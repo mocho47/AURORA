@@ -21,10 +21,10 @@ class MotorRegistry:
         Initialize registry
 
         Args:
-            motores_dir: Path to motors directory (defaults to C:\AURORA\MOTORES)
+            motores_dir: Path to motors directory (defaults to <raiz_proyecto>/MOTORES)
         """
         if motores_dir is None:
-            motores_dir = r"C:\AURORA\MOTORES"
+            motores_dir = str(Path(__file__).resolve().parent.parent / "MOTORES")
 
         self.motores_dir = Path(motores_dir)
         self.motores: Dict[str, Any] = {}

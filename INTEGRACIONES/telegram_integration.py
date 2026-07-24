@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""INTEGRACION TELEGRAM - Bot automático para AURORA"""
+"""INTEGRACION TELEGRAM - Bot automático para AURORA.
+100% HONESTO: envía REAL vía Bot API cuando hay token. Si falta, lo DICE
+(status FALTA_TOKEN). NUNCA regresa "enviado" sin haber mandado nada."""
 
 import asyncio
 import json
@@ -10,20 +12,28 @@ import os
 class TelegramIntegration:
     def __init__(self):
         self.nombre = "telegram"
-        self.token = os.getenv("TELEGRAM_TOKEN", "demo_token")
-        self.chat_id = os.getenv("TELEGRAM_CHAT_ID", "0")
+        self.token = os.getenv("TELEGRAM_TOKEN", "")
+        self.chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
         self.base_url = f"https://api.telegram.org/bot{self.token}"
 
     async def enviar_mensaje(self, chat_id: str, mensaje: str) -> Dict[str, Any]:
-        """Envía mensaje Telegram"""
-        return {
-            "integracion": "telegram",
-            "accion": "enviar_mensaje",
-            "chat_id": chat_id,
-            "mensaje": mensaje,
-            "timestamp": datetime.now().isoformat(),
-            "status": "enviado"
-        }
+        """Envía mensaje Telegram REAL vía Bot API."""
+        base = {"integracion": "telegram", "accion": "enviar_mensaje", "chat_id": chat_id,
+                "mensaje": mensaje, "timestamp": datetime.now().isoformat()}
+        if not self.token:
+            return {**base, "status": "FALTA_TOKEN",
+                    "detalle": "Falta TELEGRAM_TOKEN en .env. No se envía nada — no se simula."}
+        try:
+            import requests
+            r = await asyncio.to_thread(
+                requests.post, f"{self.base_url}/sendMessage",
+                json={"chat_id": chat_id, "text": mensaje}, timeout=15)
+            j = r.json()
+            if r.ok and j.get("ok"):
+                return {**base, "status": "enviado", "message_id": j["result"]["message_id"]}
+            return {**base, "status": "ERROR", "detalle": str(j)[:250]}
+        except Exception as e:
+            return {**base, "status": "ERROR", "detalle": str(e)[:250]}
 
     async def enviar_dashboard(self, chat_id: str, datos: Dict) -> Dict[str, Any]:
         """Envía dashboard como mensaje Telegram"""

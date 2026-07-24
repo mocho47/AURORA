@@ -34,10 +34,10 @@ class AuroraSelector:
         Initialize with motor registry
 
         Args:
-            motores_metadata_path: Path to metadata.json (defaults to C:\AURORA\MOTORES\metadata.json)
+            motores_metadata_path: Path to metadata.json (defaults to <raiz_proyecto>/MOTORES/metadata.json)
         """
         if motores_metadata_path is None:
-            motores_metadata_path = r"C:\AURORA\MOTORES\metadata.json"
+            motores_metadata_path = str(Path(__file__).resolve().parent.parent / "MOTORES" / "metadata.json")
 
         self.motores: Dict[str, MotorConfig] = {}
         self._load_metadata(motores_metadata_path)
