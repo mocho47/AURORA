@@ -103,19 +103,23 @@ class MotorMarketing:
         if not self._groq:
             return {"status": "ERROR"}
         patrones = await self._leer_memoria_marketing("todas")
-        r = await self._groq.chat.completions.create(
-            model=_MODELO,
-            messages=[
-                {"role": "system", "content": PROMPT_MARKETING},
-                {"role": "user", "content": (
-                    f"Crea un calendario de contenido para 7 días. Objetivo: {objetivo}.\n"
-                    f"Plataformas: TikTok, Instagram, Facebook, YouTube.\n"
-                    f"Patrones exitosos de memoria AURORA: {patrones}\n"
-                    "Formato: día → plataforma → tipo → descripción breve del contenido."
-                )},
-            ],
-            max_tokens=900, temperature=0.7,
-        )
+        try:
+            r = await self._groq.chat.completions.create(
+                model=_MODELO,
+                messages=[
+                    {"role": "system", "content": PROMPT_MARKETING},
+                    {"role": "user", "content": (
+                        f"Crea un calendario de contenido para 7 días. Objetivo: {objetivo}.\n"
+                        f"Plataformas: TikTok, Instagram, Facebook, YouTube.\n"
+                        f"Patrones exitosos de memoria AURORA: {patrones}\n"
+                        "Formato: día → plataforma → tipo → descripción breve del contenido."
+                    )},
+                ],
+                max_tokens=900, temperature=0.7,
+            )
+        except Exception as e:
+            logger.error(f"Error en estrategia_semanal: {e}")
+            return {"status": "ERROR", "detalle": str(e)[:200]}
         plan = r.choices[0].message.content.strip()
         await self._registrar_generacion("estrategia_semanal", "todas", plan)
         return {"status": "OK", "plan": plan, "objetivo": objetivo}
@@ -133,18 +137,22 @@ class MotorMarketing:
         except Exception:
             resultados_web = "Búsqueda web no disponible — usando conocimiento LLM."
 
-        r = await self._groq.chat.completions.create(
-            model=_MODELO,
-            messages=[
-                {"role": "system", "content": PROMPT_MARKETING},
-                {"role": "user", "content": (
-                    f"Analiza la competencia en: {nicho}\n"
-                    f"Datos web: {str(resultados_web)[:1000]}\n"
-                    "Responde: 1) Qué hace la competencia 2) Oportunidades para ATF 3) Diferenciación táctica."
-                )},
-            ],
-            max_tokens=600,
-        )
+        try:
+            r = await self._groq.chat.completions.create(
+                model=_MODELO,
+                messages=[
+                    {"role": "system", "content": PROMPT_MARKETING},
+                    {"role": "user", "content": (
+                        f"Analiza la competencia en: {nicho}\n"
+                        f"Datos web: {str(resultados_web)[:1000]}\n"
+                        "Responde: 1) Qué hace la competencia 2) Oportunidades para ATF 3) Diferenciación táctica."
+                    )},
+                ],
+                max_tokens=600,
+            )
+        except Exception as e:
+            logger.error(f"Error en analizar_competencia: {e}")
+            return {"status": "ERROR", "detalle": str(e)[:200]}
         analisis = r.choices[0].message.content.strip()
         # Guardar insight en semántica
         try:

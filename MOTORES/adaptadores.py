@@ -228,7 +228,7 @@ class MotorEditor:
     def __init__(self):
         sys.path.insert(0, str(ROOT / "EDITOR"))
         try:
-            import editor_core as _e
+            import conversiones as _e
             self._e = _e
         except Exception as e:
             self._e = None
@@ -239,11 +239,11 @@ class MotorEditor:
 
     async def preparar_laser(self, ruta: str) -> Dict:
         if not self._e: return {"error": "Editor no disponible"}
-        return await asyncio.to_thread(self._e.grabado, ruta)
+        return await asyncio.to_thread(self._e.a_bw_puro, ruta)
 
     async def linea_byn(self, ruta: str) -> Dict:
         if not self._e: return {"error": "Editor no disponible"}
-        return await asyncio.to_thread(self._e.linea, ruta)
+        return await asyncio.to_thread(self._e.a_linea, ruta)
 
     def get_status(self) -> Dict:
         return {"motor_id": self.motor_id, "disponible": self._e is not None}
@@ -277,9 +277,9 @@ Agenda tareas, recordatorios y acciones automáticas en el sistema."""
 class MotorProgramador:
     motor_id = "motor_programador"
     def __init__(self):
-        sys.path.insert(0, str(ROOT / "PROGRAMADOR"))
+        sys.path.insert(0, str(ROOT / "AGENDA"))
         try:
-            import agendador_core as _ag
+            import agenda as _ag
             self._ag = _ag
         except Exception as e:
             self._ag = None
