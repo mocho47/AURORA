@@ -22,6 +22,7 @@ import json
 import os
 import hashlib
 import hmac
+import random
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
@@ -169,6 +170,8 @@ class GeneradorRespuestas:
             intención = "general"
 
         respuesta = self.respuestas.get(intención, self.respuestas["general"])
+        if isinstance(respuesta, list):
+            respuesta = random.choice(respuesta)
 
         # Personalizar si es necesario
         if perfil.nombre:
