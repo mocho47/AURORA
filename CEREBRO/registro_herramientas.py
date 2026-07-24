@@ -83,11 +83,8 @@ def descubrir(refrescar: bool = False) -> dict:
         for py in d.rglob("*.py"):
             if py.name in EXCLUIR_ARCHIVOS or "__pycache__" in py.parts:
                 continue
-            # AUTOMATIONS = demos viejos NEXUS que SIMULAN datos (precio $450 fijo, "ingresos"
-            # inventados, "publica" sin publicar). Fuera del registro para que el chat NUNCA
-            # los invoque y engañe. Los archivos se conservan; se reconstruirán REALES si se pide.
-            if "AUTOMATIONS" in py.parts:
-                continue
+            # AUTOMATIONS: flujos venta/marketing/sueño — YA REALES (2026-07-24, conectados a
+            # cotizador/oracle/Groq/reportes reales, con confirmar=False anti-efectos). Ya se exponen.
             try:
                 arbol = ast.parse(py.read_text(encoding="utf-8", errors="ignore"))
             except Exception:
