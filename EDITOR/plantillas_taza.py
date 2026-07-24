@@ -25,6 +25,12 @@ def _cm_a_px(cm, dpi): return round(cm / CM_POR_PULGADA * dpi)
 def _norm(s): return "".join(c for c in _ud.normalize("NFD", (s or "").lower()) if _ud.category(c) != "Mn")
 
 
+def _asegurar_extension(salida: str, ext: str = ".png") -> str:
+    """PIL.Image.save() truena sin extensión reconocible. Si 'salida' no trae, se agrega."""
+    p = Path(salida)
+    return str(p) if p.suffix else str(p.with_suffix(ext))
+
+
 def _font(size, bold=True):
     cands = ([r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\segoeuib.ttf",
               r"C:\Windows\Fonts\calibrib.ttf"] if bold else
@@ -61,10 +67,19 @@ def _star(d, cx, cy, r, color):
 
 
 # ── PINCELES (renderers parametrizados) ───────────────────────────────
+def _tc(c):
+    """PIL exige tuplas en fill=; el JSON del chat manda listas. Normaliza."""
+    return tuple(c) if isinstance(c, list) else c
+
+def _tcs(cols):
+    return [_tc(c) for c in cols] if cols else cols
+
+
 def r_grad(w, h, c1, c2, horizontal=False):
-    return _grad(w, h, c1, c2, horizontal)
+    return _grad(w, h, _tc(c1), _tc(c2), horizontal)
 
 def r_confeti(w, h, c1, c2, cols, dense=200):
+    c1, c2, cols = _tc(c1), _tc(c2), _tcs(cols)
     img = _grad(w, h, c1, c2); d = ImageDraw.Draw(img); rnd = random.Random(7)
     for _ in range(dense):
         x, y, r = rnd.randint(0, w), rnd.randint(0, h), rnd.randint(max(4, h // 90), max(8, h // 55))
@@ -72,6 +87,7 @@ def r_confeti(w, h, c1, c2, cols, dense=200):
     return img
 
 def r_corazones(w, h, c1, c2, cols, dense=70):
+    c1, c2, cols = _tc(c1), _tc(c2), _tcs(cols)
     img = _grad(w, h, c1, c2); d = ImageDraw.Draw(img); rnd = random.Random(3)
     for _ in range(dense):
         x, y, s = rnd.randint(0, w), rnd.randint(0, h), rnd.randint(max(16, h // 30), max(30, h // 16))
@@ -79,6 +95,7 @@ def r_corazones(w, h, c1, c2, cols, dense=70):
     return img
 
 def r_estrellas(w, h, c1, c2, dotcol, starcol, dense=200, bigs=14):
+    c1, c2, dotcol, starcol = _tc(c1), _tc(c2), _tc(dotcol), _tc(starcol)
     img = _grad(w, h, c1, c2); d = ImageDraw.Draw(img); rnd = random.Random(9)
     for _ in range(dense):
         x, y, r = rnd.randint(0, w), rnd.randint(0, h), rnd.randint(2, 5)
@@ -88,6 +105,7 @@ def r_estrellas(w, h, c1, c2, dotcol, starcol, dense=200, bigs=14):
     return img
 
 def r_lunares(w, h, base, cols):
+    base, cols = _tc(base), _tcs(cols)
     img = Image.new("RGB", (w, h), base); d = ImageDraw.Draw(img)
     step = max(40, round(h * 0.22))
     for gy in range(0, h + step, step):
@@ -98,6 +116,7 @@ def r_lunares(w, h, base, cols):
     return img
 
 def r_olas(w, h, cols):
+    cols = _tcs(cols)
     img = Image.new("RGB", (w, h), cols[0]); d = ImageDraw.Draw(img)
     bh = h / len(cols)
     for i, c in enumerate(cols):
@@ -108,6 +127,7 @@ def r_olas(w, h, cols):
     return img
 
 def r_geom(w, h, base, cols):
+    base, cols = _tc(base), _tcs(cols)
     img = Image.new("RGB", (w, h), base); d = ImageDraw.Draw(img); rnd = random.Random(4)
     s = max(60, round(h * 0.5))
     for gx in range(-s, w + s, s):
@@ -116,6 +136,7 @@ def r_geom(w, h, base, cols):
     return img
 
 def r_marmol(w, h, c1, c2, vein):
+    c1, c2, vein = _tc(c1), _tc(c2), _tc(vein)
     img = _grad(w, h, c1, c2, horizontal=True); d = ImageDraw.Draw(img); rnd = random.Random(6)
     for _ in range(14):
         x = rnd.randint(0, w); pts = [(x, 0)]
@@ -135,6 +156,7 @@ def r_nieve(w, h, c1, c2, starcol=None):
     return img
 
 def r_rayas(w, h, cols, vertical=False):
+    cols = _tcs(cols)
     img = Image.new("RGB", (w, h), cols[0]); d = ImageDraw.Draw(img)
     n = len(cols);
     if vertical:
@@ -148,6 +170,7 @@ def r_rayas(w, h, cols, vertical=False):
     return img
 
 def r_floral(w, h, c1, c2, cols):
+    c1, c2, cols = _tc(c1), _tc(c2), _tcs(cols)
     img = _grad(w, h, c1, c2, horizontal=True); d = ImageDraw.Draw(img); rnd = random.Random(11)
     for _ in range(45):
         cx, cy, r = rnd.randint(0, w), rnd.randint(0, h), rnd.randint(max(12, h // 34), max(22, h // 18))
@@ -169,6 +192,7 @@ def r_nubes(w, h, c1, c2):
     return Image.alpha_composite(img, layer).convert("RGB")
 
 def r_glow(w, h, base, glow):
+    base, glow = _tc(base), _tc(glow)
     img = Image.new("RGBA", (w, h), base + (255,))
     layer = Image.new("RGBA", (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(layer)
     cx, cy = w // 2, h // 2; rw, rh = int(w * 0.32), int(h * 0.62)
@@ -357,6 +381,7 @@ def componer_taza(fondo_id: str, frase: str = "", modo: str = "frase_foto",
         carpeta = Path.home() / "Desktop" / "Plantillas_Taza"
         carpeta.mkdir(parents=True, exist_ok=True)
         salida = str(carpeta / f"taza_{fondo_id}_{modo}.png")
+    salida = _asegurar_extension(salida)
     Path(salida).parent.mkdir(parents=True, exist_ok=True)
     img.save(salida, dpi=(dpi, dpi))
     return {"status": "ok", "fondo": meta["nombre"], "tema": meta["tema"], "modo": modo,
@@ -400,6 +425,7 @@ def generar_hoja_a4(items=None, dpi: int = 300, salida: str = "") -> dict:
         carpeta = Path.home() / "Desktop" / "Plantillas_Taza"
         carpeta.mkdir(parents=True, exist_ok=True)
         salida = str(carpeta / "hoja_A4_3tazas.png")
+    salida = _asegurar_extension(salida)
     Path(salida).parent.mkdir(parents=True, exist_ok=True)
     hoja.save(salida, dpi=(dpi, dpi))
     return {"status": "ok", "salida": salida, "tazas": puestas,
@@ -427,6 +453,7 @@ def catalogo_fondos(salida: str = "") -> dict:
         y += th + lab + pad
     if not salida:
         salida = str(Path.home() / "Desktop" / "Catalogo_Fondos_Taza.png")
+    salida = _asegurar_extension(salida)
     hoja.save(salida)
     return {"status": "ok", "salida": salida, "total_fondos": len(FONDOS), "temas": len(_TEMAS)}
 

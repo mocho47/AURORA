@@ -98,7 +98,7 @@ def convertir(entrada: str, a: str, salida: str = "", dpi: int = 300,
     # 4) Comando Inkscape real
     cmd = [INKSCAPE, str(src), "--export-type=" + dst, f"--export-filename={salida}"]
     if ext == "pdf" and pagina is not None:
-        cmd.insert(2, f"--pdf-page={pagina+1}")   # Inkscape usa páginas 1-based
+        cmd.insert(2, f"--pages={pagina+1}")   # Inkscape 1.4.3: --pages, no --pdf-page (1-based)
     if dst == "png":
         cmd.append(f"--export-dpi={dpi}")
 

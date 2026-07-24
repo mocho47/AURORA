@@ -508,7 +508,7 @@
       "fuentes": []
     },
     {
-      "id": "Sello de G",
+      "id": "sello_goma_chico",
       "nombre": "Sello de Goma (Chico)",
       "precio": 180.0,
       "negocio": "MILENS",
@@ -529,7 +529,7 @@
       "fuentes": []
     },
     {
-      "id": "Sello de G",
+      "id": "sello_goma_grande",
       "nombre": "Sello de Goma (Grande)",
       "precio": 280.0,
       "negocio": "MILENS",
@@ -649,7 +649,7 @@
       "fuentes": []
     },
     {
-      "id": "Acrílico 3",
+      "id": "acrilico_3mm_color",
       "nombre": "Acrílico 3mm Color (Hoja)",
       "precio": 900.0,
       "negocio": "MILENS",
@@ -670,7 +670,7 @@
       "fuentes": []
     },
     {
-      "id": "Acrílico 3",
+      "id": "acrilico_3mm_transparente",
       "nombre": "Acrílico 3mm Transparente (Hoja)",
       "precio": 800.0,
       "negocio": "MILENS",

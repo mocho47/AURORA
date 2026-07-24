@@ -214,7 +214,7 @@ def configurar_meta(user_token: str, app_id: str, app_secret: str) -> dict:
 
 def _escribir_env(valores: dict):
     from pathlib import Path
-    envp = Path(r"C:\AURORA\.env")
+    envp = Path(r"C:\AURORA.worktrees\.env")
     lineas = envp.read_text(encoding="utf-8").splitlines() if envp.exists() else []
     claves = set(valores)
     nuevas = [l for l in lineas if "=" not in l or l.split("=", 1)[0].strip() not in claves]
