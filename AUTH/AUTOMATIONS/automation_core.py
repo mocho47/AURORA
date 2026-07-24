@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-RAIZ = Path(__file__).parent.parent
+RAIZ = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(RAIZ / "CEREBRO"))
 sys.path.insert(0, str(RAIZ / "ORACLE"))
 
