@@ -33,7 +33,7 @@ EXCLUIR_ARCHIVOS = {"aurora_server.py", "registro_herramientas.py", "consciencia
 # se invierte: SOLO es segura la que empieza con un verbo de LECTURA conocido.
 # Todo lo demás se trata como que escribe → el chat pide confirmación antes de ejecutar.
 _VERBOS_LECTURA = (
-    "listar", "obtener", "consultar", "buscar", "ver", "leer", "resumen", "resumir",
+    "listar", "obtener", "consultar", "buscar", "leer", "resumen", "resumir",
     "calcular", "cotizar", "analizar", "comparar", "contar", "estado", "diagnostic",
     "info", "detalle", "catalogo", "catálogo", "existe", "es_", "hay_", "tiene_",
     "total", "listado", "reporte", "revisar", "validar", "verificar_credenciales",
