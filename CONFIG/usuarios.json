@@ -1,0 +1,18 @@
+{
+  "usuarios": [
+    {
+      "id": "anuar",
+      "nombre": "Anuar",
+      "rol": "dueño",
+      "pin_salt": "74884051d958cec9135dd74de24ddb2f",
+      "pin_hash": "28da50ca68fafff5991b102fc7a52e2167bb117e9c6158534fad316a78f72656"
+    },
+    {
+      "id": "rocio",
+      "nombre": "Rocío",
+      "rol": "dueño",
+      "pin_salt": "70576d8c80822b991d7a7eba03ad451e",
+      "pin_hash": "88543664bd264533b40a524089a11835de4e361f1a2fb373440940143af39326"
+    }
+  ]
+}

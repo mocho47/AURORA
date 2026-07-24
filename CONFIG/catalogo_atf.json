@@ -1,0 +1,863 @@
+{
+  "_meta": {
+    "descripcion": "Catalogo ATF (marca blanca, precios PUBLICOS del proveedor, SIN marca). Clonado del PDF real. No incluye precios de distribuidor. No inventado.",
+    "instalacion": {
+      "desde": 2000,
+      "hasta": 3500,
+      "moneda": "MXN",
+      "nota": "segun vehiculo"
+    },
+    "total": 106,
+    "fuente": "catalogo proveedor (PDF) - solo columna PUBLICO EN GENERAL"
+  },
+  "productos": [
+    {
+      "nombre": "Faro LED Plus (Single)",
+      "precio": 500.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "PL4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Plus (Doble)",
+      "precio": 550.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "PL4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Basic (Single)",
+      "precio": 550.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "BA4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Basic (Doble)",
+      "precio": 600.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "BA4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Classic (Single)",
+      "precio": 600.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "CLA",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Classic (Doble)",
+      "precio": 650.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "CLA",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Tricolor (Single)",
+      "precio": 800.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "TRI",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Tricolor (Doble)",
+      "precio": 900.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "TRI",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Projector Lens (Doble)",
+      "precio": 900.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "LENS-2 H4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Premium Lite (Single)",
+      "precio": 750.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "LT",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Premium Lite (Doble)",
+      "precio": 850.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "LT",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED H4 Projector Lens (Doble)",
+      "precio": 1199.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "LENS-3 H4",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Premium 55W (Single)",
+      "precio": 750.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "PM55",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Premium 55W (Doble)",
+      "precio": 850.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "PM55",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Exclusive 70W (Single)",
+      "precio": 1299.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "EX",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Exclusive 70W (Doble)",
+      "precio": 1399.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "EX",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Exclusive 90W (Single)",
+      "precio": 1399.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "EX90",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro LED Exclusive 90W (Doble)",
+      "precio": 1499.0,
+      "negocio": "ATF",
+      "categoria": "Faro LED",
+      "sku": "EX90",
+      "specs": ""
+    },
+    {
+      "nombre": "Proyector Bi-LED X1 3\"",
+      "precio": 3149.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X1",
+      "specs": "92W alta/60W baja 6000K"
+    },
+    {
+      "nombre": "Proyector Bi-LED X2 3\"",
+      "precio": 2799.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X2",
+      "specs": "80W/55W 6000K"
+    },
+    {
+      "nombre": "Proyector Bi-LED X3 3\"",
+      "precio": 3149.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X3",
+      "specs": "62W/51W 6000K+DRL"
+    },
+    {
+      "nombre": "Proyector Bi-LED X4 3\"",
+      "precio": 2699.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X4",
+      "specs": "84W/51W 6000K"
+    },
+    {
+      "nombre": "Proyector Bi-LED X5 2.5\"",
+      "precio": 1599.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X5",
+      "specs": "54W/45W 6000K"
+    },
+    {
+      "nombre": "Proyector Bi-LED X6 3\"",
+      "precio": 1599.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X6",
+      "specs": "54W/45W 6000K desmontable"
+    },
+    {
+      "nombre": "Proyector Bi-LED X7 3\" (nieblas)",
+      "precio": 2099.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X7",
+      "specs": "51W/43W 5000K universal"
+    },
+    {
+      "nombre": "Proyector Bi-LED X7T 3\" (nieblas tricolor)",
+      "precio": 2149.0,
+      "negocio": "ATF",
+      "categoria": "Proyector Bi-LED",
+      "sku": "AOZ-X7T",
+      "specs": "51W/43W tricolor universal"
+    },
+    {
+      "nombre": "P13W",
+      "precio": 330.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_7181",
+      "specs": ""
+    },
+    {
+      "nombre": "1156 Corn Base Redonda",
+      "precio": 190.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6089",
+      "specs": ""
+    },
+    {
+      "nombre": "1156 Ambar Base Redonda Canbus",
+      "precio": 190.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6089A",
+      "specs": ""
+    },
+    {
+      "nombre": "1156 Red Base Redonda Canbus",
+      "precio": 190.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6089R",
+      "specs": ""
+    },
+    {
+      "nombre": "3156 Corn Base Negro Canbus",
+      "precio": 190.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6093",
+      "specs": ""
+    },
+    {
+      "nombre": "7440 Corn Base Negra Larga Canbus",
+      "precio": 190.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6091",
+      "specs": ""
+    },
+    {
+      "nombre": "3157 Corn Base Blanca Bicolor",
+      "precio": 295.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6403",
+      "specs": ""
+    },
+    {
+      "nombre": "1157 Corn Base Redonda Bicolor",
+      "precio": 295.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6399",
+      "specs": ""
+    },
+    {
+      "nombre": "7443 Base Blanca Larga Bicolor",
+      "precio": 295.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_6401",
+      "specs": ""
+    },
+    {
+      "nombre": "Festoon Canbus 31mm",
+      "precio": 95.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_5141",
+      "specs": ""
+    },
+    {
+      "nombre": "Festoon Canbus 36mm",
+      "precio": 99.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_5142",
+      "specs": ""
+    },
+    {
+      "nombre": "Festoon Canbus 39mm",
+      "precio": 99.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_5143",
+      "specs": ""
+    },
+    {
+      "nombre": "Festoon Canbus 42mm",
+      "precio": 99.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_5144",
+      "specs": ""
+    },
+    {
+      "nombre": "T10 Base Corto Chico Canbus",
+      "precio": 85.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_1239",
+      "specs": ""
+    },
+    {
+      "nombre": "T10 Base Lupa",
+      "precio": 49.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_1205",
+      "specs": ""
+    },
+    {
+      "nombre": "T10 Base Grande 15 LEDs Canbus",
+      "precio": 59.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_1203",
+      "specs": ""
+    },
+    {
+      "nombre": "T10 Base Larga Corn Canbus",
+      "precio": 125.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_1192",
+      "specs": ""
+    },
+    {
+      "nombre": "T10 Base Larga 360 Canbus",
+      "precio": 49.0,
+      "negocio": "ATF",
+      "categoria": "Auxiliar",
+      "sku": "IL_1212",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro Offroad EX7 30/60W",
+      "precio": 3900.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-NDE-001",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 20\" 70W",
+      "precio": 1850.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S1-20-P7E7J",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 20\" Ambar+Blanco 50W",
+      "precio": 2399.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S6-20-R5H1",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 10\" 50W",
+      "precio": 1560.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S1-10-D1J",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 6\" 30W",
+      "precio": 1245.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S1-6-D1J",
+      "specs": ""
+    },
+    {
+      "nombre": "Driving Light Combo 80W",
+      "precio": 2000.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-R-5-C10D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Quad Driving Light 80W",
+      "precio": 2050.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-L-6-P7E7D1",
+      "specs": ""
+    },
+    {
+      "nombre": "White Rock Light Kit 9Wx6",
+      "precio": 2215.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-Y1D-2-D6",
+      "specs": ""
+    },
+    {
+      "nombre": "Rock Light Ambar+Blanco 6W",
+      "precio": 249.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-Y-2-H2",
+      "specs": ""
+    },
+    {
+      "nombre": "Single Row 20W",
+      "precio": 755.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-L-2-E7T",
+      "specs": ""
+    },
+    {
+      "nombre": "Single Row Diffusion 20W",
+      "precio": 755.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-L-K-2-E7T",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually 40W",
+      "precio": 785.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-2-E4T",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually + DRL 25W",
+      "precio": 1249.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-2-R9T-A-A",
+      "specs": ""
+    },
+    {
+      "nombre": "Flush Mount 20W",
+      "precio": 545.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-EL-2-E13T",
+      "specs": ""
+    },
+    {
+      "nombre": "Flush Mount Diffusion 20W",
+      "precio": 755.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-E-L-K-2-E7T",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 10\" RGB",
+      "precio": 1725.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S5D1-10-R5Q-APP",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 10\" Ambar+Blanco",
+      "precio": 1425.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S6-10-R5H1",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 6\" Ambar+Blanco",
+      "precio": 1250.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S6-6-R5H1",
+      "specs": ""
+    },
+    {
+      "nombre": "Barra LED Single Row 4\"",
+      "precio": 625.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-L-4-E7D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Rock Light RGB+White",
+      "precio": 2675.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-RLW-N8",
+      "specs": ""
+    },
+    {
+      "nombre": "Direccional Motocicleta",
+      "precio": 2490.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-BW-SM001",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro Offroad EX4 White",
+      "precio": 1575.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-WL2501",
+      "specs": ""
+    },
+    {
+      "nombre": "Faro Offroad EX4 Amber",
+      "precio": 1575.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-WL2501Y",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Squadron Amber",
+      "precio": 290.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-2-P",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Pro",
+      "precio": 1975.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-K-W-4-C27T3",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Navy",
+      "precio": 725.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-M-2-L2D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Flood-Spot Amber",
+      "precio": 599.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-2-E4E15D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Amber+White",
+      "precio": 1625.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-2-P23H1",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Amber",
+      "precio": 625.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-2-L2D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Driving Light Combo Amber",
+      "precio": 1525.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-R-5-C10D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Flood-Spot 26W",
+      "precio": 620.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-2-E4E15D1",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Laser 30W",
+      "precio": 690.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-2-E12T",
+      "specs": ""
+    },
+    {
+      "nombre": "Quad Dot Headlight 45W",
+      "precio": 1050.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-S-7",
+      "specs": ""
+    },
+    {
+      "nombre": "Round Dot Headlight 40W",
+      "precio": 1060.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-M-7",
+      "specs": ""
+    },
+    {
+      "nombre": "Switch Universal 6",
+      "precio": 2930.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-JC01",
+      "specs": ""
+    },
+    {
+      "nombre": "Switch Universal 8",
+      "precio": 3690.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-JC02",
+      "specs": ""
+    },
+    {
+      "nombre": "Switch Universal 12",
+      "precio": 3790.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-JC03",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Diffusion",
+      "precio": 725.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-K-2-E4T",
+      "specs": ""
+    },
+    {
+      "nombre": "Super Side Shooter",
+      "precio": 2150.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-GR7-B",
+      "specs": ""
+    },
+    {
+      "nombre": "Round Light 40W",
+      "precio": 1650.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-WG-5",
+      "specs": ""
+    },
+    {
+      "nombre": "Round Light Amber 40W",
+      "precio": 1650.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-WG-5",
+      "specs": ""
+    },
+    {
+      "nombre": "Side Shooter 40W",
+      "precio": 645.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-SR-5",
+      "specs": ""
+    },
+    {
+      "nombre": "Side Shooter Amber 40W",
+      "precio": 645.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-SR-5",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Protector",
+      "precio": 55.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AC2WH",
+      "specs": ""
+    },
+    {
+      "nombre": "Dually Amber Cover",
+      "precio": 55.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AC2WA",
+      "specs": ""
+    },
+    {
+      "nombre": "Quad Driving Amber Cover",
+      "precio": 340.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AC6LA",
+      "specs": ""
+    },
+    {
+      "nombre": "Driving Laser Black Cover",
+      "precio": 260.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AC7RH",
+      "specs": ""
+    },
+    {
+      "nombre": "Hexacomb Black 100W",
+      "precio": 1590.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-HC02-7-B",
+      "specs": ""
+    },
+    {
+      "nombre": "Hexacomb Silver 100W",
+      "precio": 1590.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-HC02-7-S",
+      "specs": ""
+    },
+    {
+      "nombre": "Light Pod Combo 5.75\" 35W",
+      "precio": 1350.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-OL-2301",
+      "specs": ""
+    },
+    {
+      "nombre": "Light Pod Combo 4\" 30W",
+      "precio": 1900.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-OL-2302",
+      "specs": ""
+    },
+    {
+      "nombre": "Honeycomb Black 40W",
+      "precio": 2490.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-HC01-B",
+      "specs": ""
+    },
+    {
+      "nombre": "Honeycomb Silver 40W",
+      "precio": 2490.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-HC01-S",
+      "specs": ""
+    },
+    {
+      "nombre": "Mini Lens Pro 30W",
+      "precio": 700.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-1850WC",
+      "specs": ""
+    },
+    {
+      "nombre": "Mini Lens Spot Light 45W",
+      "precio": 1300.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "LY-SL-001",
+      "specs": ""
+    },
+    {
+      "nombre": "Arnes 1 a 4",
+      "precio": 349.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AW7",
+      "specs": ""
+    },
+    {
+      "nombre": "Arnes 1 a 2",
+      "precio": 299.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AW6",
+      "specs": ""
+    },
+    {
+      "nombre": "Arnes Doble 4/6/10/20\"",
+      "precio": 340.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AW103",
+      "specs": ""
+    },
+    {
+      "nombre": "Arnes 2/4\"",
+      "precio": 355.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AW27",
+      "specs": ""
+    },
+    {
+      "nombre": "Arnes 2/4/6/10/20\"",
+      "precio": 370.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-AW21",
+      "specs": ""
+    },
+    {
+      "nombre": "Single Row Amber 20W",
+      "precio": 755.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "ALO-T-L-2E7T",
+      "specs": ""
+    },
+    {
+      "nombre": "Asador Parrilla Offroad",
+      "precio": 1550.0,
+      "negocio": "ATF",
+      "categoria": "Offroad",
+      "sku": "AMG",
+      "specs": ""
+    }
+  ]
+}

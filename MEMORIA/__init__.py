@@ -1,0 +1,1 @@
+# AURORA — MEMORIA package

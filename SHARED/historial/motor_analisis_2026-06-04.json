@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2026-06-04T03:26:53.574921",
+    "motor_id": "motor_analisis",
+    "mensaje": "hola",
+    "respuesta": "¡Hola! ¿En qué puedo ayudarte hoy?"
+  },
+  {
+    "timestamp": "2026-06-04T03:27:32.611719",
+    "motor_id": "motor_analisis",
+    "mensaje": "tienes acceso a los archivos de m pc",
+    "respuesta": "No, no tengo acceso a los archivos de tu PC. Soy un modelo de lenguaje basado en inteligencia artificial que se ejecuta en un servidor remoto y no tengo la capacidad de acceder a tu equipo local ni a "
+  },
+  {
+    "timestamp": "2026-06-04T03:28:12.625115",
+    "motor_id": "motor_analisis",
+    "mensaje": "podria darte acceso",
+    "respuesta": "Puedes proporcionarme más detalles sobre a qué tipo de acceso te refieres. ¿Es un enlace, un documento, un sistema o algo más? Estoy aquí para ayudarte con cualquier consulta que tengas. ¿En qué puedo"
+  },
+  {
+    "timestamp": "2026-06-04T03:28:18.960557",
+    "motor_id": "motor_analisis",
+    "mensaje": "",
+    "respuesta": "Parece que no has formulado una pregunta o consulta. ¿En qué puedo ayudarte hoy?"
+  },
+  {
+    "timestamp": "2026-06-04T04:44:17.249768",
+    "motor_id": "motor_analisis",
+    "mensaje": ".\\LANZAR_AURORA_AHORA.ps1",
+    "respuesta": "Parece que estás intentando ejecutar un script de PowerShell llamado \"LANZAR_AURORA_AHORA.ps1\". Sin embargo, no tengo información sobre el contenido o el propósito de este script.\n\nSi estás buscando a"
+  }
+]

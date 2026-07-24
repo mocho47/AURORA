@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA NEXUS v3 - Panel Operativo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .output {
+            background: #1a1f3a;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .output:empty::before {
+            content: "Haz clic en un botón para ver resultados...";
+            color: #888;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ AURORA NEXUS v3</h1>
+            <p>Sistema Inteligente de Operaciones</p>
+        </header>
+
+        <div class="buttons">
+            <button onclick="verMotores()">⚙️ Ver Motores</button>
+            <button onclick="razonar()">🧠 Razonar</button>
+            <button onclick="cotizar()">💰 Cotizar</button>
+            <button onclick="ejecutarMotor()">🚀 Ejecutar Motor</button>
+            <button onclick="salud()">✓ Estado Sistema</button>
+            <button onclick="limpiar()">🗑️ Limpiar</button>
+        </div>
+
+        <div class="output" id="output"></div>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:8000';
+        const output = document.getElementById('output');
+
+        function mostrar(texto, tipo = 'info') {
+            if (typeof texto === 'object') {
+                texto = JSON.stringify(texto, null, 2);
+            }
+            const span = document.createElement('div');
+            span.className = tipo;
+            span.textContent = texto;
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function limpiar() {
+            output.innerHTML = '';
+        }
+
+        async function verMotores() {
+            limpiar();
+            mostrar('⏳ Cargando motores...', 'info');
+            try {
+                const res = await fetch(`${API}/api/motores/listar`);
+                const data = await res.json();
+                mostrar('✓ MOTORES DISPONIBLES:', 'success');
+                mostrar(`Total: ${data.total}`, 'info');
+                data.motores.forEach(m => {
+                    mostrar(`  • ${m.id.toUpperCase()} - ${m.status.toUpperCase()}`, 'success');
+                });
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function razonar() {
+            limpiar();
+            const msg = prompt('¿Cuál es tu pregunta?', 'Analiza el mercado actual');
+            if (!msg) return;
+
+            mostrar(`🧠 Procesando: "${msg}"...`, 'info');
+            try {
+                const res = await fetch(`${API}/api/cerebro/razonar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: msg, contexto: {}})
+                });
+                const data = await res.json();
+                mostrar('✓ RESPUESTA DEL CEREBRO AURORA:', 'success');
+                mostrar(data, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function cotizar() {
+            limpiar();
+            const neg = prompt('Negocio (atf/milens)', 'atf');
+            if (!neg) return;
+            const prod = prompt('Producto', 'kit');
+            if (!prod) return;
+            const cant = prompt('Cantidad', '1');
+            if (!cant) return;
+
+            mostrar(`💰 Cotizando ${cant}x ${prod} en ${neg}...`, 'info');
+            try {
+                const res = await fetch(`${API}/api/operacion/cotizar?negocio=${neg}&producto=${prod}&cantidad=${cant}`);
+                const data = await res.json();
+                mostrar('✓ COTIZACIÓN GENERADA:', 'success');
+                mostrar(`Producto: ${data.producto}`, 'info');
+                mostrar(`Cantidad: ${data.cantidad}`, 'info');
+                mostrar(`Precio Unitario: $${data.base}`, 'info');
+                mostrar(`Subtotal: $${data.total}`, 'info');
+                mostrar(`IVA (16%): $${data.impuestos}`, 'info');
+                mostrar(`TOTAL FINAL: $${data.total_final}`, 'success');
+                mostrar(`Vigencia: ${data.vigencia}`, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function ejecutarMotor() {
+            limpiar();
+            const motor = prompt('Motor (motor_analisis, motor_ventas, motor_cotizador, etc)', 'motor_analisis');
+            if (!motor) return;
+            const accion = prompt('¿Qué hacer?', 'ejecutar');
+            if (!accion) return;
+
+            mostrar(`🚀 Ejecutando ${motor}...`, 'info');
+            try {
+                const res = await fetch(`${API}/api/motor/${motor}/ejecutar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: accion, contexto: {}})
+                });
+                const data = await res.json();
+                mostrar('✓ RESULTADO:', 'success');
+                mostrar(data, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function salud() {
+            limpiar();
+            mostrar('✓ Verificando estado...', 'info');
+            try {
+                const res = await fetch(`${API}/health`);
+                const data = await res.json();
+                mostrar('✓ SISTEMA OPERATIVO:', 'success');
+                mostrar(`Status: ${data.status}`, 'info');
+                mostrar(`Sistema: ${data.sistema}`, 'info');
+                mostrar(`Motores: ${data.motores}`, 'info');
+                mostrar(`Cerebro: ${data.cerebro}`, 'info');
+                mostrar(`Timestamp: ${data.timestamp}`, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

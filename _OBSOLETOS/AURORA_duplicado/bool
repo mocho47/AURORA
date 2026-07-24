@@ -1,0 +1,1 @@
+    def esta_operativo(self) - return self.operativo and self._groq() is not None

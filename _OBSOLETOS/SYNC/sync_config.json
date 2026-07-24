@@ -1,0 +1,30 @@
+{
+  "tu_pc": {
+    "nombre": "Tu PC",
+    "ip": "192.168.1.100",
+    "puerto": 8000,
+    "tipo": "master",
+    "ubicacion": "C:\\AURORA"
+  },
+  "pc_esposa": {
+    "nombre": "PC Esposa",
+    "ip": "192.168.1.101",
+    "puerto": 8000,
+    "tipo": "replica",
+    "ubicacion": "C:\\AURORA"
+  },
+  "puerto_sync": 9000,
+  "intervalo_sync": 5,
+  "resolver_conflictos": "timestamp",
+  "modo": "bidireccional",
+  "directorios_sync": [
+    "C:\\AURORA\\DATA\\",
+    "C:\\AURORA\\MEMORIA\\",
+    "C:\\AURORA\\SYNC\\"
+  ],
+  "prioridades": {
+    "MEMORIA": 3,
+    "PEDIDOS": 2,
+    "ARCHIVOS": 1
+  }
+}

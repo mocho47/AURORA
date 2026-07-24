@@ -1,0 +1,715 @@
+{
+  "_meta": {
+    "descripcion": "Fichas tecnicas REALES de ATF y MILENS para el Vendedor de AURORA. Identidad de precios_base.json. AURORA investiga en la web y autocompleta con fuentes; lo no verificable queda PENDIENTE (no inventa). Mismas reglas para ambos negocios.",
+    "estados": [
+      "PENDIENTE",
+      "PARCIAL",
+      "COMPLETA"
+    ],
+    "plantilla_campos": [
+      "que_es",
+      "compatibilidad",
+      "diferencias",
+      "specs",
+      "instalacion",
+      "recomendado_para",
+      "argumentos_venta"
+    ]
+  },
+  "fichas": [
+    {
+      "id": "tira_sec_prem",
+      "nombre": "Tiras Secuenciales Premium (2300)",
+      "precio": 2300.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "tira_sec_std",
+      "nombre": "Tiras Secuenciales Std (1600)",
+      "precio": 1600.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "demon_1",
+      "nombre": "Ojos Demonio (1 Color)",
+      "precio": 500.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Dispositivo de iluminación interior o exterior diseñado para vehículos, compuesto por una matriz de diodos emisores de luz (LED) que pueden ser controlados individualmente para formar patrones, logotipos o animaciones específicas.",
+      "compatibilidad": [
+        "sistemas eléctricos de 12V"
+      ],
+      "diferencias": "Versión de entrada, un solo color fijo. No cambia de color ni se controla por Bluetooth como el RGB BT, pero cuesta un tercio. Mismo efecto 'ojo de demonio'.",
+      "specs": {
+        "voltaje": "12V"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": [
+          "configuración correcta del voltaje",
+          "instalación adecuada",
+          "protección contra humedad y calor"
+        ],
+        "pasos": []
+      },
+      "recomendado_para": "Quien quiere el look a bajo costo con un color definido. Sistemas 12V.",
+      "argumentos_venta": [
+        "personalización avanzada",
+        "matriz de píxeles flexibles",
+        "capacidad de programación vía aplicación móvil"
+      ],
+      "fuentes": [
+        "https://es.aliexpress.com/s/wiki-ssr/article/Panel-LED-programable-ojos-demonio-coche-12V",
+        "https://es.scribd.com/document/858126794/Ojos-fendi",
+        "https://divinotrendec.com/products/luces-ojos-demonio-led-auto"
+      ]
+    },
+    {
+      "id": "demon_rgb",
+      "nombre": "Ojos Demonio RGB BT",
+      "precio": 1500.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Luces LED Ojo de Demonio RGB para Coche de KaiDengZhe",
+      "compatibilidad": [
+        "autos",
+        "camionetas"
+      ],
+      "diferencias": "Gama alta: RGB con control Bluetooth desde app, efectos estáticos y dinámicos, resistente a clima. Se instala sin modificar el chasis (parabrisas inferior / líneas del capó).",
+      "specs": {
+        "material": "",
+        "color": "X7 Azul, X8 Blanco y X9 Verde",
+        "ubicaciones estratégicas": "parabrisas inferior o líneas del capó"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": [],
+        "pasos": [
+          "Conexión en paralelo al encendido",
+          "Resistencia de protección y masa adecuada"
+        ]
+      },
+      "recomendado_para": "Clientes que quieren personalización total y control por celular; autos y camionetas 12V.",
+      "argumentos_venta": [
+        "personalizar vehículos sin modificar el chasis",
+        "efectos estáticos y dinámicos en colores",
+        "resistentes a condiciones climáticas"
+      ],
+      "fuentes": [
+        "https://articulo.mercadolibre.com.mx/MLM-2234716009-faros-rgb-demon-eye-led-demon-eye-kits-personalizados-ojos-_JM",
+        "https://es.aliexpress.com/s/wiki-ssr/article/Luces-LED-Ojo-de-Demonio-RGB-para-Coche",
+        "https://www.amazon.com.mx/personalizados-modificaci%C3%B3n-decoraci%C3%B3n-autom%C3%B3viles-personalizaci%C3%B3n/dp/B0DST286R8"
+      ]
+    },
+    {
+      "id": "fibra",
+      "nombre": "Fibra Óptica Interior",
+      "precio": 2000.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "led_h4_prem",
+      "nombre": "LED H4 Premium",
+      "precio": 1850.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [
+        "Volkswagen",
+        "Mercedes-Benz",
+        "BMW",
+        "Audi",
+        "Hyundai",
+        "Kia"
+      ],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": [],
+      "nota_verificacion": "Degradada por incoherencia: texto menciona modelo ['h7'] pero el producto es ['h4']"
+    },
+    {
+      "id": "led_h7_prem",
+      "nombre": "LED H7 Premium",
+      "precio": 1850.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "led_int",
+      "nombre": "LED Intermedio (General)",
+      "precio": 950.0,
+      "negocio": "ATF",
+      "categoria": "retrofit",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Taza Mágic",
+      "nombre": "Taza Mágica",
+      "precio": 100,
+      "negocio": "MILENS",
+      "categoria": "Tazas",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "sin especificar",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Taza Cerám",
+      "nombre": "Taza Cerámica 11oz",
+      "precio": 60,
+      "negocio": "MILENS",
+      "categoria": "Tazas",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Termo 20oz",
+      "nombre": "Termo 20oz (Skinny)",
+      "precio": 270,
+      "negocio": "MILENS",
+      "categoria": "Termos",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Termo 30oz",
+      "nombre": "Termo 30oz",
+      "precio": 250,
+      "negocio": "MILENS",
+      "categoria": "Termos",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Ideal para mantener tus bebidas frias o calientes",
+      "compatibilidad": [
+        "sublimación",
+        "vinil",
+        "grabado láser"
+      ],
+      "diferencias": "Acero inox con aislado térmico (frío/calor), 30oz — mayor capacidad que el 18oz.",
+      "specs": {
+        "Material": "Acero Inox",
+        "Color": "Naranja",
+        "Capacidad": "30 onzas",
+        "Peso": "0.40 kg"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": "",
+        "pasos": [
+          "Lavado a Mano con agua tibia"
+        ]
+      },
+      "recomendado_para": "Regalo corporativo, uso diario, quien quiere bebida a temperatura por horas.",
+      "argumentos_venta": [
+        "100% reutilizable",
+        "Capacidad de almacenamiento con aislado"
+      ],
+      "fuentes": [
+        "https://evans.com.mx/termo-evans-30-oz-ap-126.html",
+        "https://www.knova.mx/articulo/13563-termo-de-30-oz-packout",
+        "https://rtic.mx/products/tumbler-rtic-30-oz"
+      ]
+    },
+    {
+      "id": "Termo 40oz",
+      "nombre": "Termo 40oz (Travel)",
+      "precio": 350,
+      "negocio": "MILENS",
+      "categoria": "Termos",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Termo 18oz",
+      "nombre": "Termo 18oz (Bala)",
+      "precio": 230,
+      "negocio": "MILENS",
+      "categoria": "Termos",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Termo con dispensador, 18 L, fabricado en polipropileno resistente a impactos",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {
+        "Capacidad": "18 L (4.7 gal)",
+        "Peso": "2.2 kg",
+        "Dimensiones": "25 x 44 cm"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": [
+        "https://www.truper.com/ficha_tecnica/controllers/index.php?codigo=62125",
+        "https://rigba.com/wp-content/uploads/2021/06/2272.pdf",
+        "https://es.scribd.com/document/630376883/MANUAL-TECNICO-TERMOPANEL-2021-2"
+      ]
+    },
+    {
+      "id": "Vasos Plás",
+      "nombre": "Vasos Plásticos (Cafetero)",
+      "precio": 45,
+      "negocio": "MILENS",
+      "categoria": "Termos",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Playera Al",
+      "nombre": "Playera Algodón (DTF)",
+      "precio": 200,
+      "negocio": "MILENS",
+      "categoria": "Textil",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Playera Po",
+      "nombre": "Playera Poliéster (Subli)",
+      "precio": 140,
+      "negocio": "MILENS",
+      "categoria": "Textil",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Gorra (Sub",
+      "nombre": "Gorra (Subli/Vinil)",
+      "precio": 100,
+      "negocio": "MILENS",
+      "categoria": "Textil",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Agenda Vin",
+      "nombre": "Agenda Vinipiel (Laser)",
+      "precio": 280.0,
+      "negocio": "MILENS",
+      "categoria": "Oficina",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Agenda Vinipiel (Laser)",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {
+        "potencia_laser": "20%",
+        "velocidad": "1500 mm",
+        "espacio_de_linea": "0.05 mm"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": [
+        "https://elmundolaser.com/parametros-para-corte-y-grabado-en-laser-de-fibra-optica/",
+        "https://articulo.mercadolibre.com.mx/MLM-1975158443-agenda-2024-de-escritorio-de-vinipiel-10-piezas-personaliza-_JM",
+        "https://www.youtube.com/watch?v=yp0Bb9z4Wgw"
+      ]
+    },
+    {
+      "id": "Bolígrafo ",
+      "nombre": "Bolígrafo Metal (Laser)",
+      "precio": 45.0,
+      "negocio": "MILENS",
+      "categoria": "Oficina",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Sello de G",
+      "nombre": "Sello de Goma (Chico)",
+      "precio": 180.0,
+      "negocio": "MILENS",
+      "categoria": "Oficina",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Sello de G",
+      "nombre": "Sello de Goma (Grande)",
+      "precio": 280.0,
+      "negocio": "MILENS",
+      "categoria": "Oficina",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Módulo de ",
+      "nombre": "Módulo de Voz (Peluches)",
+      "precio": 150.0,
+      "negocio": "MILENS",
+      "categoria": "Temporada",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Un circuito integrado pequeño diseñado para almacenar y reproducir audio digitalmente, optimizado para funcionar con una fuente de alimentación de 3V y dimensiones compactas de 42×22.5 mm.",
+      "compatibilidad": [
+        "peluches"
+      ],
+      "diferencias": "Reproduce audio sin programar microcontroladores ni soldadura avanzada; 3V, 30s de grabación, 42×22.5mm — plug-and-play frente a soluciones que exigen código.",
+      "specs": {
+        "capacidad_de_grabacion": 30,
+        "fuente_de_alimentacion": 3,
+        "dimensiones": "42×22.5 mm"
+      },
+      "instalacion": {
+        "dificultad": "",
+        "requiere": [],
+        "pasos": [
+          "Conectar el módulo a la placa de control del peluche"
+        ]
+      },
+      "recomendado_para": "Para aquellos que se preguntan qué es exactamente este dispositivo",
+      "argumentos_venta": [
+        "Elimina la barrera técnica de la programación de microcontroladores",
+        "Permite a cualquier persona crear un juguete interactivo en cuestión de minutos",
+        "No requiere soldadura avanzada ni software complejo"
+      ],
+      "fuentes": [
+        "https://es.aliexpress.com/s/wiki-ssr/article/M%C3%B3dulo-grabadora-de-voz-30-60-segundos-para-peluches",
+        "https://www.officinadellafantasia.com/Voz-Grabable-195-Segundos-Ideal-Para-Peluches-Y-Proyectos-DIY-506042",
+        "https://www.amazon.com.mx/Grabadora-voz-para-peluches-manualidades/dp/B0DCG2BC3V"
+      ]
+    },
+    {
+      "id": "MDF 2.7mm ",
+      "nombre": "MDF 2.7mm (Hoja)",
+      "precio": 110.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "MDF 5.5mm ",
+      "nombre": "MDF 5.5mm (Hoja)",
+      "precio": 280.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Multiplay ",
+      "nombre": "Multiplay 4mm (Hoja)",
+      "precio": 350.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Acrílico 3",
+      "nombre": "Acrílico 3mm Color (Hoja)",
+      "precio": 900.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Acrílico 3",
+      "nombre": "Acrílico 3mm Transparente (Hoja)",
+      "precio": 800.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    },
+    {
+      "id": "Acrílico 6",
+      "nombre": "Acrílico 6mm (Hoja)",
+      "precio": 1800.0,
+      "negocio": "MILENS",
+      "categoria": "material laser",
+      "estado_ficha": "PENDIENTE",
+      "que_es": "",
+      "compatibilidad": [],
+      "diferencias": "",
+      "specs": {},
+      "instalacion": {
+        "dificultad": "",
+        "tiempo_aprox": "",
+        "requiere": [],
+        "pasos": []
+      },
+      "recomendado_para": "",
+      "argumentos_venta": [],
+      "fuentes": []
+    }
+  ]
+}

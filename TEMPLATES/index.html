@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA v1 - Sistema Inteligente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f0f23;
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: #1a1a3a;
+            border-right: 1px solid #2a2a4a;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .logo-section {
+            padding: 25px 20px;
+            border-bottom: 1px solid #2a2a4a;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-section {
+            padding: 20px 0;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .nav-label {
+            padding: 0 20px;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #e0e0e0;
+            border-left-color: #667eea;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .status-bar {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid #2a2a4a;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* MAIN AREA */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        .header {
+            padding: 20px 30px;
+            background: #151530;
+            border-bottom: 1px solid #2a2a4a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .motor-badge {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* CONTENT */
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .section {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        /* CHAT SECTION */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-history::-webkit-scrollbar-track {
+            background: #1a1a3a;
+        }
+
+        .chat-history::-webkit-scrollbar-thumb {
+            background: #2a2a4a;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.user .text {
+            background: #667eea;
+            color: white;
+            border-radius: 12px 0 12px 12px;
+            padding: 12px 16px;
+            display: inline-block;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message.assistant .text {
+            background: #2a2a4a;
+            color: #e0e0e0;
+            border-radius: 0 12px 12px 12px;
+            padding: 12px 16px;
+            display: inline-block;
+            max-width: 70%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* INPUT */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            background: #1a1a3a;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e0e0e0;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 44px;
+            max-height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-send:active {
+            transform: translateY(0);
+        }
+
+        .btn-send.loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* MOTORS GRID */
+        .motors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .motor-card {
+            background: #1a1a3a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .motor-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .motor-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .motor-desc {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .motor-info {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* HISTORY SECTION */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: #1a1a3a;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .history-motor {
+            font-size: 11px;
+            color: #667eea;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .history-text {
+            font-size: 13px;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* SETTINGS */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .setting-card {
+            background: #1a1a3a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 10px;
+            background: #151530;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .motors-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .message.user .text,
+            .message.assistant .text {
+                max-width: 90%;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo-section">
+                <div class="logo">⚡ AURORA</div>
+                <div class="tagline">v1 - Sistema Inteligente</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Principal</div>
+                <div class="nav-item active" onclick="showSection('chat')">💬 Chat</div>
+                <div class="nav-item" onclick="showSection('motores')">🔧 Motores</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Información</div>
+                <div class="nav-item" onclick="showSection('historial')">📜 Histórico</div>
+                <div class="nav-item" onclick="showSection('settings')">⚙️ Configuración</div>
+            </div>
+
+            <div class="status-bar">
+                <div><span class="status-dot"></span>Operativo</div>
+                <div style="margin-top: 8px; color: #666; font-size: 11px;">
+                    <div>Motores: <strong id="motor-count">0</strong></div>
+                    <div>SDK: <strong>Groq</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN AREA -->
+        <div class="main">
+            <!-- HEADER -->
+            <div class="header">
+                <div class="header-title" id="page-title">Chat AURORA</div>
+                <div class="header-info">
+                    <div id="current-motor" class="motor-badge" style="display: none;"></div>
+                    <div id="response-time" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <!-- CHAT SECTION -->
+                <div id="chat" class="section active">
+                    <div class="chat-container">
+                        <div class="chat-history" id="chat-history">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⚡</div>
+                                <div>Bienvenido a AURORA</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                                    Escribe tu pregunta y AURORA elegirá el motor optimal
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-area">
+                            <textarea id="input-message" class="input-field" placeholder="Escribe tu pregunta..." rows="2"></textarea>
+                            <button class="btn-send" onclick="sendMessage()">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOTORES SECTION -->
+                <div id="motores" class="section">
+                    <h2 style="margin-bottom: 25px;">Motores Disponibles</h2>
+                    <div class="motors-grid" id="motors-grid">
+                        <div class="empty-state">
+                            <div class="loading-spinner" style="margin: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL SECTION -->
+                <div id="historial" class="section">
+                    <h2 style="margin-bottom: 25px;">Histórico de Conversaciones</h2>
+                    <div class="history-list" id="history-list">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📜</div>
+                            <div>Sin histórico aún</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS SECTION -->
+                <div id="settings" class="section">
+                    <h2 style="margin-bottom: 25px;">Configuración</h2>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-label">API Key - Claude</div>
+                            <input type="password" class="setting-input" id="api-claude" placeholder="sk-ant-...">
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">API Key - Groq</div>
+                            <input type="password" class="setting-input" id="api-groq" placeholder="gsk_...">
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">API Key - Zai</div>
+                            <input type="password" class="setting-input" id="api-zai" placeholder="sk-...">
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-label">URL Ollama</div>
+                            <input type="text" class="setting-input" id="ollama-url" placeholder="http://localhost:11434" value="http://localhost:11434">
+                        </div>
+                    </div>
+                    <button class="btn-send" onclick="saveSettings()" style="margin-left: 30px; margin-top: 20px;">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let history = [];
+
+        // FUNCIONES DE NAVEGACIÓN
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Show selected section
+            document.getElementById(section).classList.add('active');
+
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update page title
+            const titles = {
+                chat: '💬 Chat AURORA',
+                motores: '🔧 Motores Disponibles',
+                historial: '📜 Histórico',
+                settings: '⚙️ Configuración'
+            };
+            document.getElementById('page-title').textContent = titles[section];
+
+            // Load motores if needed
+            if (section === 'motores') {
+                loadMotores();
+            }
+            if (section === 'historial') {
+                loadHistory();
+            }
+        }
+
+        // CHAT
+        function sendMessage() {
+            const input = document.getElementById('input-message');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            input.value = '';
+
+            // Show loading
+            addMessage('assistant', '<div class="loading-spinner"></div> Procesando...');
+
+            // Send to API
+            fetch(`${API_URL}/procesar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mensaje: message, contexto: {} })
+            })
+            .then(r => r.json())
+            .then(data => {
+                // Remove loading message
+                const lastMsg = document.getElementById('chat-history').lastChild;
+                if (lastMsg && lastMsg.textContent.includes('Procesando')) {
+                    lastMsg.remove();
+                }
+
+                // Show response
+                const response = data.respuesta || 'Sin respuesta';
+                addMessage('assistant', response, data.motor_id, data.tiempo_ms);
+
+                // Update motor badge
+                if (data.motor_id) {
+                    document.getElementById('current-motor').textContent = `Motor: ${data.motor_id}`;
+                    document.getElementById('current-motor').style.display = 'inline-block';
+                }
+                if (data.tiempo_ms) {
+                    document.getElementById('response-time').textContent = `${data.tiempo_ms}ms`;
+                    document.getElementById('response-time').style.display = 'inline-block';
+                }
+
+                // Add to history
+                history.push({
+                    timestamp: new Date(),
+                    motor: data.motor_id,
+                    message: message,
+                    response: response
+                });
+            })
+            .catch(err => {
+                const lastMsg = document.getElementById('chat-history').lastChild;
+                if (lastMsg) lastMsg.remove();
+                addMessage('assistant', '❌ Error: ' + err.message);
+            });
+        }
+
+        function addMessage(type, text, motor = null, time = null) {
+            const history = document.getElementById('chat-history');
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.innerHTML = `
+                <div class="text" style="text-align: left;">${escapeHtml(text)}</div>
+                ${type === 'assistant' && time ? `<div class="message-time">${time}ms</div>` : ''}
+            `;
+            history.appendChild(msg);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // MOTORES
+        function loadMotores() {
+            fetch(`${API_URL}/motores`)
+                .then(r => r.json())
+                .then(data => {
+                    const grid = document.getElementById('motors-grid');
+                    grid.innerHTML = '';
+
+                    if (!data.motores || data.motores.length === 0) {
+                        grid.innerHTML = '<div class="empty-state">No hay motores disponibles</div>';
+                        return;
+                    }
+
+                    data.motores.forEach(motor => {
+                        const card = document.createElement('div');
+                        card.className = 'motor-card';
+                        card.innerHTML = `
+                            <div class="motor-name">${motor.nombre || motor.id}</div>
+                            <div class="motor-desc">${motor.descripcion || 'Motor especializado'}</div>
+                            <div class="motor-info">
+                                <span>SDK: ${motor.sdk_preferido || 'auto'}</span>
+                                <span>${motor.activo ? '✓ Activo' : '✗ Inactivo'}</span>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    document.getElementById('motor-count').textContent = data.total || 0;
+                })
+                .catch(err => console.error('Error loading motores:', err));
+        }
+
+        // HISTORY
+        function loadHistory() {
+            const list = document.getElementById('history-list');
+            if (history.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><div>Sin histórico aún</div></div>';
+                return;
+            }
+
+            list.innerHTML = history.map((item, i) => `
+                <div class="history-item">
+                    <div class="history-motor">${item.motor || 'Unknown'}</div>
+                    <div class="history-text">${escapeHtml(item.message)}</div>
+                    <div class="history-time">${new Date(item.timestamp).toLocaleTimeString('es-ES')}</div>
+                </div>
+            `).join('');
+        }
+
+        // SETTINGS
+        function saveSettings() {
+            const settings = {
+                claude: document.getElementById('api-claude').value,
+                groq: document.getElementById('api-groq').value,
+                zai: document.getElementById('api-zai').value,
+                ollama_url: document.getElementById('ollama-url').value
+            };
+
+            localStorage.setItem('aurora_settings', JSON.stringify(settings));
+            alert('Configuración guardada');
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('aurora_settings') || '{}');
+            document.getElementById('api-claude').value = settings.claude || '';
+            document.getElementById('api-groq').value = settings.groq || '';
+            document.getElementById('api-zai').value = settings.zai || '';
+            document.getElementById('ollama-url').value = settings.ollama_url || 'http://localhost:11434';
+        }
+
+        // KEYBOARD
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // INIT
+        window.addEventListener('load', () => {
+            loadSettings();
+            loadMotores();
+        });
+    </script>
+</body>
+</html>

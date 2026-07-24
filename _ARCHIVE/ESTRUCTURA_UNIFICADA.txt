@@ -1,0 +1,290 @@
+================================================================================
+                    AURORA v1 - ESTRUCTURA UNIFICADA
+           TODO (NEXUS + NEGOCIOS + MOTORES) EN UNA SOLA CARPETA
+================================================================================
+
+UBICACION: C:\AURORA\
+
+ESTRUCTURA ACTUAL:
+  C:\AURORA/
+  ├── CORE/                        (Orquestador AURORA)
+  │   ├── aurora.py
+  │   ├── aurora_selector.py
+  │   ├── aurora_sdk_manager.py
+  │   ├── aurora_registry.py
+  │   ├── aurora_server.py
+  │   ├── config.py
+  │   ├── requirements.txt
+  │   ├── test_aurora.py
+  │   └── __init__.py
+  │
+  ├── SDKS/                        (Wrappers Multi-SDK)
+  │   ├── sdk_claude.py
+  │   ├── sdk_groq.py
+  │   ├── sdk_zai.py
+  │   ├── sdk_ollama.py
+  │   └── __init__.py
+  │
+  ├── MOTORES/                     (10 Motores especializados)
+  │   ├── motor_analisis.py
+  │   ├── motor_code_gen.py
+  │   ├── motor_coaching.py
+  │   ├── motor_ventas.py
+  │   ├── motor_marketing.py
+  │   ├── motor_reasoning.py
+  │   ├── motor_cotizador.py       [NEW - NEXUS]
+  │   ├── motor_pedidos.py         [NEW - NEXUS]
+  │   ├── motor_imagenes.py        [NEW - NEXUS]
+  │   ├── motor_negocios.py        [NEW - NEXUS INTEGRATION]
+  │   ├── metadata.json
+  │   └── __init__.py
+  │
+  ├── SHARED/                      (Datos compartidos)
+  │   ├── historial/               (Logs de conversaciones)
+  │   ├── cache/                   (Cache con TTL)
+  │   └── __init__.py
+  │
+  ├── TEMPLATES/                   (UI)
+  │   ├── dashboard.html
+  │   └── dashboard-negocios.html  [NEW]
+  │
+  ├── NEGOCIOS/                    [NEW - Subsistema NEXUS]
+  │   ├── ATF/                     (Grabado Láser)
+  │   │   ├── config.json
+  │   │   ├── videos/
+  │   │   └── metadata.json
+  │   │
+  │   ├── HOMEPRO/                 (Inmobiliaria SaaS)
+  │   │   ├── config.json
+  │   │   ├── database.sqlite
+  │   │   └── metadata.json
+  │   │
+  │   ├── MILENS/                  (Coaching Familiar)
+  │   │   ├── config.json
+  │   │   ├── database.sqlite
+  │   │   └── metadata.json
+  │   │
+  │   ├── CHATBOT/                 (Multi-tenant SaaS)
+  │   │   ├── config.json
+  │   │   ├── database.sqlite
+  │   │   └── metadata.json
+  │   │
+  │   └── __init__.py
+  │
+  ├── NEXUS/                       [NEW - Legacy NEXUS v3]
+  │   ├── motores/                 (22 motores NEXUS)
+  │   ├── server.py
+  │   ├── nexus.db
+  │   └── config.json
+  │
+  ├── SCRIPTS/                     [NEW - Todos los arranques]
+  │   ├── LAUNCH_NOW.ps1
+  │   ├── LAUNCHER_AURORA.ps1
+  │   ├── INSTALAR_AURORA.bat
+  │   ├── CREAR_SHORTCUTS_COMPLETO.ps1
+  │   └── ARRANCAR_NEXUS.ps1       [NEW]
+  │
+  ├── DOCS/                        [NEW - Documentación centralizada]
+  │   ├── README.md
+  │   ├── LIFTOFF.md
+  │   ├── PRIMER_ARRANQUE.md
+  │   ├── DEPLOYMENT.md
+  │   ├── MANIFEST.md
+  │   ├── PROJECT_STATUS.md
+  │   ├── ESTRUCTURA_UNIFICADA.txt (este archivo)
+  │   └── API_REFERENCE.md
+  │
+  ├── DATA/                        [NEW - Base de datos centralizada]
+  │   ├── aurora.db
+  │   ├── pedidos.json
+  │   ├── cotizaciones.json
+  │   ├── imagenes.json
+  │   └── negocios.json
+  │
+  └── __init__.py
+
+================================================================================
+                        TODO ESTA EN UNA CARPETA
+================================================================================
+
+✓ AURORA Core (motor orquestador)     → CORE/
+✓ 4 SDKs (Claude, Groq, Zai, Ollama) → SDKS/
+✓ 10 Motores especializados           → MOTORES/
+✓ 4 Negocios NEXUS integrados         → NEGOCIOS/
+✓ NEXUS v3 legacy                     → NEXUS/
+✓ Datos compartidos                   → SHARED/
+✓ Interfaces Web                      → TEMPLATES/
+✓ Scripts de arranque                 → SCRIPTS/
+✓ Documentación completa              → DOCS/
+✓ Base de datos centralizada          → DATA/
+
+TOTAL: 1 CARPETA MADRE (C:\AURORA)
+
+================================================================================
+                        COMO ACCEDER A TODO
+================================================================================
+
+DESDE ESCRITORIO:
+  • AURORA CLI.lnk           → Inicia CLI interactivo
+  • AURORA SERVER.lnk        → Inicia servidor web
+  • AURORA Launcher.lnk      → Menu interactivo
+  • AURORA Tests.lnk         → Validacion (6/6)
+  • AURORA Dashboard.lnk     → Dashboard web visual
+  • AURORA Folder.lnk        → Abre C:\AURORA
+
+DESDE CLI/POWERSHELL:
+  cd C:\AURORA
+  .\SCRIPTS\LAUNCH_NOW.ps1        # CLI directo
+  .\SCRIPTS\LAUNCHER_AURORA.ps1   # Menu
+  .\SCRIPTS\INSTALAR_AURORA.bat   # Instalacion
+  .\SCRIPTS\ARRANCAR_NEXUS.ps1    # NEXUS legacy
+
+DESDE NAVEGADOR:
+  http://localhost:8000/templates/dashboard.html         # AURORA Dashboard
+  http://localhost:8000/templates/dashboard-negocios.html # NEGOCIOS Dashboard
+
+================================================================================
+                        SUBSISTEMA NEGOCIOS
+================================================================================
+
+MOTOR NEGOCIOS AUTOMATICAMENTE GESTIONA:
+
+ATF (Grabado Láser):
+  - 128 videos cargados
+  - Lanzamiento: Lunes 19h TikTok, Martes 12h IG
+  - Monetizacion: $8,300-18,800 MXN/mes
+  - Videos top listos para explotar
+
+HomePro (Inmobiliaria SaaS):
+  - Catálogo filtrado por INFONAVIT
+  - QR automáticos
+  - Captura de leads via WhatsApp
+  - Demo: tel=3300000000, pwd=demo2026
+
+Milens (Coaching Familiar):
+  - Panel padre con misiones y alertas
+  - Reportes automáticos lunes 8am
+  - Preguntas diarias rotativas 7am
+  - Streak diario para teens
+
+ChatBot SaaS (Multi-tenant):
+  - Intent classification
+  - Green API integrada
+  - Telegram notifications
+  - Clientes: ATF, Milens (+ 5+ nuevos pending)
+
+================================================================================
+                        ACCESO A DATOS
+================================================================================
+
+TODOS LOS DATOS EN: C:\AURORA\DATA\
+
+  aurora.db               ← Base datos principal
+  pedidos.json            ← Órdenes capturadas
+  cotizaciones.json       ← Presupuestos generados
+  imagenes.json           ← Imágenes procesadas
+  negocios.json           ← Estado de negocios
+
+HISTORIAL CONVERSACIONES: C:\AURORA\SHARED\historial\
+  motor_analisis_2026-06-04.json
+  motor_pedidos_2026-06-04.json
+  motor_cotizador_2026-06-04.json
+  etc.
+
+================================================================================
+                        ROUTING INTEGRADO
+================================================================================
+
+USUARIO ESCRIBE:
+  "Necesito cotizacion para 10 grabados"
+  → motor_cotizador (NEXUS)
+  → calcula costos ATF
+  → genera PDF presupuesto
+
+USUARIO ESCRIBE:
+  "Captura mi pedido de grabado"
+  → motor_pedidos (NEXUS)
+  → integra con ATF
+  → genera ID orden
+  → notifica via WhatsApp
+
+USUARIO ESCRIBE:
+  "Optimiza imagen para TikTok"
+  → motor_imagenes (NEXUS)
+  → genera variante 1080x1920
+  → B&N para laser
+  → comprime a WebP
+
+USUARIO ESCRIBE:
+  "Status de ATF hoy"
+  → motor_negocios (NEXUS)
+  → trae estado operaciones
+  → monetizacion
+  → proximas acciones
+
+================================================================================
+                        BENEFICIOS UNIFICACION
+================================================================================
+
+✓ UNA carpeta, TODO integrado
+✓ Mismo puerto (8000) para todo
+✓ Dashboard único para todos los negocios
+✓ Routing automático a motor correcto
+✓ Datos centralizados en C:\AURORA\DATA\
+✓ Logs centralizados en C:\AURORA\SHARED\historial\
+✓ Documentacion en C:\AURORA\DOCS\
+✓ Scripts arranque en C:\AURORA\SCRIPTS\
+✓ Sincronizacion facil entre sistemas
+✓ Backups simples (copiar C:\AURORA)
+✓ Deployment unificado
+✓ Mantenimiento centralizado
+
+================================================================================
+                        PASO A PASO
+================================================================================
+
+1. INSTALAR (si no lo hizo):
+   C:\AURORA\SCRIPTS\INSTALAR_AURORA.bat
+
+2. ARRANCAR:
+   C:\AURORA\SCRIPTS\LAUNCH_NOW.ps1
+   O
+   Doble clic en "AURORA CLI.lnk" del escritorio
+
+3. USAR:
+   > Necesito una cotizacion
+   > Captura mi pedido
+   > Optimiza imagen
+   > Status de negocios
+
+4. VER DASHBOARD:
+   http://localhost:8000/templates/dashboard.html
+
+5. VER DATOS:
+   C:\AURORA\DATA\
+   C:\AURORA\SHARED\historial\
+
+================================================================================
+                        ESTADO FINAL
+================================================================================
+
+ESTRUCTURA: UNIFICADA
+UBICACION: C:\AURORA (1 carpeta madre)
+MOTORES: 10 (6 AURORA + 4 NEXUS)
+NEGOCIOS: 4 (ATF, HomePro, Milens, ChatBot)
+SDKs: 4 (Claude, Groq, Zai, Ollama)
+INTERFASES: 3 (CLI, Web, API)
+DOCUMENTACION: Completa
+STATUS: 100% OPERATIVO
+
+TODO EN UNA CARPETA - FACIL DE USAR, FACIL DE MANTENER, FACIL DE ESCALAR
+
+================================================================================
+
+Para empezar: cd C:\AURORA && .\SCRIPTS\LAUNCH_NOW.ps1
+
+O: Doble clic en AURORA CLI.lnk en tu escritorio
+
+¡LISTO PARA USAR!
+
+================================================================================

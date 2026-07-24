@@ -1,0 +1,23 @@
+{
+  "_meta": "Reglas de autonomía supervisada de AURORA para administrar redes. Definidas por Anuar 2026-06-20.",
+  "modo": "autonomia_supervisada",
+  "aprobacion_contenido": "por_lote_mensual",
+  "publicar_sin_preguntar_si_lote_aprobado": true,
+  "cadencia_lote": "un mes de videos a la vez",
+  "pauta_autonoma_semanal_usd": 1,
+  "pauta_nota": "1 USD es simbólico; no alcanza para pauta real, así que en la práctica AURORA SIEMPRE pide autorización antes de gastar en anuncios. Subir este número si algún día se quiere pauta automática.",
+  "objetivo_permanente": "vender y monetizar ATF (y MILENS) con buena práctica real",
+  "requiere_OK_siempre": [
+    "cerrar venta o comprometer precio",
+    "gastar en pauta real",
+    "publicar algo fuera del lote/plantillas aprobadas",
+    "cambiar precios u ofertas"
+  ],
+  "aurora_hace_sola": [
+    "publicar el contenido del lote aprobado en el mejor horario",
+    "responder dudas con guiones aprobados y capturar leads en ORACLE",
+    "dar seguimiento a leads",
+    "avisar a Anuar lo importante (lead caliente / decisión requerida)"
+  ],
+  "actualizado": "2026-06-20"
+}

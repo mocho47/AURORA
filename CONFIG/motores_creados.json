@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "medidor_dxf",
+    "meta": {
+      "id": "medidor_dxf",
+      "nombre": "Medidor DXF",
+      "descripcion": "Medidor de ancho y alto de archivos DXF",
+      "categoria": "Medición"
+    },
+    "creado": "2026-07-11T15:56:24"
+  },
+  {
+    "slug": "que_reciba_dos_numeros_y",
+    "meta": {
+      "id": "que_reciba_dos_numeros_y",
+      "nombre": "Motor de Suma de Números",
+      "descripcion": "Recibe dos números y devuelve su suma",
+      "categoria": "Matemáticas"
+    },
+    "creado": "2026-07-16T02:46:07"
+  }
+]

@@ -1,0 +1,23 @@
+PASS | /
+PASS | /health
+PASS | /chat
+PASS | /escaparate
+PASS | /oracle
+PASS | /manifest.json
+PASS | /sw.js
+PASS | /api/acceso/estado
+FALLA(0) | /api/acceso/listar
+PASS | /api/comandos
+PASS | /api/motores/listar
+PASS | /api/modulos
+PASS | /api/video/listar
+PASS | /api/publicador/estado
+PASS | /api/whatsapp/estado
+PASS | /api/oracle/leads
+PASS | /api/oracle/ordenes
+PASS | /api/oracle/resumen
+PASS | /api/taller/generadores
+PASS | /api/chat/history?sessionId=x
+FALLA(0) | /api/redes/comentarios?limite=3
+
+>>> 19/21 GET responden <<<

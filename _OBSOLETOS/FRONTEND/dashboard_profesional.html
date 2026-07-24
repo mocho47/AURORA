@@ -1,0 +1,627 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURORA v3 — Panel de Control</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#090d1a;--bg2:#0f1525;--bg3:#141d35;
+  --blue:#2563eb;--blue2:#1d4ed8;--blue-light:#3b82f6;
+  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;
+  --text:#e2e8f0;--sub:#94a3b8;--border:#1e293b;
+  --card:#111827;--radius:10px
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#0f1525 0%,#1a2744 100%);border-bottom:2px solid var(--blue);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff}
+.logo-text h1{font-size:1.35em;font-weight:700;color:#fff}
+.logo-text span{font-size:.78em;color:var(--sub)}
+.header-right{display:flex;gap:16px;align-items:center}
+.status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:6px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-lbl{font-size:.82em;color:var(--sub)}
+.sys-time{font-size:.82em;color:var(--sub);background:var(--bg3);padding:5px 12px;border-radius:6px;border:1px solid var(--border)}
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:2px}
+.tab{padding:13px 20px;cursor:pointer;font-size:.88em;font-weight:600;color:var(--sub);border-bottom:3px solid transparent;transition:all .18s;user-select:none;white-space:nowrap}
+.tab:hover{color:var(--text);background:rgba(37,99,235,.07)}
+.tab.active{color:#fff;border-bottom-color:var(--blue);background:rgba(37,99,235,.1)}
+main{padding:24px;max-width:1440px;margin:0 auto}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:900px){.g4,.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g4,.g3,.g2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-lbl{font-size:.74em;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.card-val{font-size:2.2em;font-weight:700;color:var(--green)}
+.card-note{font-size:.78em;color:var(--sub);margin-top:5px}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.mrow:last-child{border:none}
+.mlbl{font-size:.86em;color:var(--sub)}
+.mval{font-size:.92em;font-weight:600}
+.tbl-wrap{overflow-x:auto;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:.86em}
+th{background:var(--bg3);color:var(--sub);text-align:left;padding:10px 13px;font-size:.76em;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(37,99,235,.04)}
+.sem{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.ROJO{background:var(--red);box-shadow:0 0 5px var(--red)}
+.AMARILLO{background:var(--yellow);box-shadow:0 0 5px var(--yellow)}
+.VERDE{background:var(--green);box-shadow:0 0 5px var(--green)}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.75em;font-weight:600;white-space:nowrap}
+.b-PENDIENTE{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.4)}
+.b-EN_PROCESO{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.4)}
+.b-TERMINADO{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.4)}
+.b-ENTREGADO{background:rgba(148,163,184,.12);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.btn{padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-size:.84em;font-weight:600;transition:all .16s;line-height:1}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:var(--blue2)}
+.btn-g{background:var(--green);color:#000}.btn-g:hover{background:#16a34a}
+.btn-r{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.35)}.btn-r:hover{background:var(--red);color:#fff}
+.btn-o{background:transparent;color:var(--blue-light);border:1px solid rgba(59,130,246,.45)}.btn-o:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-sm{padding:5px 11px;font-size:.78em}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.sec-title{font-size:1.2em;font-weight:700}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:26px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:1.05em;margin-bottom:18px;color:var(--blue-light);font-weight:700}
+.frow{margin-bottom:13px}
+.frow label{display:block;font-size:.79em;color:var(--sub);margin-bottom:4px}
+.frow input,.frow select,.frow textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:7px;font-size:.88em;outline:none;transition:border .15s}
+.frow input:focus,.frow select,.frow textarea:focus{border-color:var(--blue)}
+.frow textarea{min-height:75px;resize:vertical}
+.fcols{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.mactions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.voice-btn{background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;border:none;border-radius:50px;padding:11px 22px;font-size:.9em;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(37,99,235,.35);transition:all .18s;margin-top:4px}
+.voice-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(37,99,235,.45)}
+.quick-btns{display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;bottom:26px;right:26px;background:var(--bg2);border:1px solid var(--blue);color:var(--text);padding:12px 20px;border-radius:9px;font-size:.86em;z-index:999;opacity:0;transition:opacity .28s;pointer-events:none;max-width:320px;line-height:1.4}
+.toast.show{opacity:1}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.empty{text-align:center;padding:50px 16px;color:var(--sub)}
+.empty-icon{font-size:2.8em;margin-bottom:10px}
+select option{background:var(--bg3)}
+.chip{display:inline-block;background:rgba(59,130,246,.13);color:#60a5fa;border:1px solid rgba(59,130,246,.3);padding:2px 9px;border-radius:10px;font-size:.76em}
+.saldo-lbl{font-size:1.05em;color:var(--yellow);font-weight:700}
+.filter-bar{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <div class="logo-text">
+      <h1>AURORA v3</h1>
+      <span>Sistema Integral de Marketing y Taller</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span><span class="status-dot"></span><span class="status-lbl" id="sys-status">Conectando...</span></span>
+    <span class="sys-time" id="sys-time">—</span>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="showTab('panel')">Panel</div>
+  <div class="tab" onclick="showTab('ordenes')">Ordenes de Trabajo</div>
+  <div class="tab" onclick="showTab('clientes')">Clientes</div>
+  <div class="tab" onclick="showTab('proveedores')">Proveedores</div>
+  <div class="tab" onclick="showTab('publicador')">Publicador</div>
+</nav>
+
+<main>
+
+<!-- ══════════ PANEL ══════════ -->
+<div class="section active" id="sec-panel">
+  <div class="grid g4" style="margin-bottom:18px">
+    <div class="card"><div class="card-lbl">Ordenes Activas</div><div class="card-val" id="m-ord">—</div><div class="card-note">Pendientes + En proceso</div></div>
+    <div class="card"><div class="card-lbl">Clientes Registrados</div><div class="card-val" id="m-cli">—</div><div class="card-note">En directorio</div></div>
+    <div class="card"><div class="card-lbl">Proveedores</div><div class="card-val" id="m-prov">—</div><div class="card-note">En directorio</div></div>
+    <div class="card"><div class="card-lbl">Estado del Sistema</div><div class="card-val" style="font-size:1.3em;color:var(--green)" id="m-sys">OPERATIVO</div><div class="card-note">AURORA v3.0</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-lbl" style="margin-bottom:14px">Resumen de Ordenes</div>
+      <div class="mrow"><span class="mlbl">Pendientes</span><span class="mval" id="c-pend" style="color:var(--yellow)">0</span></div>
+      <div class="mrow"><span class="mlbl">En Proceso</span><span class="mval" id="c-proc" style="color:var(--blue-light)">0</span></div>
+      <div class="mrow"><span class="mlbl">Terminadas (hoy)</span><span class="mval" id="c-term" style="color:var(--green)">0</span></div>
+      <div class="mrow"><span class="mlbl"><span class="sem ROJO"></span>Sin anticipo</span><span class="mval" id="c-rojo" style="color:var(--red)">0</span></div>
+      <div class="mrow"><span class="mlbl"><span class="sem AMARILLO"></span>Anticipo parcial</span><span class="mval" id="c-amar" style="color:var(--yellow)">0</span></div>
+      <div class="mrow"><span class="mlbl"><span class="sem VERDE"></span>Pagadas completo</span><span class="mval" id="c-verd" style="color:var(--green)">0</span></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl" style="margin-bottom:14px">Acciones Rapidas</div>
+      <div class="quick-btns">
+        <button class="btn btn-p" onclick="showTab('ordenes');abrirModalOrden()">+ Nueva Orden de Trabajo</button>
+        <button class="btn btn-o" onclick="showTab('clientes');abrirModalCliente()">+ Nuevo Cliente</button>
+        <button class="btn btn-o" onclick="showTab('proveedores');abrirModalProveedor()">+ Nuevo Proveedor</button>
+        <button class="voice-btn" onclick="leerReporte()">&#127908; Escuchar Reporte del Dia</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ORDENES ══════════ -->
+<div class="section" id="sec-ordenes">
+  <div class="sec-hd">
+    <span class="sec-title">Ordenes de Trabajo</span>
+    <button class="btn btn-p" onclick="abrirModalOrden()">+ Nueva Orden</button>
+  </div>
+  <div class="filter-bar">
+    <button class="btn btn-sm btn-o" onclick="filtrarOrdenes('')">Todas</button>
+    <button class="btn btn-sm" style="background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.4)" onclick="filtrarOrdenes('PENDIENTE')">Pendientes</button>
+    <button class="btn btn-sm" style="background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.4)" onclick="filtrarOrdenes('EN_PROCESO')">En Proceso</button>
+    <button class="btn btn-sm" style="background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.4)" onclick="filtrarOrdenes('TERMINADO')">Terminadas</button>
+    <button class="btn btn-sm" style="background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.3)" onclick="filtrarOrdenes('ENTREGADO')">Entregadas</button>
+  </div>
+  <div class="card tbl-wrap">
+    <table>
+      <thead><tr><th>Folio</th><th>Cliente</th><th>Descripcion</th><th>Costo</th><th>Anticipo</th><th>Saldo</th><th>Semaforo</th><th>Estado</th><th>Entrega Est.</th><th>Acciones</th></tr></thead>
+      <tbody id="body-ordenes"><tr><td colspan="10" style="text-align:center;color:var(--sub);padding:38px">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ CLIENTES ══════════ -->
+<div class="section" id="sec-clientes">
+  <div class="sec-hd">
+    <span class="sec-title">Directorio de Clientes</span>
+    <button class="btn btn-p" onclick="abrirModalCliente()">+ Nuevo Cliente</button>
+  </div>
+  <div class="card tbl-wrap">
+    <table>
+      <thead><tr><th>Nombre</th><th>Telefono</th><th>Email</th><th>Direccion</th><th>Notas</th><th>Fecha Alta</th><th>Acciones</th></tr></thead>
+      <tbody id="body-clientes"><tr><td colspan="7" style="text-align:center;color:var(--sub);padding:38px">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ PROVEEDORES ══════════ -->
+<div class="section" id="sec-proveedores">
+  <div class="sec-hd">
+    <span class="sec-title">Directorio de Proveedores</span>
+    <button class="btn btn-p" onclick="abrirModalProveedor()">+ Nuevo Proveedor</button>
+  </div>
+  <div class="card tbl-wrap">
+    <table>
+      <thead><tr><th>Nombre</th><th>Telefono</th><th>Email</th><th>Categoria</th><th>Notas</th><th>Fecha Alta</th><th>Acciones</th></tr></thead>
+      <tbody id="body-proveedores"><tr><td colspan="7" style="text-align:center;color:var(--sub);padding:38px">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ PUBLICADOR ══════════ -->
+<div class="section" id="sec-publicador">
+  <div class="sec-hd"><span class="sec-title">Publicador de Contenido</span></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-lbl" style="margin-bottom:14px">Crear Publicacion</div>
+      <div class="frow"><label>Contenido del post</label><textarea id="pub-txt" placeholder="Escribe el mensaje para tus redes sociales..."></textarea></div>
+      <div class="frow">
+        <label>Redes sociales</label>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:5px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.88em"><input type="checkbox" id="pub-fb"> Facebook</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.88em"><input type="checkbox" id="pub-ig"> Instagram</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.88em"><input type="checkbox" id="pub-tt"> TikTok</label>
+        </div>
+      </div>
+      <div class="frow"><label>Programar para (dejar vacio = ahora)</label><input type="datetime-local" id="pub-hora"></div>
+      <button class="btn btn-p" style="width:100%;margin-top:4px" onclick="publicar()">Publicar</button>
+    </div>
+    <div class="card">
+      <div class="card-lbl" style="margin-bottom:14px">Directivas del Publicador</div>
+      <div style="font-size:.85em;line-height:1.7">
+        <div class="mrow"><span class="mlbl">Marca</span><span class="mval" style="font-size:.84em">ATF Excelencia</span></div>
+        <div class="mrow"><span class="mlbl">Tono</span><span class="mval" style="font-size:.84em">Profesional, confiable</span></div>
+        <div class="mrow"><span class="mlbl">Publico objetivo</span><span class="mval" style="font-size:.84em">18-45 anos, CDMX</span></div>
+        <div class="mrow"><span class="mlbl">Mejor horario</span><span class="mval" style="font-size:.84em">7-9am y 6-8pm</span></div>
+        <div class="mrow"><span class="mlbl">Hashtags base</span><span class="mval" style="font-size:.84em">#ATF #Excelencia</span></div>
+        <div class="mrow"><span class="mlbl">CTA preferido</span><span class="mval" style="font-size:.84em">Llama ya / WhatsApp</span></div>
+      </div>
+      <div style="margin-top:13px;padding:11px;background:var(--bg3);border-radius:7px;font-size:.8em;color:var(--sub)">
+        Para modificar estas directivas edita <strong style="color:var(--text)">DIRECTIVAS.md</strong> en la raiz del proyecto.
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══ MODAL ORDEN ══ -->
+<div class="modal-bg" id="m-orden">
+<div class="modal">
+  <h3 id="t-orden">Nueva Orden de Trabajo</h3>
+  <input type="hidden" id="o-id">
+  <div class="frow"><label>Cliente *</label><select id="o-cli"><option value="">-- Seleccionar cliente --</option></select></div>
+  <div class="frow"><label>Descripcion del trabajo *</label><textarea id="o-desc" placeholder="Ej: Sublimacion 24 playeras talla M, diseno adjunto"></textarea></div>
+  <div class="fcols">
+    <div class="frow"><label>Costo total ($)</label><input type="number" id="o-costo" placeholder="0.00" min="0" step="0.01"></div>
+    <div class="frow"><label>Anticipo recibido ($)</label><input type="number" id="o-anticipo" placeholder="0.00" min="0" step="0.01"></div>
+  </div>
+  <div class="fcols">
+    <div class="frow"><label>Fecha de entrega estimada</label><input type="date" id="o-fecha"></div>
+    <div class="frow"><label>Estado</label>
+      <select id="o-estado"><option value="PENDIENTE">Pendiente</option><option value="EN_PROCESO">En Proceso</option><option value="TERMINADO">Terminado</option><option value="ENTREGADO">Entregado</option></select>
+    </div>
+  </div>
+  <div class="frow"><label>Notas</label><input type="text" id="o-notas" placeholder="Instrucciones especiales, referencias..."></div>
+  <div class="mactions">
+    <button class="btn btn-r" onclick="cerrarM('m-orden')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarOrden()">Guardar Orden</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL COMPLETAR ══ -->
+<div class="modal-bg" id="m-completar">
+<div class="modal">
+  <h3>Completar Orden y Notificar al Cliente</h3>
+  <input type="hidden" id="comp-id">
+  <div style="background:var(--bg3);border-radius:8px;padding:13px;margin-bottom:15px">
+    <div style="font-size:.78em;color:var(--sub)">Folio</div>
+    <div style="font-weight:700;margin-bottom:4px" id="comp-folio">—</div>
+    <div style="font-size:.78em;color:var(--sub)">Cliente</div>
+    <div id="comp-cliente">—</div>
+    <div style="margin-top:9px;font-size:.84em">Saldo pendiente: <span class="saldo-lbl" id="comp-saldo">$0.00</span></div>
+  </div>
+  <div class="frow"><label>Horario de recogida</label><input type="text" id="comp-horario" placeholder="Ej: manana de 9am a 6pm"></div>
+  <div class="frow"><label>Mensaje personalizado (dejar vacio = automatico)</label><textarea id="comp-msg" placeholder="Se generara automaticamente si lo dejas en blanco..."></textarea></div>
+  <div class="mactions">
+    <button class="btn btn-r" onclick="cerrarM('m-completar')">Cancelar</button>
+    <button class="btn btn-g" onclick="ejecutarCompletar()">Marcar Terminada + Enviar WhatsApp</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL CLIENTE ══ -->
+<div class="modal-bg" id="m-cliente">
+<div class="modal">
+  <h3 id="t-cliente">Nuevo Cliente</h3>
+  <input type="hidden" id="cli-id">
+  <div class="frow"><label>Nombre completo *</label><input type="text" id="cli-nombre" placeholder="Juan Perez Garcia"></div>
+  <div class="fcols">
+    <div class="frow"><label>Telefono (10 digitos)</label><input type="tel" id="cli-tel" placeholder="5512345678"></div>
+    <div class="frow"><label>Email</label><input type="email" id="cli-email" placeholder="correo@ejemplo.com"></div>
+  </div>
+  <div class="frow"><label>Direccion</label><input type="text" id="cli-dir" placeholder="Calle, Colonia, Ciudad"></div>
+  <div class="frow"><label>Notas</label><input type="text" id="cli-notas" placeholder="Referencias, preferencias..."></div>
+  <div class="mactions">
+    <button class="btn btn-r" onclick="cerrarM('m-cliente')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarCliente()">Guardar Cliente</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL PROVEEDOR ══ -->
+<div class="modal-bg" id="m-proveedor">
+<div class="modal">
+  <h3 id="t-prov">Nuevo Proveedor</h3>
+  <input type="hidden" id="prov-id">
+  <div class="frow"><label>Nombre / Empresa *</label><input type="text" id="prov-nombre" placeholder="Distribuidora XYZ SA"></div>
+  <div class="fcols">
+    <div class="frow"><label>Telefono</label><input type="tel" id="prov-tel" placeholder="5512345678"></div>
+    <div class="frow"><label>Email</label><input type="email" id="prov-email" placeholder="ventas@proveedor.com"></div>
+  </div>
+  <div class="fcols">
+    <div class="frow"><label>Categoria</label><input type="text" id="prov-cat" placeholder="Telas, Tintas, Equipos..."></div>
+    <div class="frow"><label>Notas</label><input type="text" id="prov-notas" placeholder="Dias de entrega, credito..."></div>
+  </div>
+  <div class="mactions">
+    <button class="btn btn-r" onclick="cerrarM('m-proveedor')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarProveedor()">Guardar Proveedor</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── UTILS ────────────────────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+function toast(msg,tipo='ok'){
+  const t=$('toast');t.textContent=msg;
+  t.className='toast show '+(tipo==='err'?'err':'ok');
+  setTimeout(()=>{t.className='toast'},3200);
+}
+function fmt(n){return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0)}
+function cerrarM(id){$(id).classList.remove('open')}
+function abrirM(id){$(id).classList.add('open')}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector('[onclick="showTab(\''+name+'\')"]').classList.add('active');
+  $('sec-'+name).classList.add('active');
+  const fn={ordenes:cargarOrdenes,clientes:cargarClientes,proveedores:cargarProveedores};
+  if(fn[name])fn[name]();
+}
+
+// ── RELOJ ────────────────────────────────────────────────────────────────────
+function reloj(){$('sys-time').textContent=new Date().toLocaleString('es-MX',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
+setInterval(reloj,1000);reloj();
+
+// ── PANEL ────────────────────────────────────────────────────────────────────
+async function actualizarPanel(){
+  try{
+    await fetch('/api/health');
+    $('sys-status').textContent='OPERATIVO';$('sys-status').style.color='var(--green)';
+  }catch{$('sys-status').textContent='DESCONECTADO';$('sys-status').style.color='var(--red)';return}
+  try{
+    const [ords,clis,provs]=await Promise.all([
+      fetch('/api/crm/ordenes').then(r=>r.json()),
+      fetch('/api/crm/clientes').then(r=>r.json()),
+      fetch('/api/crm/proveedores').then(r=>r.json())
+    ]);
+    $('m-ord').textContent=ords.filter(o=>o.estado==='PENDIENTE'||o.estado==='EN_PROCESO').length;
+    $('m-cli').textContent=clis.length;
+    $('m-prov').textContent=provs.length;
+    const hoy=new Date().toISOString().slice(0,10);
+    $('c-pend').textContent=ords.filter(o=>o.estado==='PENDIENTE').length;
+    $('c-proc').textContent=ords.filter(o=>o.estado==='EN_PROCESO').length;
+    $('c-term').textContent=ords.filter(o=>o.estado==='TERMINADO'&&(o.fecha_terminado||'').startsWith(hoy)).length;
+    $('c-rojo').textContent=ords.filter(o=>o.semaforo==='ROJO'&&o.estado!=='ENTREGADO').length;
+    $('c-amar').textContent=ords.filter(o=>o.semaforo==='AMARILLO').length;
+    $('c-verd').textContent=ords.filter(o=>o.semaforo==='VERDE').length;
+  }catch(e){}
+}
+setInterval(actualizarPanel,30000);
+
+// ── REPORTE DE VOZ ───────────────────────────────────────────────────────────
+async function leerReporte(){
+  if(!window.speechSynthesis){toast('Tu navegador no soporta voz','err');return}
+  window.speechSynthesis.cancel();
+  let txt='Buenos dias. Aqui el reporte de AURORA. ';
+  try{
+    const ords=await fetch('/api/crm/ordenes').then(r=>r.json());
+    const pend=ords.filter(o=>o.estado==='PENDIENTE').length;
+    const proc=ords.filter(o=>o.estado==='EN_PROCESO').length;
+    const term=ords.filter(o=>o.estado==='TERMINADO').length;
+    const sinAnt=ords.filter(o=>o.semaforo==='ROJO'&&o.estado!=='ENTREGADO').length;
+    txt+=`Tienes ${pend} ordenes pendientes y ${proc} en proceso. `;
+    if(term)txt+=`${term} ordenes estan terminadas esperando entrega. `;
+    if(sinAnt)txt+=`Atencion: ${sinAnt} ordenes no tienen anticipo registrado. Revisa el semaforo. `;
+    else txt+=`Todas las ordenes activas tienen anticipo registrado. `;
+    txt+='Que tengas un excelente dia de trabajo.';
+  }catch{txt+='No se pudo obtener informacion del sistema.'}
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='es-MX';u.rate=0.93;u.pitch=0.88;
+  const waitForVoices=()=>new Promise(res=>{
+    const v=window.speechSynthesis.getVoices();
+    if(v.length)return res(v);
+    window.speechSynthesis.onvoiceschanged=()=>res(window.speechSynthesis.getVoices());
+  });
+  const voices=await waitForVoices();
+  const voz=voices.find(v=>v.lang==='es-MX'&&/male/i.test(v.name))
+            ||voices.find(v=>v.lang==='es-MX')
+            ||voices.find(v=>v.lang.startsWith('es'));
+  if(voz)u.voice=voz;
+  window.speechSynthesis.speak(u);
+  toast('Reproduciendo reporte...');
+}
+
+// ── ORDENES ──────────────────────────────────────────────────────────────────
+let _ords=[];let _filtro='';
+async function cargarOrdenes(){
+  $('body-ordenes').innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--sub);padding:35px">Cargando...</td></tr>';
+  try{_ords=await fetch('/api/crm/ordenes').then(r=>r.json());renderOrdenes();}
+  catch{$('body-ordenes').innerHTML='<tr><td colspan="10" style="color:var(--red);padding:16px">Error al cargar ordenes</td></tr>'}
+}
+function filtrarOrdenes(e){_filtro=e;renderOrdenes()}
+function renderOrdenes(){
+  const lista=_filtro?_ords.filter(o=>o.estado===_filtro):_ords;
+  if(!lista.length){$('body-ordenes').innerHTML='<tr><td colspan="10"><div class="empty"><div class="empty-icon">📋</div>No hay ordenes</div></td></tr>';return}
+  $('body-ordenes').innerHTML=lista.map(o=>{
+    const saldo=(o.costo_total||0)-(o.anticipo||0);
+    const acc=o.estado!=='ENTREGADO'&&o.estado!=='TERMINADO'
+      ?`<button class="btn btn-sm btn-g" onclick="abrirCompletar(${o.id})">Terminar</button>`:'';
+    return`<tr>
+      <td><strong style="color:var(--blue-light)">${o.folio||'—'}</strong></td>
+      <td>${o.cliente_nombre||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(o.descripcion||'').replace(/"/g,"'")}">${o.descripcion||'—'}</td>
+      <td>${fmt(o.costo_total)}</td>
+      <td style="color:var(--green)">${fmt(o.anticipo)}</td>
+      <td style="color:${saldo>0?'var(--yellow)':'var(--green)'}">${fmt(saldo)}</td>
+      <td><span class="sem ${o.semaforo}"></span>${o.semaforo}</td>
+      <td><span class="badge b-${o.estado}">${(o.estado||'').replace('_',' ')}</span></td>
+      <td style="font-size:.82em;color:var(--sub)">${o.fecha_entrega_est||'—'}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-o" onclick="editarOrden(${o.id})">Editar</button>
+        ${acc}
+        <button class="btn btn-sm btn-r" onclick="eliminarOrden(${o.id})">&#10005;</button>
+      </td></tr>`;
+  }).join('');
+}
+async function abrirModalOrden(){
+  await cargarCliSel();
+  $('t-orden').textContent='Nueva Orden de Trabajo';$('o-id').value='';
+  ['o-desc','o-notas'].forEach(i=>$(i).value='');
+  ['o-costo','o-anticipo'].forEach(i=>$(i).value='');
+  $('o-fecha').value='';$('o-estado').value='PENDIENTE';
+  abrirM('m-orden');
+}
+async function editarOrden(id){
+  await cargarCliSel();
+  const o=_ords.find(x=>x.id===id);if(!o)return;
+  $('t-orden').textContent='Editar Orden';$('o-id').value=id;
+  $('o-cli').value=o.cliente_id||'';$('o-desc').value=o.descripcion||'';
+  $('o-costo').value=o.costo_total||0;$('o-anticipo').value=o.anticipo||0;
+  $('o-fecha').value=o.fecha_entrega_est||'';$('o-notas').value=o.notas||'';
+  $('o-estado').value=o.estado||'PENDIENTE';abrirM('m-orden');
+}
+async function guardarOrden(){
+  const id=$('o-id').value;
+  const cli=parseInt($('o-cli').value);
+  if(!cli){toast('Selecciona un cliente','err');return}
+  const desc=$('o-desc').value.trim();
+  if(!desc){toast('La descripcion es requerida','err');return}
+  const body={cliente_id:cli,descripcion:desc,
+    costo_total:parseFloat($('o-costo').value)||0,
+    anticipo:parseFloat($('o-anticipo').value)||0,
+    fecha_entrega_est:$('o-fecha').value,notas:$('o-notas').value.trim()};
+  try{
+    if(id){body.estado=$('o-estado').value;await fetch(`/api/crm/ordenes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+    else{await fetch('/api/crm/ordenes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+    toast(id?'Orden actualizada':'Orden creada');cerrarM('m-orden');cargarOrdenes();actualizarPanel();
+  }catch{toast('Error al guardar','err')}
+}
+function abrirCompletar(id){
+  const o=_ords.find(x=>x.id===id);if(!o)return;
+  $('comp-id').value=id;$('comp-folio').textContent=o.folio||'—';
+  $('comp-cliente').textContent=o.cliente_nombre||'—';
+  $('comp-saldo').textContent=fmt((o.costo_total||0)-(o.anticipo||0));
+  $('comp-horario').value='';$('comp-msg').value='';abrirM('m-completar');
+}
+async function ejecutarCompletar(){
+  const id=$('comp-id').value;
+  const body={horario_recogida:$('comp-horario').value||'en horario de oficina',
+    mensaje_personalizado:$('comp-msg').value||null};
+  try{
+    const r=await fetch(`/api/crm/ordenes/${id}/completar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();cerrarM('m-completar');
+    const w=d.whatsapp||'';
+    toast(w.includes('enviado')?'Orden terminada. WhatsApp enviado.':
+          w.includes('sin telefono')?'Orden terminada. Cliente sin telefono.':
+          `Orden terminada. WhatsApp: ${w}`);
+    cargarOrdenes();actualizarPanel();
+  }catch{toast('Error al completar','err')}
+}
+async function eliminarOrden(id){
+  if(!confirm('¿Eliminar esta orden de trabajo?'))return;
+  await fetch(`/api/crm/ordenes/${id}`,{method:'DELETE'});
+  toast('Orden eliminada');cargarOrdenes();actualizarPanel();
+}
+
+// ── CLIENTES ─────────────────────────────────────────────────────────────────
+async function cargarClientes(){
+  try{
+    const lista=await fetch('/api/crm/clientes').then(r=>r.json());
+    if(!lista.length){$('body-clientes').innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">👥</div>Sin clientes registrados</div></td></tr>';return}
+    $('body-clientes').innerHTML=lista.map(c=>`<tr>
+      <td><strong>${c.nombre}</strong></td><td>${c.telefono||'—'}</td><td>${c.email||'—'}</td>
+      <td>${c.direccion||'—'}</td><td>${c.notas||'—'}</td>
+      <td style="color:var(--sub);font-size:.8em">${(c.fecha_alta||'').slice(0,10)}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-sm btn-o" onclick="editarCliente(${c.id})">Editar</button>
+        <button class="btn btn-sm btn-r" onclick="eliminarCliente(${c.id})">&#10005;</button>
+      </td></tr>`).join('');
+  }catch{$('body-clientes').innerHTML='<tr><td colspan="7" style="color:var(--red);padding:16px">Error al cargar clientes</td></tr>'}
+}
+async function cargarCliSel(){
+  const sel=$('o-cli'),val=sel.value;
+  const lista=await fetch('/api/crm/clientes').then(r=>r.json());
+  sel.innerHTML='<option value="">-- Seleccionar cliente --</option>'+
+    lista.map(c=>`<option value="${c.id}">${c.nombre}${c.telefono?' ('+c.telefono+')':''}</option>`).join('');
+  if(val)sel.value=val;
+}
+function abrirModalCliente(){
+  $('t-cliente').textContent='Nuevo Cliente';$('cli-id').value='';
+  ['cli-nombre','cli-tel','cli-email','cli-dir','cli-notas'].forEach(i=>$(i).value='');
+  abrirM('m-cliente');
+}
+async function editarCliente(id){
+  const lista=await fetch('/api/crm/clientes').then(r=>r.json());
+  const c=lista.find(x=>x.id===id);if(!c)return;
+  $('t-cliente').textContent='Editar Cliente';$('cli-id').value=id;
+  $('cli-nombre').value=c.nombre||'';$('cli-tel').value=c.telefono||'';
+  $('cli-email').value=c.email||'';$('cli-dir').value=c.direccion||'';
+  $('cli-notas').value=c.notas||'';abrirM('m-cliente');
+}
+async function guardarCliente(){
+  const id=$('cli-id').value;
+  const nombre=$('cli-nombre').value.trim();
+  if(!nombre){toast('El nombre es requerido','err');return}
+  const body={nombre,telefono:$('cli-tel').value.trim(),email:$('cli-email').value.trim(),
+    direccion:$('cli-dir').value.trim(),notas:$('cli-notas').value.trim()};
+  try{
+    if(id)await fetch(`/api/crm/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    else await fetch('/api/crm/clientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    toast(id?'Cliente actualizado':'Cliente registrado');
+    cerrarM('m-cliente');cargarClientes();actualizarPanel();
+  }catch{toast('Error al guardar','err')}
+}
+async function eliminarCliente(id){
+  if(!confirm('¿Eliminar este cliente?'))return;
+  await fetch(`/api/crm/clientes/${id}`,{method:'DELETE'});
+  toast('Cliente eliminado');cargarClientes();actualizarPanel();
+}
+
+// ── PROVEEDORES ───────────────────────────────────────────────────────────────
+async function cargarProveedores(){
+  try{
+    const lista=await fetch('/api/crm/proveedores').then(r=>r.json());
+    if(!lista.length){$('body-proveedores').innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">🏭</div>Sin proveedores registrados</div></td></tr>';return}
+    $('body-proveedores').innerHTML=lista.map(p=>`<tr>
+      <td><strong>${p.nombre}</strong></td><td>${p.telefono||'—'}</td><td>${p.email||'—'}</td>
+      <td><span class="chip">${p.categoria||'—'}</span></td><td>${p.notas||'—'}</td>
+      <td style="color:var(--sub);font-size:.8em">${(p.fecha_alta||'').slice(0,10)}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-sm btn-o" onclick="editarProveedor(${p.id})">Editar</button>
+        <button class="btn btn-sm btn-r" onclick="eliminarProveedor(${p.id})">&#10005;</button>
+      </td></tr>`).join('');
+  }catch{$('body-proveedores').innerHTML='<tr><td colspan="7" style="color:var(--red);padding:16px">Error al cargar proveedores</td></tr>'}
+}
+function abrirModalProveedor(){
+  $('t-prov').textContent='Nuevo Proveedor';$('prov-id').value='';
+  ['prov-nombre','prov-tel','prov-email','prov-cat','prov-notas'].forEach(i=>$(i).value='');
+  abrirM('m-proveedor');
+}
+async function editarProveedor(id){
+  const lista=await fetch('/api/crm/proveedores').then(r=>r.json());
+  const p=lista.find(x=>x.id===id);if(!p)return;
+  $('t-prov').textContent='Editar Proveedor';$('prov-id').value=id;
+  $('prov-nombre').value=p.nombre||'';$('prov-tel').value=p.telefono||'';
+  $('prov-email').value=p.email||'';$('prov-cat').value=p.categoria||'';
+  $('prov-notas').value=p.notas||'';abrirM('m-proveedor');
+}
+async function guardarProveedor(){
+  const id=$('prov-id').value;
+  const nombre=$('prov-nombre').value.trim();
+  if(!nombre){toast('El nombre es requerido','err');return}
+  const body={nombre,telefono:$('prov-tel').value.trim(),email:$('prov-email').value.trim(),
+    categoria:$('prov-cat').value.trim(),notas:$('prov-notas').value.trim()};
+  try{
+    if(id)await fetch(`/api/crm/proveedores/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    else await fetch('/api/crm/proveedores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    toast(id?'Proveedor actualizado':'Proveedor registrado');
+    cerrarM('m-proveedor');cargarProveedores();actualizarPanel();
+  }catch{toast('Error al guardar','err')}
+}
+async function eliminarProveedor(id){
+  if(!confirm('¿Eliminar este proveedor?'))return;
+  await fetch(`/api/crm/proveedores/${id}`,{method:'DELETE'});
+  toast('Proveedor eliminado');cargarProveedores();actualizarPanel();
+}
+
+// ── PUBLICADOR ────────────────────────────────────────────────────────────────
+async function publicar(){
+  const txt=$('pub-txt').value.trim();
+  if(!txt){toast('Escribe el contenido','err');return}
+  const redes=[];
+  if($('pub-fb').checked)redes.push('facebook');
+  if($('pub-ig').checked)redes.push('instagram');
+  if($('pub-tt').checked)redes.push('tiktok');
+  if(!redes.length){toast('Selecciona al menos una red','err');return}
+  try{
+    const r=await fetch('/api/publicador/crear',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contenido:txt,redes,horario_publicacion:$('pub-hora').value||null})});
+    if(r.status===401||r.status===403){toast('Requiere autenticacion JWT — ve a /api/docs','err');return}
+    const d=await r.json();
+    toast(`Publicacion ${d.estado||'creada'} — ${d.id_publicacion||''}`);
+  }catch{toast('Error al publicar','err')}
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+actualizarPanel();
+</script>
+</body>
+</html>

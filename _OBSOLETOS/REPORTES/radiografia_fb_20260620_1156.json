@@ -1,0 +1,39 @@
+{
+  "generado": "2026-06-20T11:56:37",
+  "pagina": {
+    "name": "Actualiza tus faros",
+    "fan_count": 592,
+    "followers_count": 592,
+    "id": "110364004632197"
+  },
+  "total_publicaciones_analizadas": 25,
+  "interaccion_total": 1,
+  "interaccion_promedio": 0.0,
+  "top_publicacion": {
+    "fecha": "2026-05-31T14:00",
+    "hora": 14,
+    "likes": 0,
+    "comentarios": 0,
+    "compartidos": 1,
+    "interaccion": 1,
+    "texto": "✨ Cuando la diferencia se nota desde 200 metros de distancia",
+    "url": "https://www.facebook.com/reel/2396000540882138/"
+  },
+  "mejores_horas": [
+    {
+      "hora_utc": 14,
+      "interaccion_prom": 0.1
+    },
+    {
+      "hora_utc": 18,
+      "interaccion_prom": 0.0
+    },
+    {
+      "hora_utc": 8,
+      "interaccion_prom": 0.0
+    }
+  ],
+  "insights": {
+    "nota": "Insights no disponibles con este permiso: HTTP Error 400: Bad Request"
+  }
+}

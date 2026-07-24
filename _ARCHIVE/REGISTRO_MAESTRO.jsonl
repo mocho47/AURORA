@@ -1,0 +1,4 @@
+# AURORA - Registro Maestro de Transacciones
+# Cada línea es una transacción completa registrada
+
+{"timestamp":"2026-06-08T12:30:00","tipo":"sistema","evento":"inicializacion","motores":9,"status":"operativo","version":"3.0"}

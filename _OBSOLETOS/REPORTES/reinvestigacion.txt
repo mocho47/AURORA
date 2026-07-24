@@ -1,0 +1,29 @@
+ATF    Tiras Secuenciales Premium (2300   -> PARCIAL
+ATF    Tiras Secuenciales Std (1600)      -> PARCIAL
+ATF    Ojos Demonio (1 Color)             -> PARCIAL
+ATF    Ojos Demonio RGB BT                -> PARCIAL
+ATF    Fibra Óptica Interior              -> ERROR timed out
+ATF    LED H4 Premium                     -> PARCIAL
+ATF    LED H7 Premium                     -> PENDIENTE
+ATF    LED Intermedio (General)           -> PARCIAL
+MILENS Taza Mágica                        -> PARCIAL
+MILENS Taza Cerámica 11oz                 -> PARCIAL
+MILENS Termo 20oz (Skinny)                -> PARCIAL
+MILENS Termo 30oz                         -> PARCIAL
+MILENS Termo 40oz (Travel)                -> PARCIAL
+MILENS Termo 18oz (Bala)                  -> PARCIAL
+MILENS Vasos Plásticos (Cafetero)         -> ERROR timed out
+MILENS Playera Algodón (DTF)              -> PARCIAL
+MILENS Playera Poliéster (Subli)          -> PARCIAL
+MILENS Gorra (Subli/Vinil)                -> PARCIAL
+MILENS Agenda Vinipiel (Laser)            -> PARCIAL
+MILENS Bolígrafo Metal (Laser)            -> ERROR timed out
+MILENS Sello de Goma (Chico)              -> ERROR timed out
+MILENS Sello de Goma (Grande)             -> ERROR timed out
+MILENS Módulo de Voz (Peluches)           -> ERROR timed out
+MILENS MDF 2.7mm (Hoja)                   -> PARCIAL
+MILENS MDF 5.5mm (Hoja)                   -> PARCIAL
+MILENS Multiplay 4mm (Hoja)               -> PARCIAL
+MILENS Acrílico 3mm Color (Hoja)          -> PARCIAL
+MILENS Acrílico 3mm Transparente (Hoja)   -> PARCIAL
+MILENS Acrílico 6mm (Hoja)                -> PARCIAL

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORACLE · AURORA NEXUS</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#5C1519">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}</script>
+<style>
+:root{--bg:#0a0e27;--panel:#141a3a;--panel2:#0f1430;--line:#252c5c;--accent:#667eea;--accent2:#764ba2;--ok:#7ee787;--txt:#e8eaf6;--mut:#8b93c7;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,Arial;background:var(--bg);color:var(--txt);height:100vh;display:flex;overflow:hidden;}
+/* Sidebar */
+.side{width:230px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 0;}
+.brand{padding:0 22px 18px;border-bottom:1px solid var(--line);}
+.brand h1{font-size:1.25em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.brand p{font-size:.72em;color:var(--mut);margin-top:2px;}
+.nav{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:4px;}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:var(--mut);padding:11px 14px;border-radius:8px;cursor:pointer;font-size:.92em;transition:.15s;}
+.nav button:hover{background:var(--panel2);color:var(--txt);}
+.nav button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:600;}
+.nav .ico{font-size:1.1em;width:20px;text-align:center;}
+.health{padding:12px 22px;border-top:1px solid var(--line);font-size:.78em;color:var(--mut);}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:16px 28px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.topbar h2{font-size:1.15em;}
+.content{flex:1;overflow-y:auto;padding:24px 28px;}
+.section{display:none;}
+.section.active{display:block;animation:fade .2s;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+/* Components */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+.kpi b{display:block;font-size:1.7em;color:var(--ok);}
+.kpi span{font-size:.78em;color:var(--mut);}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px;}
+.card h3{font-size:1em;color:#9db2ff;margin-bottom:14px;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+label{font-size:.78em;color:var(--mut);display:block;margin:6px 0 3px;}
+input,select,textarea{width:100%;padding:9px 11px;background:var(--panel2);border:1px solid var(--line);color:#fff;border-radius:7px;font-size:.9em;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:11px 20px;border-radius:8px;cursor:pointer;font-weight:600;margin-top:12px;}
+.btn:hover{opacity:.92;}
+table{width:100%;border-collapse:collapse;font-size:.85em;margin-top:6px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+th{color:var(--mut);font-weight:600;font-size:.85em;}
+td select{padding:5px 7px;font-size:.85em;}
+.cols{display:grid;grid-template-columns:1fr 1.3fr;gap:18px;}
+@media(max-width:900px){.cols{grid-template-columns:1fr;}}
+/* Chat */
+.chat-box{display:flex;flex-direction:column;height:calc(100vh - 200px);}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px;}
+.msg{padding:11px 15px;border-radius:10px;max-width:75%;line-height:1.45;white-space:pre-wrap;}
+.msg.user{align-self:flex-end;background:var(--accent);}
+.msg.aurora{align-self:flex-start;background:var(--panel2);border-left:3px solid var(--ok);}
+.msg.think{align-self:flex-start;color:var(--mut);font-style:italic;}
+.chat-in{display:flex;gap:10px;margin-top:12px;}
+.muted{color:var(--mut);font-size:.85em;}
+pre{background:var(--panel2);padding:12px;border-radius:8px;overflow:auto;font-size:.82em;border:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="side">
+  <div class="brand"><h1>ORACLE</h1><p>operado por AURORA NEXUS</p></div>
+  <div class="nav" id="nav">
+    <button data-s="resumen" class="active"><span class="ico">📊</span> Resumen</button>
+    <button data-s="captacion"><span class="ico">🎯</span> Interesados</button>
+    <button data-s="taller"><span class="ico">🔧</span> Taller</button>
+    <button data-s="cotizador"><span class="ico">💰</span> Cotizador ATF</button>
+    <button data-s="redes"><span class="ico">📡</span> Redes</button>
+    <button data-s="videos"><span class="ico">🎬</span> Videos</button>
+    <button data-s="editor"><span class="ico">🎨</span> Editor</button>
+    <button data-s="diseno"><span class="ico">🛠️</span> Diseño/Láser</button>
+    <button data-s="mercado"><span class="ico">📈</span> Mercado</button>
+    <button data-s="modulos"><span class="ico">🧩</span> Módulos</button>
+    <button data-s="chat"><span class="ico">💬</span> AURORA</button>
+    <button data-s="vendedor"><span class="ico">🏪</span> Vendedor</button>
+    <button data-s="marketing"><span class="ico">🎯</span> Marketing</button>
+    <button data-s="agenda"><span class="ico">📅</span> Agenda</button>
+    <button data-s="sublimacion"><span class="ico">🖨️</span> Sublimación</button>
+    <button data-s="acceso"><span class="ico">🖥️</span> Acceso Web/PC</button>
+  </div>
+  <div class="health"><span class="dot"></span><span id="health">conectando…</span></div>
+</div>
+
+<div class="main">
+  <div class="topbar"><h2 id="title">Resumen</h2><span class="muted" id="clock"></span></div>
+  <div class="content">
+
+    <!-- RESUMEN -->
+    <div class="section active" id="s-resumen">
+      <div class="card" id="briefing_card" style="border-left:4px solid #7ee787">
+        <h3>🤖 AURORA — Parte del día</h3>
+        <div id="briefing" class="muted">Cargando parte…</div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="card"><h3>Pipeline de órdenes (conteos reales)</h3><div id="pipe"></div></div>
+    </div>
+
+    <!-- CAPTACION -->
+    <div class="section" id="s-captacion">
+      <div class="cols">
+        <div class="card"><h3>Nuevo interesado</h3>
+          <label>Negocio *</label><select id="l_negocio"><option value="atf">ATF (faros)</option><option value="milens">MILENS (láser/sublimación)</option></select>
+          <label>Nombre *</label><input id="l_nombre" placeholder="Nombre del prospecto">
+          <div class="row"><div><label>Teléfono</label><input id="l_tel"></div><div><label>Fuente</label><input id="l_fuente" placeholder="TikTok, IG…"></div></div>
+          <label>Vehículo / Ref.</label><input id="l_veh" placeholder="Marca / modelo / año">
+          <label>Interés</label><input id="l_interes" placeholder="Kit X5, grabado…">
+          <label>Notas</label><textarea id="l_notas" rows="2"></textarea>
+          <button class="btn" onclick="crearLead()">Registrar interesado</button>
+        </div>
+        <div class="card"><h3>Interesados</h3>
+          <table><thead><tr><th>#</th><th>Neg.</th><th>Nombre</th><th>Vehículo</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="tb_leads"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TALLER -->
+    <div class="section" id="s-taller">
+      <div class="cols">
+        <div class="card"><h3>Nueva orden de taller</h3>
+          <label>Negocio *</label><select id="o_negocio"><option value="atf">ATF (faros)</option><option value="milens">MILENS (láser/sublimación)</option></select>
+          <label>Cliente *</label><input id="o_cliente">
+          <div class="row"><div><label>Teléfono</label><input id="o_tel"></div><div><label>Vehículo / Ref.</label><input id="o_veh"></div></div>
+          <div class="row"><div><label>Servicio</label><input id="o_serv" placeholder="Instalación / Grabado…"></div><div><label>Kit / Producto</label><input id="o_kit" placeholder="X5 / termo…"></div></div>
+          <div class="row"><div><label>Precio</label><input id="o_precio" type="number"></div><div><label>Anticipo</label><input id="o_anticipo" type="number"></div></div>
+          <div class="row"><div><label>Fecha cita/entrega</label><input id="o_cita" placeholder="2026-06-15 17:00"></div><div><label>Instalador/Responsable</label><input id="o_inst"></div></div>
+          <button class="btn" onclick="crearOrden()">Crear orden</button>
+        </div>
+        <div class="card"><h3>Órdenes</h3>
+          <table><thead><tr><th>#</th><th>Neg.</th><th>Cliente</th><th>Producto</th><th>Precio</th><th>Estado</th></tr></thead><tbody id="tb_ordenes"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COTIZADOR -->
+    <div class="section" id="s-cotizador">
+      <div class="cols">
+        <div class="card"><h3>Cotizador (precios reales)</h3>
+          <label>Negocio</label><select id="c_neg"><option value="atf">ATF</option><option value="milens">MILENS</option></select>
+          <label>Producto</label><input id="c_prod" placeholder="x5, kit, grabado_termo…" value="x5">
+          <label>Cantidad</label><input id="c_cant" type="number" value="1">
+          <button class="btn" onclick="cotizar()">Cotizar</button>
+        </div>
+        <div class="card"><h3>Resultado</h3><div id="cot_res" class="muted">Sin cotización aún…</div></div>
+      </div>
+    </div>
+
+    <!-- REDES -->
+    <div class="section" id="s-redes">
+      <div class="card"><h3>Estado de redes (honesto · sin simular)</h3>
+        <table><thead><tr><th>Plataforma</th><th>Estado</th><th>Token API</th><th>Login vault</th><th>Detalle</th></tr></thead><tbody id="tb_redes"></tbody></table>
+        <p class="muted" style="margin-top:10px">LISTA = publica por API real. FALTA_TOKEN = falta el token de API (no se simula nada).</p>
+      </div>
+      <div class="card"><h3>⚡ Configurar Meta (Facebook + Instagram) — automático</h3>
+        <p class="muted">Pega los 3 valores de Graph API Explorer y AURORA configura TODO solo (token largo, page, IG, .env).</p>
+        <label>User Access Token</label><input id="m_token" placeholder="EAAxxxx...">
+        <div class="row"><div><label>App ID</label><input id="m_appid"></div><div><label>App Secret</label><input id="m_secret"></div></div>
+        <button class="btn" onclick="configMeta()">Configurar FB + IG</button>
+        <div id="m_res" class="muted" style="margin-top:10px"></div>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Publicar</h3>
+          <label>Plataforma</label><select id="r_plat"><option>facebook</option><option>instagram</option><option>tiktok</option><option>youtube</option></select>
+          <label>Texto</label><textarea id="r_texto" rows="3" placeholder="Texto del post"></textarea>
+          <label>Media URL (opcional)</label><input id="r_media">
+          <button class="btn" onclick="publicarRed()">Publicar</button>
+        </div>
+        <div class="card"><h3>Resultado</h3><div id="r_res" class="muted">Sin publicaciones aún…</div></div>
+      </div>
+    </div>
+
+    <!-- VIDEOS -->
+    <div class="section" id="s-videos">
+      <div class="card"><h3>Videos para viralizar (reedición real 9:16 + hooks por IA)</h3>
+        <button class="btn" onclick="cargarVideos()">Actualizar lista</button>
+        <table><thead><tr><th>Video</th><th>MB</th><th>Acciones</th></tr></thead><tbody id="tb_videos"></tbody></table>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="vid_res" class="muted">Elige un video…</div></div>
+    </div>
+
+    <!-- MODULOS -->
+    <div class="section" id="s-modulos">
+      <div class="card"><h3>Módulos integrados (en pausa · ATF es prioridad)</h3>
+        <p class="muted">FORJA, EVOLUCIÓN y CANBUSFIX quedan integrados y administrables. Actívalos cuando quieras.</p>
+        <table><thead><tr><th>Módulo</th><th>Descripción</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="tb_modulos"></tbody></table>
+      </div>
+    </div>
+
+    <!-- DISEÑO / LASER -->
+    <div class="section" id="s-diseno">
+      <div class="cols">
+        <div class="card"><h3>🛠️ Caja para corte láser (boxes.py)</h3>
+          <div class="row3"><div><label>Ancho cm</label><input id="cj_x" type="number" value="20"></div>
+            <div><label>Largo cm</label><input id="cj_y" type="number" value="15"></div>
+            <div><label>Alto cm</label><input id="cj_h" type="number" value="10"></div></div>
+          <div class="row"><div><label>Grosor material (mm)</label><input id="cj_t" type="number" value="2.7" step="0.1"></div>
+            <div><label>Tipo</label><select id="cj_g"><option>UniversalBox</option><option>ClosedBox</option><option>TypeTray</option><option>CompartmentBox</option><option>HingeBox</option><option>DisplayShelf</option></select></div></div>
+          <button class="btn" onclick="genCaja()">Generar caja DXF</button>
+        </div>
+        <div class="card"><h3>✍️ Nombre / texto a DXF</h3>
+          <label>Texto</label><input id="tx_t" placeholder="LUCIO">
+          <label>Alto (cm)</label><input id="tx_h" type="number" value="6">
+          <button class="btn" onclick="genNombre()">Generar nombre DXF</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <h3>🔁 Convertir / Vectorizar</h3>
+          <label>Ruta del archivo</label><input id="cv_ruta" placeholder="C:\\...\\diseño.svg o foto.png">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" style="margin:0" onclick="convDxf()">A DXF</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="vectT()">Vectorizar→DXF</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="catalogoT()">Catálogo DXF</button>
+          </div>
+        </div>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="ds_res" class="muted">Elige una acción…</div></div>
+    </div>
+
+    <!-- MERCADO -->
+    <div class="section" id="s-mercado">
+      <div class="card"><h3>📈 Estudio de mercado (web real + IA)</h3>
+        <label>Negocio</label><select id="em_neg"><option value="atf">ATF (faros)</option><option value="milens">MILENS (láser/sublimación)</option></select>
+        <label>Tema (opcional)</label><input id="em_tema" placeholder="ej. precios kits LED">
+        <button class="btn" onclick="estudioM()">Generar estudio</button>
+        <div id="em_res" class="muted" style="margin-top:12px">El estudio aparecerá aquí…</div>
+      </div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="section" id="s-editor">
+      <div class="cols">
+        <div class="card"><h3>Súper Editor de imágenes</h3>
+          <p class="muted">Edición real para merch/láser. Pega la ruta del archivo (AURORA tiene acceso al disco).</p>
+          <label>Ruta de la imagen</label><input id="ed_ruta" placeholder="C:\Users\Administrador\Downloads\foto.jpg">
+          <div class="row"><div><label>Umbral grabado</label><input id="ed_umbral" type="number" value="128"></div>
+            <div><label>Tamaño cm (ancho × alto)</label><div class="row"><input id="ed_w" type="number" placeholder="ancho"><input id="ed_h" type="number" placeholder="alto"></div></div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn" style="margin:0" onclick="edAccion('quitar-fondo')">Quitar fondo</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="edAccion('linea')">Línea B&N</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="edAccion('grabado')">Grabado B&N</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="edAccion('redimensionar')">Redimensionar</button>
+            <button class="btn" style="margin:0;background:#5b3a7a" onclick="edAccion('low-poly')">Low-Poly</button>
+            <button class="btn" style="margin:0;background:#5b3a7a" onclick="edAccion('cartoon')">Cartoon</button>
+            <button class="btn" style="margin:0;background:#7a1620" onclick="edAccion('pdf-gran-formato')">PDF gran formato</button>
+          </div>
+        </div>
+        <div class="card"><h3>Resultado</h3><div id="ed_res" class="muted">Elige una acción…</div></div>
+      </div>
+    </div>
+
+    <!-- VENDEDOR -->
+    <div class="section" id="s-vendedor">
+      <div class="cols">
+        <div class="card"><h3>Fichas técnicas</h3>
+          <label>Negocio</label><select id="v_neg"><option value="atf">ATF (faros)</option><option value="milens">MILENS (láser/sublimación)</option></select>
+          <label>Producto (opcional)</label><input id="v_prod" placeholder="x5, kit, grabado_termo…">
+          <button class="btn" onclick="verFichas()">Ver fichas</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <h3>Técnicas de venta</h3>
+          <input id="v_tecnica" placeholder="SPIN, cierre, objeción…">
+          <button class="btn" onclick="verTecnica()">Consultar técnica</button>
+        </div>
+        <div class="card"><h3>Investigar / Responder</h3>
+          <label>Investigar competencia (tema)</label>
+          <input id="v_inv" placeholder="precio faros LED Santiago…">
+          <button class="btn" onclick="investigar()">Investigar (web + IA)</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <label>Responder objeción de cliente</label>
+          <textarea id="v_obj" rows="3" placeholder="Es muy caro / ya tengo…"></textarea>
+          <button class="btn" onclick="responderObj()">Responder con IA</button>
+        </div>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="v_res" class="muted">Elige una acción…</div></div>
+    </div>
+
+    <!-- MARKETING -->
+    <div class="section" id="s-marketing">
+      <div class="cols">
+        <div class="card"><h3>Algoritmos y Playbook</h3>
+          <label>Red social</label>
+          <select id="mk_red"><option value="">Todas</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option></select>
+          <button class="btn" onclick="mkAlgoritmo()">Ver algoritmo</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <label>Flanco estratégico</label>
+          <select id="mk_flanco"><option value="">General</option><option value="precio">Precio</option><option value="calidad">Calidad</option><option value="urgencia">Urgencia</option></select>
+          <button class="btn" onclick="mkPlaybook()">Ver playbook</button>
+        </div>
+        <div class="card"><h3>Plan de marketing + Horarios</h3>
+          <label>Negocio</label><select id="mk_neg"><option value="atf">ATF</option><option value="milens">MILENS</option></select>
+          <label>Objetivo</label><input id="mk_obj" placeholder="Aumentar ventas 30% en julio">
+          <button class="btn" onclick="mkPlan()">Generar plan IA</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <label>Red social (horarios)</label><input id="mk_red2" placeholder="instagram">
+          <button class="btn" onclick="mkHorarios()">Ver horarios óptimos</button>
+        </div>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="mk_res" class="muted">Elige una acción…</div></div>
+    </div>
+
+    <!-- AGENDA -->
+    <div class="section" id="s-agenda">
+      <div class="cols">
+        <div class="card"><h3>Preparar publicaciones</h3>
+          <label>Negocio</label><select id="ag_neg"><option value="atf">ATF</option><option value="milens">MILENS</option></select>
+          <label>Plataforma</label><select id="ag_plat"><option>facebook</option><option>instagram</option><option>tiktok</option></select>
+          <label>Días adelante</label><input id="ag_dias" type="number" value="7">
+          <button class="btn" onclick="prepararAgenda()">Preparar lote</button>
+          <button class="btn" style="background:#2c3463;margin-top:8px" onclick="publicarPendientes()">Publicar pendientes ahora</button>
+        </div>
+        <div class="card"><h3>Estado agenda</h3><div id="ag_estado" class="muted">Cargando…</div></div>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="ag_res" class="muted">Sin resultado aún…</div></div>
+    </div>
+
+    <!-- SUBLIMACION -->
+    <div class="section" id="s-sublimacion">
+      <div class="cols">
+        <div class="card"><h3>Herramientas de sublimación</h3>
+          <label>Ruta imagen / video fuente</label>
+          <input id="sub_ruta" placeholder="C:\…\diseño.png o video.mp4">
+          <div class="row"><div><label>Ancho cm</label><input id="sub_w" type="number" value="20"></div><div><label>Alto cm</label><input id="sub_h" type="number" value="20"></div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn" style="margin:0" onclick="subAccion('lienzo')">Lienzo 300 DPI</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="subAccion('montar')">Montar en producto</button>
+            <button class="btn" style="margin:0;background:#5b3a7a" onclick="subAccion('video')">Generar video</button>
+          </div>
+        </div>
+        <div class="card"><h3>Resultado</h3><div id="sub_res" class="muted">Elige una acción…</div></div>
+      </div>
+    </div>
+
+    <!-- ACCESO WEB/PC -->
+    <div class="section" id="s-acceso">
+      <div class="cols">
+        <div class="card"><h3>Navegación Web</h3>
+          <label>URL</label><input id="acc_url" placeholder="https://…">
+          <button class="btn" onclick="accWeb()">Leer página</button>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <h3>Comandos del PC</h3>
+          <p class="muted" style="margin-bottom:8px">Solo comandos de lectura (dir, type, echo…)</p>
+          <input id="acc_cmd" placeholder="dir C:\AURORA">
+          <button class="btn" onclick="accCmd()">Ejecutar</button>
+        </div>
+        <div class="card"><h3>Archivos</h3>
+          <label>Ruta</label><input id="acc_ruta" placeholder="C:\AURORA\config.py">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" style="margin:0" onclick="accLeer()">Leer</button>
+            <button class="btn" style="margin:0;background:#2c3463" onclick="accListar()">Listar dir</button>
+          </div>
+          <hr style="border-color:#2c3463;margin:14px 0">
+          <label>Contenido a escribir</label>
+          <textarea id="acc_content" rows="4" placeholder="Contenido del archivo…"></textarea>
+          <button class="btn" onclick="accEscribir()">Escribir archivo</button>
+        </div>
+      </div>
+      <div class="card"><h3>Resultado</h3><div id="acc_res" class="muted">Elige una acción…</div></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="section" id="s-chat">
+      <div class="chat-box">
+        <div class="msgs" id="msgs"></div>
+        <div class="chat-in">
+          <input id="chat_in" placeholder="Pregúntale a AURORA…" onkeydown="if(event.key==='Enter')enviar()">
+          <button class="btn" style="margin:0" onclick="enviar()">Enviar</button>
+          <button class="btn" style="margin:0;background:#7c5cff" id="btn_mic" onclick="escuchar()" title="Hablarle a AURORA">🎤</button>
+          <button class="btn" style="margin:0;background:#2c3463" id="btn_voz" onclick="toggleVoz()" title="Activar/silenciar voz de AURORA">🔊</button>
+          <button class="btn" style="margin:0;background:#2c3463" id="btn_login" onclick="loginDueno()" title="Identificarme como Anuar (dueño)">🔒</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TITLES={resumen:'Resumen',captacion:'Interesados',taller:'Taller',cotizador:'Cotizador ATF',redes:'Redes',videos:'Videos',editor:'Editor',diseno:'Diseño/Láser',mercado:'Mercado',modulos:'Módulos',chat:'AURORA',vendedor:'Vendedor',marketing:'Marketing',agenda:'Agenda',sublimacion:'Sublimación',acceso:'Acceso Web/PC'};
+const ESTADOS_ORDEN=["en_proceso","terminado","entregado"];
+const ESTADOS_LEAD=["nuevo","contactado","cotizado","ganado","perdido"];
+let sessionId='panel_'+Date.now();
+
+async function jget(u){return (await fetch(u)).json();}
+async function jpost(u,b){return (await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})).json();}
+
+// Nav
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const s=b.dataset.s;
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  document.getElementById('s-'+s).classList.add('active');
+  document.getElementById('title').textContent=TITLES[s];
+  if(s==='resumen')cargarResumen();
+  if(s==='captacion')cargarLeads();
+  if(s==='taller')cargarOrdenes();
+  if(s==='redes')cargarRedes();
+  if(s==='videos')cargarVideos();
+  if(s==='modulos')cargarModulos();
+  if(s==='agenda')cargarAgenda();
+});
+
+async function cargarModulos(){
+  const d=await jget('/api/modulos');
+  document.getElementById('tb_modulos').innerHTML=(d.modulos||[]).map(m=>{
+    const act=m.estado==='activo';
+    const badge='<span class="badge" style="background:'+(act?'#7ee787':'#ffd166')+';color:#0a0e27">'+m.estado.toUpperCase()+'</span>';
+    const btn=act?'<button class="btn" style="margin:0;padding:5px 10px;background:#f87171" onclick="modAcc(\''+m.id+'\',\'pausar\')">Pausar</button>'
+                 :'<button class="btn" style="margin:0;padding:5px 10px" onclick="modAcc(\''+m.id+'\',\'activar\')">Activar</button>';
+    return '<tr><td><b>'+m.nombre+'</b>'+(m.puerto?' <span class=muted>:'+m.puerto+'</span>':'')+'</td><td class=muted>'+m.desc+'</td><td>'+badge+'</td><td>'+btn+'</td></tr>';
+  }).join('');
+}
+async function modAcc(id,acc){ await jpost('/api/modulos/'+id+'/'+acc,{}); cargarModulos(); }
+
+function dsShow(r){document.getElementById('ds_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';}
+async function genCaja(){
+  document.getElementById('ds_res').textContent='Generando caja…';
+  const b={x:parseFloat(cj_x.value)*10,y:parseFloat(cj_y.value)*10,h:parseFloat(cj_h.value)*10,thickness:parseFloat(cj_t.value),generador:cj_g.value};
+  dsShow(await jpost('/api/taller/caja',b));
+}
+async function genNombre(){
+  document.getElementById('ds_res').textContent='Generando nombre…';
+  dsShow(await jpost('/api/taller/texto-dxf',{texto:tx_t.value,alto_cm:parseFloat(tx_h.value)}));
+}
+async function convDxf(){ document.getElementById('ds_res').textContent='Convirtiendo…'; dsShow(await jpost('/api/taller/convertir-dxf',{ruta:cv_ruta.value})); }
+async function vectT(){ document.getElementById('ds_res').textContent='Vectorizando…'; dsShow(await jpost('/api/taller/vectorizar',{ruta:cv_ruta.value})); }
+async function catalogoT(){ const r=await jget('/api/taller/catalogo'); document.getElementById('ds_res').innerHTML='<b>'+r.total+' trabajos DXF</b><br>'+(r.trabajos||[]).slice(0,40).map(t=>'• '+t.nombre+' ('+t.kb+'KB)').join('<br>'); }
+async function estudioM(){
+  document.getElementById('em_res').textContent='Investigando mercado (web + IA)…';
+  const r=await jpost('/api/estudio-mercado',{negocio:em_neg.value,tema:em_tema.value});
+  document.getElementById('em_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.estudio||r.detalle||'')+'</pre>';
+}
+async function edAccion(acc){
+  const ruta=document.getElementById('ed_ruta').value.trim();
+  if(!ruta){alert('Pega la ruta de la imagen');return;}
+  document.getElementById('ed_res').innerHTML='Procesando '+acc+'…';
+  const body={ruta,umbral:parseInt(document.getElementById('ed_umbral').value||128),ancho_cm:parseFloat(document.getElementById('ed_w').value||0),alto_cm:parseFloat(document.getElementById('ed_h').value||0)};
+  const r=await jpost('/api/editor/'+acc,body);
+  if(r.status==='OK'){
+    document.getElementById('ed_res').innerHTML='<p class=muted>✓ '+r.archivo+'</p><img src="/editor-out/'+encodeURIComponent(r.archivo)+'?t='+Date.now()+'" style="max-width:100%;background:#fff;border-radius:8px">';
+  } else {
+    document.getElementById('ed_res').innerHTML='<pre style="color:#ffd166">'+(r.detalle||JSON.stringify(r))+'</pre>';
+  }
+}
+
+async function cargarVideos(){
+  const d=await jget('/api/video/listar');
+  if(d.status!=='OK'){ document.getElementById('tb_videos').innerHTML='<tr><td colspan=3 class=muted>'+(d.detalle||'sin videos')+'</td></tr>'; return; }
+  document.getElementById('tb_videos').innerHTML=d.videos.map(v=>'<tr><td>'+v.nombre+'</td><td>'+v.mb+'</td><td><button class="btn" style="margin:0;padding:5px 10px" onclick="viralVideo(\''+v.nombre.replace(/'/g,"\\'")+'\')">Hooks</button> <button class="btn" style="margin:0;padding:5px 10px;background:#2c3463" onclick="reeditarVideo(\''+v.nombre.replace(/'/g,"\\'")+'\')">9:16</button></td></tr>').join('');
+}
+async function viralVideo(n){
+  document.getElementById('vid_res').innerHTML='Generando hooks para '+n+'…';
+  const r=await jpost('/api/video/viral',{nombre:n});
+  document.getElementById('vid_res').innerHTML='<b>'+n+'</b><pre>'+(r.viral||'')+'</pre>';
+}
+async function reeditarVideo(n){
+  document.getElementById('vid_res').innerHTML='Reeditando '+n+' a 9:16 (puede tardar)…';
+  const r=await jpost('/api/video/reeditar',{nombre:n});
+  document.getElementById('vid_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+
+async function cargarRedes(){
+  const d=await jget('/api/publicador/estado');
+  const color={LISTA:'#7ee787',FALTA_TOKEN:'#ffd166',FALTA:'#f87171'};
+  document.getElementById('tb_redes').innerHTML=d.redes.map(r=>'<tr><td>'+r.plataforma+'</td><td><span class="badge" style="background:'+(color[r.estado]||'#2c3463')+';color:#0a0e27">'+r.estado+'</span></td><td>'+(r.token_api?'sí':'no')+'</td><td>'+(r.login_vault?'sí':'no')+'</td><td class=muted>'+r.detalle+'</td></tr>').join('');
+}
+async function configMeta(){
+  document.getElementById('m_res').textContent='Configurando FB + IG…';
+  const r=await jpost('/api/publicador/configurar-meta',{user_token:document.getElementById('m_token').value.trim(),app_id:document.getElementById('m_appid').value.trim(),app_secret:document.getElementById('m_secret').value.trim()});
+  document.getElementById('m_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+  if(r.status==='OK')cargarRedes();
+}
+async function publicarRed(){
+  const r=await jpost('/api/publicador/publicar',{plataforma:r_plat.value,texto:r_texto.value,media_url:r_media.value});
+  const ok=r.status==='PUBLICADO';
+  document.getElementById('r_res').innerHTML='<pre style="color:'+(ok?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+
+// Health
+async function health(){try{const h=await jget('/health');document.getElementById('health').textContent='AURORA · '+h.motores+' motores · cerebro '+h.cerebro;}catch(e){document.getElementById('health').textContent='sin conexión';}}
+
+// Resumen
+function kpi(v,l){return '<div class="kpi"><b>'+v+'</b><span>'+l+'</span></div>';}
+async function cargarBriefing(){
+  try{
+    const b=await jget('/api/briefing');
+    const el=document.getElementById('briefing');
+    el.textContent = b.briefing || 'Parte no disponible (cerebro offline).';
+    el.classList.remove('muted');
+    if(b.briefing && !window._saludado){ window._saludado=true; setTimeout(()=>hablar('Hola Anuar. '+b.briefing), 400); }
+  }catch(e){ document.getElementById('briefing').textContent='No se pudo cargar el parte.'; }
+}
+async function cargarResumen(){
+  cargarBriefing();
+  const r=(await jget('/api/oracle/resumen')).resumen;
+  document.getElementById('kpis').innerHTML=
+    kpi(r.total_leads,'Interesados')+kpi(r.total_ordenes,'Órdenes')+
+    kpi('$'+r.valor_total_ordenes,'Valor órdenes')+kpi('$'+r.anticipos_cobrados,'Anticipos')+kpi('$'+r.saldo_pendiente,'Saldo pendiente');
+  const pn=r.por_negocio||{atf:{leads:0,ordenes:0},milens:{leads:0,ordenes:0}};
+  document.getElementById('pipe').innerHTML=
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">'+
+    '<div class="kpi" style="border-left:4px solid #E8631A"><b>'+pn.atf.leads+' / '+pn.atf.ordenes+'</b><span>ATF · leads / órdenes</span></div>'+
+    '<div class="kpi" style="border-left:4px solid #7c5cff"><b>'+pn.milens.leads+' / '+pn.milens.ordenes+'</b><span>MILENS · leads / órdenes</span></div></div>'+
+    '<table><thead><tr>'+ESTADOS_ORDEN.map(e=>'<th style="color:'+(COLOR_ORDEN[e]||"#fff")+'">'+e.replace("_"," ")+'</th>').join('')+'</tr></thead><tbody><tr>'+ESTADOS_ORDEN.map(e=>'<td style="color:'+(COLOR_ORDEN[e]||"#fff")+';font-weight:700">'+(r.ordenes_por_estado[e]||0)+'</td>').join('')+'</tr></tbody></table>';
+}
+
+// Leads
+function selEstado(tipo,id,actual){const arr=tipo==='orden'?ESTADOS_ORDEN:ESTADOS_LEAD;return '<select onchange="cambiarEstado(\''+tipo+'\','+id+',this.value)">'+arr.map(e=>'<option '+(e===actual?'selected':'')+'>'+e+'</option>').join('')+'</select>';}
+async function cambiarEstado(tipo,id,estado){await jpost('/api/oracle/'+tipo+'/'+id+'/estado',{estado});if(tipo==='lead')cargarLeads();else cargarOrdenes();}
+function badgeNeg(n){const c=(n==='milens')?'#7c5cff':'#E8631A';return '<span class="badge" style="background:'+c+';color:#fff;font-size:.72em">'+(n||'atf').toUpperCase()+'</span>';}
+async function cargarLeads(){
+  const ls=(await jget('/api/oracle/leads')).leads;
+  document.getElementById('tb_leads').innerHTML=ls.map(l=>'<tr><td>'+l.id+'</td><td>'+badgeNeg(l.negocio)+'</td><td>'+l.nombre+'</td><td>'+(l.vehiculo||'')+'</td><td>'+selEstado('lead',l.id,l.estado)+'</td><td><button class="btn" style="margin:0;padding:5px 9px" onclick="seguirLead('+l.id+')">Seguir</button></td></tr>').join('')||'<tr><td colspan=6 class=muted>Sin interesados aún</td></tr>';
+}
+async function seguirLead(id){
+  const r=await jpost('/api/oracle/lead/'+id+'/seguimiento',{});
+  if(r.mensaje){ prompt('Mensaje de seguimiento (cópialo y envíalo por WhatsApp):', r.mensaje); }
+  else alert(r.detalle||'No se pudo generar');
+}
+async function crearLead(){
+  const nombre=document.getElementById('l_nombre').value.trim();if(!nombre){alert('Nombre obligatorio');return;}
+  const r=await jpost('/api/oracle/lead',{nombre,negocio:document.getElementById('l_negocio').value,telefono:l_tel.value,fuente:l_fuente.value,vehiculo:l_veh.value,interes:l_interes.value,notas:l_notas.value});
+  if(r.detail){alert(r.detail);return;}
+  ['l_nombre','l_tel','l_fuente','l_veh','l_interes','l_notas'].forEach(i=>document.getElementById(i).value='');
+  cargarLeads();
+}
+
+// Ordenes — color por etapa
+const COLOR_ORDEN={en_proceso:'#ffd166',terminado:'#4dabf7',entregado:'#2fb344'};
+function badgeEtapa(e){return '<span class="badge" style="background:'+(COLOR_ORDEN[e]||'#2c3463')+';color:#0a0e27;font-weight:700">'+(e||'').replace('_',' ').toUpperCase()+'</span>';}
+async function cargarOrdenes(){
+  const os=(await jget('/api/oracle/ordenes')).ordenes;
+  document.getElementById('tb_ordenes').innerHTML=os.map(o=>'<tr style="border-left:5px solid '+(COLOR_ORDEN[o.estado]||'#2c3463')+'"><td>'+o.id+'</td><td>'+badgeNeg(o.negocio)+'</td><td>'+o.cliente+'</td><td>'+(o.kit||o.servicio||'')+'</td><td>$'+o.precio+'</td><td>'+badgeEtapa(o.estado)+'<br>'+selEstado('orden',o.id,o.estado)+'</td></tr>').join('')||'<tr><td colspan=6 class=muted>Sin órdenes aún</td></tr>';
+}
+async function crearOrden(){
+  const cliente=document.getElementById('o_cliente').value.trim();if(!cliente){alert('Cliente obligatorio');return;}
+  const r=await jpost('/api/oracle/orden',{cliente,negocio:document.getElementById('o_negocio').value,telefono:o_tel.value,vehiculo:o_veh.value,servicio:o_serv.value,kit:o_kit.value,precio:parseFloat(o_precio.value||0),anticipo:parseFloat(o_anticipo.value||0),fecha_cita:o_cita.value,instalador:o_inst.value});
+  if(r.detail){alert(r.detail);return;}
+  ['o_cliente','o_tel','o_veh','o_serv','o_kit','o_precio','o_anticipo','o_cita','o_inst'].forEach(i=>document.getElementById(i).value='');
+  cargarOrdenes();
+}
+
+// Cotizador
+async function cotizar(){
+  const neg=c_neg.value,prod=c_prod.value,cant=c_cant.value||1;
+  const d=await jget('/api/operacion/cotizar?negocio='+neg+'&producto='+encodeURIComponent(prod)+'&cantidad='+cant);
+  if(d.status!=='OK'){
+    const disp=d.disponibles?('<p class=muted style="margin-top:8px">Disponibles: '+d.disponibles.join(', ')+'</p>'):'';
+    document.getElementById('cot_res').innerHTML='<p style="color:#ffd166">⚠️ '+(d.detalle||'No encontrado')+'</p>'+disp; return;
+  }
+  document.getElementById('cot_res').innerHTML=
+    '<table><tr><th>Producto</th><td>'+d.producto+'</td></tr><tr><th>Precio unit.</th><td>$'+d.precio_unitario+'</td></tr><tr><th>Subtotal</th><td>$'+d.subtotal_producto+'</td></tr><tr><th>IVA</th><td>$'+d.impuestos+'</td></tr><tr><th>Total final</th><td><b style="color:#7ee787">$'+d.total_final+'</b></td></tr></table><p class=muted style="margin-top:8px">'+(d.nota||'')+'</p>';
+}
+
+// ---- VOZ (JARVIS en el navegador) ----
+let VOZ_ON = true;
+function toggleVoz(){
+  VOZ_ON=!VOZ_ON;
+  document.getElementById('btn_voz').textContent=VOZ_ON?'🔊':'🔇';
+  if(!VOZ_ON && window.speechSynthesis) speechSynthesis.cancel();
+}
+function hablar(t){
+  if(!VOZ_ON || !t || !window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(String(t).slice(0,600));
+    u.lang='es-MX'; u.rate=1.05;
+    const v=speechSynthesis.getVoices().find(x=>x.lang && x.lang.toLowerCase().startsWith('es'));
+    if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function escuchar(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('Tu navegador no soporta micrófono de voz. Usa Chrome.'); return; }
+  const r=new SR(); r.lang='es-MX'; r.interimResults=false; r.maxAlternatives=1;
+  const b=document.getElementById('btn_mic'); b.textContent='🔴';
+  r.onresult=e=>{ document.getElementById('chat_in').value=e.results[0][0].transcript; enviar(); };
+  r.onerror=()=>{ b.textContent='🎤'; };
+  r.onend=()=>{ b.textContent='🎤'; };
+  r.start();
+}
+
+// Chat
+async function enviar(){
+  const inp=document.getElementById('chat_in');const m=inp.value.trim();if(!m)return;
+  const box=document.getElementById('msgs');
+  box.insertAdjacentHTML('beforeend','<div class="msg user"></div>');box.lastChild.textContent=m;
+  inp.value='';box.scrollTop=box.scrollHeight;
+  box.insertAdjacentHTML('beforeend','<div class="msg think">🧠 Pensando…</div>');const think=box.lastChild;box.scrollTop=box.scrollHeight;
+  try{const d=await jpost('/api/chat/send',{mensaje:m,sessionId,contexto:{negocio:'ATF'},token:localStorage.getItem('aurora_token')||''});think.remove();
+    box.insertAdjacentHTML('beforeend','<div class="msg aurora"></div>');box.lastChild.textContent=d.respuesta;
+    hablar(d.respuesta);
+  }catch(e){think.remove();box.insertAdjacentHTML('beforeend','<div class="msg aurora">Error: '+e.message+'</div>');}
+  box.scrollTop=box.scrollHeight;
+}
+
+async function loginDueno(){
+  const pin=prompt('PIN de dueño (Anuar):');
+  if(!pin)return;
+  const r=await jpost('/api/identidad/login',{pin});
+  if(r.status==='OK'){localStorage.setItem('aurora_token',r.token);const b=document.getElementById('btn_login');b.textContent='✅';b.title='Identificado como Anuar (dueño)';alert('Listo, Anuar — identificado como dueño. 🎸');}
+  else{alert('No se pudo: '+(r.detalle||r.status));}
+}
+(function(){if(localStorage.getItem('aurora_token')){const b=document.getElementById('btn_login');if(b){b.textContent='✅';b.title='Identificado como dueño';}}})();
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleString('es-MX'),1000);
+health();setInterval(health,15000);
+cargarResumen();
+
+// VENDEDOR
+async function verFichas(){
+  const prod=document.getElementById('v_prod').value.trim();
+  const neg=document.getElementById('v_neg').value;
+  const url=prod?'/api/vendedor/ficha?producto='+encodeURIComponent(prod)+'&negocio='+neg:'/api/vendedor/fichas?negocio='+neg;
+  const r=await jget(url);
+  document.getElementById('v_res').innerHTML='<pre style="white-space:pre-wrap">'+JSON.stringify(r,null,2)+'</pre>';
+}
+async function verTecnica(){
+  const r=await jget('/api/vendedor/tecnicas?nombre='+encodeURIComponent(document.getElementById('v_tecnica').value));
+  document.getElementById('v_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.tecnica||r.descripcion||JSON.stringify(r,null,2))+'</pre>';
+}
+async function investigar(){
+  document.getElementById('v_res').textContent='Investigando (web + IA)…';
+  const r=await jpost('/api/vendedor/investigar',{negocio:document.getElementById('v_neg').value,tema:document.getElementById('v_inv').value});
+  document.getElementById('v_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.investigacion||r.detalle||JSON.stringify(r,null,2))+'</pre>';
+}
+async function responderObj(){
+  document.getElementById('v_res').textContent='Generando respuesta…';
+  const r=await jpost('/api/vendedor/responder',{negocio:document.getElementById('v_neg').value,objecion:document.getElementById('v_obj').value});
+  document.getElementById('v_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.respuesta||r.detalle||JSON.stringify(r,null,2))+'</pre>';
+}
+
+// MARKETING
+async function mkAlgoritmo(){
+  document.getElementById('mk_res').textContent='Consultando algoritmo…';
+  const r=await jget('/api/marketing/algoritmo?red='+document.getElementById('mk_red').value);
+  document.getElementById('mk_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.algoritmo||JSON.stringify(r,null,2))+'</pre>';
+}
+async function mkPlaybook(){
+  document.getElementById('mk_res').textContent='Consultando playbook…';
+  const r=await jget('/api/marketing/playbook?flanco='+document.getElementById('mk_flanco').value);
+  document.getElementById('mk_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.playbook||JSON.stringify(r,null,2))+'</pre>';
+}
+async function mkPlan(){
+  document.getElementById('mk_res').textContent='Generando plan (IA)…';
+  const r=await jpost('/api/marketing/plan',{negocio:document.getElementById('mk_neg').value,objetivo:document.getElementById('mk_obj').value});
+  document.getElementById('mk_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.plan||JSON.stringify(r,null,2))+'</pre>';
+}
+async function mkHorarios(){
+  document.getElementById('mk_res').textContent='Consultando horarios…';
+  const r=await jpost('/api/marketing/horarios',{red:document.getElementById('mk_red2').value});
+  document.getElementById('mk_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.horarios||JSON.stringify(r,null,2))+'</pre>';
+}
+
+// AGENDA
+async function cargarAgenda(){
+  const r=await jget('/api/agenda/estado');
+  document.getElementById('ag_estado').innerHTML='<pre>'+JSON.stringify(r,null,2)+'</pre>';
+}
+async function prepararAgenda(){
+  document.getElementById('ag_res').textContent='Preparando lote…';
+  const r=await jpost('/api/agenda/preparar',{negocio:document.getElementById('ag_neg').value,plataforma:document.getElementById('ag_plat').value,dias_adelante:parseInt(document.getElementById('ag_dias').value||7)});
+  document.getElementById('ag_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+async function publicarPendientes(){
+  document.getElementById('ag_res').textContent='Publicando pendientes…';
+  const r=await jpost('/api/agenda/publicar-pendientes',{});
+  document.getElementById('ag_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+
+// SUBLIMACION
+async function subAccion(acc){
+  document.getElementById('sub_res').textContent='Procesando '+acc+'…';
+  const r=await jpost('/api/sublimacion/'+acc,{ruta:document.getElementById('sub_ruta').value,ancho_cm:parseFloat(document.getElementById('sub_w').value||20),alto_cm:parseFloat(document.getElementById('sub_h').value||20)});
+  document.getElementById('sub_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+
+// ACCESO WEB/PC
+async function accWeb(){
+  document.getElementById('acc_res').textContent='Cargando página…';
+  const r=await jpost('/api/acceso/web',{url:document.getElementById('acc_url').value});
+  document.getElementById('acc_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.contenido||r.detalle||JSON.stringify(r))+'</pre>';
+}
+async function accCmd(){
+  document.getElementById('acc_res').textContent='Ejecutando…';
+  const r=await jpost('/api/acceso/comando',{comando:document.getElementById('acc_cmd').value});
+  document.getElementById('acc_res').innerHTML='<pre>'+(r.salida||r.detalle||JSON.stringify(r))+'</pre>';
+}
+async function accLeer(){
+  const r=await jpost('/api/acceso/archivo/leer',{ruta:document.getElementById('acc_ruta').value});
+  document.getElementById('acc_res').innerHTML='<pre style="white-space:pre-wrap">'+(r.contenido||r.detalle||JSON.stringify(r))+'</pre>';
+}
+async function accListar(){
+  const r=await jget('/api/acceso/listar?ruta='+encodeURIComponent(document.getElementById('acc_ruta').value));
+  document.getElementById('acc_res').innerHTML='<pre>'+JSON.stringify(r,null,2)+'</pre>';
+}
+async function accEscribir(){
+  const r=await jpost('/api/acceso/archivo/escribir',{ruta:document.getElementById('acc_ruta').value,contenido:document.getElementById('acc_content').value});
+  document.getElementById('acc_res').innerHTML='<pre style="color:'+(r.status==='OK'?'#7ee787':'#ffd166')+'">'+JSON.stringify(r,null,2)+'</pre>';
+}
+</script>
+</body>
+</html>

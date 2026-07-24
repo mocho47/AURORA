@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA v2 - Panel Operativo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f23; color: #e0e0e0; height: 100vh; overflow: hidden; }
+        .container { display: flex; height: 100vh; }
+        .sidebar { width: 280px; background: linear-gradient(180deg, #1a1a3a 0%, #0f0f23 100%); border-right: 1px solid #2a2a4a; padding: 20px 0; overflow-y: auto; display: flex; flex-direction: column; }
+        .logo-section { padding: 0 20px 30px; border-bottom: 1px solid #2a2a4a; text-align: center; }
+        .logo { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+        .tagline { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-section { padding: 20px 0; border-bottom: 1px solid #2a2a4a; }
+        .nav-label { padding: 0 20px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; font-weight: 600; }
+        .nav-item { padding: 12px 20px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; color: #999; font-size: 14px; }
+        .nav-item:hover { background: rgba(102, 126, 234, 0.1); color: #e0e0e0; border-left-color: #667eea; }
+        .nav-item.active { background: rgba(102, 126, 234, 0.15); color: #667eea; border-left-color: #667eea; font-weight: 600; }
+        .status-bar { margin-top: auto; padding: 20px; border-top: 1px solid #2a2a4a; font-size: 12px; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 8px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .header { padding: 20px 30px; background: #151530; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 20px; font-weight: 600; }
+        .content { flex: 1; display: flex; overflow: hidden; }
+        .section { flex: 1; display: none; flex-direction: column; padding: 30px; overflow-y: auto; }
+        .section.active { display: flex; }
+        .card { background: #1a1a3a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .card-title { font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 15px; text-transform: uppercase; }
+        h2 { margin-bottom: 20px; font-size: 18px; }
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; margin-right: 10px; margin-top: 10px; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        input, select, textarea { background: #151530; border: 1px solid #2a2a4a; color: #e0e0e0; padding: 10px; border-radius: 6px; font-family: inherit; font-size: 13px; margin-bottom: 10px; width: 100%; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; background: rgba(102, 126, 234, 0.05); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo-section">
+                <div class="logo">⚡ AURORA</div>
+                <div class="tagline">v2 - Operativo</div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-label">Rol Actual</div>
+                <select id="roleSelector" onchange="cambiarRol(this.value)" style="width: 90%; padding: 8px; margin: 10px; border-radius: 4px; background: #151530; color: #667eea; border: 1px solid #667eea;">
+                    <option value="vendedor">💼 Vendedor (Negocios)</option>
+                    <option value="teen">🧠 Teen (Psicología)</option>
+                    <option value="maestro">👨‍🏫 Maestro (Educación)</option>
+                    <option value="padre">👨‍👩‍👧 Padre (Familia)</option>
+                    <option value="admin">⚙️ Admin (Sistema)</option>
+                </select>
+            </div>
+
+            <div class="nav-section" id="vendedor-menu">
+                <div class="nav-label">Negocios</div>
+                <div class="nav-item active" onclick="mostrar('dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="mostrar('diseño')">🎨 Diseño Gráfico</div>
+                <div class="nav-item" onclick="mostrar('cotizar')">💰 Cotizar</div>
+                <div class="nav-item" onclick="mostrar('pedidos')">📦 Pedidos</div>
+                <div class="nav-item" onclick="mostrar('redes')">📱 Redes</div>
+            </div>
+
+            <div class="nav-section" id="teen-menu" style="display: none;">
+                <div class="nav-label">Acompañamiento</div>
+                <div class="nav-item" onclick="mostrar('teen-dashboard')">🧠 Mi Espacio</div>
+                <div class="nav-item" onclick="mostrar('teen-fortalezas')">💪 Mis Fortalezas</div>
+                <div class="nav-item" onclick="mostrar('teen-regulacion')">😌 Herramientas</div>
+                <div class="nav-item" onclick="mostrar('teen-chat')">💬 Chat AURORA</div>
+            </div>
+
+            <div class="nav-section" id="maestro-menu" style="display: none;">
+                <div class="nav-label">Educación</div>
+                <div class="nav-item" onclick="mostrar('maestro-dashboard')">📊 Estado Aula</div>
+                <div class="nav-item" onclick="mostrar('maestro-dinamicas')">🎲 Dinámicas</div>
+                <div class="nav-item" onclick="mostrar('maestro-alertas')">🚨 Alertas</div>
+                <div class="nav-item" onclick="mostrar('maestro-recursos')">📚 Recursos</div>
+            </div>
+
+            <div class="nav-section" id="padre-menu" style="display: none;">
+                <div class="nav-label">Familia</div>
+                <div class="nav-item" onclick="mostrar('padre-dashboard')">👨‍👩‍👧 Familia</div>
+                <div class="nav-item" onclick="mostrar('padre-opciones')">💡 Opciones</div>
+                <div class="nav-item" onclick="mostrar('padre-comunicacion')">💬 Comunicación</div>
+            </div>
+
+            <div class="nav-section" id="admin-menu" style="display: none;">
+                <div class="nav-label">Administración</div>
+                <div class="nav-item" onclick="mostrar('admin-dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="mostrar('admin-finanzas')">💰 Finanzas</div>
+                <div class="nav-item" onclick="mostrar('admin-reportes')">📋 Reportes</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Sistema</div>
+                <div class="nav-item" onclick="mostrar('chat')">🧠 Chat AURORA</div>
+            </div>
+            <div class="status-bar">
+                <div><span class="status-dot"></span>Operativo</div>
+                <div style="margin-top: 8px; font-size: 11px; color: #666;">
+                    <div>Motores: 17/17</div>
+                    <div>Estado: Activo</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="header">
+                <div class="header-title" id="titulo">📊 Dashboard</div>
+            </div>
+
+            <div class="content">
+                <!-- DASHBOARD -->
+                <div id="dashboard" class="section active">
+                    <h2>Estado del Sistema</h2>
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Motores Activos</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #667eea;">17/17</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">SDKs Disponibles</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #667eea;">4/5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DISEÑO GRÁFICO -->
+                <div id="diseño" class="section">
+                    <h2>Diseñador Gráfico - Vectorización</h2>
+                    <div class="card">
+                        <div class="card-title">Cargar Imagen (Drag & Drop)</div>
+
+                        <div id="dropzone" style="border: 2px dashed #667eea; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; background: rgba(102, 126, 234, 0.05); margin-bottom: 20px; transition: all 0.3s;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📸</div>
+                            <div style="font-weight: 600; margin-bottom: 5px;">Arrastra imagen aquí</div>
+                            <div style="font-size: 12px; color: #888;">O haz clic para seleccionar</div>
+                            <input type="file" id="imagenInput" accept="image/*" style="display: none;">
+                        </div>
+
+                        <div id="preview" style="display: none; margin-bottom: 20px;">
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Preview</div>
+                            <img id="previewImg" style="width: 100%; max-width: 300px; border-radius: 6px; border: 1px solid #2a2a4a;">
+                        </div>
+
+                        <div class="grid">
+                            <div>
+                                <label>DPI:</label>
+                                <input type="number" id="dpiInput" value="300" min="100" max="1200">
+                            </div>
+                            <div>
+                                <label>Umbral (0-255):</label>
+                                <input type="number" id="thresholdInput" value="128" min="0" max="255">
+                            </div>
+                        </div>
+
+                        <button class="btn" onclick="vectorizar()" id="vectorizarBtn" style="display: none; width: 100%;">Vectorizar a SVG</button>
+                        <button class="btn" onclick="descargarSVG()" id="descargaBtn" style="display: none; width: 100%; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">Descargar SVG Vectorial</button>
+
+                        <div id="resultVectorial" style="display: none; margin-top: 20px; padding: 15px; background: #0f0f23; border: 1px solid #2a2a4a; border-radius: 6px;">
+                            <div style="color: #22c55e; margin-bottom: 10px;">✓ Vectorización completada</div>
+                            <div style="color: #888; font-size: 11px;">
+                                <div>Archivo: <strong id="fileName"></strong></div>
+                                <div>Formato: <strong>SVG Vectorial (curvas cerradas)</strong></div>
+                                <div>Estado: <strong>Listo para descargar</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COTIZAR -->
+                <div id="cotizar" class="section">
+                    <h2>Cotizador Profesional</h2>
+                    <div class="card">
+                        <div class="grid">
+                            <div>
+                                <label>Nombre Cliente:</label>
+                                <input type="text" id="nomcl" placeholder="Nombre">
+                            </div>
+                            <div>
+                                <label>Teléfono:</label>
+                                <input type="tel" id="telcl" placeholder="Ej: 3300000000">
+                            </div>
+                        </div>
+
+                        <div class="grid">
+                            <div>
+                                <label>Negocio:</label>
+                                <select id="negsel" onchange="actualizarProductos()">
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="MILENS">🎨 MILENS</option>
+                                    <option value="ATF">🚗 ATF</option>
+                                    <option value="ILUMINACION">💡 ILUMINACIÓN</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Producto:</label>
+                                <select id="prodcot" onchange="cargarPrecioProducto()">
+                                    <option value="">-- Selecciona producto --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="seccionTipoPrecio" style="display: none;">
+                            <label>Tipo de Precio:</label>
+                            <select id="tipoPrecio" onchange="cargarPrecioProducto()">
+                                <option value="mayoreo">💼 Precio Mayoreo (Para ti)</option>
+                                <option value="publico">🛍️ Precio Público (Para vender)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid">
+                            <div>
+                                <label>Cantidad:</label>
+                                <input type="number" id="cantcot" value="1" oninput="actualizarTotal()">
+                            </div>
+                            <div>
+                                <label>Costo Unitario:</label>
+                                <input type="number" id="costcot" value="0" step="0.01" oninput="actualizarTotal()">
+                            </div>
+                        </div>
+
+                        <div class="grid">
+                            <div>
+                                <label>% Anticipo:</label>
+                                <input type="number" id="antcot" value="50" min="0" max="100">
+                            </div>
+                            <div>
+                                <label>Fecha de Entrega:</label>
+                                <input type="date" id="fechcot">
+                            </div>
+                        </div>
+
+                        <button class="btn" onclick="cotizar()" style="width: 100%;">Generar Cotización</button>
+
+                        <div id="resultcot" style="display: none; margin-top: 20px; padding: 20px; background: #0f0f23; border: 1px solid #2a2a4a; border-radius: 6px;"></div>
+                    </div>
+                </div>
+
+                <!-- PEDIDOS -->
+                <div id="pedidos" class="section">
+                    <h2>Gestor de Pedidos</h2>
+                    <div class="card">
+                        <div class="grid">
+                            <div><label>Cliente:</label><input type="text" id="cliped" placeholder="Nombre"></div>
+                            <div><label>Producto:</label><input type="text" id="propod" placeholder="Producto"></div>
+                        </div>
+                        <div class="grid">
+                            <div><label>Cantidad:</label><input type="number" id="canped" value="1"></div>
+                            <div><label>Precio Unitario:</label><input type="number" id="preped" value="0"></div>
+                        </div>
+                        <button class="btn" onclick="crearPedido()" style="width: 100%;">Crear Pedido</button>
+                    </div>
+                </div>
+
+                <!-- REDES -->
+                <div id="redes" class="section">
+                    <h2>Publicador de Redes Sociales</h2>
+
+                    <!-- CREAR PUBLICACIÓN -->
+                    <div class="card">
+                        <div class="card-title">Crear Publicación</div>
+                        <div>
+                            <label>Plataforma:</label>
+                            <select id="plataforma" style="margin-bottom: 15px;">
+                                <option value="">-- Selecciona --</option>
+                                <option value="instagram">📱 Instagram (Reel/Post)</option>
+                                <option value="tiktok">🎵 TikTok</option>
+                                <option value="facebook">📘 Facebook</option>
+                                <option value="todas">📢 Todas las redes</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Tipo de Contenido:</label>
+                            <select id="tipoContenido" style="margin-bottom: 15px;">
+                                <option value="manual">✍️ Escribir manualmente</option>
+                                <option value="generar">✨ Generar automáticamente con AURORA</option>
+                            </select>
+                        </div>
+
+                        <div id="seccionManual" style="display: block;">
+                            <label>Contenido:</label>
+                            <textarea id="textoPost" placeholder="Escribe tu contenido..." style="min-height: 100px; margin-bottom: 15px;"></textarea>
+
+                            <label>Imagen/Video:</label>
+                            <input type="file" id="medioPost" accept="image/*,video/*" style="margin-bottom: 15px;">
+                        </div>
+
+                        <div id="seccionGenerar" style="display: none;">
+                            <label>Tema de Publicación:</label>
+                            <input type="text" id="temaPost" placeholder="Ej: Instalación Aozoom X5, Testimonio cliente" style="margin-bottom: 15px;">
+                        </div>
+
+                        <div class="grid">
+                            <div>
+                                <label>Fecha de Publicación:</label>
+                                <input type="date" id="fechaPost" style="margin-bottom: 15px;">
+                            </div>
+                            <div>
+                                <label>Hora:</label>
+                                <input type="time" id="horaPost" style="margin-bottom: 15px;">
+                            </div>
+                        </div>
+
+                        <button class="btn" onclick="crearPublicacion()" style="width: 100%; margin-top: 0;">Crear Publicación</button>
+                    </div>
+
+                    <!-- CALENDARIO DE PUBLICACIONES -->
+                    <div class="card">
+                        <div class="card-title">Próximas Publicaciones (7 días)</div>
+                        <div id="calendarioPublicaciones" style="display: grid; gap: 10px;">
+                            <div style="padding: 10px; background: #0f0f23; border-radius: 6px; border-left: 3px solid #667eea;">
+                                <div style="font-weight: 600;">📱 Instagram Reel</div>
+                                <div style="font-size: 12px; color: #888;">Hoy 9:00 AM - Instalación Aozoom X5</div>
+                                <div style="margin-top: 5px; font-size: 11px;">
+                                    <span style="background: rgba(102, 126, 234, 0.2); padding: 3px 8px; border-radius: 3px; color: #667eea;">Programada</span>
+                                </div>
+                            </div>
+                            <div style="padding: 10px; background: #0f0f23; border-radius: 6px; border-left: 3px solid #22c55e;">
+                                <div style="font-weight: 600;">🎵 TikTok Video</div>
+                                <div style="font-size: 12px; color: #888;">Mañana 1:00 PM - Comparativa X3 vs X5</div>
+                                <div style="margin-top: 5px; font-size: 11px;">
+                                    <span style="background: rgba(34, 197, 94, 0.2); padding: 3px 8px; border-radius: 3px; color: #22c55e;">Listo para publicar</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MÉTRICAS EN VIVO -->
+                    <div class="card">
+                        <div class="card-title">Métricas en Vivo (últimos 7 días)</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="padding: 15px; background: #0f0f23; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">📱 Instagram</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #667eea;">2,450</div>
+                                <div style="font-size: 11px; color: #888;">Vistas totales</div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a4a;">
+                                    <div style="font-size: 11px;">👍 342 Me gusta</div>
+                                    <div style="font-size: 11px;">💬 28 Comentarios</div>
+                                    <div style="font-size: 11px;">📤 156 Compartidos</div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 15px; background: #0f0f23; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🎵 TikTok</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #667eea;">8,920</div>
+                                <div style="font-size: 11px; color: #888;">Vistas totales</div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a4a;">
+                                    <div style="font-size: 11px;">❤️ 1,250 Likes</div>
+                                    <div style="font-size: 11px;">💬 89 Comentarios</div>
+                                    <div style="font-size: 11px;">🔄 324 Compartidos</div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 15px; background: #0f0f23; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">📘 Facebook</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #667eea;">1,680</div>
+                                <div style="font-size: 11px; color: #888;">Vistas totales</div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a4a;">
+                                    <div style="font-size: 11px;">👍 156 Reacciones</div>
+                                    <div style="font-size: 11px;">💬 42 Comentarios</div>
+                                    <div style="font-size: 11px;">📤 78 Compartidos</div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 15px; background: #0f0f23; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 12px; color: #888; margin-bottom: 8px;">📊 Engagement Rate</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #22c55e;">8.2%</div>
+                                <div style="font-size: 11px; color: #888;">Promedio de interacción</div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a4a;">
+                                    <div style="font-size: 11px;">↑ Crecimiento: +12% semana</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHAT CEREBRO AURORA -->
+                <div id="chat" class="section">
+                    <h2>Cerebro AURORA - Chat Inteligente</h2>
+                    <div class="card">
+                        <div style="padding: 15px; background: #0f0f23; border-radius: 6px; margin-bottom: 15px; max-height: 300px; overflow-y: auto; border: 1px solid #2a2a4a;">
+                            <div id="chatLog" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 6px; border-left: 3px solid #667eea;">
+                                    <div style="color: #667eea; font-weight: 600; font-size: 12px;">🤖 AURORA</div>
+                                    <div style="font-size: 13px; color: #e0e0e0; margin-top: 5px;">Hola, soy AURORA. Puedo ayudarte con cotizaciones, análisis de negocios, estrategias de marketing y más. ¿En qué puedo asistirte?</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 60px; gap: 10px;">
+                            <input type="text" id="mensajeInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') enviarMensaje()">
+                            <button class="btn" onclick="enviarMensaje()" style="margin: 0; margin-bottom: 0;">Enviar</button>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.05); border: 1px solid #2a2a4a; border-radius: 6px;">
+                            <div style="font-size: 12px; color: #888; margin-bottom: 10px;">💡 Comandos rápidos:</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <button class="btn" onclick="enviarComando('Cotiza LED H4 para 5 unidades')" style="font-size: 12px; padding: 8px; margin: 0; background: rgba(102, 126, 234, 0.2); color: #667eea; border: 1px solid #667eea;">💰 Cotizar</button>
+                                <button class="btn" onclick="enviarComando('Analiza estrategia ATF')" style="font-size: 12px; padding: 8px; margin: 0; background: rgba(102, 126, 234, 0.2); color: #667eea; border: 1px solid #667eea;">📊 Análisis</button>
+                                <button class="btn" onclick="enviarComando('Plan de marketing MILENS')" style="font-size: 12px; padding: 8px; margin: 0; background: rgba(102, 126, 234, 0.2); color: #667eea; border: 1px solid #667eea;">📢 Marketing</button>
+                                <button class="btn" onclick="enviarComando('¿Cuáles son mis mejores productos?')" style="font-size: 12px; padding: 8px; margin: 0; background: rgba(102, 126, 234, 0.2); color: #667eea; border: 1px solid #667eea;">🎯 Insights</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrar(sec) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(sec).classList.add('active');
+            if(event.target.classList.contains('nav-item')) event.target.classList.add('active');
+
+            const titles = {
+                'dashboard': '📊 Dashboard Vendedor',
+                'diseño': '🎨 Diseño Gráfico',
+                'cotizar': '💰 Cotizar',
+                'pedidos': '📦 Pedidos',
+                'redes': '📱 Redes',
+                'chat': '🧠 Chat AURORA',
+                'teen-dashboard': '🧠 Mi Espacio (Teen)',
+                'teen-fortalezas': '💪 Mis Fortalezas',
+                'teen-regulacion': '😌 Herramientas de Apoyo',
+                'teen-chat': '💬 Chat de Acompañamiento',
+                'maestro-dashboard': '📊 Estado del Aula',
+                'maestro-dinamicas': '🎲 Dinámicas Educativas',
+                'maestro-alertas': '🚨 Alertas de Alumnos',
+                'maestro-recursos': '📚 Recursos Educativos',
+                'padre-dashboard': '👨‍👩‍👧 Panel Familia',
+                'padre-opciones': '💡 Opciones para Padres',
+                'padre-comunicacion': '💬 Comunicación',
+                'admin-dashboard': '📊 Dashboard Admin',
+                'admin-finanzas': '💰 Finanzas',
+                'admin-reportes': '📋 Reportes',
+            };
+            document.getElementById('titulo').textContent = titles[sec] || sec;
+        }
+
+        function cambiarRol(rol) {
+            // Ocultar todos los menús
+            document.getElementById('vendedor-menu').style.display = 'none';
+            document.getElementById('teen-menu').style.display = 'none';
+            document.getElementById('maestro-menu').style.display = 'none';
+            document.getElementById('padre-menu').style.display = 'none';
+            document.getElementById('admin-menu').style.display = 'none';
+
+            // Mostrar el menú del rol seleccionado
+            const menuMap = {
+                'vendedor': 'vendedor-menu',
+                'teen': 'teen-menu',
+                'maestro': 'maestro-menu',
+                'padre': 'padre-menu',
+                'admin': 'admin-menu',
+            };
+
+            const menuToShow = menuMap[rol];
+            if(menuToShow) document.getElementById(menuToShow).style.display = 'block';
+
+            // Actualizar dashboard
+            mostrar(rol + '-dashboard');
+        }
+
+        // ========== CHAT AURORA ==========
+        function enviarMensaje() {
+            const input = document.getElementById('mensajeInput');
+            const mensaje = input.value.trim();
+
+            if (!mensaje) return;
+
+            // Agregar mensaje del usuario
+            agregarMensajeChat(mensaje, 'usuario');
+
+            // Simular respuesta de AURORA
+            setTimeout(() => {
+                const respuestas = [
+                    'He recibido tu solicitud. Analizando datos...',
+                    '✓ Procesando tu petición con todos los motores disponibles.',
+                    '🔄 Consultando base de datos de productos y clientes...',
+                    '💡 Generando análisis inteligente...',
+                    '📊 Compilando datos de mercado y tendencias...'
+                ];
+
+                const respuesta = respuestas[Math.floor(Math.random() * respuestas.length)];
+                agregarMensajeChat(respuesta, 'aurora');
+            }, 800);
+
+            input.value = '';
+        }
+
+        function enviarComando(comando) {
+            document.getElementById('mensajeInput').value = comando;
+            enviarMensaje();
+        }
+
+        function agregarMensajeChat(contenido, remitente) {
+            const chatLog = document.getElementById('chatLog');
+
+            const div = document.createElement('div');
+            div.style.cssText = `
+                padding: 10px;
+                border-radius: 6px;
+                border-left: 3px solid ${remitente === 'aurora' ? '#667eea' : '#22c55e'};
+                background: ${remitente === 'aurora' ? 'rgba(102, 126, 234, 0.1)' : 'rgba(34, 197, 94, 0.1)'};
+            `;
+
+            const emisor = remitente === 'aurora' ? '🤖 AURORA' : '👤 Tú';
+            const color = remitente === 'aurora' ? '#667eea' : '#22c55e';
+
+            div.innerHTML = `
+                <div style="color: ${color}; font-weight: 600; font-size: 12px;">${emisor}</div>
+                <div style="font-size: 13px; color: #e0e0e0; margin-top: 5px;">${contenido}</div>
+            `;
+
+            chatLog.appendChild(div);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        let imagenActual = null, svgVectorial = null;
+        const dropzone = document.getElementById('dropzone');
+        const imagenInput = document.getElementById('imagenInput');
+
+        dropzone.addEventListener('click', () => imagenInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.background = 'rgba(102, 126, 234, 0.2)'; });
+        dropzone.addEventListener('dragleave', () => { dropzone.style.background = 'rgba(102, 126, 234, 0.05)'; });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.style.background = 'rgba(102, 126, 234, 0.05)';
+            if (e.dataTransfer.files.length > 0) {
+                imagenInput.files = e.dataTransfer.files;
+                cargarImagen();
+            }
+        });
+        imagenInput.addEventListener('change', cargarImagen);
+
+        function cargarImagen() {
+            const file = imagenInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    imagenActual = img;
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('vectorizarBtn').style.display = 'block';
+                    document.getElementById('fileName').textContent = file.name;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function vectorizar() {
+            if (!imagenActual) { alert('Carga una imagen'); return; }
+            const canvas = document.createElement('canvas');
+            canvas.width = imagenActual.width;
+            canvas.height = imagenActual.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imagenActual, 0, 0);
+            const threshold = parseInt(document.getElementById('thresholdInput').value);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                const valor = gray > threshold ? 255 : 0;
+                data[i] = data[i + 1] = data[i + 2] = valor;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            svgVectorial = generarSVG(canvas);
+            document.getElementById('resultVectorial').style.display = 'block';
+            document.getElementById('descargaBtn').style.display = 'block';
+        }
+
+        function generarSVG(canvas) {
+            const w = canvas.width, h = canvas.height;
+            let svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><rect width="${w}" height="${h}" fill="white"/>`;
+            const ctx = canvas.getContext('2d');
+            const data = ctx.getImageData(0, 0, w, h).data;
+            let pathData = 'M';
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    if (data[idx] === 0) pathData += ` ${x} ${y} L`;
+                }
+            }
+            pathData = pathData.replace(/ L$/g, ' Z');
+            if (pathData !== 'M') svg += `<path d="${pathData}" fill="black" stroke="none"/>`;
+            svg += '</svg>';
+            return svg;
+        }
+
+        function descargarSVG() {
+            if (!svgVectorial) { alert('Vectoriza primero'); return; }
+            const nombre = document.getElementById('fileName').textContent.split('.')[0];
+            const blob = new Blob([svgVectorial], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${nombre}_vectorizado.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ========== GESTIÓN DE PRODUCTOS DESDE NEXUS ==========
+
+        // Catálogo de ILUMINACIÓN con precio mayoreo y precio público
+        const CATALOGO_ILUMINACION = {
+            "Neon Flex Rojo (Metro)": { mayoreo: 45, publico: 180 },
+            "Neon Flex Azul (Metro)": { mayoreo: 45, publico: 180 },
+            "Neon Flex Blanco (Metro)": { mayoreo: 45, publico: 180 },
+            "Neon Flex Multicolor (Metro)": { mayoreo: 65, publico: 260 },
+            "Fuente 12V Neon": { mayoreo: 150, publico: 450 },
+            "LED H4 Premium": { mayoreo: 1850, publico: 3700 },
+            "LED H7 Premium": { mayoreo: 1850, publico: 3700 },
+            "LED Intermedio (General)": { mayoreo: 950, publico: 1900 },
+            "Tiras Secuenciales Premium": { mayoreo: 2300, publico: 4600 },
+            "Tiras Secuenciales Standard": { mayoreo: 1600, publico: 3200 },
+            "Ojos Demonio (1 Color)": { mayoreo: 500, publico: 1000 },
+            "Ojos Demonio RGB": { mayoreo: 1500, publico: 3000 },
+            "Fibra Óptica Interior": { mayoreo: 2000, publico: 4000 }
+        };
+
+        // Catálogo de productos extraído de C:\NEXUS\CONFIG\precios_base.json
+        const CATALOGO = {
+            MILENS: {
+                "🍽️ Servilletero MDF 10x10x7cm (6+ piezas)": 25.0,
+                "🍽️ Servilletero MDF 10x10x7cm (30+ piezas)": 23.0,
+                "🥤 Vaso Fiesta Personalizado (1 pieza)": 65.0,
+                "🥤 Vaso Fiesta Personalizado (12+ piezas)": 55.0,
+                "🥤 Vaso Fiesta Personalizado (50+ piezas)": 43.0,
+                "☕ Vaso Cafetero Plástico (1 pieza)": 45.0,
+                "☕ Vaso Cafetero Plástico (12+ piezas)": 38.0,
+                "☕ Vaso Cafetero Plástico (30+ piezas)": 35.0,
+                "📦 Caja 20x20x10 (Sin grabado)": 80.0,
+                "📦 Caja 20x20x10 (1 grabado)": 120.0,
+                "📦 Caja 20x20x10 (2 grabados)": 160.0,
+                "Taza Mágica": 150.0,
+                "Taza Cerámica 11oz": 95.0,
+                "Termo 20oz (Skinny)": 280.0,
+                "Termo 30oz": 320.0,
+                "Termo 40oz (Travel)": 450.0,
+                "Termo 18oz (Bala)": 220.0,
+                "Vasos Plásticos (Cafetero)": 85.0,
+                "Playera Algodón (DTF)": 250.0,
+                "Playera Poliéster (Subli)": 180.0,
+                "Gorra (Subli/Vinil)": 120.0,
+                "Agenda Vinipiel (Laser)": 280.0,
+                "Bolígrafo Metal (Laser)": 45.0,
+                "Sello de Goma (Chico)": 180.0,
+                "Sello de Goma (Grande)": 280.0,
+                "Módulo de Voz (Peluches)": 150.0,
+                "MDF 2.7mm (Hoja)": 110.0,
+                "MDF 5.5mm (Hoja)": 280.0,
+                "Multiplay 4mm (Hoja)": 350.0,
+                "Acrílico 3mm Color (Hoja)": 900.0,
+                "Acrílico 3mm Transparente (Hoja)": 800.0,
+                "Acrílico 6mm (Hoja)": 1800.0
+            },
+            ATF: {
+                "Tiras Secuenciales Premium (2300)": 2300.0,
+                "Tiras Secuenciales Std (1600)": 1600.0,
+                "Ojos Demonio (1 Color)": 500.0,
+                "Ojos Demonio RGB BT": 1500.0,
+                "Fibra Óptica Interior": 2000.0,
+                "LED H4 Premium": 1850.0,
+                "LED H7 Premium": 1850.0,
+                "LED Intermedio (General)": 950.0
+            },
+            ILUMINACION: {
+                "Neon Flex Rojo (Metro)": 45.0,
+                "Neon Flex Azul (Metro)": 45.0,
+                "Neon Flex Blanco (Metro)": 45.0,
+                "Neon Flex Multicolor (Metro)": 65.0,
+                "Fuente 12V Neon": 150.0,
+                "LED H4 Premium": 1850.0,
+                "LED H7 Premium": 1850.0,
+                "LED Intermedio (General)": 950.0,
+                "Tiras Secuenciales Premium": 2300.0,
+                "Tiras Secuenciales Standard": 1600.0,
+                "Ojos Demonio (1 Color)": 500.0,
+                "Ojos Demonio RGB": 1500.0,
+                "Fibra Óptica Interior": 2000.0
+            }
+        };
+
+        function actualizarProductos() {
+            const negocio = document.getElementById('negsel').value;
+            const prodSelect = document.getElementById('prodcot');
+
+            prodSelect.innerHTML = '<option value="">-- Selecciona producto --</option>';
+
+            if (!negocio || !CATALOGO[negocio]) return;
+
+            const productos = Object.keys(CATALOGO[negocio]);
+            productos.forEach(prod => {
+                const option = document.createElement('option');
+                option.value = prod;
+                option.textContent = prod;
+                prodSelect.appendChild(option);
+            });
+        }
+
+        function cargarPrecioProducto() {
+            const negocio = document.getElementById('negsel').value;
+            const producto = document.getElementById('prodcot').value;
+            const seccionTipoPrecio = document.getElementById('seccionTipoPrecio');
+
+            // Mostrar selector de tipo de precio solo para ILUMINACIÓN
+            if (negocio === 'ILUMINACION') {
+                seccionTipoPrecio.style.display = 'block';
+                const tipoPrecio = document.getElementById('tipoPrecio').value;
+
+                if (producto && CATALOGO_ILUMINACION[producto]) {
+                    const precios = CATALOGO_ILUMINACION[producto];
+                    const precio = tipoPrecio === 'mayoreo' ? precios.mayoreo : precios.publico;
+                    document.getElementById('costcot').value = precio.toFixed(2);
+                    actualizarTotal();
+                }
+            } else {
+                seccionTipoPrecio.style.display = 'none';
+
+                if (negocio && producto && CATALOGO[negocio][producto]) {
+                    const precio = CATALOGO[negocio][producto];
+                    document.getElementById('costcot').value = precio.toFixed(2);
+                    actualizarTotal();
+                }
+            }
+        }
+
+        function actualizarTotal() {
+            const cantidad = parseInt(document.getElementById('cantcot').value) || 1;
+            const producto = document.getElementById('prodcot').value;
+            let costo = parseFloat(document.getElementById('costcot').value) || 0;
+            const anticipo = parseInt(document.getElementById('antcot').value) || 50;
+
+            // LÓGICA ESPECIAL PARA SERVILLETEROS
+            if (producto.includes("Servilletero")) {
+                const costoPorUnidad = 20;
+                const precioPorUnidad = cantidad >= 30 ? 23 : 25;
+                document.getElementById('costcot').value = precioPorUnidad.toFixed(2);
+                costo = precioPorUnidad;
+                const descuentoText = cantidad >= 30 ?
+                    `✓ DESCUENTO POR CANTIDAD: $25→$23 c/u (-$2 por pieza)` :
+                    `Próximo descuento: 30 piezas = $23 c/u`;
+                console.log(`Servilleteros: ${cantidad} × $${precioPorUnidad} (costo: $${costoPorUnidad})`);
+                console.log(descuentoText);
+            }
+
+            // LÓGICA ESPECIAL PARA VASO FIESTA
+            if (producto.includes("Vaso Fiesta")) {
+                const costoPorUnidad = 32; // COSTO FIJO, NO BAJA MÁS
+                let precioPorUnidad;
+
+                if (cantidad >= 50) {
+                    precioPorUnidad = 43;
+                } else if (cantidad >= 12) {
+                    precioPorUnidad = 55;
+                } else {
+                    precioPorUnidad = 65;
+                }
+
+                document.getElementById('costcot').value = precioPorUnidad.toFixed(2);
+                costo = precioPorUnidad;
+
+                const descuentoText = cantidad >= 50 ?
+                    `✓ DESCUENTO MAYOREO: 1=$65 → 12=$55 → 50=$43 c/u (-22 por pieza)` :
+                    cantidad >= 12 ?
+                    `✓ DESCUENTO: 1=$65 → 12=$55 c/u (-10 por pieza). Próximo: 50=$43` :
+                    `Descuentos: 12+ piezas = $55 | 50+ piezas = $43`;
+
+                const ganancia = (precioPorUnidad - costoPorUnidad);
+                console.log(`Vaso Fiesta: ${cantidad} × $${precioPorUnidad} (costo fijo: $${costoPorUnidad}, ganancia: $${ganancia} c/u)`);
+                console.log(descuentoText);
+            }
+
+            // LÓGICA ESPECIAL PARA VASO CAFETERO PLÁSTICO
+            if (producto.includes("Vaso Cafetero")) {
+                const costoPorUnidad = 30; // COSTO FIJO
+                let precioPorUnidad;
+
+                if (cantidad >= 30) {
+                    precioPorUnidad = 35;
+                } else if (cantidad >= 12) {
+                    precioPorUnidad = 38;
+                } else {
+                    precioPorUnidad = 45;
+                }
+
+                document.getElementById('costcot').value = precioPorUnidad.toFixed(2);
+                costo = precioPorUnidad;
+
+                const descuentoText = cantidad >= 30 ?
+                    `✓ MAYOREO: 1=$45 → 12=$38 → 30=$35 c/u (-10 por pieza)` :
+                    cantidad >= 12 ?
+                    `✓ DESCUENTO: 1=$45 → 12=$38 c/u (-7 por pieza). Próximo: 30=$35` :
+                    `Descuentos: 12+ piezas = $38 | 30+ piezas = $35`;
+
+                const ganancia = (precioPorUnidad - costoPorUnidad);
+                console.log(`Vaso Cafetero: ${cantidad} × $${precioPorUnidad} (costo fijo: $${costoPorUnidad}, ganancia: $${ganancia} c/u)`);
+                console.log(descuentoText);
+            }
+
+            // Mostrar cálculo en tiempo real
+            const total = cantidad * costo;
+            const margenCalc = total * 0.5; // 50% de margen
+            const precioVenta = total + margenCalc;
+            const anticipoCalc = precioVenta * (anticipo / 100);
+            const saldoCalc = precioVenta - anticipoCalc;
+
+            console.log(`Cálculo: ${cantidad} × ${costo} = ${total}`);
+        }
+
+        function cotizar() {
+            const nombre = document.getElementById('nomcl').value.trim();
+            const telefono = document.getElementById('telcl').value.trim();
+            const negocio = document.getElementById('negsel').value;
+            const producto = document.getElementById('prodcot').value;
+            const cantidad = parseInt(document.getElementById('cantcot').value);
+            const costoUnit = parseFloat(document.getElementById('costcot').value);
+            const porcentajeAnticipo = parseInt(document.getElementById('antcot').value);
+            const fechaEntrega = document.getElementById('fechcot').value;
+
+            if (!nombre || !telefono || !negocio || !producto || !fechaEntrega) { alert('Completa todos los campos'); return; }
+            if (costoUnit <= 0) { alert('Ingresa costo válido'); return; }
+            if (cantidad <= 0) { alert('Cantidad debe ser mayor a 0'); return; }
+
+            const costoTotal = costoUnit * cantidad;
+            const margen = costoTotal * 0.5;
+            const precioPublico = costoTotal + margen;
+            const anticipo = (precioPublico * porcentajeAnticipo) / 100;
+            const saldo = precioPublico - anticipo;
+            const fecha = new Date();
+            const cotID = `COT-${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2,'0')}${String(fecha.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`;
+            const dateObj = new Date(fechaEntrega + 'T00:00:00');
+            const diasEntrega = Math.ceil((dateObj - fecha) / (1000 * 60 * 60 * 24));
+
+            const result = `
+                <div style="border-bottom: 2px solid #667eea; padding-bottom: 15px; margin-bottom: 15px;">
+                    <div><strong>Cotización No.:</strong> ${cotID}</div>
+                    <div style="font-size: 12px; color: #888;">Generada: ${fecha.toLocaleDateString('es-ES')}</div>
+                </div>
+                <div style="margin-bottom: 15px;"><strong>${nombre}</strong><br><span style="color: #888;">Tel: ${telefono}</span></div>
+                <div style="background: #0f0f23; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                    <div><strong>Negocio:</strong> ${negocio}</div>
+                    <div><strong>Producto:</strong> ${producto}</div>
+                    <div><strong>Cantidad:</strong> ${cantidad}</div>
+                </div>
+                <div style="background: #0f0f23; padding: 10px; border-radius: 6px; border-left: 3px solid #667eea; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between;"><span>Costo:</span><span>$${costoTotal.toFixed(2)}</span></div>
+                    <div style="display: flex; justify-content: space-between;"><span>Margen:</span><span style="color: #22c55e;">+$${margen.toFixed(2)}</span></div>
+                    <div style="border-top: 1px solid #2a2a4a; padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between; font-weight: 600;"><span>Total:</span><span style="color: #667eea;">$${precioPublico.toFixed(2)}</span></div>
+                </div>
+                <div style="background: #0f0f23; padding: 10px; border-radius: 6px;">
+                    <div><strong>Anticipo (${porcentajeAnticipo}%):</strong> $${anticipo.toFixed(2)}</div>
+                    <div style="color: #888;">Saldo: $${saldo.toFixed(2)}</div>
+                    <div style="margin-top: 8px; font-size: 11px; color: #888;">Entrega: ${dateObj.toLocaleDateString('es-ES')} (${diasEntrega} días)</div>
+                </div>
+            `;
+
+            document.getElementById('resultcot').innerHTML = result;
+            document.getElementById('resultcot').style.display = 'block';
+        }
+
+        function crearPedido() {
+            const cliente = document.getElementById('cliped').value;
+            const producto = document.getElementById('propod').value;
+            const cantidad = document.getElementById('canped').value;
+            const precio = document.getElementById('preped').value;
+            if (!cliente || !producto || !precio) { alert('Completa campos'); return; }
+            alert(`✓ Pedido creado\nID: PED-20260604-001\nCliente: ${cliente}\nProducto: ${producto}\nCantidad: ${cantidad}\nTotal: $${cantidad * precio}`);
+        }
+
+        // ========== PUBLICADOR DE REDES SOCIALES ==========
+
+        // Manejar cambio entre manual y automático
+        document.getElementById('tipoContenido')?.addEventListener('change', function() {
+            const seccionManual = document.getElementById('seccionManual');
+            const seccionGenerar = document.getElementById('seccionGenerar');
+
+            if (this.value === 'manual') {
+                seccionManual.style.display = 'block';
+                seccionGenerar.style.display = 'none';
+            } else {
+                seccionManual.style.display = 'none';
+                seccionGenerar.style.display = 'block';
+            }
+        });
+
+        // Sincronización automática ATF/MILENS
+        document.getElementById('plataforma')?.addEventListener('change', function() {
+            const temaPost = document.getElementById('temaPost');
+            if (this.value === 'instagram') {
+                temaPost.placeholder = 'Ej: Instalación Aozoom X5, Transformación hogar ATF';
+            } else if (this.value === 'tiktok') {
+                temaPost.placeholder = 'Ej: Tutorial rápido, Comparativa X3 vs X5';
+            } else if (this.value === 'facebook') {
+                temaPost.placeholder = 'Ej: Testimonio cliente, Beneficios ATF';
+            } else {
+                temaPost.placeholder = 'Ej: Tema general para todas las redes';
+            }
+        });
+
+        function crearPublicacion() {
+            const plataforma = document.getElementById('plataforma').value;
+            const tipoContenido = document.getElementById('tipoContenido').value;
+            const fechaPost = document.getElementById('fechaPost').value;
+            const horaPost = document.getElementById('horaPost').value;
+
+            if (!plataforma) { alert('Selecciona plataforma'); return; }
+            if (!fechaPost) { alert('Selecciona fecha'); return; }
+            if (!horaPost) { alert('Selecciona hora'); return; }
+
+            let contenido = '';
+            let tipo = '';
+
+            if (tipoContenido === 'manual') {
+                contenido = document.getElementById('textoPost').value;
+                const medio = document.getElementById('medioPost').value;
+
+                if (!contenido) { alert('Escribe el contenido'); return; }
+                tipo = 'Creación Manual';
+            } else {
+                const tema = document.getElementById('temaPost').value;
+                if (!tema) { alert('Especifica el tema'); return; }
+
+                // Generar contenido automático con AURORA
+                contenido = generarContenidoAURORA(tema, plataforma);
+                tipo = 'Generado por AURORA';
+            }
+
+            // Generar ID único
+            const fechaStr = fechaPost.replace(/-/g, '');
+            const publID = `PUB-${fechaStr}-${Math.floor(Math.random() * 999).toString().padStart(3, '0')}`;
+
+            // Guardar publicación (simulado - en producción iría a BD)
+            const publicacion = {
+                id: publID,
+                plataforma: plataforma,
+                contenido: contenido,
+                tipo: tipo,
+                fecha: fechaPost,
+                hora: horaPost,
+                estado: 'programada',
+                timestamp: new Date().toISOString()
+            };
+
+            // Sincronizar con ATF/MILENS si aplica
+            if (plataforma === 'todas' || plataforma === 'instagram' || plataforma === 'tiktok') {
+                sincronizarConNegocio(publicacion, 'ATF');
+            }
+
+            // Mostrar confirmación
+            alert(`✓ Publicación creada\n\nID: ${publID}\nPlataforma: ${plataforma}\nFecha: ${fechaPost} ${horaPost}\n\nEstado: Programada para ${new Date(fechaPost).toLocaleDateString('es-ES')}`);
+
+            // Limpiar formulario
+            document.getElementById('textoPost').value = '';
+            document.getElementById('temaPost').value = '';
+            document.getElementById('medioPost').value = '';
+            document.getElementById('fechaPost').value = '';
+            document.getElementById('horaPost').value = '';
+            document.getElementById('plataforma').value = '';
+            document.getElementById('tipoContenido').value = 'manual';
+            document.getElementById('seccionManual').style.display = 'block';
+            document.getElementById('seccionGenerar').style.display = 'none';
+
+            // Actualizar calendario
+            actualizarCalendarioPublicaciones(publicacion);
+        }
+
+        function generarContenidoAURORA(tema, plataforma) {
+            // Template de contenido generado por AURORA para cada plataforma
+            const templates = {
+                instagram: `📸 ${tema}\n\n✨ Descubre la transformación\n\n➡️ Enlace en bio\n\n#ATF #Instalación #Hogar #Transformación #Diseño #ModernoYFuncional`,
+
+                tiktok: `🎬 ${tema}\n\n🔥 Mira cómo lo hacemos\n\n💡 Síguenos para más\n\n#TikTok #ATF #Tutorial #Viral #Hogar`,
+
+                facebook: `🏠 ${tema}\n\n✅ Satisfacción garantizada\n\n📞 Contáctanos para tu consulta gratis\n\n👍 Comparte con amigos que necesiten esto`,
+
+                todas: `🚀 ${tema}\n\n✨ Disponible en todas nuestras redes\n\n🎯 Síguenos y no te pierdas nada\n\n#SigueMás`
+            };
+
+            return templates[plataforma] || templates.todas;
+        }
+
+        function sincronizarConNegocio(publicacion, negocio) {
+            // Marcar que esta publicación está vinculada a ATF/MILENS
+            publicacion.negocio = negocio;
+            publicacion.sincronizado = true;
+
+            // En producción: enviar a API de ATF/MILENS para actualizar sus portales
+            console.log(`[SYNC] Publicación ${publicacion.id} sincronizada con ${negocio}`);
+        }
+
+        function actualizarCalendarioPublicaciones(publicacion) {
+            const calendario = document.getElementById('calendarioPublicaciones');
+
+            const iconoPlatforma = {
+                instagram: '📱',
+                tiktok: '🎵',
+                facebook: '📘',
+                todas: '📢'
+            };
+
+            const colorPlatforma = {
+                instagram: '#667eea',
+                tiktok: '#667eea',
+                facebook: '#667eea',
+                todas: '#667eea'
+            };
+
+            const divPublicacion = document.createElement('div');
+            divPublicacion.style.cssText = `
+                padding: 10px;
+                background: #0f0f23;
+                border-radius: 6px;
+                border-left: 3px solid ${colorPlatforma[publicacion.plataforma]};
+            `;
+
+            divPublicacion.innerHTML = `
+                <div style="font-weight: 600;">${iconoPlatforma[publicacion.plataforma]} ${publicacion.plataforma.charAt(0).toUpperCase() + publicacion.plataforma.slice(1)}</div>
+                <div style="font-size: 12px; color: #888;">${publicacion.fecha} ${publicacion.hora} - ${publicacion.tipo}</div>
+                <div style="margin-top: 5px; font-size: 11px;">
+                    <span style="background: rgba(102, 126, 234, 0.2); padding: 3px 8px; border-radius: 3px; color: #667eea;">Programada</span>
+                </div>
+            `;
+
+            calendario.insertBefore(divPublicacion, calendario.firstChild);
+        }
+    </script>
+</body>
+</html>

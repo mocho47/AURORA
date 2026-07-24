@@ -1,0 +1,96 @@
+# .gitignore - Protege archivos sensibles
+
+# Archivos de entorno
+.env
+.env.local
+.env.*
+!/.env.example
+
+# Dependencias y cache de Python
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+*.egg-info/
+
+# Bases de datos
+*.db
+*.sqlite3
+
+# Logs
+LOGS/
+logs/
+*.log
+*.tmp
+
+# Archivos de build y distribución
+build/
+dist/
+dist_atf/
+dist_milens/
+dist_venta/
+*.spec
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de backup
+*.bak
+*.swp
+*.swo
+*~
+BACKUPS/
+
+# Paquetes Python instalados dentro de SUPER_MARKETING_SYSTEM (vendor)
+# Solo se trackean los archivos de app, no las librerías instaladas
+SUPER_MARKETING_SYSTEM/supabase_auth*/
+SUPER_MARKETING_SYSTEM/supabase_functions*/
+SUPER_MARKETING_SYSTEM/*.dist-info/
+SUPER_MARKETING_SYSTEM/bin/
+SUPER_MARKETING_SYSTEM/cffi*/
+SUPER_MARKETING_SYSTEM/cryptography*/
+SUPER_MARKETING_SYSTEM/dateutil/
+SUPER_MARKETING_SYSTEM/deprecation*/
+SUPER_MARKETING_SYSTEM/jwt/
+SUPER_MARKETING_SYSTEM/multidict*/
+SUPER_MARKETING_SYSTEM/packaging*/
+SUPER_MARKETING_SYSTEM/propcache*/
+SUPER_MARKETING_SYSTEM/pycparser*/
+SUPER_MARKETING_SYSTEM/pyjwt*/
+SUPER_MARKETING_SYSTEM/python_dateutil*/
+SUPER_MARKETING_SYSTEM/six*
+SUPER_MARKETING_SYSTEM/strenum*/
+SUPER_MARKETING_SYSTEM/supafunc*/
+SUPER_MARKETING_SYSTEM/typing_extensions*
+SUPER_MARKETING_SYSTEM/typing_inspection*/
+SUPER_MARKETING_SYSTEM/yarl*/
+SUPER_MARKETING_SYSTEM/*.pyd
+SUPER_MARKETING_SYSTEM/_cffi_backend*
+
+# DB de memoria (generada en runtime)
+MEMORIA/aurora_memoria.db
+
+# Archivos de salida
+EDITOR_OUT/
+SUBLIMACION_OUT/
+TALLER_OUT/
+UPLOADS/
+VIDEO/
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+
+# Otros
+node_modules/
+
+# Secrets
+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
+

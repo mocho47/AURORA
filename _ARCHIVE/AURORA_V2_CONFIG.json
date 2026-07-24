@@ -1,0 +1,340 @@
+{
+  "sistema": "AURORA v2 - Operativo",
+  "version": "2.0.0",
+  "status": "activo",
+  "fecha_activacion": "2026-06-06",
+  "ultima_actualizacion": "2026-06-06T23:59:00Z",
+
+  "roles": [
+    {
+      "id": "teen",
+      "nombre": "Adolescente",
+      "descripcion": "Usuario estudiante con módulos cognitivos",
+      "features": ["coaching", "misiones", "logros", "streak"],
+      "plataforma": "Evolución TEENS",
+      "acceso": "http://localhost:8000/teen"
+    },
+    {
+      "id": "maestro",
+      "nombre": "Maestro/Docente",
+      "descripcion": "Educador con herramientas de intervención",
+      "features": ["heatmap_clase", "expediente_alumno", "protocolo_intervencion", "dinamicas_sel"],
+      "plataforma": "Evolución TEENS",
+      "acceso": "http://localhost:8000/maestro"
+    },
+    {
+      "id": "padre",
+      "nombre": "Padre/Guardián",
+      "descripcion": "Familia con monitoreo y conexión",
+      "features": ["semaforo_familiar", "temas_semanales", "pregunta_dia", "sos_protocol", "misiones_padre"],
+      "plataforma": "Evolución TEENS",
+      "acceso": "http://localhost:8000/padre"
+    },
+    {
+      "id": "vendedor",
+      "nombre": "Vendedor/Emprendedor",
+      "descripcion": "Usuario de Marketing Automation",
+      "features": ["publicador_multired", "editor_videos", "chatbot_wa", "busqueda_web", "analytics"],
+      "plataforma": "ATF Excelencia",
+      "acceso": "http://localhost:8000/vendedor"
+    },
+    {
+      "id": "admin",
+      "nombre": "Administrador",
+      "descripcion": "Control total del sistema",
+      "features": ["dashboard_admin", "user_management", "reportes", "configuracion", "backups"],
+      "plataforma": "AURORA v2 Master",
+      "acceso": "http://localhost:8000/admin"
+    }
+  ],
+
+  "features": {
+    "coaching": {
+      "nombre": "Sistema de Coaching",
+      "descripcion": "Mentoring automático basado en IA",
+      "modulos": [
+        "erikson",
+        "bloom",
+        "dweck",
+        "frankl",
+        "cnv",
+        "design_thinking"
+      ],
+      "sdk": ["claude", "groq", "zai", "ollama"],
+      "estado": "activo"
+    },
+    "codigo": {
+      "nombre": "Generador de Código",
+      "descripcion": "Generación automática de código profesional",
+      "lenguajes": ["python", "javascript", "rust", "go", "solidity"],
+      "features": ["linting", "testing", "documentacion"],
+      "estado": "activo"
+    },
+    "cotizador": {
+      "nombre": "Sistema de Cotización",
+      "descripcion": "Generador de cotizaciones automáticas",
+      "integraciones": ["mercado_libre", "google_shopping", "precios_reales"],
+      "estado": "activo"
+    },
+    "chat": {
+      "nombre": "ChatBot Multi-Plataforma",
+      "descripcion": "Respuestas automáticas 24/7",
+      "plataformas": ["whatsapp", "telegram", "discord", "web"],
+      "features": ["intent_detection", "lead_scoring", "sales_pitch"],
+      "estado": "activo"
+    },
+    "crisis_protocol": {
+      "nombre": "Protocolo de Crisis",
+      "descripcion": "Respuesta automática a situaciones críticas",
+      "triggers": ["riesgo_vital", "situacion_emergencia", "llamada_auxilio"],
+      "respuesta": "escalate_inmediato",
+      "notificaciones": ["email", "sms", "telegram", "whatsapp"],
+      "estado": "activo"
+    }
+  },
+
+  "panel_admin": {
+    "url": "http://localhost:8000/panel",
+    "puerto": 8000,
+    "protocolo": "HTTP",
+    "tabs": [
+      {
+        "id": "dashboard",
+        "nombre": "Dashboard Principal",
+        "acceso": "/panel/dashboard",
+        "metricas": ["kpis", "usuarios_activos", "ingresos", "engagement"]
+      },
+      {
+        "id": "usuarios",
+        "nombre": "Gestión de Usuarios",
+        "acceso": "/panel/usuarios",
+        "acciones": ["crear", "editar", "eliminar", "asignar_roles"]
+      },
+      {
+        "id": "reportes",
+        "nombre": "Reportes",
+        "acceso": "/panel/reportes",
+        "tipos": ["engagement", "roi", "usuarios", "ventas"]
+      },
+      {
+        "id": "configuracion",
+        "nombre": "Configuración",
+        "acceso": "/panel/configuracion",
+        "opciones": ["api_keys", "integraciones", "emails", "webhooks"]
+      }
+    ]
+  },
+
+  "integraciones": [
+    {
+      "nombre": "TikTok",
+      "tipo": "OAuth2",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "Instagram",
+      "tipo": "OAuth2",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "YouTube",
+      "tipo": "API Key",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "Facebook",
+      "tipo": "OAuth2",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "WhatsApp",
+      "tipo": "Green API",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "Google Custom Search",
+      "tipo": "API Key",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "Mercado Libre",
+      "tipo": "OAuth2",
+      "estado": "configurado"
+    },
+    {
+      "nombre": "Groq",
+      "tipo": "API Key",
+      "estado": "activo"
+    },
+    {
+      "nombre": "Claude API",
+      "tipo": "API Key",
+      "estado": "activo"
+    },
+    {
+      "nombre": "Zai",
+      "tipo": "OAuth2",
+      "estado": "disponible"
+    },
+    {
+      "nombre": "Ollama",
+      "tipo": "HTTP Local",
+      "estado": "disponible"
+    }
+  ],
+
+  "base_de_datos": {
+    "tipo": "SQLite",
+    "ubicacion": "C:\\AURORA\\atf_inteligente.db",
+    "modo": "WAL",
+    "backup": "cada 6 horas",
+    "tablas": [
+      "usuarios",
+      "publicaciones",
+      "videos",
+      "leads",
+      "conversaciones",
+      "reportes",
+      "metricas",
+      "sugerencias"
+    ]
+  },
+
+  "videos": {
+    "ubicacion_principal": "C:\\VIDEOS_MAESTROS\\",
+    "total_catalogados": 123,
+    "carpetas": [
+      "ATF_ORIGINALES",
+      "PROCESOS",
+      "TERMINADOS",
+      "ATF_PROCESADOS",
+      "GOOGLE_FOTOS",
+      "GOOGLE_DRIVE",
+      "STOCK",
+      "OTROS"
+    ],
+    "estrategia": "rotacion_inteligente_por_red",
+    "publicaciones_diarias": 14,
+    "redes": [
+      {
+        "red": "TikTok",
+        "videos_dia": 5,
+        "formato": "9:16 vertical",
+        "duracion": "15-30s"
+      },
+      {
+        "red": "Instagram",
+        "videos_dia": 4,
+        "formatos": ["vertical", "cuadrado"],
+        "duracion": "15-60s"
+      },
+      {
+        "red": "YouTube",
+        "videos_dia": 2,
+        "formatos": ["vertical", "horizontal"],
+        "duracion": "15-60s"
+      },
+      {
+        "red": "Facebook",
+        "videos_dia": 3,
+        "formato": "variable",
+        "duracion": "30-60s"
+      }
+    ]
+  },
+
+  "sistemas_compilados": {
+    "atf_excelencia": {
+      "archivo": "ATF_Excelencia.exe",
+      "tamaño": "11 MB",
+      "estado": "operativo",
+      "ubicacion": "C:\\Users\\Administrador\\Documents\\",
+      "puerto": 8000
+    },
+    "milens": {
+      "archivo": "Milens.exe",
+      "tamaño": "36 MB",
+      "estado": "operativo",
+      "ubicacion": "PC esposa",
+      "puerto": 8001
+    },
+    "marketing_digital_pro": {
+      "archivo": "Marketing_Digital_Pro.exe",
+      "tamaño": "36 MB",
+      "estado": "lista_para_vender",
+      "ubicacion": "C:\\Users\\Administrador\\Documents\\",
+      "puerto": "configurable"
+    }
+  },
+
+  "documentacion": {
+    "total_documentos": 30,
+    "manuales": 12,
+    "lineas_documentacion": 5000,
+    "guias": [
+      "GUIA_MAXIMA_POTENCIA.md",
+      "ESTRATEGIA_VIDEOS_POR_RED.md",
+      "MANUAL_ADMIN_GENERICO.md",
+      "MANUAL_USUARIO_GENERICO.md",
+      "API_REFERENCE.md",
+      "TROUBLESHOOTING.md"
+    ]
+  },
+
+  "proyeccion_financiera": {
+    "mes_1": {
+      "clientes": "0-5",
+      "ingresos": "$0-15k MXN"
+    },
+    "mes_2_3": {
+      "clientes": "15-50",
+      "ingresos": "$40-150k MXN"
+    },
+    "mes_6": {
+      "clientes": "50+",
+      "ingresos": "$250k+ MXN"
+    },
+    "año_1": {
+      "clientes": "100+",
+      "ingresos": "$1.9M+ MXN"
+    }
+  },
+
+  "seguridad": {
+    "api_keys_encriptadas": true,
+    "backup_automatico": true,
+    "wal_mode": true,
+    "validacion_hmac": true,
+    "rate_limiting": true,
+    "ssl_ready": true
+  },
+
+  "monitoreo": {
+    "health_check": "cada 60 segundos",
+    "alertas": true,
+    "logs": "C:\\AURORA\\logs\\",
+    "metricas_reales": true,
+    "dashboard_refresh": "cada 5 segundos"
+  },
+
+  "proximos_pasos": [
+    "Abrir ATF_Excelencia.exe",
+    "Acceder a http://localhost:8000/panel",
+    "Completar API keys en .env",
+    "Escanear 123+ videos",
+    "Programar publicaciones automáticas",
+    "Monitorear en vivo",
+    "Expandir a otros clientes"
+  ],
+
+  "estado_final": {
+    "compilacion": "completada",
+    "testing": "validado",
+    "documentacion": "completa",
+    "bots_terminados": 3,
+    "videos_catalogados": 123,
+    "manuales_generados": 12,
+    "ejecutables": 9,
+    "operacion": "100% automatizada"
+  }
+}

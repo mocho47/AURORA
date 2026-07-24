@@ -1,0 +1,112 @@
+[
+  {
+    "id": "motor_analisis",
+    "nombre": "Análisis General",
+    "descripcion": "Motor genérico para análisis de cualquier tipo. Punto de entrada por defecto.",
+    "patrones": ["analiza", "explica", "resume", "que es", "cómo", "por qué"],
+    "sdk_preferido": "groq",
+    "puerto": 8001,
+    "activo": true,
+    "timeout": 12.0,
+    "max_tokens": 500
+  },
+  {
+    "id": "motor_code_gen",
+    "nombre": "Generación de Código",
+    "descripcion": "Especializado en generación y análisis de código",
+    "patrones": ["código", "script", "función", "clase", "programa", "algoritmo"],
+    "sdk_preferido": "claude",
+    "puerto": 8002,
+    "activo": true,
+    "timeout": 15.0,
+    "max_tokens": 4096
+  },
+  {
+    "id": "motor_coaching",
+    "nombre": "Coaching y Desarrollo",
+    "descripcion": "Especializado en coaching familiar y desarrollo personal",
+    "patrones": ["familia", "emoción", "relación", "desarrollo", "crecimiento", "objetivo"],
+    "sdk_preferido": "groq",
+    "puerto": 8003,
+    "activo": true,
+    "timeout": 12.0,
+    "max_tokens": 500
+  },
+  {
+    "id": "motor_ventas",
+    "nombre": "Ventas y CRM",
+    "descripcion": "Especializado en gestión de ventas y relaciones con clientes",
+    "patrones": ["venta", "cliente", "pedido", "presupuesto", "cotiza", "compra"],
+    "sdk_preferido": "groq",
+    "puerto": 8004,
+    "activo": true,
+    "timeout": 12.0,
+    "max_tokens": 500
+  },
+  {
+    "id": "motor_marketing",
+    "nombre": "Marketing y Contenido",
+    "descripcion": "Especializado en estrategia de marketing y generación de contenido",
+    "patrones": ["marketing", "contenido", "social", "red", "campaña", "publicidad"],
+    "sdk_preferido": "zai",
+    "puerto": 8005,
+    "activo": true,
+    "timeout": 8.0,
+    "max_tokens": 400
+  },
+  {
+    "id": "motor_reasoning",
+    "nombre": "Razonamiento Profundo",
+    "descripcion": "Especializado en análisis complejos, pensamiento estratégico y problemas lógicos",
+    "patrones": ["profundo", "estrategia", "lógica", "análisis", "razonamiento", "complicado", "complejo"],
+    "sdk_preferido": "claude",
+    "puerto": 8006,
+    "activo": true,
+    "timeout": 20.0,
+    "max_tokens": 2048
+  },
+  {
+    "id": "motor_cotizador",
+    "nombre": "Cotizador Inteligente",
+    "descripcion": "Generación de cotizaciones, presupuestos y cálculo de precios",
+    "patrones": ["cotiza", "presupuesto", "precio", "costo", "valor", "tarifa", "cuota"],
+    "sdk_preferido": "groq",
+    "puerto": 8007,
+    "activo": true,
+    "timeout": 12.0,
+    "max_tokens": 600
+  },
+  {
+    "id": "motor_pedidos",
+    "nombre": "Gestor de Pedidos",
+    "descripcion": "Captura, seguimiento y gestión de órdenes de compra",
+    "patrones": ["pedido", "orden", "compra", "encargo", "solicitud", "reserva"],
+    "sdk_preferido": "groq",
+    "puerto": 8008,
+    "activo": true,
+    "timeout": 10.0,
+    "max_tokens": 500
+  },
+  {
+    "id": "motor_imagenes",
+    "nombre": "Optimización de Imágenes",
+    "descripcion": "Edición, optimización y procesamiento de imágenes",
+    "patrones": ["imagen", "foto", "visual", "grafico", "diseño", "laser", "optimizar"],
+    "sdk_preferido": "claude",
+    "puerto": 8009,
+    "activo": true,
+    "timeout": 15.0,
+    "max_tokens": 800
+  },
+  {
+    "id": "motor_negocios",
+    "nombre": "Gestor de Negocios NEXUS",
+    "descripcion": "Integración y gestión de todos los negocios: ATF, HomePro, Milens, ChatBot SaaS",
+    "patrones": ["atf", "homepro", "milens", "chatbot", "negocio", "operaciones", "ventas"],
+    "sdk_preferido": "groq",
+    "puerto": 8010,
+    "activo": true,
+    "timeout": 12.0,
+    "max_tokens": 800
+  }
+]

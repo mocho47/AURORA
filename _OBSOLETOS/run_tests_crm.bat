@@ -1,0 +1,3 @@
+@echo off
+echo 🚀 Ejecutando pruebas de la Fase 2: CRM...
+python -m unittest discover tests

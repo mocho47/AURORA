@@ -1,0 +1,22 @@
+PASS | AURORA healthy :: capac=9
+PASS | log sin errores recientes :: 0 errores
+PASS | cotizar X5=1599
+PASS | cotizar H4=1850
+PASS | cotizar termo 30oz=320
+PASS | cotizar HONESTO (servilletero=NO_ENCONTRADO)
+PASS | catalogo 106 productos
+PASS | vendedor 29 fichas
+PASS | asesor marketing
+PASS | agendador
+PASS | sublimacion
+PASS | editor
+PASS | taller
+PASS | oracle: 0 interesados reales :: ordenes=9
+PASS | identidad configurada
+PASS | cliente BLOQUEADO en resumen
+PASS | auto-posteo 12PM PAUSADO
+PASS | chat->cotizar
+PASS | chat->vendedor ficha
+PASS | chat dice INTERESADOS no leads
+
+>>> 20 PASS / 0 FALLA <<<

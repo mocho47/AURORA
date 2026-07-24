@@ -1,0 +1,656 @@
+{
+  "_nota": "Catálogo REAL de Creaciones Milens (autoridad — Anuar 2026-07-12). Precios de VENTA. Costos pendientes (se agregan en Taller·Precios para el balance). 'escalas' = precio por cantidad.",
+  "laser_reglas": {
+    "costo_minuto_diseno_listo": 6,
+    "costo_minuto_con_edicion": 10,
+    "velocidad_corte_3mm_mm_s": 15,
+    "velocidad_corte_6mm_mm_s": 5,
+    "velocidad_grabado_mm_s": 200,
+    "edicion_o_creacion_archivo": 50,
+    "cobro_minimo_grabado": 60,
+    "nota_6mm": "corte 6mm = 3x tiempo = 3x costo vs 3mm"
+  },
+  "prendas": [
+    {
+      "nombre": "Playera polo manga corta personalizada",
+      "precio": 200,
+      "incluye": "personalizada con logo o diseño"
+    },
+    {
+      "nombre": "Playera cuello redondo personalizada",
+      "precio": 260,
+      "incluye": "personalizada con logo o diseño"
+    },
+    {
+      "nombre": "Playera blanca poliéster (para sublimar)",
+      "precio": 140
+    },
+    {
+      "nombre": "Boxer blanco poliéster unitalla (para personalizar)",
+      "precio": 160
+    }
+  ],
+  "extras": [
+    {
+      "nombre": "Logo en caja MDF",
+      "precio": 30
+    },
+    {
+      "nombre": "Diseño complejo en caja MDF",
+      "precio": 90
+    },
+    {
+      "nombre": "Edición o creación de archivo",
+      "precio": 50
+    }
+  ],
+  "dtf": {
+    "costo_metro_min": 160,
+    "costo_metro_max": 235,
+    "uber": 50,
+    "uber_reparto": "por viaje",
+    "venta_metro": 280,
+    "colocacion_planchado": 30,
+    "nota": "Planchado (colocación) solo = $30, NO incluye el DTF. Cliente: (a) trae prenda + compra DTF por metro + planchado $30, o (b) compra solo el metro."
+  },
+  "vinil_textil": {
+    "metodo": "manual (a ojo): se teclea el precio acordado; guarda medidas+referencia",
+    "ejemplo_real": {
+      "descripcion": "letras 10x28 cm + números 15x10 cm, solo recorte",
+      "precio": 95
+    }
+  },
+  "productos": [
+    {
+      "nombre": "Llavero MDF personalizado (grabado)",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 45
+        },
+        {
+          "desde": 10,
+          "precio": 35
+        }
+      ],
+      "nota": "con edición de diseño +$10"
+    },
+    {
+      "nombre": "Llavero metálico (grabado)",
+      "precio": 69
+    },
+    {
+      "nombre": "Servilletero MDF 3mm (grabado)",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 45
+        },
+        {
+          "desde": 12,
+          "precio": 35
+        }
+      ]
+    },
+    {
+      "nombre": "Posavasos MDF (set x4)",
+      "precio": 120
+    },
+    {
+      "nombre": "Posavasos MDF (suelto)",
+      "precio": 32
+    },
+    {
+      "nombre": "Caja MDF para taza 11oz (1 grabado en tapa)",
+      "precio": 75
+    },
+    {
+      "nombre": "Caja MDF para taza 15oz (1 grabado en tapa)",
+      "precio": 85
+    },
+    {
+      "nombre": "Porta menú restaurante MDF 3mm (grabado logo)",
+      "precio": 110
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 20x20x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 250
+        },
+        {
+          "desde": 10,
+          "precio": 200
+        },
+        {
+          "desde": 50,
+          "precio": 170
+        }
+      ],
+      "nota": "sin grabado; logo +$30, diseño complejo +$90"
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 20x25x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 290
+        },
+        {
+          "desde": 10,
+          "precio": 230
+        },
+        {
+          "desde": 50,
+          "precio": 195
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 20x30x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 330
+        },
+        {
+          "desde": 10,
+          "precio": 265
+        },
+        {
+          "desde": 50,
+          "precio": 225
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 20x35x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 370
+        },
+        {
+          "desde": 10,
+          "precio": 295
+        },
+        {
+          "desde": 50,
+          "precio": 250
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 25x25x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 340
+        },
+        {
+          "desde": 10,
+          "precio": 270
+        },
+        {
+          "desde": 50,
+          "precio": 230
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 25x30x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 385
+        },
+        {
+          "desde": 10,
+          "precio": 310
+        },
+        {
+          "desde": 50,
+          "precio": 260
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 25x35x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 430
+        },
+        {
+          "desde": 10,
+          "precio": 345
+        },
+        {
+          "desde": 50,
+          "precio": 290
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 30x30x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 440
+        },
+        {
+          "desde": 10,
+          "precio": 350
+        },
+        {
+          "desde": 50,
+          "precio": 300
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 30x35x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 490
+        },
+        {
+          "desde": 10,
+          "precio": 395
+        },
+        {
+          "desde": 50,
+          "precio": 335
+        }
+      ]
+    },
+    {
+      "nombre": "Caja MDF encastres tapa bisagras 35x35x10cm",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 555
+        },
+        {
+          "desde": 10,
+          "precio": 445
+        },
+        {
+          "desde": 50,
+          "precio": 375
+        }
+      ]
+    },
+    {
+      "nombre": "Tabla de servicio grabada (madera natural, hasta 30x20cm)",
+      "precio": 200
+    },
+    {
+      "nombre": "Señalética hotelera MDF 3mm (desde)",
+      "precio": 160,
+      "nota": "cotización según tamaño y cantidad"
+    },
+    {
+      "nombre": "Señalética acrílico 3mm (desde)",
+      "precio": 200,
+      "nota": "cotización según tamaño y cantidad"
+    },
+    {
+      "nombre": "Grabado contorno lineal (vectorial) diseño listo",
+      "precio": 60
+    },
+    {
+      "nombre": "Grabado contorno lineal con edición de diseño",
+      "precio": 110
+    },
+    {
+      "nombre": "Grabado raster logo/texto hasta 10x10cm (diseño listo)",
+      "precio": 60
+    },
+    {
+      "nombre": "Grabado raster logo/texto hasta 10x10cm con edición",
+      "precio": 110
+    },
+    {
+      "nombre": "Grabado raster foto/diseño complejo hasta 10x10cm",
+      "precio": 125
+    },
+    {
+      "nombre": "Grabado raster foto hasta 15x10cm",
+      "precio": 190
+    },
+    {
+      "nombre": "Grabado raster foto hasta 20x20cm",
+      "precio": 500
+    },
+    {
+      "nombre": "Cobro mínimo cualquier grabado láser",
+      "precio": 60
+    },
+    {
+      "nombre": "Grabado de termo (servicio, termo propio)",
+      "precio": 80
+    },
+    {
+      "nombre": "Stickers personalizados (vinyl, mín 50 pzas, desde)",
+      "precio": 8
+    },
+    {
+      "nombre": "Taza blanca 11oz (grabada)",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 60
+        },
+        {
+          "desde": 13,
+          "precio": 55
+        },
+        {
+          "desde": 36,
+          "precio": 45
+        }
+      ]
+    },
+    {
+      "nombre": "Taza mágica 11oz",
+      "precio": 130
+    },
+    {
+      "nombre": "Taza mágica 15oz",
+      "precio": 150
+    },
+    {
+      "nombre": "Termo 18oz acero grabado láser",
+      "precio": 230,
+      "nota": "ya grabado"
+    },
+    {
+      "nombre": "Termo 20oz acero grabado láser",
+      "precio": 230,
+      "nota": "ya grabado; mismo precio que 18/30oz"
+    },
+    {
+      "nombre": "Termo 30oz acero grabado láser",
+      "precio": 230,
+      "nota": "ya grabado"
+    },
+    {
+      "nombre": "Termo skinny sublimable (20oz, personalizado a color)",
+      "precio": 270,
+      "nota": "sublimación full color, ya personalizado"
+    },
+    {
+      "nombre": "Termo 40oz acero grabado láser",
+      "precio": 350,
+      "nota": "ya grabado"
+    },
+    {
+      "nombre": "Termo 40oz personalizado con DTF",
+      "precio": 450,
+      "nota": "no hay versión sublimada; se hace con DTF"
+    },
+    {
+      "nombre": "Llavero de acero sublimado",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 150
+        },
+        {
+          "desde": 10,
+          "precio": 120
+        },
+        {
+          "desde": 50,
+          "precio": 100
+        }
+      ]
+    },
+    {
+      "nombre": "Lámina sublimada",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 225
+        },
+        {
+          "desde": 10,
+          "precio": 180
+        },
+        {
+          "desde": 50,
+          "precio": 155
+        }
+      ]
+    },
+    {
+      "nombre": "Mouse pad sublimado",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 225
+        },
+        {
+          "desde": 10,
+          "precio": 180
+        },
+        {
+          "desde": 50,
+          "precio": 155
+        }
+      ]
+    },
+    {
+      "nombre": "Vidrio sublimable portarretrato",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 425
+        },
+        {
+          "desde": 10,
+          "precio": 340
+        },
+        {
+          "desde": 50,
+          "precio": 290
+        }
+      ]
+    },
+    {
+      "nombre": "Azulejo sublimado",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 175
+        },
+        {
+          "desde": 10,
+          "precio": 140
+        },
+        {
+          "desde": 50,
+          "precio": 120
+        }
+      ]
+    },
+    {
+      "nombre": "Rompecabezas sublimado",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 225
+        },
+        {
+          "desde": 10,
+          "precio": 180
+        },
+        {
+          "desde": 50,
+          "precio": 155
+        }
+      ]
+    },
+    {
+      "nombre": "Copa alargada de cristal con grabado láser",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 225
+        },
+        {
+          "desde": 10,
+          "precio": 180
+        },
+        {
+          "desde": 50,
+          "precio": 150
+        }
+      ]
+    },
+    {
+      "nombre": "Copa chaparrita de cristal con grabado láser",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 275
+        },
+        {
+          "desde": 10,
+          "precio": 215
+        },
+        {
+          "desde": 50,
+          "precio": 185
+        }
+      ]
+    },
+    {
+      "nombre": "Caballito de cristal con grabado láser",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 190
+        },
+        {
+          "desde": 10,
+          "precio": 150
+        },
+        {
+          "desde": 50,
+          "precio": 130
+        }
+      ]
+    },
+    {
+      "nombre": "Cenicero de cristal con grabado láser",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 175
+        },
+        {
+          "desde": 10,
+          "precio": 140
+        },
+        {
+          "desde": 50,
+          "precio": 120
+        }
+      ]
+    },
+    {
+      "nombre": "Set copa alargada + caballito grabados",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 390
+        },
+        {
+          "desde": 10,
+          "precio": 310
+        },
+        {
+          "desde": 50,
+          "precio": 260
+        }
+      ]
+    },
+    {
+      "nombre": "Tarro cervecero vidrio 1L con grabado láser",
+      "escalas": [
+        {
+          "desde": 1,
+          "precio": 250
+        },
+        {
+          "desde": 10,
+          "precio": 200
+        },
+        {
+          "desde": 50,
+          "precio": 170
+        }
+      ]
+    },
+    {
+      "nombre": "Vinil recorte pequeño (hasta 5x5cm, desde)",
+      "precio": 35
+    },
+    {
+      "nombre": "Vinil recorte mediano (10x10cm, desde)",
+      "precio": 50
+    },
+    {
+      "nombre": "Vinil recorte grande (20x20cm, desde)",
+      "precio": 90
+    },
+    {
+      "nombre": "Vinil recorte extra grande (30x30cm, desde)",
+      "precio": 160
+    },
+    {
+      "nombre": "Vinil recorte por metro lineal aplicado (desde)",
+      "precio": 200,
+      "unidad": "metro"
+    },
+    {
+      "nombre": "Mínimo cualquier trabajo de vinil",
+      "precio": 35
+    },
+    {
+      "nombre": "Gorra personalizada (sublimada)",
+      "precio": 120
+    },
+    {
+      "nombre": "Gorra personalizada (vinil textil)",
+      "precio": 150
+    },
+    {
+      "nombre": "Agenda de vinipiel (grabado láser)",
+      "precio": 280
+    },
+    {
+      "nombre": "Bolígrafo metálico (grabado láser)",
+      "precio": 45
+    },
+    {
+      "nombre": "Sello de goma chico (grabado láser)",
+      "precio": 180
+    },
+    {
+      "nombre": "Sello de goma grande (grabado láser)",
+      "precio": 280
+    },
+    {
+      "nombre": "Módulo de voz para peluches (grabable)",
+      "precio": 150
+    }
+  ],
+  "pendientes_confirmar": [
+    "Costos de cada producto: Anuar los ajusta sobre la marcha en Taller·Precios"
+  ]
+}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA NEXUS v3 - Panel Operativo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        .panel {
+            display: none;
+            background: #1a1f3a;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .panel.activo { display: block; }
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #0a0e27;
+            color: #fff;
+            border: 1px solid #667eea;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+        .btn-ejecutar {
+            background: #4ade80;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-ejecutar:hover { background: #22c55e; }
+        .btn-volver {
+            background: #f87171;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .output {
+            background: #1a1f3a;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .output:empty::before {
+            content: "Los resultados aparecerán aquí...";
+            color: #888;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        hr { border: 1px solid #667eea; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ AURORA NEXUS v3</h1>
+            <p>Sistema Inteligente de Operaciones</p>
+        </header>
+
+        <div class="buttons">
+            <button onclick="mostrarPanelMotores()">⚙️ Motores</button>
+            <button onclick="mostrarRazonar()">🧠 Razonar</button>
+            <button onclick="mostrarCotizar()">💰 Cotizar</button>
+            <button onclick="mostrarSalud()">✓ Sistema</button>
+            <button onclick="limpiarTodo()">🗑️ Limpiar</button>
+        </div>
+
+        <!-- PANEL MOTORES -->
+        <div id="panelMotores" class="panel">
+            <h3>⚙️ Ejecutar Motor</h3>
+            <select id="motorSelect">
+                <option value="">-- Selecciona un motor --</option>
+                <option value="motor_analisis">Análisis (Mercado y datos)</option>
+                <option value="motor_coaching">Coaching (Asesoría)</option>
+                <option value="motor_code_gen">CodeGen (Código)</option>
+                <option value="motor_cotizador">Cotizador (Presupuestos)</option>
+                <option value="motor_imagenes">Imágenes (Generar)</option>
+                <option value="motor_negocios">Negocios (FODA)</option>
+                <option value="motor_pedidos">Pedidos (Gestión)</option>
+                <option value="motor_reasoning">Reasoning (Razonamiento)</option>
+                <option value="motor_ventas">Ventas (Estrategia)</option>
+            </select>
+            <input type="text" id="motorAccion" placeholder="¿Qué quieres hacer?" value="ejecutar">
+            <button class="btn-ejecutar" onclick="ejecutarMotorSeleccionado()">Ejecutar</button>
+            <button class="btn-volver" onclick="volverAlMenu()">Volver</button>
+        </div>
+
+        <!-- PANEL RAZONAR -->
+        <div id="panelRazonar" class="panel">
+            <h3>🧠 Razonar (Cerebro AURORA)</h3>
+            <textarea id="razonarInput" placeholder="¿Cuál es tu pregunta?" style="height: 80px; width: 100%; padding: 10px; border: 1px solid #667eea; border-radius: 5px; background: #0a0e27; color: #fff; margin-bottom: 10px;">Analiza el mercado de retrofit en iluminación automotriz en Guadalajara</textarea>
+            <button class="btn-ejecutar" onclick="razonarAhora()">Razonar</button>
+            <button class="btn-volver" onclick="volverAlMenu()">Volver</button>
+        </div>
+
+        <!-- PANEL COTIZAR -->
+        <div id="panelCotizar" class="panel">
+            <h3>💰 Cotizar Producto</h3>
+            <label>Negocio:</label>
+            <select id="cotizarNegocio">
+                <option value="atf">ATF (Retrofit)</option>
+                <option value="milens">MILENS (Coaching)</option>
+            </select>
+
+            <label>Producto:</label>
+            <select id="cotizarProducto">
+                <option value="kit">Kit Completo</option>
+                <option value="instalacion">Instalación</option>
+                <option value="otro">Otro</option>
+            </select>
+
+            <label>Cantidad:</label>
+            <input type="number" id="cotizarCantidad" value="1" min="1">
+
+            <button class="btn-ejecutar" onclick="cotizarAhora()">Cotizar</button>
+            <button class="btn-volver" onclick="volverAlMenu()">Volver</button>
+        </div>
+
+        <!-- OUTPUT -->
+        <div class="output" id="output"></div>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:8000';
+        const output = document.getElementById('output');
+
+        function mostrar(texto, tipo = 'info') {
+            if (typeof texto === 'object') {
+                texto = JSON.stringify(texto, null, 2);
+            }
+            const span = document.createElement('div');
+            span.className = tipo;
+            span.textContent = texto;
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function ocultarTodosPaneles() {
+            document.getElementById('panelMotores').classList.remove('activo');
+            document.getElementById('panelRazonar').classList.remove('activo');
+            document.getElementById('panelCotizar').classList.remove('activo');
+        }
+
+        function mostrarPanelMotores() {
+            ocultarTodosPaneles();
+            output.innerHTML = '';
+            document.getElementById('panelMotores').classList.add('activo');
+        }
+
+        function mostrarRazonar() {
+            ocultarTodosPaneles();
+            output.innerHTML = '';
+            document.getElementById('panelRazonar').classList.add('activo');
+        }
+
+        function mostrarCotizar() {
+            ocultarTodosPaneles();
+            output.innerHTML = '';
+            document.getElementById('panelCotizar').classList.add('activo');
+        }
+
+        async function mostrarSalud() {
+            ocultarTodosPaneles();
+            output.innerHTML = '';
+            mostrar('✓ Verificando estado del sistema...', 'info');
+            try {
+                const res = await fetch(`${API}/health`);
+                const data = await res.json();
+                mostrar('✓ SISTEMA OPERATIVO:', 'success');
+                mostrar(data, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        function volverAlMenu() {
+            ocultarTodosPaneles();
+            output.innerHTML = '<div class="info">Listo para trabajar. Selecciona una opción.</div>';
+        }
+
+        function limpiarTodo() {
+            ocultarTodosPaneles();
+            output.innerHTML = '';
+        }
+
+        async function ejecutarMotorSeleccionado() {
+            const motor = document.getElementById('motorSelect').value;
+            if (!motor) {
+                mostrar('❌ Selecciona un motor primero', 'error');
+                return;
+            }
+
+            const accion = document.getElementById('motorAccion').value || 'ejecutar';
+            output.innerHTML = '';
+            mostrar(`🚀 Ejecutando ${motor}...`, 'info');
+
+            try {
+                const res = await fetch(`${API}/api/motor/${motor}/ejecutar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: accion, contexto: {}})
+                });
+                const data = await res.json();
+                mostrar('✓ RESULTADO:', 'success');
+                mostrar(data, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function razonarAhora() {
+            const msg = document.getElementById('razonarInput').value;
+            if (!msg) {
+                mostrar('❌ Escribe una pregunta', 'error');
+                return;
+            }
+
+            output.innerHTML = '';
+            mostrar(`🧠 Procesando: "${msg}"...`, 'info');
+
+            try {
+                const res = await fetch(`${API}/api/cerebro/razonar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: msg, contexto: {}})
+                });
+                const data = await res.json();
+                mostrar('✓ RESPUESTA DEL CEREBRO AURORA:', 'success');
+                mostrar(data, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function cotizarAhora() {
+            const neg = document.getElementById('cotizarNegocio').value;
+            const prod = document.getElementById('cotizarProducto').value;
+            const cant = document.getElementById('cotizarCantidad').value;
+
+            output.innerHTML = '';
+            mostrar(`💰 Cotizando ${cant}x ${prod} en ${neg}...`, 'info');
+
+            try {
+                const url = `${API}/api/operacion/cotizar?negocio=${neg}&producto=${prod}&cantidad=${cant}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                mostrar('✓ COTIZACIÓN GENERADA:', 'success');
+                mostrar(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+                mostrar(`Negocio: ${data.negocio}`, 'info');
+                mostrar(`Producto: ${data.producto}`, 'info');
+                mostrar(`Cantidad: ${data.cantidad}`, 'info');
+                mostrar(`Precio Unitario: $${data.base}`, 'info');
+                mostrar(`Subtotal: $${data.total}`, 'info');
+                mostrar(`IVA (16%): $${data.impuestos}`, 'info');
+                mostrar(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'success');
+                mostrar(`💰 TOTAL FINAL: $${data.total_final}`, 'success');
+                mostrar(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+                mostrar(`Vigencia: ${data.vigencia}`, 'info');
+            } catch(e) {
+                mostrar(`❌ Error: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

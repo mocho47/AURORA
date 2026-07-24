@@ -1,0 +1,45 @@
+# SERVIDOR PROFESIONAL INTEGRADO - Dependencias Reales
+# Instalar con: pip install -r requirements.txt
+
+# HTTP y Async
+aiohttp==3.9.1
+httpx==0.25.2
+asyncio-contextmanager==1.0.0
+
+# Web Scraping
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# APIs y Autenticación
+requests==2.31.0
+oauthlib==3.2.2
+cryptography==41.0.7
+
+# Bases de datos
+sqlite3-stubs==0.4.0
+
+# Utilidades
+python-dotenv==1.0.0
+pydantic==2.5.0
+typing-extensions==4.8.0
+
+# Logging y Monitoring
+python-json-logger==2.0.7
+
+# Validación
+email-validator==2.1.0
+
+# APIs específicas (opcional, según necesidad)
+google-api-python-client==2.108.0
+mercadolibre==2.0.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Desarrollo (opcional)
+black==23.12.1
+flake8==6.1.0
+mypy==1.7.1
