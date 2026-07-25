@@ -287,6 +287,14 @@ def _es_crear_agente(mensaje: str) -> bool:
         "nuevo agente"))
 
 
+def _es_confirmacion(mensaje: str) -> bool:
+    """True si el mensaje es un 'sí' claro a una acción pendiente (sin ambigüedad)."""
+    m = _norm_txt(mensaje).strip(" .,!¡¿?")
+    return m in ("si", "confirmo", "confirmado", "hazlo", "adelante", "dale",
+                 "va", "vale", "ok", "okay", "correcto", "afirmativo", "procede",
+                 "si confirmo", "si hazlo", "si adelante", "si porfavor", "si por favor")
+
+
 def _es_listar_agentes(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     return any(t in m for t in (
@@ -447,6 +455,8 @@ class Consciencia:
         self._memoria_corto: Dict[str, List[Dict]] = {}
         # Fábrica de Agentes: spec en construcción por sesión (pregunta-antes-de-crear)
         self._agente_en_creacion: Dict[str, Dict] = {}
+        # Enrutador universal: herramienta peligrosa elegida, esperando "sí" de Anuar
+        self._accion_pendiente: Dict[str, Dict] = {}
 
     async def inicializar(self) -> None:
         if self._listo:
@@ -569,6 +579,19 @@ class Consciencia:
         # Si ambiguo → LLM routing
         if not motor_ids:
             motor_ids, paralelo = await self._routing_llm(mensaje, contexto)
+
+        # 2.44 CONFIRMACIÓN DE ACCIÓN PENDIENTE — el enrutador universal (2.8) propuso
+        # una herramienta peligrosa en el turno anterior y quedó esperando un "sí". Si
+        # este mensaje es esa confirmación, ejecuta de verdad; si no, se abandona el
+        # pendiente (no se queda colgado esperando para siempre) y sigue el flujo normal.
+        if session_id in self._accion_pendiente:
+            if _es_confirmacion(mensaje):
+                real = await self._confirmar_accion_pendiente(session_id)
+                self._agregar_sesion(session_id, mensaje, real["respuesta"])
+                ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
+                return {"respuesta": real["respuesta"], "motores_usados": ["router_universal"],
+                        "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
+            self._accion_pendiente.pop(session_id, None)
 
         # 2.45 FÁBRICA DE AGENTES — diálogo "pregunta-antes-de-crear". Si hay un agente
         # en construcción para esta sesión, este mensaje es el CONTEXTO que da Anuar.
@@ -719,7 +742,7 @@ class Consciencia:
         # auto-filtra: si no hay herramienta real que aplique, devuelve None (barato, sin
         # LLM) y sigue el flujo normal. Así alcanza las 475 funciones sin gatillo angosto.
         if len(_norm_txt(mensaje).split()) >= 2:
-            real = await self._router_universal(mensaje)
+            real = await self._router_universal(mensaje, session_id)
             if real is not None:
                 self._agregar_sesion(session_id, mensaje, real["respuesta"])
                 ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
@@ -1172,7 +1195,34 @@ class Consciencia:
             return {"respuesta": f"No pude ejecutar el agente (no lo simulo): {str(e)[:200]}"}
 
     # ── ENRUTADOR UNIVERSAL (tool-calling sobre el registro de 203 funciones reales) ──
-    async def _router_universal(self, mensaje: str) -> Optional[Dict]:
+    async def _ejecutar_herramienta_real(self, reg, clave: str, args: dict, h: dict) -> Dict:
+        """Ejecuta una herramienta del registro y formatea el resultado. Nunca inventa."""
+        try:
+            res = await asyncio.to_thread(reg.ejecutar, clave, args)
+        except Exception as e:
+            return {"respuesta": f"Intenté usar {clave} pero falló (no lo invento): {str(e)[:200]}"}
+        if not isinstance(res, dict) or res.get("status") != "ok":
+            detalle = res.get("detalle") if isinstance(res, dict) else str(res)
+            return {"respuesta": f"No pude completar {clave} (no lo invento): {str(detalle)[:250]}"}
+        salida = res.get("resultado")
+        titulo = f"🔧 {h.get('funcion', clave)}"
+        if isinstance(salida, dict):
+            texto = self._fmt_dict(titulo, salida)
+        elif isinstance(salida, (list, tuple)):
+            texto = titulo + ":\n" + "\n".join(f"• {x}" for x in list(salida)[:30])
+        else:
+            texto = f"{titulo}:\n{str(salida)[:1500]}"
+        return {"respuesta": texto}
+
+    async def _confirmar_accion_pendiente(self, session_id: str) -> Dict:
+        """El usuario dijo 'sí' a una herramienta peligrosa propuesta antes. La ejecuta de verdad."""
+        pendiente = self._accion_pendiente.pop(session_id, None)
+        if not pendiente:
+            return {"respuesta": "No tengo ninguna acción pendiente de confirmar — dime qué necesitas."}
+        reg = _registro()
+        return await self._ejecutar_herramienta_real(reg, pendiente["clave"], pendiente["args"], pendiente["h"])
+
+    async def _router_universal(self, mensaje: str, session_id: str = "") -> Optional[Dict]:
         """Elige y EJECUTA una herramienta real del registro para responder con datos
         de verdad (no candados a mano). Devuelve {'respuesta': ...} o None si ninguna aplica.
         NUNCA inventa: si no hay herramienta o falla, lo dice honesto."""
@@ -1228,27 +1278,17 @@ class Consciencia:
             return None
         args = data.get("args") if isinstance(data.get("args"), dict) else {}
 
-        # Herramienta destructiva/escritura → NO ejecutar; pedir confirmación.
+        # Herramienta destructiva/escritura → NO ejecutar todavía; guarda el pendiente
+        # para esta sesión y pide confirmación. Si Anuar responde "sí" en el siguiente
+        # mensaje, se ejecuta de verdad (ver _confirmar_accion_pendiente).
         if h.get("peligrosa"):
-            return {"respuesta": f"Eso hace un cambio real ({clave}). Confírmame y lo hago."}
+            if session_id:
+                self._accion_pendiente[session_id] = {"clave": clave, "args": args, "h": h}
+            params_usados = ", ".join(f"{k}={v}" for k, v in args.items()) or "sin datos extra"
+            return {"respuesta": f"Voy a usar {clave} ({params_usados}). Responde 'sí' para confirmar y lo hago."}
 
-        # No peligrosa → ejecutar de verdad (registro.ejecutar es síncrono).
-        try:
-            res = await asyncio.to_thread(reg.ejecutar, clave, args)
-        except Exception as e:
-            return {"respuesta": f"Intenté usar {clave} pero falló (no lo invento): {str(e)[:200]}"}
-        if not isinstance(res, dict) or res.get("status") != "ok":
-            detalle = res.get("detalle") if isinstance(res, dict) else str(res)
-            return {"respuesta": f"No pude completar {clave} (no lo invento): {str(detalle)[:250]}"}
-        salida = res.get("resultado")
-        titulo = f"🔧 {h.get('funcion', clave)}"
-        if isinstance(salida, dict):
-            texto = self._fmt_dict(titulo, salida)
-        elif isinstance(salida, (list, tuple)):
-            texto = titulo + ":\n" + "\n".join(f"• {x}" for x in list(salida)[:30])
-        else:
-            texto = f"{titulo}:\n{str(salida)[:1500]}"
-        return {"respuesta": texto}
+        # No peligrosa → ejecutar de verdad.
+        return await self._ejecutar_herramienta_real(reg, clave, args, h)
 
     def _fmt_dict(self, titulo: str, d) -> str:
         """Formatea el resultado REAL de un motor en texto legible, sin inventar."""
