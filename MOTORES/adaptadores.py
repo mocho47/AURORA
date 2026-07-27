@@ -288,6 +288,39 @@ class MotorProgramador:
         return {"motor_id": self.motor_id, "disponible": self._ag is not None}
 
 
+# ── COREL — control real de CorelDRAW por COM ─────────────────────
+
+PROMPT_COREL = """Eres el motor de control de CorelDRAW de AURORA. Operas el CorelDRAW real
+abierto en la PC (por COM): lees el documento activo, exportas a PDF y cambias tamaño de página.
+Nunca simulas un resultado — si Corel no está abierto o algo falla, lo dices directamente."""
+
+class MotorCorel:
+    motor_id = "motor_corel"
+    def __init__(self):
+        sys.path.insert(0, str(ROOT / "EDITOR"))
+        try:
+            import corel_core as _c
+            self._c = _c
+        except Exception as e:
+            self._c = None
+            logger.warning(f"COREL: {e}")
+
+    async def info_documento(self) -> Dict:
+        if not self._c: return {"error": "Corel no disponible"}
+        return await asyncio.to_thread(self._c.info_documento)
+
+    async def exportar_pdf(self, ruta_salida: str) -> Dict:
+        if not self._c: return {"error": "Corel no disponible"}
+        return await asyncio.to_thread(self._c.exportar_pdf, ruta_salida)
+
+    async def escalar_pagina(self, ancho_cm: float, alto_cm: float, en_documento_nuevo: bool = False) -> Dict:
+        if not self._c: return {"error": "Corel no disponible"}
+        return await asyncio.to_thread(self._c.escalar_pagina, ancho_cm, alto_cm, en_documento_nuevo)
+
+    def get_status(self) -> Dict:
+        return {"motor_id": self.motor_id, "disponible": self._c.disponible() if self._c else False}
+
+
 # ── CATÁLOGO DE ADAPTADORES ───────────────────────────────────────
 # Mapa: motor_id → clase adaptadora
 ADAPTADORES_CATALOGO = {
@@ -301,4 +334,5 @@ ADAPTADORES_CATALOGO = {
     "motor_editor":       MotorEditor,
     "motor_buscador":     MotorBuscador,
     "motor_programador":  MotorProgramador,
+    "motor_corel":        MotorCorel,
 }

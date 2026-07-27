@@ -82,6 +82,27 @@ def _callback_para(motor_obj, metodo_principal: str):
     return callback
 
 
+def _callback_corel(motor_obj):
+    """Callback especial para MotorCorel (metodos multiples)."""
+    async def callback(msg: Mensaje) -> Optional[dict]:
+        accion = msg.contenido.get("accion", "info")
+        try:
+            if accion == "exportar_pdf":
+                return await motor_obj.exportar_pdf(msg.contenido.get("ruta_salida", ""))
+            elif accion == "escalar_pagina":
+                return await motor_obj.escalar_pagina(
+                    msg.contenido.get("ancho_cm", 0),
+                    msg.contenido.get("alto_cm", 0),
+                    msg.contenido.get("en_documento_nuevo", False),
+                )
+            else:
+                return await motor_obj.info_documento()
+        except Exception as e:
+            logger.error(f"Error callback corel: {e}")
+        return None
+    return callback
+
+
 def _callback_oracle(motor_obj):
     """Callback especial para MotorOracle (metodos multiples)."""
     async def callback(msg: Mensaje) -> Optional[dict]:
@@ -202,6 +223,18 @@ async def registrar_todos_los_motores() -> dict:
     except Exception as e:
         resultado["motor_oracle"] = f"error: {e}"
         logger.warning(f"[BUS] motor_oracle: {e}")
+
+    # ── MotorCorel (desde adaptadores) — control real de CorelDRAW ─
+    try:
+        sys.path.insert(0, str(ROOT / "MOTORES"))
+        import adaptadores as _adap
+        corel_obj = _adap.MotorCorel()
+        bus.registrar("motor_corel", _callback_corel(corel_obj))
+        resultado["motor_corel"] = "registrado"
+        logger.info("[BUS] Registrado: motor_corel (CorelDRAW COM)")
+    except Exception as e:
+        resultado["motor_corel"] = f"error: {e}"
+        logger.warning(f"[BUS] motor_corel: {e}")
 
     # ── SUSCRIPCIONES CRUZADAS ──────────────────────────────────────
     # Cuando llega un nuevo lead → motor_ventas lo recibe

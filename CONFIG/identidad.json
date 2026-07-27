@@ -1,5 +1,11 @@
 {
   "pin_salt": "8180d941ff112be19f593050f486a55d",
   "pin_hash": "a7ed2ab520bef2400f2069259cd16b2488a15d3fddd71e66e68f894737e69b0c",
-  "tokens": []
+  "tokens": [
+    {
+      "salt": "6948905ebc93e05b",
+      "hash": "4e872cf2bece0b3bf9c912245b4809fe50f874f36af02313fff810de187808f8",
+      "creado": "2026-07-24T00:53:18"
+    }
+  ]
 }

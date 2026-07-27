@@ -18,5 +18,15 @@
       "categoria": "Matemáticas"
     },
     "creado": "2026-07-16T02:46:07"
+  },
+  {
+    "slug": "prueba_auditoria_viva",
+    "meta": {
+      "id": "prueba_auditoria_viva",
+      "nombre": "Motor de Prueba",
+      "descripcion": "Recibe un número y devuelve su doble",
+      "categoria": "Pruebas"
+    },
+    "creado": "2026-07-24T19:41:39"
   }
 ]

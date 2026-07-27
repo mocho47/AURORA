@@ -1,0 +1,437 @@
+# -*- coding: utf-8 -*-
+"""
+AURORA · MOTOR COREL
+Control real de CorelDRAW 2025 por COM (win32com). Se conecta a la instancia
+que ya está abierta (o la abre si no hay ninguna) y opera sobre el documento
+real. Honesto: si Corel no está instalado o falla la conexión, lo dice;
+nunca simula un resultado.
+"""
+from __future__ import annotations
+import functools
+from pathlib import Path
+from typing import Dict
+
+_PROGID = "CorelDRAW.Application.26"
+
+
+def _con_com(fn):
+    """
+    Inicializa el apartamento COM en el hilo actual antes de tocar Corel y lo
+    libera al salir. Necesario porque estas funciones se llaman desde hilos
+    del pool de asyncio.to_thread, que no traen COM inicializado — sin esto
+    la llamada se cuelga en vez de fallar o responder.
+    """
+    @functools.wraps(fn)
+    def envoltura(*args, **kwargs):
+        import pythoncom
+        pythoncom.CoInitialize()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            pythoncom.CoUninitialize()
+    return envoltura
+
+
+def _app():
+    import win32com.client
+    try:
+        return win32com.client.gencache.EnsureDispatch(_PROGID)
+    except Exception as e:
+        raise RuntimeError(f"No se pudo conectar a CorelDRAW: {e}")
+
+
+@_con_com
+def disponible() -> bool:
+    """True si CorelDRAW responde por COM ahora mismo."""
+    try:
+        _app()
+        return True
+    except Exception:
+        return False
+
+
+@_con_com
+def info_documento() -> Dict:
+    """Estado real del documento activo en Corel (solo lectura)."""
+    try:
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        pg = doc.ActivePage
+        return {
+            "status": "ok",
+            "nombre": doc.Name,
+            "paginas": doc.Pages.Count,
+            "ancho": round(pg.SizeWidth, 3),
+            "alto": round(pg.SizeHeight, 3),
+            "unidad": doc.Unit,
+        }
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:200]}
+
+
+@_con_com
+def exportar_pdf(ruta_salida: str) -> Dict:
+    """
+    Publica el documento activo a PDF en ruta_salida.
+    Genera un archivo NUEVO — no modifica el documento original.
+    Usa el perfil de PDF configurado por última vez en Corel (Corel no expone
+    el DPI como parámetro directo de PublishToPDF; para forzar DPI exacto
+    usar exportar_bitmap con formato raster).
+    """
+    try:
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        destino = Path(ruta_salida).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        doc.PublishToPDF(str(destino))
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no generó el archivo (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino),
+                "kb": round(destino.stat().st_size / 1024, 1)}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def exportar_bitmap(ruta_salida: str, dpi: int = 300, formato: str = "png") -> Dict:
+    """
+    Exporta el documento activo a PNG/JPG con el DPI exacto indicado.
+    Genera un archivo NUEVO — no modifica el documento original.
+    """
+    try:
+        import win32com.client
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        c = win32com.client.constants
+        filtros = {"png": getattr(c, "cdrPNG", None), "jpg": getattr(c, "cdrJPEG", None),
+                   "jpeg": getattr(c, "cdrJPEG", None)}
+        filtro = filtros.get(formato.lower())
+        if filtro is None:
+            return {"status": "error", "detalle": f"Formato '{formato}' no soportado (usa png o jpg)."}
+        destino = Path(ruta_salida).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        # PaletteOptions y ExportArea son parametros COM (VT_DISPATCH): None = usar default real.
+        doc.ExportBitmap(str(destino), filtro, 1, 4, 0, 0, dpi, dpi,
+                          1, False, False, True, False, 0, None, None)
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no generó el archivo (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino),
+                "kb": round(destino.stat().st_size / 1024, 1), "dpi": dpi}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def escalar_pagina(ancho_cm: float, alto_cm: float, en_documento_nuevo: bool = False) -> Dict:
+    """
+    Cambia el tamaño de página (cm) del documento activo.
+    Si en_documento_nuevo=True, opera sobre un documento nuevo en blanco
+    (útil para pruebas sin tocar el trabajo real que esté abierto).
+    """
+    try:
+        import win32com.client
+        app = _app()
+        doc = app.CreateDocument() if en_documento_nuevo else app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        c = win32com.client.constants
+        doc.Unit = c.cdrCentimeter
+        pg = doc.ActivePage
+        pg.SizeWidth = ancho_cm
+        pg.SizeHeight = alto_cm
+        return {"status": "ok", "ancho_cm": ancho_cm, "alto_cm": alto_cm,
+                "documento_nuevo": en_documento_nuevo, "nombre": doc.Name}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def preparar_para_lona(ancho_m: float, alto_m: float, ruta_salida: str, dpi: int = 120) -> Dict:
+    """
+    Prepara el mismo diseño del documento activo para impresión de lona/banner:
+    escala la página al tamaño real en metros (se ve de lejos, no necesita
+    300dpi) y exporta a PNG a dpi bajo-medio (120 por default) para que el
+    archivo sea manejable. Usa exportar_pdf() en vez de esta si el taller
+    de impresión pide PDF en lugar de imagen.
+    """
+    try:
+        import win32com.client
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        c = win32com.client.constants
+        doc.Unit = c.cdrCentimeter
+        pg = doc.ActivePage
+        pg.SizeWidth = ancho_m * 100
+        pg.SizeHeight = alto_m * 100
+
+        filtros = {"png": getattr(c, "cdrPNG", None), "jpg": getattr(c, "cdrJPEG", None)}
+        formato = Path(ruta_salida).suffix.lstrip(".").lower()
+        filtro = filtros.get(formato, filtros["png"])
+        destino = Path(ruta_salida).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        doc.ExportBitmap(str(destino), filtro, 1, 4, 0, 0, dpi, dpi,
+                          1, False, False, True, False, 0, None, None)
+        # Imagenes de lona son grandes (varios megapixeles): Corel puede seguir
+        # escribiendo el archivo un momento despues de que la llamada regresa.
+        import time as _time
+        for _ in range(20):
+            if destino.exists() and destino.stat().st_size > 0:
+                break
+            _time.sleep(1)
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no genero el archivo (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1),
+                "ancho_m": ancho_m, "alto_m": alto_m, "dpi": dpi}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def cerrar_documento_sin_guardar(nombre: str) -> Dict:
+    """Cierra un documento por nombre SIN guardar (para limpiar documentos de prueba)."""
+    try:
+        app = _app()
+        for d in app.Documents:
+            if d.Name == nombre:
+                d.Close()
+                return {"status": "ok", "cerrado": nombre}
+        return {"status": "no_encontrado", "detalle": f"'{nombre}' no está abierto."}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:200]}
+
+
+@_con_com
+def guardar_copia(ruta_salida: str) -> Dict:
+    """
+    Guarda una COPIA del documento activo en ruta_salida (.cdr) sin tocar
+    ni renombrar el archivo original abierto (SaveAsCopy, no rompe el vínculo).
+    """
+    try:
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        destino = Path(ruta_salida).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        doc.SaveAsCopy(str(destino), None)
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no generó la copia (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1)}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def agregar_imagen_documento_activo(ruta_imagen: str, enviar_atras: bool = False) -> Dict:
+    """
+    Importa una imagen al documento ACTIVO (el que ya tienes abierto y
+    trabajando en Corel, no uno nuevo). Si enviar_atras=True, la manda al
+    fondo de la pila de capas (para ponerla detrás del logo).
+    """
+    try:
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        if not Path(ruta_imagen).exists():
+            return {"status": "error", "detalle": f"No existe la imagen: {ruta_imagen}"}
+        lyr = doc.ActiveLayer
+        lyr.Import(str(ruta_imagen), 0, None)
+        shape = lyr.Shapes.Item(1)
+        if enviar_atras:
+            shape.OrderToBack()
+        return {"status": "ok", "forma": shape.Name, "enviada_atras": enviar_atras}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+def quitar_fondo_y_agregar(ruta_imagen: str, enviar_atras: bool = True) -> Dict:
+    """
+    Flujo real del splash: quita el fondo de la imagen (IA real, rembg) y
+    el resultado lo importa al documento activo de Corel, mandándolo atrás
+    del logo por default (igual que el flujo manual de Anuar).
+    """
+    import importlib.util as _ilu
+    try:
+        spec = _ilu.spec_from_file_location("conversiones", Path(__file__).parent / "conversiones.py")
+        conv = _ilu.module_from_spec(spec); spec.loader.exec_module(conv)
+        r_fondo = conv.quitar_fondo(ruta_imagen)
+        if r_fondo.get("status") != "ok":
+            return {"status": "error", "detalle": f"No se pudo quitar el fondo: {r_fondo}"}
+    except Exception as e:
+        return {"status": "error", "detalle": f"quitar_fondo fallo: {str(e)[:200]}"}
+
+    r_import = agregar_imagen_documento_activo.__wrapped__(r_fondo["salida"], enviar_atras)
+    if r_import.get("status") == "ok":
+        r_import["imagen_sin_fondo"] = r_fondo["salida"]
+    return r_import
+
+
+@_con_com
+def crear_planilla(ruta_pieza: str, ancho_hoja_cm: float, alto_hoja_cm: float,
+                    ancho_pieza_cm: float, alto_pieza_cm: float,
+                    ruta_salida_pdf: str, espacio_entre_piezas_cm: float = 0.2,
+                    margen_hoja_cm: float = 0.5) -> Dict:
+    """
+    Arma una planilla real: repite ruta_pieza tantas veces como quepan en
+    una hoja de ancho_hoja_cm x alto_hoja_cm, cada pieza a su tamaño real
+    (ancho_pieza_cm x alto_pieza_cm — el tamaño del suaje), con espacio
+    entre piezas para que el corte no se traslape. Exporta a PDF.
+    """
+    try:
+        import win32com.client
+        app = _app()
+        if not Path(ruta_pieza).exists():
+            return {"status": "error", "detalle": f"No existe la pieza: {ruta_pieza}"}
+
+        doc = app.CreateDocument()
+        c = win32com.client.constants
+        doc.Unit = c.cdrCentimeter
+        pg = doc.ActivePage
+        pg.SizeWidth = ancho_hoja_cm
+        pg.SizeHeight = alto_hoja_cm
+        lyr = doc.ActiveLayer
+
+        paso_x = ancho_pieza_cm + espacio_entre_piezas_cm
+        paso_y = alto_pieza_cm + espacio_entre_piezas_cm
+        ancho_util = ancho_hoja_cm - 2 * margen_hoja_cm
+        alto_util = alto_hoja_cm - 2 * margen_hoja_cm
+        columnas = max(int(ancho_util // paso_x), 0)
+        filas = max(int(alto_util // paso_y), 0)
+        if columnas == 0 or filas == 0:
+            doc.Close()
+            return {"status": "error",
+                    "detalle": f"La pieza ({ancho_pieza_cm}x{alto_pieza_cm}cm) no cabe en la hoja ({ancho_hoja_cm}x{alto_hoja_cm}cm)."}
+
+        # Importamos la pieza UNA sola vez y duplicamos (mucho mas rapido que
+        # reimportar el archivo en cada casilla — igual que lo haria un diseñador real).
+        lyr.Import(str(ruta_pieza), 0, None)
+        original = lyr.Shapes.Item(1)
+        original.SetSize(ancho_pieza_cm, alto_pieza_cm)
+        x0 = margen_hoja_cm
+        y0 = alto_hoja_cm - margen_hoja_cm - alto_pieza_cm
+        original.SetPosition(x0, y0)
+
+        total = 0
+        for fila in range(filas):
+            for col in range(columnas):
+                x = margen_hoja_cm + col * paso_x
+                y = alto_hoja_cm - margen_hoja_cm - alto_pieza_cm - fila * paso_y
+                if col == 0 and fila == 0:
+                    total += 1
+                    continue  # ya es la original, no se duplica a si misma
+                original.Duplicate(x - x0, y - y0)
+                total += 1
+
+        destino = Path(ruta_salida_pdf).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        doc.PublishToPDF(str(destino))
+        doc.Close()
+
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no genero el PDF de la planilla (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1),
+                "piezas": total, "columnas": columnas, "filas": filas}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+def extraer_color_pixel(ruta_imagen: str, x: int, y: int) -> Dict:
+    """
+    Gotero real: lee el color exacto del pixel (x,y) de una imagen de
+    referencia (ej. foto del envase). No usa Corel, solo lee la imagen.
+    """
+    try:
+        from PIL import Image
+        ruta = Path(ruta_imagen)
+        if not ruta.exists():
+            return {"status": "error", "detalle": f"No existe la imagen: {ruta_imagen}"}
+        img = Image.open(ruta).convert("RGB")
+        if not (0 <= x < img.width and 0 <= y < img.height):
+            return {"status": "error",
+                    "detalle": f"Pixel ({x},{y}) fuera de la imagen ({img.width}x{img.height})."}
+        r, g, b = img.getpixel((x, y))
+        return {"status": "ok", "r": r, "g": g, "b": b, "hex": f"#{r:02X}{g:02X}{b:02X}"}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:200]}
+
+
+@_con_com
+def aplicar_color_seleccion(r: int, g: int, b: int) -> Dict:
+    """
+    Aplica un color RGB real a la forma actualmente SELECCIONADA en Corel
+    (el mismo gesto que tú: seleccionas las letras, aplicas el tono).
+    """
+    try:
+        app = _app()
+        shape = app.ActiveShape
+        if not shape:
+            return {"status": "sin_seleccion", "detalle": "No hay ninguna forma seleccionada en Corel."}
+        color = app.CreateRGBColor(r, g, b)
+        shape.Fill.ApplyUniformFill(color)
+        return {"status": "ok", "r": r, "g": g, "b": b, "forma": shape.Name}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
+def extraer_y_aplicar_color(ruta_imagen: str, x: int, y: int) -> Dict:
+    """
+    Gotero completo: muestra el pixel (x,y) de ruta_imagen y lo aplica de
+    una vez a la forma seleccionada en Corel. Combina las dos funciones
+    de arriba en un solo paso para el flujo real del sticker.
+    """
+    muestra = extraer_color_pixel(ruta_imagen, x, y)
+    if muestra.get("status") != "ok":
+        return muestra
+    return aplicar_color_seleccion.__wrapped__(muestra["r"], muestra["g"], muestra["b"])
+
+
+@_con_com
+def integrar_logo_fondo(ruta_fondo: str, ruta_logo: str, ruta_salida_pdf: str) -> Dict:
+    """
+    Crea un documento NUEVO, importa la imagen de fondo (ajustada al tamaño
+    de página) y el logo encima (centrado), y exporta el resultado a PDF.
+    No toca ningún documento que ya esté abierto en Corel.
+    """
+    try:
+        app = _app()
+        if not Path(ruta_fondo).exists():
+            return {"status": "error", "detalle": f"No existe el fondo: {ruta_fondo}"}
+        if not Path(ruta_logo).exists():
+            return {"status": "error", "detalle": f"No existe el logo: {ruta_logo}"}
+
+        doc = app.CreateDocument()
+        lyr = doc.ActiveLayer
+
+        # Fondo: importar y ajustar a la página completa
+        lyr.Import(str(ruta_fondo), 0, None)
+        fondo = lyr.Shapes.Item(1)
+        pg = doc.ActivePage
+        fondo.SetSize(pg.SizeWidth, pg.SizeHeight)
+        fondo.SetPosition(0, 0)
+
+        # Logo: importar y centrar sobre el fondo
+        lyr.Import(str(ruta_logo), 0, None)
+        logo = lyr.Shapes.Item(1)  # el ultimo importado queda seleccionado/al frente
+        logo.CenterX = pg.SizeWidth / 2
+        logo.CenterY = pg.SizeHeight / 2
+
+        destino = Path(ruta_salida_pdf).resolve()
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        doc.PublishToPDF(str(destino))
+        doc.Close()
+
+        if not destino.exists():
+            return {"status": "error", "detalle": "Corel no generó el PDF final (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1)}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
