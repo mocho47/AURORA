@@ -50,6 +50,20 @@ def init_db() -> None:
     # artículo en varias tallas/colores). Se recrea la tabla con el esquema nuevo.
     cols = [r[1] for r in con.execute("PRAGMA table_info(items)").fetchall()]
     if "talla" not in cols or "color" not in cols:
+        # Respaldo real antes de una migración destructiva (nunca DROP sin respaldo).
+        import json as _json
+        backup_dir = ROOT / ".ide_backups"
+        backup_dir.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        viejos_items = [dict(r) for r in con.execute("SELECT * FROM items").fetchall()]
+        try:
+            viejos_mov = [dict(r) for r in con.execute("SELECT * FROM movimientos").fetchall()]
+        except sqlite3.OperationalError:
+            viejos_mov = []
+        if viejos_items or viejos_mov:
+            (backup_dir / f"inventario_pre_migracion.{ts}.bak.json").write_text(
+                _json.dumps({"items": viejos_items, "movimientos": viejos_mov}, ensure_ascii=False, indent=2),
+                encoding="utf-8")
         con.execute("DROP TABLE IF EXISTS items")
         con.execute("DROP TABLE IF EXISTS movimientos")
         con.execute("""
@@ -115,6 +129,12 @@ def agregar_item(nombre, categoria="", unidad="pz", cantidad=0,
 
     if row:
         nueva = float(row["cantidad"]) + cantidad
+        if nueva < 0:
+            con.close()
+            return {"status": "sin_stock",
+                    "mensaje": f"Existencia insuficiente: hay {row['cantidad']} {row['unidad']}, "
+                               f"no se puede aplicar {cantidad} (quedaría negativo).",
+                    "existencia": float(row["cantidad"])}
         con.execute(
             "UPDATE items SET unidad=?, minimo=?, costo_unitario=?, cantidad=?, actualizado=? WHERE id=?",
             (unidad or row["unidad"], minimo, costo_unitario, nueva, _ahora(), row["id"]))
