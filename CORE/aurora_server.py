@@ -1531,9 +1531,17 @@ async def whatsapp_qr():
     return await asyncio.to_thread(_run)
 
 
+class WhatsAppReconectarReq(BaseModel):
+    token: str
+
 @app.post("/whatsapp/reconectar", tags=["WhatsApp"])
-async def whatsapp_reconectar():
-    """Cierra sesión (logout) para poder vincular OTRO número por QR. Acción deliberada del dueño."""
+async def whatsapp_reconectar(req: WhatsAppReconectarReq):
+    """Cierra sesión (logout) para poder vincular OTRO número por QR. Acción deliberada
+    del dueño. Encontrado en vivo 2026-07-27: no tenía ningún candado -- cualquiera con
+    acceso de red al servidor podía desconectar el WhatsApp real del negocio con una
+    sola petición. _guard() es la misma función que ya protege /accion/reparar-whatsapp
+    y el resto de endpoints de PIN de dueño."""
+    _guard(req.token)
     host, inst, tok = _green_creds()
     if not (inst and tok):
         return {"status": "FALTA_TOKEN"}

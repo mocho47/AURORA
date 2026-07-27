@@ -88,12 +88,35 @@ async def _arrancar() -> None:
     # 6. WHATSAPP LISTENER ───────────────────────────────────────────
     logger.info("[6/6] Iniciando WhatsApp listener...")
     try:
+        from collections import deque
         from INTEGRACIONES.whatsapp_integration import whatsapp
+
+        # Dedup real por idMessage: con el reordenamiento de ack (procesar antes de
+        # confirmar recepción, whatsapp_integration.py) un fallo de red al borrar la
+        # notificación puede hacer que Green API reentregue el mismo mensaje — sin
+        # esto, se respondería 2 veces al mismo cliente por el mismo mensaje.
+        _wa_ids_vistos = deque(maxlen=200)
+        _wa_ids_set = set()
+
+        def _wa_ya_procesado(id_msg: str) -> bool:
+            if not id_msg:
+                return False
+            if id_msg in _wa_ids_set:
+                return True
+            if len(_wa_ids_vistos) == _wa_ids_vistos.maxlen:
+                _wa_ids_set.discard(_wa_ids_vistos[0])
+            _wa_ids_vistos.append(id_msg)
+            _wa_ids_set.add(id_msg)
+            return False
 
         async def _procesar_wa(data: dict) -> None:
             body = data.get("body", {})
             tipo = body.get("typeWebhook", "")
             if tipo == "incomingMessageReceived":
+                id_msg = body.get("idMessage", "")
+                if _wa_ya_procesado(id_msg):
+                    logger.info(f"      [WA] Mensaje {id_msg} ya procesado, ignoro duplicado.")
+                    return
                 msg_data = body.get("messageData", {})
                 texto = msg_data.get("textMessageData", {}).get("textMessage", "")
                 sender = body.get("senderData", {}).get("sender", "")
@@ -122,7 +145,11 @@ async def _arrancar() -> None:
                     )
                     respuesta = resultado.get("respuesta", "")
                     if respuesta:
-                        await whatsapp.enviar_mensaje(telefono, respuesta)
+                        r_envio = await whatsapp.enviar_mensaje(telefono, respuesta)
+                        if r_envio.get("status") != "ENVIADO":
+                            # Antes este resultado se descartaba -- el cliente real
+                            # nunca recibía nada y no quedaba ningún rastro del fallo.
+                            logger.error(f"      [WA] FALLO envío real a {telefono}: {r_envio}")
 
         asyncio.create_task(whatsapp.escuchar(_procesar_wa), name="wa_listener")
         logger.info("      WhatsApp listener activo.")
@@ -135,10 +162,20 @@ async def _arrancar() -> None:
         from pathlib import Path as _P
         marca = _P(__file__).resolve().parent / "MEMORIA" / ".ultimo_recordatorio_post"
         HORA = int(os.getenv("HORA_RECORDATORIO_POST", "9"))
-        MI_WA = os.getenv("WA_RECORDATORIO", "5213326148674")  # personal de Anuar
+        # Encontrado en vivo 2026-07-27: el default viejo (5213326148674) es el MISMO
+        # número del negocio (la instancia de Green API), no el personal de Anuar --
+        # WA_RECORDATORIO no está definido en .env, así que el aviso se lo mandaba el
+        # negocio a sí mismo y nunca le llegaba a Anuar. Sin default: si no está
+        # configurado, se salta honesto (con aviso una sola vez) en vez de adivinar mal.
+        MI_WA = os.getenv("WA_RECORDATORIO", "")
+        _avisado_falta_config = False
         while True:
             try:
                 hoy = _dt.date.today().isoformat()
+                if not MI_WA and not _avisado_falta_config:
+                    logger.warning("      [Recordatorio] WA_RECORDATORIO no está configurado en "
+                                    ".env (número personal de Anuar) — el recordatorio diario no se manda.")
+                    _avisado_falta_config = True
                 ya = marca.read_text(encoding="utf-8").strip() if marca.exists() else ""
                 if _dt.datetime.now().hour >= HORA and ya != hoy and MI_WA:
                     from INTEGRACIONES.whatsapp_integration import whatsapp as _wa

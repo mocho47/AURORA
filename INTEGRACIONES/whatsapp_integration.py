@@ -89,7 +89,11 @@ class WhatsAppIntegration:
         return await self.enviar_mensaje(telefono, mensaje)
 
     async def recibir_mensajes(self) -> Dict[str, Any]:
-        """Polling de mensajes nuevos desde Green API."""
+        """Polling de mensajes nuevos desde Green API. Ya NO borra la notificación
+        aquí — eso queda para escuchar(), y SOLO después de procesar el mensaje con
+        éxito. Encontrado en vivo 2026-07-27: borrar antes de procesar hacía que un
+        mensaje real de un cliente desapareciera para siempre si el procesamiento
+        tronaba (Groq caído, excepción en un motor, etc.)."""
         if not self._disponible():
             return {"status": "NO_CREDENCIALES", "mensajes": []}
         url = f"{self._base}/receiveNotification/{self.token}"
@@ -99,9 +103,7 @@ class WhatsAppIntegration:
                 if r.status_code == 200 and r.text.strip() not in ("", "null"):
                     data = r.json()
                     receipt_id = data.get("receiptId") if data else None
-                    if receipt_id:
-                        await self._confirmar_recepcion(receipt_id)
-                    return {"status": "OK", "mensajes": [data] if data else []}
+                    return {"status": "OK", "mensajes": [data] if data else [], "receipt_id": receipt_id}
             return {"status": "OK", "mensajes": []}
         except Exception as e:
             logger.error(f"WA recibir error: {e}")
@@ -112,18 +114,34 @@ class WhatsAppIntegration:
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 await client.delete(url)
-        except Exception:
-            pass
+        except Exception as e:
+            # Si esto falla, la notificación sigue en la cola de Green API y se
+            # vuelve a entregar en el próximo poll — puede reprocesar el mismo
+            # mensaje (por eso el dedup por idMessage en run_aurora.py), pero nunca
+            # se pierde. Antes se tragaba en silencio sin ningún rastro.
+            logger.warning(f"[WA] No se pudo confirmar recepción {receipt_id} (reintentará): {e}")
 
     async def escuchar(self, callback) -> None:
-        """Bucle de escucha continua. callback(data) se llama con cada mensaje."""
+        """Bucle de escucha continua. callback(data) se llama con cada mensaje.
+        La notificación solo se confirma (borra) DESPUÉS de que el callback procese
+        el mensaje sin lanzar excepción — si falla, no se confirma y Green API la
+        vuelve a entregar en el siguiente poll (2s) en vez de perderla para siempre."""
         logger.info("[WA] Iniciando escucha de mensajes...")
         while True:
             try:
                 result = await self.recibir_mensajes()
+                receipt_id = result.get("receipt_id")
+                procesado_ok = True
                 for msg in result.get("mensajes", []):
                     if msg:
-                        await callback(msg)
+                        try:
+                            await callback(msg)
+                        except Exception as e:
+                            procesado_ok = False
+                            logger.error(f"[WA] callback falló procesando mensaje real, "
+                                         f"NO se confirma recepción (se reintentará): {e}")
+                if receipt_id and procesado_ok:
+                    await self._confirmar_recepcion(receipt_id)
                 await asyncio.sleep(2)
             except Exception as e:
                 logger.warning(f"[WA] Error en ciclo: {e}")
