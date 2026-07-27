@@ -54,6 +54,45 @@ def _es_ruta_escritura_permitida(path: Path) -> bool:
     )
 
 
+_EXT_BINARIAS = {
+    ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".ico",
+    ".mp4", ".mp3", ".wav", ".avi", ".mov", ".mkv",
+    ".zip", ".rar", ".7z", ".exe", ".msi", ".dll",
+    ".docx", ".xlsx", ".pptx", ".cdr", ".ai", ".psd",
+}
+
+
+_CARPETAS_CONOCIDAS = {
+    "descargas": Path.home() / "Downloads", "downloads": Path.home() / "Downloads",
+    "escritorio": Path.home() / "Desktop", "desktop": Path.home() / "Desktop",
+    "documentos": Path.home() / "Documents", "documents": Path.home() / "Documents",
+}
+
+
+def _resolver_archivo_real(ruta: str) -> Tuple[Optional[Path], Optional[Dict]]:
+    """Resuelve una ruta como la escribiría un humano (carpeta conocida +
+    nombre aproximado) y, si el nombre exacto no existe, busca la coincidencia
+    real más cercana en esa carpeta — nunca deja pasar un nombre inventado.
+    Regresa (ruta_real, None) si se resolvió, o (None, dict_de_error) si no."""
+    import difflib
+    p = Path(ruta)
+    if not p.is_absolute():
+        partes = Path(ruta.replace("\\", "/")).parts
+        base = _CARPETAS_CONOCIDAS.get(partes[0].lower()) if partes else None
+        p = (base / Path(*partes[1:])) if base and len(partes) > 1 else \
+            (base if base else Path.home() / ruta)
+    if not p.exists() and p.parent.exists():
+        candidatos = [f.name for f in p.parent.iterdir() if f.is_file()]
+        match = difflib.get_close_matches(p.name, candidatos, n=1, cutoff=0.35)
+        if match:
+            p = p.parent / match[0]
+        else:
+            return None, {"status": "no_encontrado",
+                          "mensaje": f"No encontré '{ruta}' en {p.parent}. Archivos ahí: "
+                                     + ", ".join(candidatos[:15]) + (" ..." if len(candidatos) > 15 else "")}
+    return p, None
+
+
 # ── Ops síncronas ─────────────────────────────────────────────────
 
 def _ejecutar_powershell_sync(cmd: str, timeout: int = 30) -> Dict:
@@ -159,11 +198,20 @@ class PcAccess:
     # ── FILESYSTEM ────────────────────────────────────────────────
 
     async def leer_archivo(self, ruta: str) -> Dict:
-        """Lee cualquier archivo del PC."""
-        path = Path(ruta).resolve()
+        """Lee cualquier archivo de TEXTO del PC (código, .txt, .json, .csv...).
+        Resuelve carpetas conocidas y busca la coincidencia real más cercana si
+        el nombre exacto no existe. Para PDF/imágenes/video/binarios no lee el
+        contenido como texto (saldría basura) — usa abrir_archivo en su lugar."""
+        path, err = _resolver_archivo_real(ruta)
+        if err:
+            return err
+        if not path.exists():
+            return {"status": "NO_EXISTE", "ruta": str(path)}
+        if path.suffix.lower() in _EXT_BINARIAS:
+            return {"status": "es_binario", "ruta": str(path),
+                    "mensaje": f"'{path.name}' es un archivo binario ({path.suffix}), no se puede "
+                               "leer como texto. Usa abrir_archivo para abrirlo con su programa."}
         try:
-            if not path.exists():
-                return {"status": "NO_EXISTE", "ruta": str(path)}
             contenido = await asyncio.to_thread(path.read_text, encoding="utf-8", errors="replace")
             await self._registrar("archivo_leido", {"ruta": str(path), "bytes": len(contenido)}, 0.4)
             return {"status": "OK", "ruta": str(path), "contenido": contenido, "lineas": contenido.count("\n")}
@@ -251,8 +299,14 @@ class PcAccess:
     # ── APPS Y VENTANAS ───────────────────────────────────────────
 
     async def abrir_archivo(self, ruta: str) -> Dict:
-        """Abre un archivo con su aplicación predeterminada."""
-        return await self.ejecutar(f'Start-Process "{ruta}"')
+        """Abre un archivo con su aplicación predeterminada. Resuelve carpetas
+        conocidas (Descargas/Escritorio/Documentos) igual que las escribe un
+        humano, y si el nombre exacto no existe busca la coincidencia real más
+        cercana en esa carpeta — nunca intenta abrir un nombre inventado."""
+        p, err = _resolver_archivo_real(ruta)
+        if err:
+            return err
+        return await self.ejecutar(f'Start-Process "{p}"')
 
     async def apps_instaladas(self) -> Dict:
         r = await self.ejecutar(
