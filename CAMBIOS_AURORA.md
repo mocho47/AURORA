@@ -173,13 +173,28 @@ Después de cerrar el manual, se probaron en vivo los 6 grupos de trabajo comple
 
 ---
 
+## 2026-07-27 — Fase 3 del manual (510 herramientas): intentada, hallazgo real de robustez
+
+Se lanzaron 11 agentes en paralelo para verificar en vivo las 20 carpetas del enrutador universal (510 herramientas). **No se completó** — reveló un problema real: mandar muchas peticiones reales simultáneas a `/chat` puede colgar el servidor (el endpoint `/health` seguía respondiendo sano, pero `/chat` dejaba de contestar por completo, consistente con una petición que se atoró internamente y bloqueó la cola de las demás). Confirmado por 2 agentes independientes con el mismo síntoma. El servidor se reinició limpio sin problema, pero **no se repitió el intento de 11 agentes a la vez** para no volver a tumbarlo mientras Anuar seguía usando el panel en vivo.
+
+**Queda como hallazgo real pendiente**: el servidor de AURORA no está pensado para muchas peticiones de chat concurrentes — vale la pena investigar si `/chat` tiene algún candado/recurso compartido sin `asyncio.to_thread` o algún llamado sin timeout que bloquee el event loop completo. La Fase 3 completa (510 herramientas) queda pendiente para otra sesión, con un enfoque más controlado (secuencial o con pocos agentes a la vez, no 11 en paralelo).
+
+**2 bugs reales más encontrados por Anuar probando en vivo, ya corregidos**:
+1. Pedir "el pdf" de nombre "argan" abrió `argan.gsp` (un archivo de corte de 5KB, no el PDF) — la búsqueda de archivo aproximado no respetaba la extensión pedida. Corregido: ahora solo compara contra archivos del mismo tipo, y si hay varios candidatos reales parecidos, pregunta en vez de adivinar.
+2. AURORA no tenía ninguna forma real de enviar un ARCHIVO por WhatsApp (solo texto) — pedir "envíaselo como documento por WhatsApp" hacía que el enrutador adivinara mal (abrir el archivo local, o intentar abrirlo en Corel). Se construyó `enviar_archivo()` real vía Green API (`sendFileByUpload`), con resolución de contacto por número real o por nombre buscado en el CRM (ORACLE) — nunca inventa un número.
+
+**Archivos que cambiaron**: `CEREBRO/pc_access.py`, `CEREBRO/consciencia.py`, `INTEGRACIONES/whatsapp_integration.py`.
+
+---
+
 ## Planes futuros (próximas sesiones)
 
 Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) más las 2 capacidades nuevas de alertas/manual, con sus 14 candados ya verificados en vivo. Pendientes para otra sesión:
 
-1. **Verificación en vivo de las ~510 herramientas del enrutador universal** (Fase 3 declarada del manual de comandos) — hoy solo se cubrieron los 14 candados directos.
-2. Caché de pywin32 corrupta en Corel — fix rápido pendiente, no urgente.
-3. Generador del manual: no distingue candados con lógica compuesta (2 categorías de trigger a la vez, ej. `negocio`/`corel`) — hoy se avisa con una nota, sería mejor detectarlo automático.
-4. `dxf`: "vectoriza" no se comporta igual que las demás frases del mismo candado (ver hallazgo arriba) — revisar por qué.
+1. **Investigar por qué `/chat` se cuelga con varias peticiones reales simultáneas** (encontrado 2026-07-27 con la Fase 3) — prioridad alta, es un riesgo real de que el panel se quede sin responder si dos personas lo usan a la vez.
+2. **Verificación en vivo de las ~510 herramientas del enrutador universal** (Fase 3 del manual de comandos) — intentada, no completada por el hallazgo de arriba. Retomar con un enfoque secuencial/controlado, no muchos agentes a la vez.
+3. Caché de pywin32 corrupta en Corel — fix rápido pendiente, no urgente.
+4. Generador del manual: no distingue candados con lógica compuesta (2 categorías de trigger a la vez, ej. `negocio`/`corel`) — hoy se avisa con una nota, sería mejor detectarlo automático.
+5. `dxf`: "vectoriza" no se comporta igual que las demás frases del mismo candado (ver hallazgo arriba) — revisar por qué.
 
 **Explícitamente diferido, no urgente**: fusionar los 10 candados de dominio dentro del enrutador de IA — hoy son más confiables por separado (determinístico vs. probabilístico); solo tiene sentido si en el futuro se decide que vale la pena el cambio de riesgo.
