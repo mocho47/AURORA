@@ -82,16 +82,47 @@ Después de la corrección de arriba, Anuar probó pidiéndole a AURORA (no a m�
 
 ---
 
+## 2026-07-27 (madrugada) — Grupo Negocio: Órdenes + Inventario + CRM + Contabilidad
+
+**Por qué**: siguiente grupo de la lista, con datos reales de dinero del taller. 2 auditorías reales en paralelo (código completo leído, ~177k tokens combinados) sobre `TALLER/ordenes_taller.py`, `TALLER/inventario.py`, `TALLER/reportes_bi.py`, `TALLER/administracion.py`, `TALLER/cotizador_servicios.py`, `TALLER/taller_core.py`, `TALLER/album_catalogo.py` y `ORACLE/oracle_core.py`.
+
+**Aclaración importante** (no fue un bug): un agente marcó como crítico que `taller.db` estaba vacía en vez de tener las 34 órdenes reales — es el reset intencional "AURORA virgen" que Anuar pidió el 2026-07-24, con respaldo real conservado en `_BACKUP_DB_pre_virgen_20260723_235128/`. No se tocó.
+
+**Qué se encontró y se arregló:**
+
+1. **La contabilidad mensual contaba órdenes CANCELADAS como ingresos y utilidad reales** — una orden cancelada de $500 inflaba el reporte en vez de excluirse. Ahora `contabilidad_mensual()` ignora las canceladas. Probado en vivo: crear+cancelar una orden de prueba, el reporte volvió a $0 correcto.
+
+2. **Cambiar el estado de una orden que NO existe respondía "ok"** — mentira por omisión, nunca revisaba si la orden era real. Ahora responde error honesto. Probado en vivo con un id inexistente.
+
+3. **Marcar una orden como "entregada" la marcaba automáticamente como COBRADA (saldo=0), sin verificar que de verdad se pagó** — si alguien de la familia (Samm/Rocío/Anuar) entregaba el producto sin cobrar antes, el sistema igual reportaba el dinero como cobrado, perdiendo visibilidad real de cuentas por cobrar. Ahora el estado y el cobro son cosas separadas: si queda saldo pendiente al entregar, el mensaje lo avisa explícito en vez de ocultarlo. Probado en vivo con una orden de prueba con saldo pendiente.
+
+4. **Se podían dejar existencias de inventario en NEGATIVO** — reabastecer con una cantidad negativa (típico error de captura) dejaba el stock en números negativos sin ningún aviso, contaminando el valor total del inventario. Ahora se bloquea igual que ya bloqueaba la función de movimientos. Probado en vivo: intento de dejar un artículo de prueba en negativo, bloqueado.
+
+5. **Una migración de base de datos del inventario podía borrar TODO sin respaldo** — código dormido (el esquema real ya está al día, 73 artículos reales confirmados sanos), pero si alguna vez se disparaba, borraba items y movimientos sin guardar copia. Ahora, si algún día se dispara, respalda todo a un JSON con fecha antes de borrar.
+
+6. **Bug de "utilidad $0" en los reportes de negocio (BI)** — si un mes tenía una utilidad real capturada de exactamente $0, el sistema la descartaba en silencio y la reemplazaba con un cálculo derivado distinto, sin avisar. Corregido para respetar el dato real capturado, sea cual sea.
+
+7. **Crear 2 órdenes casi al mismo tiempo podía perder una de las dos** — medido en vivo: 5 órdenes creadas en paralelo, 3 de 5 fallaban con error 500 (folios que colisionaban por venir del mismo segundo + la base de datos bloqueándose entre sí). Arreglado con el mismo patrón que ya usa el resto del proyecto (modo WAL + tiempo de espera) más un folio que ya no puede repetirse. Probado en vivo: 5 de 5 órdenes creadas sin error.
+
+8. **2 arreglos menores de consistencia**: preguntar por el pronóstico de ventas (CRM) por chat pedía una confirmación extra innecesaria (siendo una consulta de solo lectura, igual que preguntar por inventario) — ya responde directo. Y 2 endpoints del CRM que sí bloqueaban brevemente el sistema mientras respondían, ahora corren igual que el resto.
+
+**Probado en vivo, checklist completo**: contabilidad excluye canceladas, estado sobre orden inexistente da error honesto, entregar no fuerza cobro falso, inventario bloquea negativos, 5 órdenes simultáneas sin fallos, pronóstico de embudo responde directo. Todos los datos de prueba (etiquetados `AUDIT2_*`) limpiados al final — inventario real (73 artículos) y resto del negocio intactos.
+
+**Archivos que cambiaron**: `TALLER/ordenes_taller.py`, `TALLER/inventario.py`, `TALLER/reportes_bi.py`, `CEREBRO/registro_herramientas.py`, `CORE/aurora_server.py`.
+
+**Explícitamente NO se hizo en esta corrección** (con razón real): no se arregló la carrera lectura-modificación-escritura en los almacenes JSON de materiales/servicios (riesgo real pero no reproducido con pérdida de datos; arreglarlo bien pide locking de archivo, otro proyecto). No se distinguió "costo nunca capturado" de "costo capturado en $0 real" en los reportes (pide una columna nueva en la base de datos, cambio de esquema fuera de alcance). No se tocó la ambigüedad de "bajo mínimo" entre artículos nunca contados y stock realmente bajo (cosmético, mejora de UX para otra sesión).
+
+---
+
 ## Planes futuros (próximas sesiones, en orden)
 
-La corrección de esta noche arregló la ESTRUCTURA del enrutador (cómo decide qué hacer con cualquier mensaje, en los 14 dominios). Lo que falta es auditar el CONTENIDO interno de cada dominio con el mismo rigor que se le dio a Corel hoy (código real leído + probado en vivo, no solo teoría). Se agrupó por riesgo real, no por orden alfabético — cada grupo es una sesión completa:
+La corrección del enrutador (26-27 jul) arregló la ESTRUCTURA (cómo decide qué hacer con cualquier mensaje). Lo que falta es auditar el CONTENIDO interno de cada dominio restante con el mismo rigor. Se agrupó por riesgo real, no por orden alfabético:
 
-1. **Negocio**: órdenes + inventario + CRM + contabilidad. Toca datos reales del taller, necesita probarse contra datos reales.
-2. **Vendedor**: fichas técnicas y pitches. Ya se le quitó el bug de esta noche (mostraba texto interno crudo); falta auditar la calidad real de las fichas mismas.
-3. **Publicador + WhatsApp**: la más delicada — manda posts y mensajes REALES a gente real. Sesión aparte, con más cuidado, sin compartir con nada más.
+1. **Vendedor**: fichas técnicas y pitches. Ya se le quitó el bug de esta noche (mostraba texto interno crudo); falta auditar la calidad real de las fichas mismas.
+2. **Publicador + WhatsApp**: la más delicada — manda posts y mensajes REALES a gente real. Sesión aparte, con más cuidado, sin compartir con nada más.
 
-**Ya cerrado** (ver arriba, 2026-07-27): Grupo de Fábrica + editar código + consultar código + memoria real.
+**Ya cerrados**: Grupo de Fábrica + editar código + consultar código + memoria real (2026-07-27); Grupo Negocio: Órdenes + Inventario + CRM + Contabilidad (2026-07-27).
 
-Es un estimado, no una promesa cerrada — Corel tomó una sesión completa por sorpresas que no se esperaban (COM, event loops). Alguno de estos 5 puede ser más rápido, otro puede encontrar lo suyo.
+Es un estimado, no una promesa cerrada — Corel tomó una sesión completa por sorpresas que no se esperaban (COM, event loops). Alguno de estos puede ser más rápido, otro puede encontrar lo suyo.
 
 **Explícitamente diferido, no urgente**: fusionar los 10 candados de dominio dentro del enrutador de IA — hoy son más confiables por separado (determinístico vs. probabilístico); solo tiene sentido si en el futuro se decide que vale la pena el cambio de riesgo.
