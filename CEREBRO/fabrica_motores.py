@@ -341,14 +341,48 @@ def crear_motor(nombre: str, descripcion: str) -> dict:
     try:
         CUSTOM_DIR.mkdir(parents=True, exist_ok=True)
         ruta = CUSTOM_DIR / f"{slug}.py"
+        reemplazo = None
+        if ruta.exists():
+            # Antes esto pisaba el motor anterior en silencio, sin aviso ni respaldo,
+            # con el mismo mensaje de éxito que una creación nueva. Mismo patrón que ya
+            # usa _editar_codigo_real: respaldo con timestamp antes de sobrescribir.
+            import shutil
+            from datetime import datetime as _dt
+            bk_dir = ROOT / ".ide_backups"
+            bk_dir.mkdir(exist_ok=True)
+            reemplazo = bk_dir / f"{slug}.py.fabrica.{_dt.now().strftime('%Y%m%d-%H%M%S')}.bak"
+            shutil.copy2(str(ruta), str(reemplazo))
         ruta.write_text(codigo, encoding="utf-8")
     except Exception as e:
         return {"status": "error", "detalle": f"No se pudo guardar: {e}"}
 
     meta = _leer_meta(ruta)
+    # "Compila" no es "funciona": _leer_meta() SÍ ejecuta el motor para leer META, así
+    # que un import roto o un error de runtime SÍ se detecta aquí — antes ese fallo se
+    # tragaba y el status seguía siendo "ok", diciéndole a Anuar "creado de verdad"
+    # sobre un motor que en realidad truena al usarse.
+    if not meta:
+        return {"status": "error", "archivo": str(ruta), "slug": slug,
+                "detalle": "El código compila (sintaxis válida) pero el motor falla al cargarse "
+                           "de verdad (import roto o error en tiempo de ejecución) — no lo doy por creado. "
+                           "El archivo quedó en disco por si quieres revisarlo a mano."}
     _registrar_autoconocimiento(meta, slug)
-    return {"status": "ok", "archivo": str(ruta), "slug": slug, "meta": meta,
-            "diseno": diseno[:800], "autoconocimiento": "registrado"}
+    # Refresca el registro universal de herramientas para que el motor nuevo quede
+    # disponible de inmediato en esta misma sesión — antes el catálogo se congelaba
+    # desde el primer mensaje hasta reiniciar el servidor (descubrir(refrescar=True)
+    # nunca se llamaba en ningún lugar del proyecto).
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT / "CEREBRO"))
+        import registro_herramientas as _reg
+        _reg.descubrir(refrescar=True)
+    except Exception:
+        pass
+    resultado = {"status": "ok", "archivo": str(ruta), "slug": slug, "meta": meta,
+                 "diseno": diseno[:800], "autoconocimiento": "registrado"}
+    if reemplazo:
+        resultado["reemplazo_de"] = f"Reemplacé un motor existente con el mismo nombre. Respaldo: {reemplazo.name}"
+    return resultado
 
 
 def listar_motores_custom() -> dict:
@@ -371,9 +405,11 @@ def probar_motor(slug: str, accion: str = "", datos: dict = None) -> dict:
 
     Blindado con try/except: un motor roto NO revienta, devuelve error.
     """
-    ruta = CUSTOM_DIR / f"{_slug(slug) if '/' not in slug else slug}.py"
-    if not ruta.exists():
-        ruta = CUSTOM_DIR / f"{slug}.py"
+    # SIEMPRE se sanitiza — antes, si el slug traía "/", se usaba tal cual sin pasar
+    # por _slug(), abriendo un path traversal real (podía salir de MOTORES_CUSTOM/ y
+    # cargar/ejecutar cualquier .py del sistema). _slug() ya vuelve el string seguro
+    # (solo a-z0-9_) sin importar qué caracteres traiga.
+    ruta = CUSTOM_DIR / f"{_slug(slug)}.py"
     if not ruta.exists():
         return {"status": "error", "mensaje": f"No existe el motor '{slug}'."}
     try:

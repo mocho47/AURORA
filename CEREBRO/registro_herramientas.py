@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Carpetas de CAPACIDADES reales de AURORA (negocio + núcleo). Se excluye lo que NO es
 # capacidad operable: el server HTTP, setup, obsoletos, el subsistema viejo, y este mismo.
 CARPETAS = [
-    "MOTORES", "MARKETING", "PUBLICADOR", "VENDEDOR", "TALLER", "ORACLE", "EDITOR",
+    "MOTORES", "MOTORES_CUSTOM", "MARKETING", "PUBLICADOR", "VENDEDOR", "TALLER", "ORACLE", "EDITOR",
     "MEMORIA", "WEB", "BIBLIOTECA", "SISTEMA", "AGENDA", "REDES", "MANUALES",
     "SUBLIMACION", "AUTH", "CEREBRO", "FORJA", "INTEGRACIONES", "CORE",
 ]
