@@ -531,6 +531,17 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("accion_fisica",   _es_accion_fisica,     "_accion_sistema_real",    "accion_sistema"),
 ]
 
+# Candados con efecto real de escritura/físico/externo — nunca ejecutables desde un
+# cliente de WhatsApp (canal="whatsapp" nunca es Anuar operando el panel, es siempre
+# un cliente real). Encontrado en vivo 2026-07-27: el candado de canal que se armó
+# para Fábrica/editar-código era la EXCEPCIÓN, no la regla — el resto del pipeline
+# (acción física, publicar, router universal) nunca revisaba canal en absoluto, así
+# que un cliente real podía lograr que AURORA mandara un WhatsApp a un tercero, abriera
+# URLs en la PC real del taller, o publicara de verdad en Facebook. Un solo punto de
+# verdad aquí, no un candado a mano por función.
+_CANDADOS_SOLO_DUENIO = {"accion_fisica", "publicar", "abrir_navegador", "editar_codigo", "crear_capacidad"}
+_MSG_SOLO_DUENIO = "Esa acción es del dueño desde el panel — no la ejecuto desde WhatsApp."
+
 _MODELO = "llama-3.1-8b-instant"
 # El 8B se equivoca eligiendo entre herramientas parecidas (ej: "convertir a PDF"
 # eligió convertir_a_dxf en vez de conversor_formatos:convertir). Para ESA decisión
@@ -695,7 +706,18 @@ class Consciencia:
         # una herramienta peligrosa en el turno anterior y quedó esperando un "sí". Si
         # este mensaje es esa confirmación, ejecuta de verdad; si no, se abandona el
         # pendiente (no se queda colgado esperando para siempre) y sigue el flujo normal.
+        # Se revisa el canal de ESTA confirmación (no el que creó el pendiente): como
+        # /chat no tiene autenticación real, alguien podría dejar pendiente algo peligroso
+        # bajo un session_id que coincida con el de un cliente real de WhatsApp, esperando
+        # que lo confirme sin saberlo con un "sí" cualquiera — encontrado en la auditoría
+        # 2026-07-27. Revisar el canal aquí, no solo al crear el pendiente, cierra eso.
         if session_id in self._accion_pendiente:
+            if canal == "whatsapp":
+                self._accion_pendiente.pop(session_id, None)
+                ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
+                self._agregar_sesion(session_id, mensaje, _MSG_SOLO_DUENIO)
+                return {"respuesta": _MSG_SOLO_DUENIO, "motores_usados": ["router_universal"],
+                        "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
             if _es_confirmacion(mensaje):
                 real = await self._confirmar_accion_pendiente(session_id)
                 self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -749,10 +771,14 @@ class Consciencia:
                 continue
             if not _trigger(mensaje):
                 continue
-            if _nombre_candado == "editar_codigo":
+            if canal == "whatsapp" and _nombre_candado in _CANDADOS_SOLO_DUENIO:
+                real = {"respuesta": _MSG_SOLO_DUENIO}
+            elif _nombre_candado == "editar_codigo":
                 real = await self._editar_codigo_real(mensaje, session_id=session_id, canal=canal)
             elif _nombre_candado == "crear_capacidad":
                 real = await self._crear_capacidad_real(mensaje, canal=canal)
+            elif _nombre_candado == "publicar":
+                real = await self._publicar_real(mensaje, session_id=session_id)
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -768,7 +794,7 @@ class Consciencia:
         # auto-filtra: si no hay herramienta real que aplique, devuelve None (barato,
         # sin LLM) y sigue el flujo normal.
         if len(_norm_txt(mensaje).split()) >= 2:
-            real = await self._router_universal(mensaje, session_id)
+            real = await self._router_universal(mensaje, session_id, canal)
             if real is not None:
                 self._agregar_sesion(session_id, mensaje, real["respuesta"])
                 ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
@@ -1114,24 +1140,26 @@ class Consciencia:
 
     # ── MOTORES CONECTADOS DIRECTO AL CHAT (acción real, sin simular) ──
 
-    async def _publicar_real(self, mensaje: str) -> Dict:
+    async def _publicar_real(self, mensaje: str, session_id: str = "") -> Dict:
+        """CHAT ↔ PUBLICADOR: muestra el preview real de HOY y deja pendiente la
+        publicación de verdad — nunca la dispara en el mismo mensaje. Encontrado en
+        vivo 2026-07-27: escanear "de verdad"/"aprueba" como substring del MISMO
+        mensaje que pide el preview hacía que un mensaje inocente ("de verdad, ¿qué
+        publico hoy?") publicara de verdad sin que nadie lo hubiera pedido. Ahora
+        reusa el mismo mecanismo estricto de confirmación de 2 turnos que ya usa el
+        router universal (_accion_pendiente + _es_confirmacion, igualdad exacta con
+        una lista corta de "sí" claros, no substring)."""
         m = _norm_txt(mensaje)
         try:
             pub = _pubint()
             if "estrategia" in m:
                 d = await asyncio.to_thread(pub.estrategia_ingresos, "atf", "")
                 return {"respuesta": self._fmt_dict("📣 Estrategia de ingresos ATF", d)}
-            # "m" ya pasó por _norm_txt (sin acentos) — la variante acentuada nunca
-            # podía matchear aquí, era código muerto.
-            aprobar = any(k in m for k in ("de verdad", "aprueba", "aprobado", "hazlo ya",
-                                           "publicalo ya", "si publica", "publica ya"))
-            if aprobar:
-                d = await asyncio.to_thread(pub.publicar_hoy, "facebook", "", True)
-                if d.get("status") == "PUBLICADO":
-                    return {"respuesta": f"✅ PUBLICADO de verdad en Facebook ATF (post {d.get('post_id')}). Video: {d.get('video','')}"}
-                return {"respuesta": f"No publiqué (no lo simulo): {self._fmt_dict('publicar_hoy', d)}"}
             d = await asyncio.to_thread(pub.preparar_publicacion, "atf")
-            return {"respuesta": "📋 Esto es lo que publicaría HOY (aún NO lo subí — dime 'publícalo de verdad' para hacerlo):\n" + self._fmt_dict("preparar", d)}
+            if session_id:
+                self._accion_pendiente[session_id] = {"tipo": "publicar_facebook"}
+            return {"respuesta": "📋 Esto es lo que publicaría HOY (aún NO lo subí):\n"
+                    + self._fmt_dict("preparar", d) + "\n\nResponde 'sí' para confirmar y publicarlo de verdad."}
         except Exception as e:
             return {"respuesta": f"No pude preparar la publicación (no lo invento): {str(e)[:200]}"}
 
@@ -1154,14 +1182,29 @@ class Consciencia:
         m = _norm_txt(mensaje)
         # Regex en vez de find+slice: antes "ficha de" hacia match dentro de "ficha DEL
         # laser" (substring "de" cae adentro de "del"), dejando una "l" suelta pegada al
-        # nombre del producto. \s+(?:del|de)\s+ consume la palabra completa que sea.
+        # nombre del producto. \s+(?:del|de|para)\s+ consume la palabra completa que sea.
+        # Encontrado en vivo 2026-07-27: "pitch DE VENTA para X" hacía que el separador
+        # "de" cayera sobre el "de" de "de venta" (no sobre el que de verdad separa el
+        # producto), dejando producto="venta para X" — la ficha nunca se encontraba y
+        # el LLM terminaba inventando specs sin ningún dato real de por medio. Ahora
+        # "pitch" también consume opcionalmente "de venta" como parte de la frase fija,
+        # y "para" se suma como separador válido (forma natural: "pitch para X").
         match = _re.search(
-            r"(?:ficha(?:\s+tecnica)?|(?:dame|hazme)?\s*(?:el\s+)?pitch|argumentos?\s+de\s+venta|"
-            r"brief\s+de\s+venta|como\s+vend\w*)\s+(?:del|de)\s+(.+)", m)
+            r"(?:ficha(?:\s+tecnica)?|(?:dame|hazme)?\s*(?:el\s+)?pitch(?:\s+de\s+venta)?|"
+            r"argumentos?\s+de\s+venta|brief\s+de\s+venta|como\s+vend\w*)\s+(?:del|de|para)\s+(.+)", m)
         producto = mensaje[match.start(1):].strip(" :¿?.") if match else mensaje
         try:
             ven = _vendedor()
             if any(k in m for k in ("pitch", "argumento", "brief", "como vend")):
+                # Verificación real ANTES del LLM: construir_brief() ya le dice al LLM
+                # "no inventes" cuando no hay ficha, pero un modelo puede no seguirlo
+                # (confirmado en vivo 2026-07-27: generó specs inventadas — "30% más
+                # visibilidad", "resistentes a la corrosión" — sin ningún dato real).
+                # Cortar aquí en código, no solo con una instrucción de prompt.
+                dz = await asyncio.to_thread(ven.ficha, producto)
+                if dz.get("status") != "OK":
+                    return {"respuesta": f"No tengo ficha real de '{producto}' — no invento el pitch. "
+                            + (f"Disponibles: {', '.join(dz.get('disponibles', [])[:10])}" if dz.get("disponibles") else "")}
                 prompt_sistema = await asyncio.to_thread(ven.construir_brief, "cliente", producto, "", "")
                 # construir_brief() arma un PROMPT DE SISTEMA para alimentar un LLM, no un
                 # pitch redactado — antes se mostraba crudo (con JSON y todo) al usuario.
@@ -1359,13 +1402,19 @@ class Consciencia:
             r = await self._editar_codigo_real(pendiente["mensaje"], saltar_confirmacion=True)
             r["respuesta"] = "Confirmado — edición del núcleo:\n" + r["respuesta"]
             return r
+        if pendiente.get("tipo") == "publicar_facebook":
+            pub = _pubint()
+            d = await asyncio.to_thread(pub.publicar_hoy, "facebook", "", True)
+            if d.get("status") == "PUBLICADO":
+                return {"respuesta": f"✅ PUBLICADO de verdad en Facebook ATF (post {d.get('post_id')}). Video: {d.get('video','')}"}
+            return {"respuesta": f"No publiqué (no lo simulo): {self._fmt_dict('publicar_hoy', d)}"}
         reg = _registro()
         r = await self._ejecutar_herramienta_real(reg, pendiente["clave"], pendiente["args"], pendiente["h"])
         params_usados = ", ".join(f"{k}={v}" for k, v in pendiente["args"].items()) or "sin datos extra"
         r["respuesta"] = f"Confirmado — ejecutando {pendiente['clave']} ({params_usados}):\n" + r["respuesta"]
         return r
 
-    async def _router_universal(self, mensaje: str, session_id: str = "") -> Optional[Dict]:
+    async def _router_universal(self, mensaje: str, session_id: str = "", canal: str = "api") -> Optional[Dict]:
         """Elige y EJECUTA una herramienta real del registro para responder con datos
         de verdad (no candados a mano). Devuelve {'respuesta': ...} o None si ninguna aplica.
         NUNCA inventa: si no hay herramienta o falla, lo dice honesto."""
@@ -1446,8 +1495,12 @@ class Consciencia:
 
         # Herramienta destructiva/escritura → NO ejecutar todavía; guarda el pendiente
         # para esta sesión y pide confirmación. Si Anuar responde "sí" en el siguiente
-        # mensaje, se ejecuta de verdad (ver _confirmar_accion_pendiente).
+        # mensaje, se ejecuta de verdad (ver _confirmar_accion_pendiente). Por WhatsApp
+        # ni siquiera se deja pendiente — un cliente real no debe poder confirmar
+        # ninguna de las ~690 herramientas peligrosas del negocio con un simple "ok".
         if h.get("peligrosa"):
+            if canal == "whatsapp":
+                return {"respuesta": _MSG_SOLO_DUENIO}
             if session_id:
                 self._accion_pendiente[session_id] = {"clave": clave, "args": args, "h": h}
             params_usados = ", ".join(f"{k}={v}" for k, v in args.items()) or "sin datos extra"
@@ -1852,12 +1905,8 @@ class Consciencia:
 
     async def _crear_capacidad_real(self, mensaje: str, canal: str = "api") -> Dict:
         """CHAT ↔ FÁBRICA: crea un motor/capacidad nuevo DE VERDAD (aislado y validado).
-        No simula: si falla, lo dice."""
-        # El endpoint /chat no tiene autenticación real (user_id es texto libre sin
-        # verificar) — un cliente de WhatsApp nunca es Anuar operando el panel, así que
-        # por ese canal la Fábrica no genera ni escribe código, pase lo que pase.
-        if canal == "whatsapp":
-            return {"respuesta": "Crear capacidades nuevas es una acción del dueño desde el panel — no la ejecuto desde WhatsApp."}
+        No simula: si falla, lo dice. El candado de canal="whatsapp" ya se aplica de
+        forma centralizada en el pipeline (_CANDADOS_SOLO_DUENIO) antes de llegar aquí."""
         try:
             from CEREBRO import fabrica_motores as _fab
         except Exception as e:
@@ -1890,11 +1939,11 @@ class Consciencia:
         Garantías mecánicas: respaldo (reversible), compila o no se aplica, y guardián
         anti-pérdida (si el cambio dejaría menos código/funciones → revierte). Sin simular.
         Si el archivo es del NÚCLEO, pide confirmación real ANTES de generar/escribir nada
-        (antes solo avisaba DESPUÉS de haber escrito — no protegía nada de verdad)."""
-        # Mismo candado que la Fábrica: editar código real del proyecto es acción del
-        # dueño, nunca de un cliente que escribe por WhatsApp.
-        if canal == "whatsapp":
-            return {"respuesta": "Editar archivos del proyecto es una acción del dueño desde el panel — no la ejecuto desde WhatsApp."}
+        (antes solo avisaba DESPUÉS de haber escrito — no protegía nada de verdad).
+        El candado de canal="whatsapp" ya se aplica de forma centralizada en el pipeline
+        (_CANDADOS_SOLO_DUENIO) antes de llegar aquí, y también en la confirmación de
+        acciones pendientes (paso 2.44) — por eso una edición de núcleo pendiente nunca
+        puede crearse ni confirmarse desde WhatsApp."""
         import re, shutil, subprocess, sys
         from datetime import datetime as _dt
         from pathlib import Path
