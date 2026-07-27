@@ -114,15 +114,42 @@ Después de la corrección de arriba, Anuar probó pidiéndole a AURORA (no a m�
 
 ---
 
-## Planes futuros (próximas sesiones, en orden)
+## 2026-07-27 — Grupos finales: Vendedor + Publicador + WhatsApp
 
-La corrección del enrutador (26-27 jul) arregló la ESTRUCTURA (cómo decide qué hacer con cualquier mensaje). Lo que falta es auditar el CONTENIDO interno de cada dominio restante con el mismo rigor. Se agrupó por riesgo real, no por orden alfabético:
+**Por qué**: los últimos 2 grupos de la lista. Publicador y WhatsApp son distintos a todo lo anterior: tienen consecuencias reales hacia AFUERA (Facebook/WhatsApp reales de ATF, gente real). 3 auditorías reales en paralelo (~273k tokens, solo lectura de código + endpoints de solo-lectura, nunca se ejecutó nada que publique o envíe de verdad durante la auditoría).
 
-1. **Vendedor**: fichas técnicas y pitches. Ya se le quitó el bug de esta noche (mostraba texto interno crudo); falta auditar la calidad real de las fichas mismas.
-2. **Publicador + WhatsApp**: la más delicada — manda posts y mensajes REALES a gente real. Sesión aparte, con más cuidado, sin compartir con nada más.
+**El hallazgo que cambió el enfoque de todo el arreglo**: el candado que bloquea Fábrica/editar-código por WhatsApp (de la corrección anterior) era la EXCEPCIÓN, no la regla. El resto del sistema (acción física, publicar, las ~690 herramientas del router universal, confirmar acciones pendientes) nunca revisaba por qué canal llegaba el mensaje. En la práctica: **cualquier cliente que le escribiera al WhatsApp real de ATF podía lograr que AURORA mandara un WhatsApp real a un tercer número, abriera cualquier página web en la PC real del taller, matara/reparara WhatsApp Desktop, publicara de verdad en Facebook, o ejecutara cualquiera de las ~690 herramientas del negocio con solo responder "ok"/"va"/"sale"**.
 
-**Ya cerrados**: Grupo de Fábrica + editar código + consultar código + memoria real (2026-07-27); Grupo Negocio: Órdenes + Inventario + CRM + Contabilidad (2026-07-27).
+**Qué se corrigió (por causa raíz, un solo candado central, no uno por función):**
 
-Es un estimado, no una promesa cerrada — Corel tomó una sesión completa por sorpresas que no se esperaban (COM, event loops). Alguno de estos puede ser más rápido, otro puede encontrar lo suyo.
+1. **Candado de canal centralizado**: un único punto en el enrutador ahora revisa, antes de ejecutar cualquier acción de escritura/física/externa (mandar WhatsApp, abrir el navegador, publicar, editar código, crear capacidades), si el mensaje llegó por WhatsApp — si es así, se rechaza honesto, sin importar cuál de esas acciones sea. También se revisa al CONFIRMAR una acción pendiente (no solo al proponerla): como el chat no tiene login real, alguien podía dejar pendiente algo peligroso bajo un identificador que coincidiera con el de un cliente real de WhatsApp, esperando que lo confirmara sin saberlo con un "sí" cualquiera — cerrado.
+
+2. **Publicar en Facebook ya no se dispara por accidente**: antes, cualquier mensaje que mencionara la frase "de verdad" (aunque fuera casual, ej. "de verdad no sé qué publicar hoy") podía disparar una publicación REAL. Ahora siempre muestra primero el preview y pide un "sí" claro en el turno siguiente — mismo mecanismo estricto que ya protege otras acciones peligrosas.
+
+3. **WhatsApp real, 4 arreglos**: (a) un mensaje real de un cliente ya no desaparece para siempre si algo falla al procesarlo — antes se borraba de la cola ANTES de contestar; (b) si un envío real de WhatsApp falla, ahora queda registrado en vez de ser invisible; (c) desconectar el WhatsApp real del negocio ahora exige el PIN del dueño — antes cualquiera con una sola petición podía cortarlo; (d) el recordatorio diario de "sube tus videos" ya no se lo manda el negocio a sí mismo (antes el número por default coincidía con el del propio negocio, nunca le llegaba a Anuar).
+
+4. **Publicador, condición de carrera real**: 2 publicaciones al mismo tiempo (doble ejecución de la tarea automática, doble clic) podían subir el MISMO video 2 veces a Facebook. Ahora hay una reserva real antes de subir (nadie más puede tomar el mismo post mientras se sube). También se agregó un registro permanente de "esto ya se publicó" que no depende de que mover el archivo a la carpeta PUBLICADOS haya funcionado — antes, si ese movimiento fallaba, el video podía volver a salir sorteado en el futuro.
+
+5. **Vendedor, 2 bugs reales de datos incorrectos**: pedir la ficha de un producto por su código (ej. "led h7") podía regresar la ficha de OTRO producto (ej. H4) — datos reales pero del equipo equivocado, verificado en vivo. Y pedir el "pitch de venta para X" hacía que el sistema buscara mal el nombre del producto, no lo encontrara, y el modelo de IA terminara inventando especificaciones que sonaban reales pero no existían en ningún lado — ahora se corta antes de llegar al modelo si la ficha no se encuentra de verdad.
+
+6. **Vendedor, 2 arreglos de seguimiento**: un segundo cliente sin teléfono capturado se perdía silenciosamente (se contaba como "duplicado" cuando era una pérdida real); y un intento fallido de contactar a un cliente por WhatsApp marcaba el lead como "contactado hace poco" igual que si sí hubiera funcionado, escondiéndolo de la lista de pendientes por 48 horas sin ningún reintento real.
+
+**Probado en vivo, checklist de 10 puntos completo**: WhatsApp bloqueado en acción física y en herramientas peligrosas del router; vector de colisión de canal cerrado (confirmado que un pendiente creado por el panel se descarta si alguien lo confirma por WhatsApp); "de verdad" ya no publica solo; WhatsApp sigue autorizado tras los cambios; reconectar sin PIN da error; ficha de "led h7" regresa H7 (antes H4); pitch de "led h4" encuentra la ficha real; Corel/negocio/memoria sin regresión.
+
+**Hallazgo aparte, no relacionado a esta corrección**: Corel dio un error de conexión (`no attribute 'MinorVersion'`) con el programa SÍ abierto — es una caché interna de Windows corrupta (pywin32), no algo que se tocó esta noche. Queda pendiente, no urgente.
+
+**Archivos que cambiaron**: `CEREBRO/consciencia.py`, `INTEGRACIONES/whatsapp_integration.py`, `run_aurora.py`, `CORE/aurora_server.py`, `MARKETING/plan_monetizacion.py`, `MARKETING/publicacion_inteligente.py`, `PUBLICADOR/auto_publicar_atf.py`, `PUBLICADOR/corregir_telefono_atf.py`, `VENDEDOR/vendedor_core.py`, `VENDEDOR/seguimiento_ventas.py`.
+
+**Explícitamente NO se hizo en esta corrección** (con razón real): no se construyó autenticación real completa para el chat (el candado de canal cierra la exposición práctica sin inventar sesiones que no existen); no se tocó la asimetría de códigos de foco en el verificador de fichas ni el criterio inconsistente de "ficha completa" (no muerden datos reales hoy, catálogo chico); no se conectó ni se borró código de ventas que hoy no se usa; no se clasificaron a detalle los tipos de error de Facebook/Meta (mejora de diagnóstico, no de seguridad).
+
+---
+
+## Planes futuros (próximas sesiones)
+
+Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) que arrancó tras la corrección del enrutador general. Pendientes nuevos, para otra sesión:
+
+1. **Asistente global de Alertas/Recordatorios** (pedido 2026-07-27): notificaciones persistentes sobre publicaciones pendientes de aprobar, mensajes sin responder (WhatsApp, Marketplace), integrado a todos los negocios y redes — para que nunca se pase por alto algo real. Merece su propio plan escrito antes de empezar.
+2. **Manual de comandos + pruebas en vivo por agentes** (pedido 2026-07-27): generar, de las listas reales de triggers del código (no a mano), un manual indexado por motor/grupo, en lenguaje simple, con las variantes de frases que cada función reconoce de verdad — probado en vivo por agentes, no solo documentado en teoría.
+3. Caché de pywin32 corrupta en Corel (ver arriba) — fix rápido pendiente, no urgente.
 
 **Explícitamente diferido, no urgente**: fusionar los 10 candados de dominio dentro del enrutador de IA — hoy son más confiables por separado (determinístico vs. probabilístico); solo tiene sentido si en el futuro se decide que vale la pena el cambio de riesgo.
