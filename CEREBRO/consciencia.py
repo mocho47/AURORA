@@ -1513,18 +1513,32 @@ class Consciencia:
 
         m = _norm_txt(mensaje)
         rutas = re.findall(r"([A-Za-z]:\\[^\s\"']+\.(?:png|jpg|jpeg|pdf|cdr))", mensaje, re.I)
-        # Sin ruta completa explícita: Anuar suele decir carpeta conocida ("en descargas")
-        # + título ("con el título X"), no una ruta absoluta — se arma la ruta real con
-        # su carpeta de usuario real, en vez de pedirle una ruta que no piensa dar.
+        # Carpeta única real para PDFs de Corel generados por AURORA — a pedido explícito
+        # de Anuar (2026-07-27): "guárdalo/almacénalo como PDF" ya sabe dónde SIEMPRE, sin
+        # rutas alternas para este tipo de archivo. Solo aplica a PDF (PNG/JPG conservan
+        # la carpeta que Anuar mencione, como antes).
+        _CARPETA_PDF_COREL = _P.home() / "Desktop" / "PDFs a Impresion"
+        es_pdf = "pdf" in m or not any(e in m for e in ("png", "jpg", "jpeg"))
         if not rutas and ("exporta" in m or "exportar" in m or "almacena" in m or "guarda" in m):
-            _carpetas = {"descargas": "Downloads", "descarga": "Downloads",
-                        "escritorio": "Desktop", "documentos": "Documents"}
-            _carpeta_real = next((v for k, v in _carpetas.items() if k in m), None)
             _titulo = re.search(r"(?:titulo|título)\s+(\w+)", mensaje, re.I)
-            if _carpeta_real and _titulo:
-                _ext = "pdf" if ("pdf" in m or not any(e in m for e in ("png", "jpg", "jpeg"))) else \
-                       next(e for e in ("png", "jpg", "jpeg") if e in m)
-                rutas = [str(_P.home() / _carpeta_real / f"{_titulo.group(1)}.{_ext}")]
+            if es_pdf:
+                _CARPETA_PDF_COREL.mkdir(parents=True, exist_ok=True)
+                if _titulo:
+                    nombre = _titulo.group(1)
+                else:
+                    # Sin título dado: usa el nombre REAL del documento abierto en Corel
+                    # (nunca inventa un nombre) — solo si el motor confirma que existe.
+                    info = await asyncio.to_thread(cc.info_documento)
+                    nombre = _P(info["nombre"]).stem if info.get("status") == "ok" else None
+                if nombre:
+                    rutas = [str(_CARPETA_PDF_COREL / f"{nombre}.pdf")]
+            else:
+                _carpetas = {"descargas": "Downloads", "descarga": "Downloads",
+                            "escritorio": "Desktop", "documentos": "Documents"}
+                _carpeta_real = next((v for k, v in _carpetas.items() if k in m), None)
+                if _carpeta_real and _titulo:
+                    _ext = next(e for e in ("png", "jpg", "jpeg") if e in m)
+                    rutas = [str(_P.home() / _carpeta_real / f"{_titulo.group(1)}.{_ext}")]
 
         if "planilla" in m:
             if not rutas:
