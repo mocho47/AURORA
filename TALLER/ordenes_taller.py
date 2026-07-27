@@ -89,8 +89,10 @@ def guardar_imagen_url(url: str) -> dict:
 
 
 def _con():
-    con = sqlite3.connect(str(DB))
+    con = sqlite3.connect(str(DB), timeout=10)
     con.row_factory = sqlite3.Row
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("PRAGMA busy_timeout=10000")
     return con
 
 
@@ -209,8 +211,9 @@ def crear_orden(data: dict) -> dict:
     utilidad = round(valor_total - costo_real, 2)
     anticipo = float(data.get("anticipo") or 0)
     saldo = round(valor_total - anticipo, 2)
+    import uuid
     ahora = datetime.now()
-    folio = "OT-" + ahora.strftime("%Y%m%d-%H%M%S")
+    folio = "OT-" + ahora.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4].upper()
 
     imagenes = data.get("imagenes") or []
     if not isinstance(imagenes, list):
@@ -331,23 +334,20 @@ def actualizar_estado(orden_id: int, estado: str) -> dict:
         return {"status": "error", "mensaje": f"Estado inválido: {estado}"}
     init_db()
     con = _con()
-    if estado == "entregado":
-        # Al entregar se registra como COBRADO COMPLETO para el contador:
-        # saldo → 0, anticipo (cobrado) → valor_total. Sale de la lista activa.
-        row = con.execute("SELECT valor_total FROM ordenes WHERE id=?", (orden_id,)).fetchone()
-        if row:
-            val = row["valor_total"] or 0
-            con.execute("UPDATE ordenes SET estado=?, anticipo=?, saldo=0 WHERE id=?",
-                        (estado, val, orden_id))
-        else:
-            con.execute("UPDATE ordenes SET estado=? WHERE id=?", (estado, orden_id))
-    else:
-        con.execute("UPDATE ordenes SET estado=? WHERE id=?", (estado, orden_id))
+    row = con.execute("SELECT saldo FROM ordenes WHERE id=?", (orden_id,)).fetchone()
+    if not row:
+        con.close()
+        return {"status": "error", "mensaje": f"Orden {orden_id} no existe."}
+    # El estado y el cobro son cosas distintas: entregar NO marca el saldo como
+    # pagado solo. Si queda saldo pendiente, se avisa explícito en vez de ocultarlo
+    # (antes se forzaba saldo=0/anticipo=valor_total sin verificar pago real).
+    con.execute("UPDATE ordenes SET estado=? WHERE id=?", (estado, orden_id))
     con.commit()
     con.close()
     msg = f"Orden {orden_id} → {estado}"
-    if estado == "entregado":
-        msg += " (registrada como cobrada y archivada para contabilidad)"
+    saldo = row["saldo"] or 0
+    if estado == "entregado" and saldo > 0:
+        msg += f" (⚠️ con saldo pendiente de ${saldo} — no se marcó como cobrado)"
     return {"status": "ok", "mensaje": msg}
 
 
@@ -411,7 +411,7 @@ def contabilidad_mensual(mes: str = None) -> dict:
     init_db()
     con = _con()
     rows = con.execute("SELECT folio,cliente,valor_total,costo_real,utilidad,anticipo,saldo,"
-                       "estado,creado,fecha_entrega FROM ordenes").fetchall()
+                       "estado,creado,fecha_entrega FROM ordenes WHERE estado != 'cancelado'").fetchall()
     con.close()
     meses = {}
     detalle = []
