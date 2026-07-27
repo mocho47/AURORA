@@ -1541,6 +1541,58 @@ class Consciencia:
             texto += f"\nLiberado: {r['mb_liberados']} MB. {r['nota']}"
             return {"respuesta": texto}
 
+        # WhatsApp: ENVIAR un ARCHIVO real (adjunto) — REAL por Green API sendFileByUpload.
+        # Antes esta capacidad no existía: el chat decía "no puedo enviar archivos" ante
+        # un pedido real de un cliente (encontrado en vivo 2026-07-27).
+        if (("whatsapp" in m or "whats app" in m or "wasap" in m or "watsap" in m)
+                and any(k in m for k in ("archivo", "documento", "pdf", " el .pdf",
+                                          "manda el", "envia el", "envialo", "mandalo"))):
+            from CEREBRO.pc_access import _resolver_archivo_real
+            fn = re.search(r"([\w\-. ]+\.(?:pdf|jpg|jpeg|png|docx?|xlsx?|dxf|cdr))", mensaje, re.I)
+            if not fn:
+                return {"respuesta": "Dame el nombre exacto del archivo (con extensión, ej. 'argan.pdf') que quieres mandar por WhatsApp."}
+            ruta_pedida = fn.group(1).strip()
+            if "/" not in ruta_pedida and "\\" not in ruta_pedida:
+                ruta_pedida = f"descargas/{ruta_pedida}"
+            p, err = _resolver_archivo_real(ruta_pedida)
+            if err:
+                return {"respuesta": err.get("mensaje", "No encontré el archivo — no lo invento.")}
+            m_tel = re.search(r"(?<!\d)(?:\+?52[\s\-]?)?(\d[\d\s\-]{8,10}\d)(?!\d)", mensaje or "")
+            tel = re.sub(r"\D", "", m_tel.group(0)) if m_tel else ""
+            if len(tel) < 10:
+                # No hay número: intenta resolver por nombre de contacto REAL en el CRM
+                # (ORACLE) — nunca inventa un número que no exista. Reconoce "contacto
+                # llamado X" y también la forma más natural "...a Fulano Perez [por
+                # whatsapp]" (encontrado en vivo 2026-07-27: la primera no cubría "a
+                # alfredo chiquilin", solo daba el mensaje genérico "ese contacto").
+                nombre_match = re.search(
+                    r"contacto (?:llamado |de nombre )?([a-zA-ZñÑáéíóúÁÉÍÓÚ ]{3,40})|"
+                    r"\ba\s+([a-zA-ZñÑáéíóúÁÉÍÓÚ]+(?:\s+[a-zA-ZñÑáéíóúÁÉÍÓÚ]+){0,2})"
+                    r"(?=\s+por\s+whatsapp|\s+por\s+wasap|\s+por\s+watsap|\s*$)",
+                    mensaje or "", re.I)
+                candidato = ((nombre_match.group(1) or nombre_match.group(2)) if nombre_match else "") or ""
+                candidato = candidato.strip()
+                encontrado = None
+                if candidato:
+                    try:
+                        from ORACLE import oracle_core as _oc
+                        await asyncio.to_thread(_oc.init_db)
+                        leads = await asyncio.to_thread(_oc.listar_leads)
+                        cn = _norm_txt(candidato)
+                        encontrado = next((l for l in leads if cn in _norm_txt(l.get("nombre") or "")), None)
+                    except Exception:
+                        encontrado = None
+                if encontrado and encontrado.get("telefono"):
+                    tel = re.sub(r"\D", "", encontrado["telefono"])
+                else:
+                    return {"respuesta": f"No tengo el número de '{candidato or 'ese contacto'}' registrado en el CRM "
+                            f"— dame el número (10 dígitos) y mando el archivo de verdad."}
+            from INTEGRACIONES.whatsapp_integration import whatsapp as _wa
+            r = await _wa.enviar_archivo("521" + tel[-10:], str(p))
+            if r.get("status") == "ENVIADO":
+                return {"respuesta": f"✅ Archivo '{p.name}' ENVIADO de verdad al {tel[-10:]} por WhatsApp (id {r.get('message_id')})."}
+            return {"respuesta": f"No pude enviarlo (no te miento): {r}"}
+
         # WhatsApp: ENVIAR un mensaje — REAL por Green API. Si trae número, lo manda de
         # verdad; si no, lo pide honesto. NUNCA simula una conversación.
         if ("whatsapp" in m or "whats app" in m or "wasap" in m or "watsap" in m or

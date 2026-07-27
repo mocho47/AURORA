@@ -57,6 +57,44 @@ class WhatsAppIntegration:
             logger.error(f"WA error: {e}")
             return {"status": "ERROR", "detalle": str(e)[:200]}
 
+    async def enviar_archivo(self, telefono: str, ruta_archivo: str, caption: str = "") -> Dict[str, Any]:
+        """Envia un archivo real (PDF/imagen/etc.) via Green API sendFileByUpload
+        (sube el archivo real, no simula). Antes AURORA no tenía ninguna forma real
+        de mandar un adjunto por WhatsApp — encontrado en vivo 2026-07-27: el chat
+        decía "no puedo enviar archivos" ante un pedido real de un cliente."""
+        if not self._disponible():
+            logger.warning("WhatsApp: credenciales no configuradas")
+            return {"status": "NO_CREDENCIALES", "telefono": telefono}
+        from pathlib import Path as _Path
+        p = _Path(ruta_archivo)
+        if not p.is_file():
+            return {"status": "ARCHIVO_NO_EXISTE", "ruta": str(p)}
+
+        chat_id = telefono.replace("+", "").replace(" ", "") + "@c.us"
+        url = f"{self._base}/sendFileByUpload/{self.token}"
+
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                with open(p, "rb") as f:
+                    files = {"file": (p.name, f)}
+                    data = {"chatId": chat_id, "caption": caption or p.name}
+                    r = await client.post(url, data=data, files=files)
+                r.raise_for_status()
+                res = r.json()
+                return {
+                    "status": "ENVIADO",
+                    "telefono": telefono,
+                    "archivo": p.name,
+                    "message_id": res.get("idMessage", ""),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+        except httpx.HTTPStatusError as e:
+            logger.error(f"WA archivo HTTP error {e.response.status_code}: {e.response.text[:200]}")
+            return {"status": "ERROR_HTTP", "codigo": e.response.status_code, "detalle": e.response.text[:200]}
+        except Exception as e:
+            logger.error(f"WA archivo error: {e}")
+            return {"status": "ERROR", "detalle": str(e)[:200]}
+
     async def enviar_cotizacion(self, telefono: str, cotizacion: Dict) -> Dict[str, Any]:
         """Formatea y envia una cotizacion por WhatsApp."""
         folio = cotizacion.get("folio", "")
