@@ -478,8 +478,12 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("memoria",         _es_memoria,           "_memoria_real",           "memoria"),
     ("equipos",         _es_equipos,           "_equipos_real",           "equipos"),
     ("crear_capacidad", _es_crear_capacidad,   "_crear_capacidad_real",   "fabrica"),
-    ("editar_codigo",   _es_editar_codigo,     "_editar_codigo_real",     "ide_editor"),
+    # consulta_codigo va ANTES que editar_codigo a propósito: si un mensaje pide ambas
+    # cosas ("enséñame el código de X y corrígelo..."), gana la acción más segura
+    # (solo mirar) sobre la más riesgosa (escribir) — antes ganaba escribir por puro
+    # accidente de orden en la lista, confirmado con ese mensaje real en la auditoría.
     ("consulta_codigo", _es_consulta_codigo,   "_consultar_codigo_real",  "ide"),
+    ("editar_codigo",   _es_editar_codigo,     "_editar_codigo_real",     "ide_editor"),
     ("accion_fisica",   _es_accion_fisica,     "_accion_sistema_real",    "accion_sistema"),
 ]
 
@@ -702,7 +706,9 @@ class Consciencia:
             if not _trigger(mensaje):
                 continue
             if _nombre_candado == "editar_codigo":
-                real = await self._editar_codigo_real(mensaje, session_id=session_id)
+                real = await self._editar_codigo_real(mensaje, session_id=session_id, canal=canal)
+            elif _nombre_candado == "crear_capacidad":
+                real = await self._crear_capacidad_real(mensaje, canal=canal)
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -750,13 +756,24 @@ class Consciencia:
 
         # 5. APRENDIZAJE
         asyncio.create_task(self._perfil.analizar_interaccion(mensaje, respuesta_final, list(respuestas.keys())))
-        await self._memoria.registrar(
-            motor_origen="consciencia",
-            tipo_evento="interaccion",
-            contenido={"user_id": user_id, "msg": mensaje[:400], "resp": respuesta_final[:400], "motores": list(respuestas.keys())},
-            importancia=0.7,
-        )
-        nueva_temp = await self._ctx.actualizar(user_id, mensaje, respuesta_final, list(respuestas.keys()), canal)
+        # Antes esta llamada NO estaba en try/except: si fallaba (DB bloqueada, disco
+        # lleno, contenido no serializable), la excepción se propagaba hasta el
+        # endpoint y tiraba la respuesta YA GENERADA (respuesta_final, lista arriba) —
+        # un fallo de memoria no debe borrar una respuesta que sí funcionó.
+        try:
+            await self._memoria.registrar(
+                motor_origen="consciencia",
+                tipo_evento="interaccion",
+                contenido={"user_id": user_id, "msg": mensaje[:400], "resp": respuesta_final[:400], "motores": list(respuestas.keys())},
+                importancia=0.7,
+            )
+        except Exception as e:
+            logger.warning(f"No se pudo registrar en memoria (la respuesta SÍ se manda igual): {e}")
+        try:
+            nueva_temp = await self._ctx.actualizar(user_id, mensaje, respuesta_final, list(respuestas.keys()), canal)
+        except Exception as e:
+            logger.warning(f"No se pudo actualizar contexto de usuario (la respuesta SÍ se manda igual): {e}")
+            nueva_temp = "frio"
 
         # Actualizar memoria de corto plazo (RAM)
         self._agregar_sesion(session_id, mensaje, respuesta_final)
@@ -1766,9 +1783,14 @@ class Consciencia:
             salida += "\n\n⚠️ No pude leer: " + "; ".join(errores) + " (te lo digo en vez de inventarlo)."
         return {"respuesta": salida}
 
-    async def _crear_capacidad_real(self, mensaje: str) -> Dict:
+    async def _crear_capacidad_real(self, mensaje: str, canal: str = "api") -> Dict:
         """CHAT ↔ FÁBRICA: crea un motor/capacidad nuevo DE VERDAD (aislado y validado).
         No simula: si falla, lo dice."""
+        # El endpoint /chat no tiene autenticación real (user_id es texto libre sin
+        # verificar) — un cliente de WhatsApp nunca es Anuar operando el panel, así que
+        # por ese canal la Fábrica no genera ni escribe código, pase lo que pase.
+        if canal == "whatsapp":
+            return {"respuesta": "Crear capacidades nuevas es una acción del dueño desde el panel — no la ejecuto desde WhatsApp."}
         try:
             from CEREBRO import fabrica_motores as _fab
         except Exception as e:
@@ -1795,12 +1817,17 @@ class Consciencia:
         return {"respuesta": f"No la creé (te lo digo derecho): {detalle}. "
                 f"Dame la idea más concreta —qué debe recibir y qué debe devolver— y lo reintento."}
 
-    async def _editar_codigo_real(self, mensaje: str, session_id: str = "", saltar_confirmacion: bool = False) -> Dict:
+    async def _editar_codigo_real(self, mensaje: str, session_id: str = "", saltar_confirmacion: bool = False,
+                                   canal: str = "api") -> Dict:
         """CHAT ↔ IDE (EDITAR): modifica cualquier archivo con red anti-ruptura.
         Garantías mecánicas: respaldo (reversible), compila o no se aplica, y guardián
         anti-pérdida (si el cambio dejaría menos código/funciones → revierte). Sin simular.
         Si el archivo es del NÚCLEO, pide confirmación real ANTES de generar/escribir nada
         (antes solo avisaba DESPUÉS de haber escrito — no protegía nada de verdad)."""
+        # Mismo candado que la Fábrica: editar código real del proyecto es acción del
+        # dueño, nunca de un cliente que escribe por WhatsApp.
+        if canal == "whatsapp":
+            return {"respuesta": "Editar archivos del proyecto es una acción del dueño desde el panel — no la ejecuto desde WhatsApp."}
         import re, shutil, subprocess, sys
         from datetime import datetime as _dt
         from pathlib import Path
@@ -1831,15 +1858,29 @@ class Consciencia:
         except Exception as e:
             return {"respuesta": f"No pude leer {rel}: {str(e)[:120]}"}
         # El LLM redacta el archivo COMPLETO ya con el cambio, sin comentarios extra.
+        # max_tokens subido de 4000 a 7800 (medido: consciencia.py necesitaria ~30,000
+        # tokens para reproducirse completo, asi que ni esto alcanza para los archivos
+        # mas grandes del nucleo — por eso el chequeo de finish_reason de abajo es la
+        # proteccion real, no el numero en si).
         try:
             r = await self._groq.chat.completions.create(
                 model=_MODELO,
                 messages=[{"role": "system", "content": "Eres un editor de código preciso. Te doy un archivo COMPLETO y una instrucción. Devuelve el archivo COMPLETO ya modificado, SIN quitar nada que no se te pidió, SIN comentarios ni explicaciones, SIN ```. Conserva todo el código existente."},
                           {"role": "user", "content": f"Archivo {rel}:\n{original}\n\nInstrucción: {mensaje}\n\nDevuelve el archivo completo modificado:"}],
-                max_tokens=4000, temperature=0.1)
+                max_tokens=7800, temperature=0.1)
             nuevo = r.choices[0].message.content
+            corte_por_limite = r.choices[0].finish_reason not in ("stop", "eos", "end_turn")
         except Exception as e:
             return {"respuesta": f"No pude generar el cambio: {str(e)[:150]}. No toqué el archivo."}
+        # Detección REAL de truncamiento — probado con un archivo real del proyecto:
+        # un corte a mitad de la última función deja código sintácticamente válido
+        # pero incompleto, y pasa los 3 guardianes de abajo (longitud/defs/compila)
+        # sin que ninguno lo note. finish_reason no miente: si no es "stop", Groq
+        # cortó por límite de tokens, sin importar qué tan "completo" se vea el texto.
+        if corte_por_limite:
+            return {"respuesta": f"🛑 No lo apliqué: {rel} es demasiado grande para reescribirlo completo de una "
+                    f"sola vez (se cortó por límite de tokens antes de terminar). Tu archivo quedó **intacto**. "
+                    f"Pídeme un cambio más chico y puntual, o hazlo en el IDE con respaldo."}
         # limpiar fences si el modelo los puso
         nuevo = re.sub(r"^```[\w]*\n?", "", nuevo.strip()); nuevo = re.sub(r"\n?```$", "", nuevo).strip() + "\n"
         # GUARDIÁN ANTI-PÉRDIDA: no permitir que se pierda código/funciones.
@@ -1886,20 +1927,34 @@ class Consciencia:
                             mensaje, flags=re.I)[-1].strip(" .:,\"'")
             if not term:
                 return {"respuesta": "¿Qué término busco en el código?"}
-            hits = []
-            for p in root.rglob("*.py"):
-                sp = str(p)
-                if "__pycache__" in sp or ".ide_backups" in sp or "_OBSOLETOS" in sp or "_ARCHIVE" in sp:
-                    continue
-                try:
-                    for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-                        if term.lower() in line.lower():
-                            hits.append(f"{p.relative_to(root)}:{i}: {line.strip()[:90]}")
-                            break
-                except Exception:
-                    continue
-                if len(hits) >= 20:
-                    break
+
+            def _buscar_sync() -> list:
+                # Medido en vivo: sin esto, una búsqueda que no encuentra nada tardaba
+                # ~22s Y bloqueaba el event loop COMPLETO (todas las sesiones de chat a
+                # la vez), porque no corría en un hilo aparte. Además 567 de 698 .py son
+                # dependencias de terceros vendorizadas en SUPER_MARKETING_SYSTEM — se
+                # excluyen para no contaminar resultados ni gastar tiempo en ellas.
+                hits, escaneados = [], 0
+                for p in root.rglob("*.py"):
+                    sp = str(p)
+                    if ("__pycache__" in sp or ".ide_backups" in sp or "_OBSOLETOS" in sp
+                            or "_ARCHIVE" in sp or "SUPER_MARKETING_SYSTEM" in sp):
+                        continue
+                    escaneados += 1
+                    if escaneados > 400:  # tope duro: nunca se rinde despues de esto
+                        break
+                    try:
+                        for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                            if term.lower() in line.lower():
+                                hits.append(f"{p.relative_to(root)}:{i}: {line.strip()[:90]}")
+                                break
+                    except Exception:
+                        continue
+                    if len(hits) >= 20:
+                        break
+                return hits
+
+            hits = await asyncio.to_thread(_buscar_sync)
             return {"respuesta": (f"Encontré '{term}' en:\n" + "\n".join(hits)) if hits else f"No encontré '{term}' en el código."}
         # ── Leer / mostrar / explicar un archivo ──
         fn = re.search(r"([\w\-]+\.\w{1,5})", mensaje)
