@@ -7,7 +7,7 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 Ruta: C:/AURORA/CEREBRO/consciencia.py
 """
-import asyncio, importlib, json, logging, os
+import asyncio, importlib, json, logging, os, re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -200,19 +200,53 @@ def _norm_txt(mensaje: str) -> str:
     return "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
 
 
+_SUFIJOS_CLITICOS = (
+    "selo", "sela", "selos", "selas", "melo", "mela", "melos", "melas",
+    "noslo", "nosla", "noslos", "noslas", "lo", "la", "los", "las", "le", "les", "se",
+)
+
+
 def _contiene_trigger(m: str, triggers) -> bool:
     """Coincidencia de trigger sin falsos positivos por substring en palabras sueltas
     (ej. 'borra' no debe matchear dentro de 'borrador', 'mueve' no dentro de 'conmueve').
-    Frases de varias palabras siguen usando substring (no hay riesgo real de colisión
-    ahí — nadie escribe 'manda a la pc' por accidente dentro de otra palabra)."""
+    Sí reconoce el mismo verbo con un pronombre pegado al final ('guardarlo',
+    'ábrelo', 'combínalo') como la misma palabra — encontrado en vivo 2026-07-27:
+    exigir coincidencia EXACTA de palabra completa hacía que formas muy naturales
+    en español ('podrías guardarlo') no calzaran con ningún trigger y el mensaje
+    se fuera al enrutador de IA, que a veces inventa en vez de admitir que no
+    reconoce el pedido. Frases de varias palabras siguen usando substring (no hay
+    riesgo real de colisión ahí — nadie escribe 'manda a la pc' por accidente
+    dentro de otra palabra)."""
     import re as _re
+    sufijos = "|".join(_SUFIJOS_CLITICOS)
     for t in triggers:
         if " " in t:
             if t in m:
                 return True
-        elif _re.search(rf"\b{_re.escape(t)}\b", m):
+        elif _re.search(rf"\b{_re.escape(t)}(?:{sufijos})?\b", m):
             return True
     return False
+
+
+# ── Abrir una URL/página real en el navegador (distinto de buscar EN la web) ──
+# Encontrado en vivo 2026-07-27: "busca la pagina ameede.com y dejala abierta en
+# el navegador" caía en busqueda_web (por "busca en la web") y hacía una búsqueda
+# de palabras clave sobre "ameede.com" en vez de navegar directo — resultados de
+# ayuda de Google totalmente ajenos. Si el mensaje trae un dominio real (algo.tld)
+# Y pide dejarlo abierto en el navegador, gana la navegación directa.
+_DOMINIO_RE = re.compile(
+    r"\b[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:com|mx|net|org|io|co|info|app|dev|"
+    r"gob\.mx|edu\.mx|com\.mx)\b", re.I)
+_ABRIR_NAVEGADOR_TRIGGERS = (
+    "navegador", "chrome", "abrela", "abrelo", "dejala abierta", "dejalo abierto",
+    "dejarla abierta", "dejarlo abierto", "abre la pagina", "abrir la pagina",
+)
+
+
+def _es_abrir_navegador(mensaje: str) -> bool:
+    if not _DOMINIO_RE.search(mensaje):
+        return False
+    return _contiene_trigger(_norm_txt(mensaje), _ABRIR_NAVEGADOR_TRIGGERS)
 
 
 # ── Búsqueda web EXPLÍCITA (el usuario pide navegar/buscar en internet) ──
@@ -351,18 +385,16 @@ _COREL_ACCIONES = (
     # Encontrado en vivo 2026-07-27: "almacenar"/"guardar" son sinonimos reales que
     # Anuar usa para "exportar" y no calzaban con nada — el mensaje se iba al
     # enrutador de IA, que adivino mal (dos veces) en vez de ir al comando directo.
-    "almacena", "almacenar", "guarda", "guardar", "guardalo",
+    "almacena", "almacenar", "guarda", "guardar",
     # Encontrado en vivo 2026-07-27: "ábrelo en Corel <ruta>" no calzaba con ningun
     # verbo de esta lista, así que el mensaje se iba al enrutador de IA, que lo
     # abría con el visor default de Windows en vez de dentro de Corel de verdad.
-    "abre", "abrir", "abrelo",
-    # Encontrado en vivo 2026-07-27 (grave): "podrías GUARDARLO como pdf" (infinitivo
-    # + "-lo", forma muy natural) no calzaba con "guarda"/"guardar" por la frontera de
-    # palabra completa — el mensaje se fue al enrutador de IA, que INVENTÓ una ruta y
-    # un contenido de puro placeholder ("ruta_al_archivo.pdf" / "contenido_del_archivo")
-    # y los escribió de verdad a disco como si fueran reales. Se agregan las formas
-    # infinitivo+"-lo" que faltaban para los verbos ya cubiertos.
-    "guardarlo", "exportarlo", "abrirlo",
+    "abre", "abrir",
+    # Nota: formas como "guardarlo"/"ábrelo"/"exportarlo" (verbo + pronombre pegado)
+    # ya NO necesitan su propia entrada aquí — _contiene_trigger() ahora reconoce el
+    # mismo verbo con "-lo/-la/-los/-las/-le/-les/-se" pegado como la misma palabra
+    # (arreglo estructural 2026-07-27, cierra esta clase de hueco para los 14
+    # dominios de una vez, no verbo por verbo).
 )
 
 
@@ -478,6 +510,7 @@ _MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor
 # llega aquí; no necesita excluir manualmente a los demás).
 _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
+    ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
     ("busqueda_web",    _es_busqueda_web,      "_buscar_web_candado",     "web_search"),
     ("corel",           _es_comando_corel,     "_ejecutar_corel_real",    "motor_corel"),
     ("dxf",             _es_conversion_dxf,    "_convertir_dxf_real",     "taller_dxf"),
@@ -1019,6 +1052,21 @@ class Consciencia:
                 return "⚠️ GROQ_API_KEY inválida. Actualiza en C:\\AURORA\\.env y reinicia."
             logger.error(f"Error motor {motor_id}: {e}")
             return None
+
+    # ── ABRIR URL EN EL NAVEGADOR (distinto de buscar EN la web) ────
+
+    async def _abrir_navegador_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ pc_access: abre un dominio/URL real directo en el navegador
+        default, sin pasar por el enrutador de IA ni por búsqueda de palabras
+        clave. No inventa la URL: usa el dominio real que escribió Anuar."""
+        from CEREBRO.pc_access import pc_access
+        dominio = _DOMINIO_RE.search(mensaje)
+        if not dominio:
+            return {"respuesta": "Dame el dominio o la URL exacta (ej. ameede.com) y la abro de verdad."}
+        r = await pc_access.abrir_url(dominio.group(0))
+        if r.get("status") == "OK":
+            return {"respuesta": f"✅ Abierta real en el navegador: {dominio.group(0)}."}
+        return {"respuesta": f"No pude abrirla (no te miento): {r.get('mensaje', r.get('stderr', r.get('status')))}"}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
 

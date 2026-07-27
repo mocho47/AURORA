@@ -308,6 +308,18 @@ class PcAccess:
             return err
         return await self.ejecutar(f'Start-Process "{p}"')
 
+    async def abrir_url(self, url: str) -> Dict:
+        """Abre una URL real en el navegador default (Start-Process). NO es un
+        archivo: no pasa por resolución de carpetas ni búsqueda difusa, solo
+        valida que tenga forma de URL y le agrega https:// si falta el esquema."""
+        import re
+        url = (url or "").strip()
+        if not url:
+            return {"status": "error", "mensaje": "Dame la URL o el dominio de la página a abrir."}
+        if not re.match(r"^https?://", url, re.I):
+            url = "https://" + url
+        return await self.ejecutar(f'Start-Process "{url}"')
+
     async def apps_instaladas(self) -> Dict:
         r = await self.ejecutar(
             "Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* "
