@@ -2489,10 +2489,13 @@ async def memoria_resumen():
     """Resumen de la memoria episódica y semántica."""
     try:
         from MEMORIA.sistema_memoria import memoria
-        episodios = await memoria.contar_episodios()
+        # contar_episodios() no existe — el método real es estadisticas(), que ya
+        # incluye episodios_total. Antes esto tronaba AttributeError siempre.
+        stats = await memoria.estadisticas()
         semantica = await memoria.recordar(tema=None, limite=5)
         return {
-            "episodios_total": episodios,
+            "episodios_total": stats.get("episodios_total"),
+            "estadisticas": stats,
             "semantica_reciente": semantica,
             "status": "ok",
         }

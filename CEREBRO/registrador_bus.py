@@ -397,9 +397,13 @@ async def registrar_todos_los_motores() -> dict:
 
         async def _cb_memoria(msg: Mensaje) -> Optional[dict]:
             try:
+                # Nombres reales de SistemaMemoria: registrar/recordar/episodios_recientes
+                # (antes llamaba guardar_episodio/buscar_semantico/obtener_episodios_recientes,
+                # que no existen — cualquier uso tronaba con AttributeError, atrapado aquí
+                # abajo y perdido en un log que nadie ve en vivo).
                 accion = msg.contenido.get("accion", "buscar")
                 if accion == "guardar_episodio":
-                    await _memoria.guardar_episodio(
+                    await _memoria.registrar(
                         motor_origen=msg.contenido.get("motor_origen", "sistema"),
                         tipo_evento=msg.contenido.get("tipo_evento", "interaccion"),
                         contenido=msg.contenido.get("contenido", {}),
@@ -407,14 +411,14 @@ async def registrar_todos_los_motores() -> dict:
                     )
                     return {"status": "guardado"}
                 elif accion == "buscar_semantico":
-                    return {"resultados": await _memoria.buscar_semantico(
+                    return {"resultados": await _memoria.recordar(
                         msg.contenido.get("tema", ""),
                         msg.contenido.get("limite", 10),
                     )}
                 elif accion == "estadisticas":
                     return await _memoria.estadisticas()
                 else:
-                    return {"resultados": await _memoria.obtener_episodios_recientes(
+                    return {"resultados": await _memoria.episodios_recientes(
                         msg.contenido.get("limite", 20)
                     )}
             except Exception as e:

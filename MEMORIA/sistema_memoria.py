@@ -117,6 +117,24 @@ def _marcar_consolidados(ids: List[int]) -> None:
     conn.close()
 
 
+def _purgar_episodios_viejos(dias: int = 90) -> int:
+    """Borra episodios YA consolidados (su resumen ya vive en `semantica`) con más de
+    `dias` de antigüedad. episodica no tenía ningún límite de crecimiento — guarda
+    TODO el tráfico del bus neuronal, no solo interacciones de chat, así que crecía
+    sin techo con meses de uso. Solo se borra lo consolidado — nunca lo pendiente."""
+    from datetime import timedelta
+    limite = (datetime.utcnow() - timedelta(days=dias)).isoformat()
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("PRAGMA journal_mode=WAL")
+    cur = conn.execute(
+        "DELETE FROM episodica WHERE consolidado=1 AND timestamp < ?", (limite,)
+    )
+    conn.commit()
+    n = cur.rowcount
+    conn.close()
+    return n
+
+
 def _upsert_semantico(
     tema: str,
     patron: str,
@@ -156,8 +174,26 @@ def _buscar_semantico(tema: str = "", limite: int = 20) -> List[Dict]:
             "SELECT * FROM semantica ORDER BY fecha_actualizacion DESC LIMIT ?",
             (limite,),
         ).fetchall()
+    resultado = [dict(r) for r in rows]
+    # semantica.tema SOLO puede valer una de 7 categorías fijas (ventas/coaching/...) —
+    # una búsqueda por nombre propio o tema específico NUNCA puede coincidir ahí por
+    # diseño del esquema, sin importar qué tan bien se extraiga el tema del mensaje.
+    # Además lo que registrar() guarda no es visible aquí hasta que corre un ciclo de
+    # sueño (motor_sueno.py, cada 60s solo con 5+min de inactividad y Groq disponible).
+    # Si no hay nada en semantica, se busca también en episodica.contenido (texto crudo,
+    # sin consolidar, pero real) para dar memoria de corto plazo aunque el sueño no
+    # haya corrido todavía.
+    if tema and not resultado:
+        ep_rows = conn.execute(
+            "SELECT timestamp, contenido FROM episodica WHERE contenido LIKE ? "
+            "ORDER BY timestamp DESC LIMIT ?",
+            (f"%{tema}%", limite),
+        ).fetchall()
+        resultado = [{"tema": tema, "patron": "memoria_reciente_sin_consolidar",
+                      "conocimiento": f"[{r['timestamp']}] {r['contenido'][:300]}",
+                      "confianza": 0.5} for r in ep_rows]
     conn.close()
-    return [dict(r) for r in rows]
+    return resultado
 
 
 def _estadisticas() -> Dict:
@@ -233,6 +269,10 @@ class SistemaMemoria:
 
     async def marcar_consolidados(self, ids: List[int]) -> None:
         await asyncio.to_thread(_marcar_consolidados, ids)
+
+    async def purgar_episodios_viejos(self, dias: int = 90) -> int:
+        """Borra episodios consolidados con más de `dias` — devuelve cuántos borró."""
+        return await asyncio.to_thread(_purgar_episodios_viejos, dias)
 
     # ── SEMÁNTICA ──────────────────────────────────────────────────
 

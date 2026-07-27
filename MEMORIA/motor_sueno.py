@@ -194,6 +194,16 @@ class MotorSueno:
             ids = [e["id"] for e in episodios]
             await memoria.marcar_consolidados(ids)
 
+            # 4.5. Purgar episodios YA consolidados con más de 90 días — episodica no
+            # tenía ningún límite de crecimiento y guarda TODO el trafico del bus, no
+            # solo chat. Su resumen ya vive en semantica, así que no se pierde nada real.
+            try:
+                borrados = await memoria.purgar_episodios_viejos(90)
+                if borrados:
+                    logger.info(f"🧹 {borrados} episodios viejos (90+ días, ya consolidados) purgados.")
+            except Exception as e:
+                logger.debug(f"Purga de episodios no aplicó: {e}")
+
             # 5. Consolidar analítica de marketing (en paralelo)
             try:
                 from MEMORIA.analitica_marketing import analitica_marketing
