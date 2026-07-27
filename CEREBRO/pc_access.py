@@ -83,9 +83,20 @@ def _resolver_archivo_real(ruta: str) -> Tuple[Optional[Path], Optional[Dict]]:
             (base if base else Path.home() / ruta)
     if not p.exists() and p.parent.exists():
         candidatos = [f.name for f in p.parent.iterdir() if f.is_file()]
-        match = difflib.get_close_matches(p.name, candidatos, n=1, cutoff=0.35)
-        if match:
+        # Si se pidió una extensión específica, SOLO se consideran candidatos del
+        # mismo tipo de archivo. Encontrado en vivo 2026-07-27: pedir "el pdf" con
+        # nombre "argan" abrió "argan.gsp" (un archivo de corte de 5KB, no el PDF)
+        # porque el nombre se parecía más, ignorando que el tipo pedido era otro.
+        ext_pedida = p.suffix.lower()
+        mismo_tipo = [c for c in candidatos if Path(c).suffix.lower() == ext_pedida] if ext_pedida else candidatos
+        pool = mismo_tipo if mismo_tipo else candidatos
+        match = difflib.get_close_matches(p.name, pool, n=3, cutoff=0.35)
+        if len(match) == 1:
             p = p.parent / match[0]
+        elif len(match) > 1:
+            return None, {"status": "ambiguo",
+                          "mensaje": f"'{ruta}' no existe exacto y hay varios parecidos en {p.parent}: "
+                                     + ", ".join(match) + ". Dime cuál exacto (no invento cuál quisiste)."}
         else:
             return None, {"status": "no_encontrado",
                           "mensaje": f"No encontré '{ruta}' en {p.parent}. Archivos ahí: "
