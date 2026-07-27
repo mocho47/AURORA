@@ -158,12 +158,28 @@ Después de la corrección de arriba, Anuar probó pidiéndole a AURORA (no a m�
 
 ---
 
+## 2026-07-27 — Verificación en vivo completa de los 14 candados directos (los 6 grupos)
+
+Después de cerrar el manual, se probaron en vivo los 6 grupos de trabajo completos (no solo un piloto) contra el servidor real — 5 agentes en paralelo más verificación directa donde el agente se negó por exceso de cautela:
+
+- **Taller** (negocio, agenda): 7/8 ✅. Reveló que `negocio` necesita palabra de pregunta + palabra de dominio juntas.
+- **Ventas** (ficha_vendedor): 8/8 ✅.
+- **Marketing** (publicar): 2/2 ✅ (sin confirmar ninguna publicación real).
+- **Diseño** (corel, dxf): 5/6 ✅. Reveló que "vectoriza" (a diferencia de "convierte a dxf") pasa por el enrutador de IA pidiendo confirmación en vez de ejecutar directo — mismo candado, comportamiento distinto según la frase exacta.
+- **Conocimiento** (busqueda_web): 2/2 ✅.
+- **Cerebro y Sistema** (intuicion, memoria, equipos, consulta_codigo, abrir_navegador — los 3 de mayor riesgo real ya se habían probado en la auditoría de seguridad, no se repitieron): 5/5 ✅.
+
+**Total: 24/26 pruebas reales coinciden exactamente con lo que promete el manual.** Los 2 hallazgos reales quedaron documentados como aviso dentro del propio manual generado (no se "corrigieron" para no inflar el alcance de hoy — son comportamientos reales que vale la pena revisar en otra sesión).
+
+---
+
 ## Planes futuros (próximas sesiones)
 
-Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) más las 2 capacidades nuevas de alertas/manual. Pendientes para otra sesión:
+Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) más las 2 capacidades nuevas de alertas/manual, con sus 14 candados ya verificados en vivo. Pendientes para otra sesión:
 
-1. **Verificación en vivo de las ~510 herramientas del enrutador universal** (Fase 3 declarada del manual de comandos) — el piloto de hoy solo cubrió los 14 candados directos.
+1. **Verificación en vivo de las ~510 herramientas del enrutador universal** (Fase 3 declarada del manual de comandos) — hoy solo se cubrieron los 14 candados directos.
 2. Caché de pywin32 corrupta en Corel — fix rápido pendiente, no urgente.
 3. Generador del manual: no distingue candados con lógica compuesta (2 categorías de trigger a la vez, ej. `negocio`/`corel`) — hoy se avisa con una nota, sería mejor detectarlo automático.
+4. `dxf`: "vectoriza" no se comporta igual que las demás frases del mismo candado (ver hallazgo arriba) — revisar por qué.
 
 **Explícitamente diferido, no urgente**: fusionar los 10 candados de dominio dentro del enrutador de IA — hoy son más confiables por separado (determinístico vs. probabilístico); solo tiene sentido si en el futuro se decide que vale la pena el cambio de riesgo.

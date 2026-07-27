@@ -119,6 +119,11 @@ def generar() -> Path:
         "acción como \"exporta\"). Una sola frase suelta de la lista puede no bastar por sí sola "
         "— este generador aún no distingue esa lógica compuesta, es una mejora pendiente.",
         "",
+        "**Aviso real 2** (mismo día): dentro de `dxf`, la frase \"vectoriza\"/\"vectorizar\" no "
+        "ejecuta directo como las demás (\"convierte a dxf\", \"pásalo a dxf\") — pasa por el "
+        "enrutador de IA y pide confirmación aparte antes de correr. Mismo candado, comportamiento "
+        "distinto según la frase exacta usada — verificado en vivo, no corregido todavía.",
+        "",
         "## Índice por grupo de trabajo (comandos directos)",
         "",
     ]
