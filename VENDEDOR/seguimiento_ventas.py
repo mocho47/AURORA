@@ -130,14 +130,20 @@ def sincronizar_leads() -> Dict:
     try:
         for l in oleads:
             oid = l.get("id")
-            tel = (l.get("telefono") or "").strip()
-            # ¿ya existe por oracle_id o por teléfono?
+            tel_real = (l.get("telefono") or "").strip()
+            # ¿ya existe por oracle_id o por teléfono REAL? (solo compara teléfonos
+            # de verdad, nunca el valor sintético que se usa para guardar sin colisión)
             existe = con.execute(
-                "SELECT id FROM embudo WHERE oracle_lead_id = ? OR (telefono != '' AND telefono = ?)",
-                (oid, tel)).fetchone()
+                "SELECT id FROM embudo WHERE oracle_lead_id = ? OR (? != '' AND telefono = ?)",
+                (oid, tel_real, tel_real)).fetchone()
             if existe:
                 saltados += 1
                 continue
+            # UNIQUE(telefono) chocaba en el SEGUNDO lead sin teléfono (ambos guardaban
+            # '') y se contaba como "duplicado" cuando era una pérdida real del lead.
+            # Encontrado en vivo 2026-07-27. Valor sintético único por lead cuando no
+            # hay teléfono real, así el índice único nunca colisiona entre leads distintos.
+            tel_guardar = tel_real or f"sin_tel_{oid}"
             # etapa inicial: respeta el estado del Oracle si es válido, si no 'nuevo'
             est = (l.get("estado") or "nuevo").lower()
             etapa = est if est in ETAPAS else "nuevo"
@@ -147,7 +153,7 @@ def sincronizar_leads() -> Dict:
                     """INSERT INTO embudo (oracle_lead_id, nombre, telefono, negocio, interes,
                                            vehiculo, etapa, ultima_interaccion, creado, actualizado)
                        VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)""",
-                    (oid, l.get("nombre") or "(sin nombre)", tel, (l.get("negocio") or "atf"),
+                    (oid, l.get("nombre") or "(sin nombre)", tel_guardar, (l.get("negocio") or "atf"),
                      l.get("interes") or "", l.get("vehiculo") or "", etapa, ahora, ahora))
                 nuevos += 1
             except sqlite3.IntegrityError:
@@ -261,7 +267,9 @@ def enviar_seguimiento(lead_id: int, mensaje: str) -> Dict:
     if not lead:
         return {"status": "error", "detalle": f"Lead {lead_id} no existe en el embudo"}
     tel = (lead.get("telefono") or "").strip()
-    if not tel:
+    # "sin_tel_<id>" es el valor sintético que usa sincronizar_leads() para leads sin
+    # teléfono real (evita colisión de UNIQUE) — nunca es un número real para enviar.
+    if not tel or tel.startswith("sin_tel_"):
         return {"status": "error", "detalle": f"Lead {lead_id} sin teléfono; no se puede enviar WhatsApp"}
 
     # Envío real
@@ -278,11 +286,17 @@ def enviar_seguimiento(lead_id: int, mensaje: str) -> Dict:
             """INSERT INTO interacciones (lead_id, tipo, canal, mensaje, resultado, fecha)
                VALUES (?, 'seguimiento', 'whatsapp', ?, ?, ?)""",
             (lead_id, mensaje, res.get("status"), ahora))
-        # Actualiza última interacción SIEMPRE que hubo intento; avanza a contactado si iba en nuevo.
-        nueva_etapa = "contactado" if (ok and lead.get("etapa") == "nuevo") else lead.get("etapa")
-        con.execute(
-            "UPDATE embudo SET ultima_interaccion = ?, etapa = ?, actualizado = ? WHERE id = ?",
-            (ahora, nueva_etapa, ahora, lead_id))
+        # Solo actualiza última interacción/etapa si el envío fue REALMENTE exitoso.
+        # Encontrado en vivo 2026-07-27: antes se actualizaba siempre que hubo intento,
+        # así que un envío fallido (token vencido, Green API caído) escondía el lead de
+        # pendientes() por 48h como si sí se hubiera contactado — sin ningún reintento.
+        if ok:
+            nueva_etapa = "contactado" if lead.get("etapa") == "nuevo" else lead.get("etapa")
+            con.execute(
+                "UPDATE embudo SET ultima_interaccion = ?, etapa = ?, actualizado = ? WHERE id = ?",
+                (ahora, nueva_etapa, ahora, lead_id))
+        else:
+            nueva_etapa = lead.get("etapa")
         con.commit()
     finally:
         con.close()

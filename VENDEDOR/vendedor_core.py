@@ -11,6 +11,7 @@ confirmarlo. Las técnicas de venta son frameworks reales y probados.
 """
 from __future__ import annotations
 import json
+import re
 import sqlite3
 import unicodedata as _ud
 from datetime import datetime
@@ -37,6 +38,26 @@ def _coincide(consulta: str, f: dict) -> bool:
         return True
     pt = [w for w in pn.split() if len(w) > 2]          # tokens de la consulta dentro del nombre
     return bool(pt) and all(w in nn or (w.endswith("s") and w[:-1] in nn) for w in pt)
+
+
+_RE_CODIGO = re.compile(r"\bh\d+\b")  # códigos de foco reales: h1, h3, h4, h7, h8, h11, h13...
+
+
+def _busca_ficha(producto: str, fichas: list) -> Optional[dict]:
+    """Si la consulta trae un código de foco real (h4, h7...), ese código EXACTO
+    gana sobre cualquier match genérico por palabra suelta. Encontrado en vivo
+    2026-07-27: pedir 'ficha del led h7' regresaba la ficha de H4, porque _coincide()
+    descarta tokens de 2 caracteres ('h7') y solo quedaba 'led', que empata con
+    cualquier ficha LED — la primera del JSON ganaba sin importar cuál pidió el
+    usuario. Datos reales pero del producto equivocado."""
+    pn = _norm(producto)
+    codigos_consulta = set(_RE_CODIGO.findall(pn))
+    if codigos_consulta:
+        exactas = [x for x in fichas
+                   if codigos_consulta & set(_RE_CODIGO.findall(_norm(x.get("nombre", ""))))]
+        if exactas:
+            return exactas[0]
+    return next((x for x in fichas if _coincide(producto, x)), None)
 
 # ───────────────────────── LIBRERÍA REAL DE TÉCNICAS DE VENTA ─────────────────────────
 TECNICAS_VENTA: Dict[str, dict] = {
@@ -89,6 +110,10 @@ def _cargar() -> dict:
 def listar_fichas() -> dict:
     """Lista los equipos del catálogo y si su ficha técnica está COMPLETA o PENDIENTE."""
     d = _cargar()
+    if d.get("_error"):
+        # Antes esto se ignoraba y respondía "OK, 0 fichas" — un catálogo corrupto
+        # se veía igual que un catálogo vacío, sin ningún aviso del error real.
+        return {"status": "ERROR", "detalle": f"No pude leer el catálogo real: {d['_error']}"}
     items = [{"id": f["id"], "nombre": f["nombre"], "precio": f.get("precio"),
               "negocio": f.get("negocio", ""), "estado": f.get("estado_ficha", "PENDIENTE")}
              for f in d.get("fichas", [])]
@@ -100,7 +125,9 @@ def listar_fichas() -> dict:
 def ficha(producto: str) -> dict:
     """Devuelve la ficha técnica REAL de un equipo. Si hay campos PENDIENTE, lo dice honesto."""
     d = _cargar()
-    f = next((x for x in d.get("fichas", []) if _coincide(producto, x)), None)
+    if d.get("_error"):
+        return {"status": "ERROR", "detalle": f"No pude leer el catálogo real: {d['_error']}"}
+    f = _busca_ficha(producto, d.get("fichas", []))
     if not f:
         disp = [x["nombre"] for x in d.get("fichas", [])]
         return {"status": "NO_ENCONTRADO", "detalle": f"No tengo '{producto}'.", "disponibles": disp}
