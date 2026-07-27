@@ -524,6 +524,53 @@ async def taller_alertas():
     return await asyncio.to_thread(_ordenes().alertas)
 
 
+@app.get("/alertas/resumen", tags=["Alertas"])
+async def alertas_resumen():
+    """Alertas globales cross-módulo, para el badge/modal del panel (pestaña Chat) —
+    no duplica lógica: agrega 3 fuentes reales que ya existen por separado.
+    NUNCA inventa una fuente sin datos reales detrás (Marketplace de FB, por
+    ejemplo, no está integrado hoy y por eso no aparece aquí)."""
+    items = []
+    try:
+        bloque = await asyncio.to_thread(_mon().bloque_pendiente)
+        if bloque.get("pendiente"):
+            n = bloque.get("total", 0)
+            items.append({"tipo": "publicacion_pendiente", "cantidad": n,
+                          "detalle": f"{n} publicación(es) sin aprobar (bloque {bloque.get('desde')} a {bloque.get('hasta')})",
+                          "ir_a": "monetiza"})
+    except Exception as e:
+        logger.warning(f"[alertas] bloque_pendiente falló: {e}")
+    try:
+        pend = await asyncio.to_thread(_seg().pendientes)
+        n = pend.get("total", 0) if isinstance(pend, dict) else 0
+        if n:
+            items.append({"tipo": "seguimiento_pendiente", "cantidad": n,
+                          "detalle": f"{n} lead(s) sin contactar a tiempo",
+                          "ir_a": "seguimiento"})
+    except Exception as e:
+        logger.warning(f"[alertas] seguimiento pendientes falló: {e}")
+    try:
+        wa = await whatsapp_estado()
+        if wa.get("status") == "ok" and wa.get("estado") != "authorized":
+            items.append({"tipo": "whatsapp_desconectado", "cantidad": 1,
+                          "detalle": f"WhatsApp real desautorizado (estado: {wa.get('estado')}) — reconectar en el panel",
+                          "ir_a": "whatsapp"})
+    except Exception as e:
+        logger.warning(f"[alertas] whatsapp_estado falló: {e}")
+    return {"status": "ok", "total": sum(i["cantidad"] for i in items), "items": items}
+
+
+@app.get("/manuales/comandos", tags=["Manuales"])
+async def manual_comandos():
+    """Manual de comandos reales, generado del código (CEREBRO/generar_manual.py) —
+    nunca escrito a mano. Regenéralo corriendo ese script si algo cambia."""
+    ruta = _ROOT / "MANUALES" / "manual_comandos_aurora.md"
+    if not ruta.exists():
+        return JSONResponse({"status": "no_generado",
+                              "detalle": "Corre 'python CEREBRO/generar_manual.py' primero."})
+    return FileResponse(str(ruta), media_type="text/plain; charset=utf-8")
+
+
 @app.get("/taller/catalogo", tags=["Taller"])
 async def taller_catalogo():
     """Catálogo combinado (ATF + Milens) para el buscador de productos."""
