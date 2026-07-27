@@ -356,6 +356,13 @@ _COREL_ACCIONES = (
     # verbo de esta lista, así que el mensaje se iba al enrutador de IA, que lo
     # abría con el visor default de Windows en vez de dentro de Corel de verdad.
     "abre", "abrir", "abrelo",
+    # Encontrado en vivo 2026-07-27 (grave): "podrías GUARDARLO como pdf" (infinitivo
+    # + "-lo", forma muy natural) no calzaba con "guarda"/"guardar" por la frontera de
+    # palabra completa — el mensaje se fue al enrutador de IA, que INVENTÓ una ruta y
+    # un contenido de puro placeholder ("ruta_al_archivo.pdf" / "contenido_del_archivo")
+    # y los escribió de verdad a disco como si fueran reales. Se agregan las formas
+    # infinitivo+"-lo" que faltaban para los verbos ya cubiertos.
+    "guardarlo", "exportarlo", "abrirlo",
 )
 
 
