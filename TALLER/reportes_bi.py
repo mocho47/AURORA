@@ -97,9 +97,12 @@ def resumen_general():
     n = len(rows)
     ingresos = sum(_num(r.get("valor_total")) for r in rows) if "valor_total" in cols else 0.0
     costos = sum(_num(r.get("costo_real")) for r in rows) if "costo_real" in cols else 0.0
-    # utilidad: usa columna si existe y aporta datos; si no, deriva ingresos-costos
-    util_col = sum(_num(r.get("utilidad")) for r in rows) if "utilidad" in cols else 0.0
-    utilidad = util_col if util_col else (ingresos - costos)
+    # utilidad: usa la columna capturada si existe (aunque su suma real sea $0),
+    # solo deriva ingresos-costos si la columna ni siquiera existe en el esquema.
+    if "utilidad" in cols:
+        utilidad = sum(_num(r.get("utilidad")) for r in rows)
+    else:
+        utilidad = ingresos - costos
     cobrado = sum(_num(r.get("anticipo")) for r in rows) if "anticipo" in cols else 0.0
     por_cobrar = sum(_num(r.get("saldo")) for r in rows) if "saldo" in cols else 0.0
     return {
@@ -132,10 +135,11 @@ def por_mes():
         a["ingresos"] += _num(r.get("valor_total")) if "valor_total" in cols else 0.0
         a["costos"] += _num(r.get("costo_real")) if "costo_real" in cols else 0.0
         a["utilidad"] += _num(r.get("utilidad")) if "utilidad" in cols else 0.0
+    tiene_col_utilidad = "utilidad" in cols
     meses = []
     for m in sorted(agg):
         a = agg[m]
-        util = a["utilidad"] if a["utilidad"] else (a["ingresos"] - a["costos"])
+        util = a["utilidad"] if tiene_col_utilidad else (a["ingresos"] - a["costos"])
         meses.append({
             "mes": a["mes"],
             "n_ordenes": a["n_ordenes"],

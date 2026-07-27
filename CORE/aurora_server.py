@@ -112,7 +112,7 @@ async def oracle_leads(estado: str = None, negocio: str = None, limite: int = 50
         import oracle_core as oracle
         oracle.init_db()
         # BUG corregido: antes se pasaba 'limite'(int) donde va 'negocio'(str) → int.lower() tronaba 500.
-        leads = oracle.listar_leads(estado, negocio)
+        leads = await asyncio.to_thread(oracle.listar_leads, estado, negocio)
         if limite and len(leads) > limite:
             leads = leads[:limite]
         return {"status": "ok", "total": len(leads), "leads": leads}
@@ -129,7 +129,7 @@ async def oracle_resumen(negocio: str = None):
         sys.path.insert(0, str(Path(__file__).parent.parent / "ORACLE"))
         import oracle_core as oracle
         oracle.init_db()
-        return oracle.resumen(negocio)
+        return await asyncio.to_thread(oracle.resumen, negocio)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
