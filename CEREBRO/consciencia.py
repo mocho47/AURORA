@@ -348,6 +348,10 @@ _COREL_ACCIONES = (
     "logo con el fondo", "logo y el fondo", "guarda una copia", "info del documento",
     "gotero", "saca el color", "extrae el color", "aplica el color", "muestra el color",
     "planilla", "quita el fondo", "quitale el fondo", "splash",
+    # Encontrado en vivo 2026-07-27: "almacenar"/"guardar" son sinonimos reales que
+    # Anuar usa para "exportar" y no calzaban con nada — el mensaje se iba al
+    # enrutador de IA, que adivino mal (dos veces) en vez de ir al comando directo.
+    "almacena", "almacenar", "guarda", "guardar", "guardalo",
 )
 
 
@@ -1509,6 +1513,18 @@ class Consciencia:
 
         m = _norm_txt(mensaje)
         rutas = re.findall(r"([A-Za-z]:\\[^\s\"']+\.(?:png|jpg|jpeg|pdf|cdr))", mensaje, re.I)
+        # Sin ruta completa explícita: Anuar suele decir carpeta conocida ("en descargas")
+        # + título ("con el título X"), no una ruta absoluta — se arma la ruta real con
+        # su carpeta de usuario real, en vez de pedirle una ruta que no piensa dar.
+        if not rutas and ("exporta" in m or "exportar" in m or "almacena" in m or "guarda" in m):
+            _carpetas = {"descargas": "Downloads", "descarga": "Downloads",
+                        "escritorio": "Desktop", "documentos": "Documents"}
+            _carpeta_real = next((v for k, v in _carpetas.items() if k in m), None)
+            _titulo = re.search(r"(?:titulo|título)\s+(\w+)", mensaje, re.I)
+            if _carpeta_real and _titulo:
+                _ext = "pdf" if ("pdf" in m or not any(e in m for e in ("png", "jpg", "jpeg"))) else \
+                       next(e for e in ("png", "jpg", "jpeg") if e in m)
+                rutas = [str(_P.home() / _carpeta_real / f"{_titulo.group(1)}.{_ext}")]
 
         if "planilla" in m:
             if not rutas:
@@ -1570,7 +1586,7 @@ class Consciencia:
                 return {"respuesta": f"✅ Página real a {r['ancho_cm']}x{r['alto_cm']}cm."}
             return {"respuesta": f"No pude escalar: {r.get('detalle', r.get('status'))}"}
 
-        if "exporta" in m or "exportar" in m:
+        if "exporta" in m or "exportar" in m or "almacena" in m or "guarda" in m:
             salida = rutas[0] if rutas else None
             if not salida:
                 return {"respuesta": "Dame la ruta completa de salida (con .pdf, .png o .jpg) y lo exporto de verdad."}
