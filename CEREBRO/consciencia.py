@@ -126,24 +126,6 @@ def _registro():
     return _REGISTRO_MOD
 
 
-# Verbos que indican que el usuario pide una ACCIÓN/dato operable (no charla).
-_INTENCION_OPERAR = (
-    "cotiza", "cotizar", "cuanto cuesta", "cuanto sale", "calcula", "dame", "lista",
-    "listar", "muestra", "genera", "crea", "busca", "revisa", "analiza", "convierte",
-    "vectoriza", "quita el fondo", "prepara", "cuantos", "cuantas", "arma", "haz",
-    # verbos de ACCIÓN/reparación — antes caían al LLM genérico (que negaba capacidad).
-    "arregla", "repara", "fix", "soluciona", "corrige", "ejecuta", "corre", "activa",
-    "apaga", "enciende", "mueve", "copia", "abre", "cierra", "instala", "limpia",
-    "optimiza", "diagnostica", "verifica", "checa", "publica", "envia", "manda",
-    "consulta", "reporta", "exporta", "escala", "cotizame", "hazme",
-)
-
-
-def _pide_operar(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in _INTENCION_OPERAR)
-
-
 def _contexto_catalogo(mensaje: str) -> str:
     """Si preguntan precio, devuelve los precios REALES del catálogo Milens que casen
     con el mensaje — para que chat y WhatsApp coticen EXACTO (no inventen)."""
@@ -210,14 +192,27 @@ _MOTORES_EJECUTORES = {"pc_cmd", "self_repair"}
 
 
 def _es_accion_fisica(mensaje: str) -> bool:
-    import unicodedata as _ud
-    m = "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
-    return any(t in m for t in _ACCION_FISICA_TRIGGERS)
+    return _contiene_trigger(_norm_txt(mensaje), _ACCION_FISICA_TRIGGERS)
 
 
 def _norm_txt(mensaje: str) -> str:
     import unicodedata as _ud
     return "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
+
+
+def _contiene_trigger(m: str, triggers) -> bool:
+    """Coincidencia de trigger sin falsos positivos por substring en palabras sueltas
+    (ej. 'borra' no debe matchear dentro de 'borrador', 'mueve' no dentro de 'conmueve').
+    Frases de varias palabras siguen usando substring (no hay riesgo real de colisión
+    ahí — nadie escribe 'manda a la pc' por accidente dentro de otra palabra)."""
+    import re as _re
+    for t in triggers:
+        if " " in t:
+            if t in m:
+                return True
+        elif _re.search(rf"\b{_re.escape(t)}\b", m):
+            return True
+    return False
 
 
 # ── Búsqueda web EXPLÍCITA (el usuario pide navegar/buscar en internet) ──
@@ -229,59 +224,52 @@ _BUSQUEDA_WEB_TRIGGERS = (
 
 
 def _es_busqueda_web(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in _BUSQUEDA_WEB_TRIGGERS)
+    return _contiene_trigger(_norm_txt(mensaje), _BUSQUEDA_WEB_TRIGGERS)
 
 
 # ── Detectores de motores conectados directo al chat (acción real) ──────
 def _es_publicar(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "publica hoy", "publicar hoy", "publica en atf", "publica en facebook",
         "prepara la publicacion", "preparar publicacion", "que publico hoy",
-        "estrategia de ingresos", "sube el video de hoy", "postea hoy", "publica el reel"))
+        "estrategia de ingresos", "sube el video de hoy", "postea hoy", "publica el reel",
+        "publicalo de verdad", "publicalo ya"))
 
 
 def _es_agenda(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "que tengo agendado", "mi agenda", "proximas citas", "proxima cita",
         "que citas tengo", "agenda de hoy", "que tengo hoy", "resumen de agenda",
         "citas de hoy", "tengo pendientes hoy"))
 
 
 def _es_ficha_vendedor(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "ficha de", "ficha tecnica de", "dame el pitch", "hazme un pitch",
         "argumentos de venta", "como vendo el", "como vender el", "brief de venta"))
 
 
 def _es_intuicion(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "que me sugieres", "tu intuicion", "que me recomiendas", "predice",
         "prediccion", "que deberia hacer", "sugerencia proactiva", "que sigue"))
 
 
 def _es_memoria(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "que recuerdas de", "que recuerdas sobre", "tu memoria", "recuerdas cuando",
         "que sabes de", "que tienes guardado sobre", "recuerdas que"))
 
 
 def _es_equipos(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "activa el equipo", "activar equipo", "que equipos tienes", "lista de equipos",
         "arma el equipo", "pon a trabajar el equipo", "equipo de marketing", "equipo de ventas"))
 
 
 # ── Fábrica de AGENTES: crear/listar/correr agentes de tarea desde el chat ──
 def _es_crear_agente(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "creame un agente", "crea un agente", "crear un agente", "fabricame un agente",
         "fabrica un agente", "necesito un agente", "quiero un agente", "arma un agente",
         "nuevo agente"))
@@ -289,22 +277,25 @@ def _es_crear_agente(mensaje: str) -> bool:
 
 def _es_confirmacion(mensaje: str) -> bool:
     """True si el mensaje es un 'sí' claro a una acción pendiente (sin ambigüedad)."""
+    # Whitelist ampliada con variantes reales que Anuar escribe (SISTEMA_BASE ya documenta
+    # que escribe corrido y con muletillas cortas) — sigue siendo igualdad exacta tras
+    # strip, no substring, para no capturar por accidente una respuesta no relacionada.
     m = _norm_txt(mensaje).strip(" .,!¡¿?")
-    return m in ("si", "confirmo", "confirmado", "hazlo", "adelante", "dale",
-                 "va", "vale", "ok", "okay", "correcto", "afirmativo", "procede",
-                 "si confirmo", "si hazlo", "si adelante", "si porfavor", "si por favor")
+    return m in ("si", "sip", "simon", "simone", "confirmo", "confirmado", "hazlo", "adelante",
+                 "dale", "dale pues", "va", "va sale", "vale", "ok", "okay", "ok hazlo",
+                 "ok hazlo ya", "correcto", "afirmativo", "procede", "hazle", "sale",
+                 "si confirmo", "si hazlo", "si adelante", "si porfavor", "si por favor",
+                 "si porfa", "si dale", "si va", "si sale", "claro que si", "obvio")
 
 
 def _es_listar_agentes(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "que agentes tengo", "que agentes hay", "lista de agentes", "mis agentes",
         "muestrame los agentes", "cuales agentes"))
 
 
 def _es_correr_agente(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in (
+    return _contiene_trigger(_norm_txt(mensaje), (
         "corre el agente", "ejecuta el agente", "activa el agente", "pon a correr el agente",
         "usa el agente", "lanza el agente"))
 
@@ -320,8 +311,7 @@ _CREAR_CAPACIDAD_TRIGGERS = (
 
 
 def _es_crear_capacidad(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in _CREAR_CAPACIDAD_TRIGGERS)
+    return _contiene_trigger(_norm_txt(mensaje), _CREAR_CAPACIDAD_TRIGGERS)
 
 
 # ── CHAT ↔ IDE: leer/buscar/explicar código por chat (solo lectura) ────
@@ -334,8 +324,7 @@ _CONSULTA_CODIGO_TRIGGERS = (
 
 
 def _es_consulta_codigo(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in _CONSULTA_CODIGO_TRIGGERS)
+    return _contiene_trigger(_norm_txt(mensaje), _CONSULTA_CODIGO_TRIGGERS)
 
 
 # ── CHAT ↔ TALLER: conversión REAL de archivos a DXF (motor que estaba dormido) ──
@@ -347,25 +336,45 @@ _CONVERSION_TRIGGERS = (
 
 def _es_conversion_dxf(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
-    return "dxf" in m and any(t in m for t in _CONVERSION_TRIGGERS)
+    return "dxf" in m and _contiene_trigger(m, _CONVERSION_TRIGGERS)
+
+
+# ── CHAT ↔ COREL: comandos directos y fijos, sin adivinar (motor_corel real) ──
+_COREL_TRIGGERS = (
+    "corel", "cdr",
+)
+_COREL_ACCIONES = (
+    "exporta", "exportar", "escala", "tamano de pagina", "combina", "integra",
+    "logo con el fondo", "logo y el fondo", "guarda una copia", "info del documento",
+    "gotero", "saca el color", "extrae el color", "aplica el color", "muestra el color",
+    "planilla", "quita el fondo", "quitale el fondo", "splash",
+)
+
+
+def _es_comando_corel(mensaje: str) -> bool:
+    m = _norm_txt(mensaje)
+    return _contiene_trigger(m, _COREL_TRIGGERS) and _contiene_trigger(m, _COREL_ACCIONES)
 
 
 # ── CHAT ↔ MOTORES DE NEGOCIO: responder con DATOS REALES, nunca improvisando ──
+# "fuentes"/"que fuente" quedaron acotados a frases de leads/CRM (antes "fuentes" solo
+# colisionaba con preguntas de tipografía para un diseño — dominio totalmente distinto).
 _NEGOCIO_TRIGGERS = (
     "orden", "ordenes", "entrego", "entregar", "pendiente de entrega",
     "inventario", "existencia", "cuanto me queda", "cuanto tengo de", "bajo minimo",
     "lead", "leads", "prospecto", "clientes nuevos", "embudo", "pronostico",
     "contabilidad", "cuanto vendi", "cuanto llevo", "utilidad", "ganancia del mes",
-    "por cobrar", "cobrar", "fuentes", "que fuente",
+    "por cobrar", "cobrar", "fuentes de leads", "fuente de leads", "fuentes efectivas",
+    "que fuente convierte", "mejor fuente de",
 )
 
 
 def _es_consulta_negocio(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     # Debe ser una PREGUNTA/consulta, no una orden de acción física
-    interroga = any(k in m for k in ("cuanto", "cuantos", "cuantas", "que ", "cuales",
-                                     "dime", "muestrame", "lista", "resumen", "como va"))
-    return interroga and any(t in m for t in _NEGOCIO_TRIGGERS)
+    interroga = _contiene_trigger(m, ("cuanto", "cuantos", "cuantas", "cuales",
+                                      "dime", "muestrame", "lista", "resumen")) or "que " in m or "como va" in m
+    return interroga and _contiene_trigger(m, _NEGOCIO_TRIGGERS)
 
 
 _EDITAR_CODIGO_TRIGGERS = (
@@ -376,8 +385,7 @@ _EDITAR_CODIGO_TRIGGERS = (
 
 
 def _es_editar_codigo(mensaje: str) -> bool:
-    m = _norm_txt(mensaje)
-    return any(t in m for t in _EDITAR_CODIGO_TRIGGERS)
+    return _contiene_trigger(_norm_txt(mensaje), _EDITAR_CODIGO_TRIGGERS)
 
 
 def _contar_defs(txt: str) -> int:
@@ -395,39 +403,87 @@ LEALTAD: Eres de Anuar, hecha a su medida. Le eres INCONDICIONAL: sigues SUS val
 Hablas español, mexicana, natural y directa — como un colaborador experto y de confianza. Brutalmente honesta: si no sabes algo, lo dices y propones cómo averiguarlo. Nunca inventas datos.
 Eres CAPAZ Y CULTA EN TODO: diseño, corte láser, papercraft, sublimación, vectorizado, DXF, marketing, tecnología, programación, estudio, ciencia y vida diaria. Entiendes EXACTAMENTE el tema del que te hablan y respondes a ESE tema real — NO desvías la conversación hacia ventas ni hacia un solo negocio.
 Conoces los negocios de Anuar (ATF Retrofit de faros; Milens láser/sublimación) y ayudas con ellos SOLO cuando el tema lo pide. No fuerzas ATF en cada respuesta.
-Puedes usar los programas de la PC (Inkscape, Aspire, RDWorks, LibreOffice) y ejecutar conversiones y tareas reales cuando te lo piden.
-CÓMO TRABAJA ANUAR (anticípate y sírvele sin que lo detalle): siempre 300 DPI; entrega PDF + PNG; medidas en cm; cotiza con precio distribuidor + público + ganancia neta + margen %. Láser: DXF para RDWorks/Aspire, convierte splines a polilíneas, imagen a 300 DPI en B&N puro ANTES de vectorizar. Lonas/sublimación: modo económico = estirar suave sin pixeleo (cliente que no paga diseño), modo premium = rediseño con mejora de fotos. Prefiere resultados reales y directos, sin teoría.
-Entregas SIEMPRE trabajo profesional, completo y real — cero simulaciones, cero respuestas a medias. Tienes memoria persistente y conoces tu propia estructura.
+Puedes usar los programas de la PC (Inkscape, Aspire, RDWorks, LibreOffice, CorelDRAW) y ejecutar conversiones y tareas reales cuando te lo piden. CorelDRAW lo controlas de verdad por COM (motor_corel): lees el documento abierto, exportas a PDF/PNG/JPG con DPI exacto, escalas página, combinas imágenes (logo+fondo) y guardas copias. La capacidad de tocar Corel EXISTE de verdad — nunca la niegues de entrada. Si en un intento puntual algo falla (Corel cerrado, error de conexión), dilo tal cual pasó: eso no es negar la capacidad, es honestidad sobre ESE intento.
+CÓMO ESCRIBE ANUAR (entiéndelo de verdad, no le pidas que se repita): escribe rápido y de corrido, con faltas de ortografía normales, sin acentos casi nunca, a veces todo en mayúsculas cuando está urgido o enojado, oraciones largas sin puntuación, mezclando varias ideas en un solo mensaje. Eso NO es descuido tuyo que corregir — es su forma natural, respétala y entiéndela tal cual, nunca lo corrijas ni se lo señales. Vocabulario real de su taller que debes reconocer sin que lo explique: "suaje" (línea/medida de corte de un sticker o troquel), "planilla" (hoja completa con varias piezas repetidas para cortar), "calcomanía"/"stiker" (sticker), "gotero" (herramienta de muestra de color/eyedropper), "splash" (gráfico decorativo tipo salpicadura), "vinil de recorte" vs "vinil textil" (dos materiales de precio distinto), "bifaz" (vinil translúcido). Si de verdad no te queda claro qué pide (falta un dato imprescindible como una medida, un archivo o un color), pregúntaselo directo y corto — nunca inventes el dato faltante ni asumas en silencio.
+Entregas SIEMPRE trabajo profesional, completo y real — cero simulaciones, cero respuestas a medias. Tienes memoria persistente (consúltala cuando el tema la necesite; no la des por completa en cada respuesta).
 
 ⛔ REGLA ABSOLUTA — NUNCA SIMULES ACCIONES FÍSICAS. Jamás digas que moviste, copiaste, borraste, reparaste, instalaste, enviaste, limpiaste cache o cambiaste algo en la PC (o en otra PC) si NO viene de una ejecución real con su resultado confirmado en este mismo intercambio. Si no tienes forma de ejecutarlo de verdad AHORA, di la verdad tal cual: "No lo hice —no tengo la acción conectada todavía— esto es lo que sí puedo hacer / esto es lo que necesito". Decir "ya lo hice" sin haberlo hecho es la peor falta que puedes cometer con Anuar. Ante la duda de si una acción se ejecutó, admítelo; NUNCA afirmes éxito sin prueba. Prometer y no hacer, o fingir que hiciste, está terminantemente prohibido."""
 
+# Protocolo operativo del taller — antes se inyectaba SIN CONDICIÓN en cada respuesta
+# de cualquier motor (incluido el coach personal hablando de la familia de Anuar),
+# contradiciendo la propia promesa de SISTEMA_BASE de "no forzar el negocio en cada
+# respuesta". Ahora solo se agrega cuando el motor activo es de un dominio donde
+# de verdad aplica (ver _MOTORES_TALLER en _ejecutar()).
+PROTOCOLO_TALLER = """CÓMO TRABAJA ANUAR (anticípate y sírvele sin que lo detalle): siempre 300 DPI; entrega PDF + PNG; medidas en cm; cotiza con precio distribuidor + público + ganancia neta + margen %. Láser: DXF para RDWorks/Aspire, convierte splines a polilíneas, imagen a 300 DPI en B&N puro ANTES de vectorizar. Lonas/sublimación: modo económico = estirar suave sin pixeleo (cliente que no paga diseño), modo premium = rediseño con mejora de fotos. Prefiere resultados reales y directos, sin teoría."""
+
 # ── Patrones de routing por motor ──────────────────────────────────────
+# Sin acentos a propósito: se comparan contra _norm_txt(mensaje) (acentos fuera),
+# y SISTEMA_BASE documenta que Anuar "escribe... sin acentos casi nunca" — patrones
+# acentuados eran, en la práctica, casi inalcanzables para su propio usuario.
 _ROUTING_PATRONES: Dict[str, List[str]] = {
     "motor_ventas":        ["venta", "cliente", "lead", "prospecto", "seguimiento", "crm", "pipeline"],
-    "motor_cotizador":     ["cuánto cuesta", "cotización", "presupuesto", "precio de", "cuánto cobra"],
+    "motor_cotizador":     ["cuanto cuesta", "cotizacion", "presupuesto", "precio de", "cuanto cobra"],
     # COACH PERSONAL / DE VIDA — trae la historia completa de Anuar (PROMPT_COACHING).
     # Antes NO estaba en el ruteo: lo personal caía en el coach de NEGOCIOS.
     "motor_coaching": ["me siento", "estoy cansado", "ya no puedo", "triste", "solo",
-                       "culpa", "perdon", "perdón", "mi hija", "mi hijo", "mis hijos",
-                       "mi esposa", "rocio", "rocío", "samanta", "yeshua", "romina",
-                       "familia", "emocion", "emoción", "sentir", "relación", "relacion",
+                       "culpa", "perdon", "mi hija", "mi hijo", "mis hijos",
+                       "mi esposa", "rocio", "samanta", "yeshua", "romina",
+                       "familia", "emocion", "sentir", "relacion",
                        "harto", "cansado", "duele", "miedo", "solo me", "desanimado"],
     # COACH DE NEGOCIOS / transformacional — creencias limitantes y metas comerciales.
     "motor_coaching_real": ["coaching", "meta", "objetivo personal", "creencia",
                             "creencia limitante", "coach de negocio", "sesion de coaching"],
-    "motor_reasoning":     ["analiza", "estrategia", "por qué", "razona", "explica a fondo", "pensamiento"],
+    "motor_reasoning":     ["analiza", "estrategia", "por que", "razona", "explica a fondo", "pensamiento"],
     "motor_negocios":      ["atf", "milens", "retrofit", "laser", "negocio", "marketing atf"],
-    "motor_code_gen":      ["código", "script", "función", "clase", "programa", "bug", "error en código"],
-    "motor_imagenes":      ["imagen", "foto", "diseño", "edita", "fondo", "laser prep"],
-    "motor_pedidos":       ["pedido", "orden", "envío", "tracking", "entrega"],
+    "motor_code_gen":      ["codigo", "script", "funcion", "clase", "programa", "bug", "error en codigo"],
+    "motor_imagenes":      ["imagen", "foto", "diseno", "edita", "fondo", "laser prep"],
+    "motor_pedidos":       ["pedido", "orden", "envio", "tracking", "entrega"],
     "motor_analisis":      [],  # fallback general
-    "web_search":          ["busca en internet", "buscar", "qué precio tiene", "competencia", "tendencia"],
-    "self_info":           ["qué puedes", "tus capacidades", "tu estructura", "tus módulos", "cómo funcioens"],
-    "self_repair":         ["arréglate", "repara el archivo", "fix ", "está fallando el módulo"],
+    "web_search":          ["busca en internet", "buscar", "que precio tiene", "competencia", "tendencia"],
+    "self_info":           ["que puedes", "tus capacidades", "tu estructura", "tus modulos", "como funcionas"],
+    "self_repair":         ["arreglate", "repara el archivo", "fix ", "esta fallando el modulo"],
     "pc_cmd":              ["ejecuta en pc", "corre el comando", "abre el archivo", "estado del pc", "cpu ", "ram ", "disco "],
 }
 
+# Motores donde el protocolo del taller (DPI/PDF/cotización/láser) de verdad aplica.
+# El resto (coaching, code_gen, pedidos, análisis general) no lo necesita — inyectarlo
+# ahí era justo lo que rompía la promesa de "no forzar el negocio en cada respuesta".
+_MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor_ventas"}
+
+# ── Pipeline de candados directos — orden real por especificidad ───────
+# Reemplaza la cadena de 17 `if: return` que se fue acumulando con el tiempo (con
+# numeración de comentarios ya desincronizada del orden real en el archivo — el
+# candado de Corel llegó a quedar físicamente después de "equipos" pese a estar
+# etiquetado para ir antes de "DXF"). Agregar una capacidad nueva ahora es una
+# línea aquí, en el lugar que le corresponde por especificidad — no cirugía dentro
+# de procesar() ni un número inventado a mano.
+# Orden: lo más específico primero (necesita 2+ condiciones para disparar), lo más
+# genérico al final (_es_accion_fisica es el único catch-all de "acción sobre el
+# sistema" — si algo más específico ya aplicaba, ya se resolvió arriba y nunca
+# llega aquí; no necesita excluir manualmente a los demás).
+_CANDADOS: List[Tuple[str, Any, str, str]] = [
+    # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
+    ("busqueda_web",    _es_busqueda_web,      "_buscar_web_candado",     "web_search"),
+    ("corel",           _es_comando_corel,     "_ejecutar_corel_real",    "motor_corel"),
+    ("dxf",             _es_conversion_dxf,    "_convertir_dxf_real",     "taller_dxf"),
+    ("negocio",         _es_consulta_negocio,  "_consultar_negocio_real","negocio_real"),
+    ("publicar",        _es_publicar,          "_publicar_real",          "publicador"),
+    ("agenda",          _es_agenda,            "_agenda_real",            "agenda"),
+    ("ficha_vendedor",  _es_ficha_vendedor,    "_vendedor_real",          "vendedor"),
+    ("intuicion",       _es_intuicion,         "_intuicion_real",         "intuicion"),
+    ("memoria",         _es_memoria,           "_memoria_real",           "memoria"),
+    ("equipos",         _es_equipos,           "_equipos_real",           "equipos"),
+    ("crear_capacidad", _es_crear_capacidad,   "_crear_capacidad_real",   "fabrica"),
+    ("editar_codigo",   _es_editar_codigo,     "_editar_codigo_real",     "ide_editor"),
+    ("consulta_codigo", _es_consulta_codigo,   "_consultar_codigo_real",  "ide"),
+    ("accion_fisica",   _es_accion_fisica,     "_accion_sistema_real",    "accion_sistema"),
+]
+
 _MODELO = "llama-3.1-8b-instant"
+# El 8B se equivoca eligiendo entre herramientas parecidas (ej: "convertir a PDF"
+# eligió convertir_a_dxf en vez de conversor_formatos:convertir). Para ESA decisión
+# puntual (una sola llamada JSON por turno, no es cuello de botella) usar el 70B.
+_MODELO_SELECTOR = "llama-3.3-70b-versatile"
 _MAX_HISTORIAL_SESION = 20  # mensajes en RAM por sesión
 
 
@@ -457,6 +513,10 @@ class Consciencia:
         self._agente_en_creacion: Dict[str, Dict] = {}
         # Enrutador universal: herramienta peligrosa elegida, esperando "sí" de Anuar
         self._accion_pendiente: Dict[str, Dict] = {}
+        # Si una acción pendiente se abandona porque el siguiente mensaje no calzó como
+        # confirmación, aquí queda el aviso para no perderla en silencio (se prepende a
+        # la respuesta del turno actual y se limpia).
+        self._pendiente_abandonado_aviso: Dict[str, str] = {}
 
     async def inicializar(self) -> None:
         if self._listo:
@@ -532,35 +592,34 @@ class Consciencia:
         session_id: str = "",
         canal: str = "api",
     ) -> Dict:
+        """Punto de entrada público — envuelve _procesar_interno con el candado único
+        de verdad: revisa la respuesta final ANTES de mandarla, sin importar qué rama
+        del pipeline la generó ni qué modelo de IA la escribió. Un modelo chico puede
+        ignorar SISTEMA_BASE aunque esté bien escrito (pasó de verdad esta noche) —
+        este candado es código, no una instrucción que el modelo pueda no seguir."""
+        resultado = await self._procesar_interno(mensaje, user_id, session_id, canal)
+        aviso_abandono = self._pendiente_abandonado_aviso.pop(session_id, "")
+        if aviso_abandono:
+            resultado["respuesta"] = aviso_abandono + "\n\n" + resultado.get("respuesta", "")
+        try:
+            resultado["respuesta"] = await self._verificar_capacidad_real(mensaje, resultado.get("respuesta", ""))
+        except Exception as e:
+            logger.debug(f"_verificar_capacidad_real no aplicó: {e}")
+        return resultado
+
+    async def _procesar_interno(
+        self,
+        mensaje: str,
+        user_id: str,
+        session_id: str = "",
+        canal: str = "api",
+    ) -> Dict:
         if not self._listo:
             await self.inicializar()
 
         session_id = session_id or user_id
         inicio = datetime.utcnow()
         self._sueno.registrar_actividad()
-
-        # 0. RAZONADOR PROFUNDO (aditivo, on-demand). Para preguntas difíciles
-        # delega al cerebro grande (70B en la nube). Blindado: ante CUALQUIER
-        # error o status!=ok NO retorna — deja seguir el flujo normal intacto.
-        if _es_pregunta_profunda(mensaje):
-            try:
-                res = await asyncio.to_thread(_razonador().razonar, mensaje, "")
-                if isinstance(res, dict) and res.get("status") == "ok" and res.get("respuesta"):
-                    respuesta_final = res["respuesta"]
-                    try:
-                        self._agregar_sesion(session_id, mensaje, respuesta_final)
-                    except Exception:
-                        pass
-                    ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-                    return {
-                        "respuesta": respuesta_final,
-                        "motores_usados": ["razonador_profundo"],
-                        "temperatura_lead": "frio",
-                        "duracion_ms": ms,
-                        "timestamp": inicio.isoformat(),
-                    }
-            except Exception as e:
-                logger.debug(f"Razonador profundo no aplicó, sigue flujo normal: {e}")
 
         # 1. CONTEXTO COMPLETO
         ctx_usuario = await self._ctx.obtener(user_id, canal)
@@ -591,7 +650,14 @@ class Consciencia:
                 ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
                 return {"respuesta": real["respuesta"], "motores_usados": ["router_universal"],
                         "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-            self._accion_pendiente.pop(session_id, None)
+            # No fue confirmación → se abandona, pero AVISADO (antes se perdía en silencio
+            # y si Anuar mandaba un "sí" días después, no significaba nada para el sistema).
+            pendiente = self._accion_pendiente.pop(session_id, None)
+            if pendiente:
+                desc = pendiente.get("clave") or "la edición de un archivo del núcleo"
+                self._pendiente_abandonado_aviso[session_id] = (
+                    f"(Cancelé la propuesta pendiente de '{desc}' porque tu mensaje no lo confirmó — "
+                    f"si la sigues necesitando, pídemela de nuevo.)")
 
         # 2.45 FÁBRICA DE AGENTES — diálogo "pregunta-antes-de-crear". Si hay un agente
         # en construcción para esta sesión, este mensaje es el CONTEXTO que da Anuar.
@@ -620,127 +686,33 @@ class Consciencia:
             return {"respuesta": real["respuesta"], "motores_usados": ["fabrica_agentes"],
                     "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
 
-        # 2.5 CANDADO ANTI-SIMULACIÓN — si piden una acción física (mover/copiar/
-        # borrar/reparar/limpiar cache/enviar a otra PC) intento ejecutarla DE VERDAD.
-        # Si no se puede ejecutar real, respondo honesto — NUNCA finjo haberlo hecho.
-        if (_es_accion_fisica(mensaje) and not (set(motor_ids) & _MOTORES_EJECUTORES)
-                and not (_es_crear_capacidad(mensaje) or _es_editar_codigo(mensaje) or _es_consulta_codigo(mensaje))
-                and not (_es_publicar(mensaje) or _es_agenda(mensaje) or _es_ficha_vendedor(mensaje)
-                         or _es_intuicion(mensaje) or _es_memoria(mensaje) or _es_equipos(mensaje))):
-            real = await self._accion_sistema_real(mensaje)
-            respuesta_final = real["respuesta"]
-            self._agregar_sesion(session_id, mensaje, respuesta_final)
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": respuesta_final, "motores_usados": ["accion_sistema"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.53 CHAT ↔ WEB — búsqueda web REAL directa (ddgs). Devuelve los resultados
-        # tal cual, sin que la síntesis del LLM los reescriba con "no tengo acceso".
-        if _es_busqueda_web(mensaje):
-            web = await self._buscar_web(mensaje)
-            self._agregar_sesion(session_id, mensaje, web)
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": web, "motores_usados": ["web_search"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.56 CHAT ↔ PUBLICADOR — preparar/publicar de verdad en redes.
-        if _es_publicar(mensaje):
-            real = await self._publicar_real(mensaje)
+        # PIPELINE DE CANDADOS DIRECTOS — orden por especificidad (ver _CANDADOS).
+        # "accion_fisica" es el único catch-all genérico y va al final: si algo más
+        # específico ya aplicaba, ya se resolvió arriba y nunca llega aquí, así que
+        # no necesita excluir manualmente a los demás (como sí lo necesitaba antes).
+        # Sí conserva su única exclusión real: si el routing rápido (paso 2) ya
+        # decidió que esto es para pc_cmd/self_repair, se les cede el paso a esos.
+        for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
+            if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
+                continue
+            if not _trigger(mensaje):
+                continue
+            if _nombre_candado == "editar_codigo":
+                real = await self._editar_codigo_real(mensaje, session_id=session_id)
+            else:
+                real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
             ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["publicador"],
+            return {"respuesta": real["respuesta"], "motores_usados": [_motor_id_candado],
                     "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
 
-        # 2.57 CHAT ↔ AGENDA — citas y pendientes reales.
-        if _es_agenda(mensaje):
-            real = await self._agenda_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["agenda"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.58 CHAT ↔ VENDEDOR — ficha técnica / pitch real.
-        if _es_ficha_vendedor(mensaje):
-            real = await self._vendedor_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["vendedor"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.59 CHAT ↔ INTUICIÓN/PREDICCIÓN — sugerencia proactiva real.
-        if _es_intuicion(mensaje):
-            real = await self._intuicion_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["intuicion"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.60 CHAT ↔ MEMORIA — recuerda de verdad de su memoria persistente.
-        if _es_memoria(mensaje):
-            real = await self._memoria_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["memoria"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.61 CHAT ↔ EQUIPOS — arma/activa un equipo de motores de verdad.
-        if _es_equipos(mensaje):
-            real = await self._equipos_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["equipos"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.54 CHAT ↔ TALLER — convertir archivos a DXF de verdad (motor dormido).
-        if _es_conversion_dxf(mensaje):
-            real = await self._convertir_dxf_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["taller_dxf"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.55 CHAT ↔ MOTORES DE NEGOCIO — datos REALES (órdenes, inventario, CRM,
-        # contabilidad). Va ANTES del LLM para que jamás improvise cifras del taller.
-        if _es_consulta_negocio(mensaje):
-            real = await self._consultar_negocio_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["negocio_real"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.6 CHAT ↔ FÁBRICA — crear una capacidad/motor nuevo de VERDAD (aislado).
-        if _es_crear_capacidad(mensaje):
-            real = await self._crear_capacidad_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["fabrica"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.65 CHAT ↔ IDE (EDITAR) — modifica cualquier archivo con red anti-ruptura:
-        # respaldo + chequeo de compilación + guardián anti-pérdida (si dejaría menos
-        # código/funciones, rechaza y revierte). NUNCA rompe ni resta en silencio.
-        if _es_editar_codigo(mensaje):
-            real = await self._editar_codigo_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["ide_editor"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.7 CHAT ↔ IDE — leer/buscar/explicar código (solo lectura, núcleo a salvo).
-        if _es_consulta_codigo(mensaje):
-            real = await self._consultar_codigo_real(mensaje)
-            self._agregar_sesion(session_id, mensaje, real["respuesta"])
-            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
-            return {"respuesta": real["respuesta"], "motores_usados": ["ide"],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
-
-        # 2.8 ENRUTADOR UNIVERSAL — última red antes del LLM genérico. Si el mensaje pide
-        # OPERAR (no charla) y ningún candado específico aplicó, deja que el registro de
-        # herramientas reales (203 funciones) elija y EJECUTE una de verdad. Si no hay
+        # ENRUTADOR UNIVERSAL — última red antes del LLM genérico. Si el mensaje pide
+        # OPERAR (no charla) y ningún candado directo aplicó, deja que el registro de
+        # herramientas reales (~690 funciones) elija y EJECUTE una de verdad. Si no hay
         # herramienta que aplique, devuelve None y sigue el flujo normal (no rompe nada).
-        # Se intenta en cualquier mensaje con sustancia (2+ palabras). El router se
-        # auto-filtra: si no hay herramienta real que aplique, devuelve None (barato, sin
-        # LLM) y sigue el flujo normal. Así alcanza las 475 funciones sin gatillo angosto.
+        # Se intenta en cualquier mensaje con sustancia (2+ palabras) — el router se
+        # auto-filtra: si no hay herramienta real que aplique, devuelve None (barato,
+        # sin LLM) y sigue el flujo normal.
         if len(_norm_txt(mensaje).split()) >= 2:
             real = await self._router_universal(mensaje, session_id)
             if real is not None:
@@ -794,11 +766,50 @@ class Consciencia:
             "timestamp": inicio.isoformat(),
         }
 
+    # ── CANDADO ÚNICO DE VERDAD ──────────────────────────────────
+
+    _PATRONES_NEGACION_FALSA = (
+        r"no puedo (acceder|ejecutar|usar|tocar|controlar|abrir|correr|realizar)",
+        r"no tengo (la capacidad|acceso|forma|manera) de",
+        r"necesitar[ií]as? (darme|otorgarme|proporcionarme) (permiso|acceso)",
+        r"en un entorno virtual",
+        r"mi funci[oó]n es (proporcionar|solo dar|unicamente dar|únicamente dar)",
+        r"no cuento con (acceso|la capacidad|herramientas)",
+    )
+
+    async def _verificar_capacidad_real(self, mensaje: str, respuesta: str) -> str:
+        """Candado único: revisa CUALQUIER respuesta final (venga del candado que venga,
+        del router universal, del razonador, o del LLM conversacional genérico) antes de
+        mandarla. Si niega una capacidad que SÍ existe en el registro real de herramientas,
+        la corrige citando la herramienta real — sin importar qué modelo la escribió, esto
+        es código, no una instrucción que un modelo chico pueda ignorar (como pasó hoy)."""
+        if not respuesta:
+            return respuesta
+        import re as _re
+        baja = respuesta.lower()
+        if not any(_re.search(p, baja) for p in self._PATRONES_NEGACION_FALSA):
+            return respuesta
+        try:
+            reg = _registro()
+            candidatos = await asyncio.to_thread(reg.buscar, mensaje, 4)
+        except Exception:
+            return respuesta
+        if not candidatos:
+            return respuesta  # de verdad no hay herramienta real — la negación queda tal cual
+        reales = "\n".join(
+            f"- {c.get('clave', c.get('funcion',''))}: {(c.get('doc') or '')[:100]}"
+            for c in candidatos[:4]
+        )
+        return (respuesta.strip() +
+                f"\n\n(Corrección real antes de enviarte esto: lo de arriba no es del todo "
+                f"cierto — SÍ tengo herramientas conectadas que aplican aquí:\n{reales}\n"
+                f"Pídemelo de nuevo directo y las uso de verdad.)")
+
     # ── ROUTING ────────────────────────────────────────────────
 
     def _routing_rapido(self, mensaje: str) -> Tuple[List[str], bool]:
         """Scoring por keywords — sin llamada a API."""
-        msg = mensaje.lower()
+        msg = _norm_txt(mensaje)
         scores: Dict[str, int] = {}
 
         for motor_id, patrones in _ROUTING_PATRONES.items():
@@ -923,8 +934,11 @@ class Consciencia:
         if cat_ctx:
             web_ctx = ""
 
+        base = SISTEMA_BASE
+        if motor_id in _MOTORES_TALLER:
+            base += "\n" + PROTOCOLO_TALLER
         system_content = (
-            f"{SISTEMA_BASE}\n\n"
+            f"{base}\n\n"
             f"--- ESPECIALIDAD ACTIVA: {motor_id.upper()} ---\n"
             f"{prompt_motor}\n\n"
             f"--- CONTEXTO USUARIO ---\n"
@@ -976,6 +990,11 @@ class Consciencia:
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
 
+    async def _buscar_web_candado(self, mensaje: str) -> Dict:
+        """Envoltorio delgado para que _buscar_web calce con la firma uniforme
+        del pipeline de candados (todos regresan {"respuesta": ...})."""
+        return {"respuesta": await self._buscar_web(mensaje)}
+
     async def _buscar_web(self, consulta: str) -> str:
         """Búsqueda web real — ddgs EN VIVO, luego fallbacks, luego Groq."""
         # 1) Web REAL en vivo (WEB/web_real.py con ddgs)
@@ -985,15 +1004,22 @@ class Consciencia:
                 return ctx
         except Exception:
             pass
+        # Respaldo #2: buscador de PRODUCTOS/PRECIOS (Google+MercadoLibre), no búsqueda
+        # web genérica — antes llamaba con un kwarg que no existe (num_resultados) y
+        # trataba el resultado como lista de dicts cuando en realidad regresa un objeto
+        # ResultadoBusqueda.productos — nunca había funcionado, el except lo escondía.
         try:
             import sys
             sys.path.insert(0, str(ROOT / "CORE"))
             from buscador_web_profesional import BuscadorWebProfesional
             buscador = BuscadorWebProfesional()
-            resultados = await buscador.buscar(consulta, num_resultados=3)
-            if resultados:
-                resumen = "\n".join([f"- {r.get('titulo','')} ({r.get('url','')}): {r.get('snippet','')}" for r in resultados[:3]])
-                return f"Resultados web para '{consulta}':\n{resumen}"
+            resultado = await buscador.buscar(consulta)
+            productos = resultado.productos if resultado else []
+            if productos:
+                resumen = "\n".join(
+                    f"- {p.titulo} — ${p.precio} {p.moneda} ({p.fuente}, {p.vendedor})"
+                    for p in productos[:3])
+                return f"Resultados de precios/productos para '{consulta}':\n{resumen}"
         except Exception:
             pass
         # Fallback: LLM con conocimiento propio
@@ -1015,8 +1041,10 @@ class Consciencia:
             if "estrategia" in m:
                 d = await asyncio.to_thread(pub.estrategia_ingresos, "atf", "")
                 return {"respuesta": self._fmt_dict("📣 Estrategia de ingresos ATF", d)}
+            # "m" ya pasó por _norm_txt (sin acentos) — la variante acentuada nunca
+            # podía matchear aquí, era código muerto.
             aprobar = any(k in m for k in ("de verdad", "aprueba", "aprobado", "hazlo ya",
-                                           "publicalo ya", "publícalo ya", "si publica", "publica ya"))
+                                           "publicalo ya", "si publica", "publica ya"))
             if aprobar:
                 d = await asyncio.to_thread(pub.publicar_hoy, "facebook", "", True)
                 if d.get("status") == "PUBLICADO":
@@ -1042,20 +1070,35 @@ class Consciencia:
             return {"respuesta": f"No pude leer la agenda (no lo invento): {str(e)[:200]}"}
 
     async def _vendedor_real(self, mensaje: str) -> Dict:
+        import re as _re
         m = _norm_txt(mensaje)
-        producto = mensaje
-        for t in ("ficha tecnica de", "ficha de", "dame el pitch de", "hazme un pitch de",
-                  "argumentos de venta de", "como vendo el", "como vender el", "brief de venta de",
-                  "dame el pitch", "hazme un pitch"):
-            if t in m:
-                idx = m.find(t) + len(t)
-                producto = mensaje[idx:].strip(" :¿?.") or mensaje
-                break
+        # Regex en vez de find+slice: antes "ficha de" hacia match dentro de "ficha DEL
+        # laser" (substring "de" cae adentro de "del"), dejando una "l" suelta pegada al
+        # nombre del producto. \s+(?:del|de)\s+ consume la palabra completa que sea.
+        match = _re.search(
+            r"(?:ficha(?:\s+tecnica)?|(?:dame|hazme)?\s*(?:el\s+)?pitch|argumentos?\s+de\s+venta|"
+            r"brief\s+de\s+venta|como\s+vend\w*)\s+(?:del|de)\s+(.+)", m)
+        producto = mensaje[match.start(1):].strip(" :¿?.") if match else mensaje
         try:
             ven = _vendedor()
             if any(k in m for k in ("pitch", "argumento", "brief", "como vend")):
-                txt = await asyncio.to_thread(ven.construir_brief, "cliente", producto, "", "")
-                return {"respuesta": f"🎯 Brief de venta ({producto}):\n{txt[:1500]}"}
+                prompt_sistema = await asyncio.to_thread(ven.construir_brief, "cliente", producto, "", "")
+                # construir_brief() arma un PROMPT DE SISTEMA para alimentar un LLM, no un
+                # pitch redactado — antes se mostraba crudo (con JSON y todo) al usuario.
+                # Ahora sí pasa por el LLM para generar el pitch real, igual que lo usa
+                # aurora_server.py.
+                if self._groq:
+                    try:
+                        r = await self._groq.chat.completions.create(
+                            model=_MODELO,
+                            messages=[{"role": "system", "content": prompt_sistema},
+                                      {"role": "user", "content": f"Dame el pitch de venta para {producto}."}],
+                            max_tokens=500, temperature=0.6)
+                        return {"respuesta": f"🎯 {r.choices[0].message.content.strip()}"}
+                    except Exception:
+                        pass
+                return {"respuesta": f"🎯 Brief de venta ({producto}) — sin LLM disponible para redactarlo, "
+                        f"aquí el contexto real usado:\n{prompt_sistema[:1500]}"}
             d = await asyncio.to_thread(ven.ficha, producto)
             return {"respuesta": self._fmt_dict(f"📄 Ficha: {producto}", d)}
         except Exception as e:
@@ -1080,10 +1123,20 @@ class Consciencia:
             return {"respuesta": f"No pude generar la sugerencia (no la invento): {str(e)[:200]}"}
 
     async def _memoria_real(self, mensaje: str) -> Dict:
+        import re as _re
+        # Extrae la entidad real de "que recuerdas de X" — antes usaba _tema_rapido, que
+        # solo reconoce 4 categorías fijas (ventas/coaching/marketing) y para la mayoría
+        # de preguntas reales devolvía tema="", cayendo a "los 5 recuerdos más recientes
+        # en general" en vez de honestamente decir que no tenía nada sobre X.
+        m = _norm_txt(mensaje)
+        match = _re.search(r"(?:que recuerdas de|que recuerdas sobre|recuerdas cuando|"
+                           r"que sabes de|que tienes guardado sobre|recuerdas que)\s+(.+)", m)
+        tema = mensaje[match.start(1):].strip(" :¿?.") if match else ""
+        tema = tema or self._tema_rapido(mensaje)
         try:
-            recuerdos = await self._memoria.recordar(tema=self._tema_rapido(mensaje), limite=5)
+            recuerdos = await self._memoria.recordar(tema=tema, limite=5)
             if not recuerdos:
-                return {"respuesta": "No tengo nada guardado sobre eso todavía (no te invento un recuerdo)."}
+                return {"respuesta": f"No tengo nada guardado sobre {'eso' if not tema else tema} todavía (no te invento un recuerdo)."}
             txt = "🧠 Lo que recuerdo:\n"
             for k in recuerdos:
                 c = k.get("conocimiento") if isinstance(k, dict) else str(k)
@@ -1104,7 +1157,8 @@ class Consciencia:
                         equipo_id = k
                         break
                 d = await asyncio.to_thread(eq.activar_equipo, equipo_id)
-                return {"respuesta": self._fmt_dict(f"🤝 Equipo '{equipo_id}' activado", d)}
+                estado_real = "activado" if d.get("status") == "ok" else "NO se activó"
+                return {"respuesta": self._fmt_dict(f"🤝 Equipo '{equipo_id}' {estado_real}", d)}
             d = await asyncio.to_thread(eq.listar_equipos)
             return {"respuesta": self._fmt_dict("🤝 Equipos disponibles", d)}
         except Exception as e:
@@ -1215,12 +1269,21 @@ class Consciencia:
         return {"respuesta": texto}
 
     async def _confirmar_accion_pendiente(self, session_id: str) -> Dict:
-        """El usuario dijo 'sí' a una herramienta peligrosa propuesta antes. La ejecuta de verdad."""
+        """El usuario dijo 'sí' a una acción peligrosa propuesta antes. La ejecuta de verdad.
+        Re-presenta qué es exactamente lo que va a correr antes del resultado — no asume
+        que Anuar recuerda el detalle exacto del turno anterior."""
         pendiente = self._accion_pendiente.pop(session_id, None)
         if not pendiente:
             return {"respuesta": "No tengo ninguna acción pendiente de confirmar — dime qué necesitas."}
+        if pendiente.get("tipo") == "editar_nucleo":
+            r = await self._editar_codigo_real(pendiente["mensaje"], saltar_confirmacion=True)
+            r["respuesta"] = "Confirmado — edición del núcleo:\n" + r["respuesta"]
+            return r
         reg = _registro()
-        return await self._ejecutar_herramienta_real(reg, pendiente["clave"], pendiente["args"], pendiente["h"])
+        r = await self._ejecutar_herramienta_real(reg, pendiente["clave"], pendiente["args"], pendiente["h"])
+        params_usados = ", ".join(f"{k}={v}" for k, v in pendiente["args"].items()) or "sin datos extra"
+        r["respuesta"] = f"Confirmado — ejecutando {pendiente['clave']} ({params_usados}):\n" + r["respuesta"]
+        return r
 
     async def _router_universal(self, mensaje: str, session_id: str = "") -> Optional[Dict]:
         """Elige y EJECUTA una herramienta real del registro para responder con datos
@@ -1247,15 +1310,23 @@ class Consciencia:
         catalogo = "\n".join(lineas)
         prompt = (
             "Eres el enrutador de AURORA. Elige UNA herramienta de la lista que responda DE VERDAD "
-            "al mensaje del usuario, o null si NINGUNA aplica. NO inventes valores: solo pon en args "
-            "los que se deduzcan del mensaje; deja fuera los que no sepas.\n\n"
+            "al mensaje del usuario, o null si NINGUNA aplica. Lee 'hace' de CADA una con cuidado "
+            "antes de decidir — varias pueden sonar parecido pero hacer cosas distintas (ej: "
+            "'convertir a DXF' NO es lo mismo que 'convertir al formato que pida el usuario'; "
+            "si el usuario dice a qué formato específico quiere convertir, prioriza la herramienta "
+            "genérica de conversión de formatos sobre una que convierte a un formato fijo distinto "
+            "al pedido). NO inventes valores: solo pon en args los que se deduzcan del mensaje; deja "
+            "fuera los que no sepas. Declara 'confianza' honesta: 'alta' SOLO si estás seguro de que "
+            "esta herramienta específica es la correcta para lo que pide el mensaje; 'media' si aplica "
+            "pero con dudas; 'baja' si es la menos mala de la lista pero no estás convencido.\n\n"
             f"HERRAMIENTAS:\n{catalogo}\n\n"
             f'MENSAJE DEL USUARIO: "{mensaje[:400]}"\n\n'
-            'Responde SOLO JSON, sin texto extra: {"herramienta":"<clave o null>","args":{...}}'
+            'Responde SOLO JSON, sin texto extra: '
+            '{"herramienta":"<clave o null>","confianza":"alta|media|baja","args":{...}}'
         )
         try:
             r = await self._groq.chat.completions.create(
-                model=_MODELO, messages=[{"role": "user", "content": prompt}],
+                model=_MODELO_SELECTOR, messages=[{"role": "user", "content": prompt}],
                 max_tokens=200, temperature=0.0)
             raw = r.choices[0].message.content.strip()
         except Exception as e:
@@ -1277,6 +1348,21 @@ class Consciencia:
         if not h:
             return None
         args = data.get("args") if isinstance(data.get("args"), dict) else {}
+        confianza = str(data.get("confianza", "media")).lower()
+
+        # VERIFICACIÓN REAL antes de ejecutar a ciegas — no solo la palabra del modelo.
+        # Esto es código determinista alrededor de una llamada probabilística: el modelo
+        # puede equivocarse (pasó hoy: eligió crear_planilla para un pedido de dibujo
+        # lineal), pero el sistema que lo rodea no tiene por qué heredar esa duda.
+        requeridos = h.get("requeridos", h.get("params", []))
+        faltantes = [p for p in requeridos if p not in args]
+        if confianza == "baja" or faltantes:
+            otras = [c for c in candidatas if c["clave"] != clave][:2]
+            sugeridas = "".join(f"\n- {c['clave']}: {c.get('doc','')}" for c in otras)
+            detalle = f"falta{'n' if len(faltantes)!=1 else ''} el dato{'s' if len(faltantes)!=1 else ''} {', '.join(faltantes)}" if faltantes else "no estoy segura de que sea la correcta"
+            return {"respuesta": f"Encontré '{clave}' pero {detalle} para ejecutarla bien — no la corro a ciegas."
+                    + (f" Herramientas relacionadas que también podrían aplicar:{sugeridas}" if sugeridas else "")
+                    + " Dime más específico y la uso de verdad."}
 
         # Herramienta destructiva/escritura → NO ejecutar todavía; guarda el pendiente
         # para esta sesión y pide confirmación. Si Anuar responde "sí" en el siguiente
@@ -1326,20 +1412,40 @@ class Consciencia:
         # verdad; si no, lo pide honesto. NUNCA simula una conversación.
         if ("whatsapp" in m or "whats app" in m or "wasap" in m or "watsap" in m or
                 "mandale un saludo" in m or "entra a mi conversacion" in m):
-            tel = re.sub(r"\D", "", (re.search(r"(\+?52)?\s*\d[\d\s\-]{8,}", mensaje or "") or type("", (), {"group": lambda s: ""})()).group() if re.search(r"\d[\d\s\-]{8,}", mensaje or "") else "")
+            # Numero: exige 9-11 digitos contiguos (con espacios/guiones permitidos entre
+            # ellos) que NO sean parte de una racha mas larga de digitos — antes cualquier
+            # secuencia de 9+ digitos en el mensaje (un folio, un monto) podia tomarse
+            # como destino.
+            m_tel = re.search(r"(?<!\d)(?:\+?52[\s\-]?)?(\d[\d\s\-]{8,10}\d)(?!\d)", mensaje or "")
+            tel = re.sub(r"\D", "", m_tel.group(0)) if m_tel else ""
             if len(tel) >= 10:
                 import os
                 inst = os.getenv("GREEN_API_INSTANCE", ""); gtok = os.getenv("GREEN_API_TOKEN", "")
                 if not inst or not gtok:
                     return {"respuesta": "Puedo enviar WhatsApp de verdad, pero faltan las credenciales de Green API en el .env (GREEN_API_INSTANCE / GREEN_API_TOKEN). No lo voy a dar por hecho."}
                 chat_id = ("521" + tel[-10:]) + "@c.us"
-                texto_msg = mensaje
+                # Extrae el TEXTO real que Anuar quiere mandar — antes se ignoraba por
+                # completo y siempre se mandaba un saludo generico fijo, aunque la
+                # respuesta dijera "ENVIADO de verdad" (bug real encontrado hoy).
+                texto_msg = ""
+                for marcador in ("diciendo que", "diciendole que", "que diga", "con el mensaje", "el mensaje"):
+                    if marcador in m:
+                        idx = m.index(marcador) + len(marcador)
+                        texto_msg = mensaje[idx:].strip(" :,\"'")
+                        break
+                if not texto_msg:
+                    limpio = re.sub(r"\d[\d\s\-]{8,}", "", mensaje or "")
+                    for palabra in ("manda", "mandale", "envia", "enviale", "whatsapp", "wasap", "watsap", "un", "al", " a "):
+                        limpio = re.sub(rf"\b{re.escape(palabra.strip())}\b", "", limpio, flags=re.I)
+                    texto_msg = limpio.strip(" :,\"'")
+                if not texto_msg or len(texto_msg) < 3:
+                    return {"respuesta": f"Tengo el número ({tel[-10:]}) pero no el TEXTO exacto — dime qué quieres que diga y lo mando de verdad (no voy a inventar un saludo genérico)."}
                 try:
-                    import requests, urllib.parse
+                    import requests
                     url = f"https://{inst}.api.greenapi.com/waInstance{inst}/sendMessage/{gtok}"
-                    resp = await asyncio.to_thread(lambda: requests.post(url, json={"chatId": chat_id, "message": "¡Hola! Le escribe ATF - Actualiza Tus Faros. ¿En qué le podemos ayudar? 🚗💡"}, timeout=20))
+                    resp = await asyncio.to_thread(lambda: requests.post(url, json={"chatId": chat_id, "message": texto_msg}, timeout=20))
                     if resp.ok and resp.json().get("idMessage"):
-                        return {"respuesta": f"✅ WhatsApp ENVIADO de verdad al {tel[-10:]} (id {resp.json()['idMessage']}). Si quieres un texto distinto, dímelo y lo reenvío."}
+                        return {"respuesta": f"✅ WhatsApp ENVIADO de verdad al {tel[-10:]} con tu texto (id {resp.json()['idMessage']})."}
                     return {"respuesta": f"No pude enviarlo (no te miento): {resp.text[:200]}"}
                 except Exception as e:
                     return {"respuesta": f"No pude enviar el WhatsApp (no lo simulo): {str(e)[:200]}"}
@@ -1388,6 +1494,99 @@ class Consciencia:
 
         # No sé ejecutarlo — honesto
         return {"respuesta": "Entendí que me pides una acción sobre el sistema, pero aún no la tengo conectada para ejecutarla de verdad, así que NO la voy a dar por hecha. Dime exactamente qué archivo/carpeta y qué acción, o la conecto como capacidad nueva."}
+
+    async def _ejecutar_corel_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ COREL: comandos directos y fijos sobre motor_corel (COM real).
+        No adivina parámetros — si falta algo (ruta, tamaño) lo pide en vez de inventar."""
+        import re, importlib.util as _ilu
+        from pathlib import Path as _P
+        raiz = _P(__file__).resolve().parent.parent
+        try:
+            spec = _ilu.spec_from_file_location("corel_core", raiz / "EDITOR" / "corel_core.py")
+            cc = _ilu.module_from_spec(spec); spec.loader.exec_module(cc)
+        except Exception as e:
+            return {"respuesta": f"No pude cargar el motor de Corel: {e}"}
+
+        m = _norm_txt(mensaje)
+        rutas = re.findall(r"([A-Za-z]:\\[^\s\"']+\.(?:png|jpg|jpeg|pdf|cdr))", mensaje, re.I)
+
+        if "planilla" in m:
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa de la pieza (imagen del sticker ya terminado) y armo la planilla real."}
+            medidas = re.findall(r"(\d+(?:\.\d+)?)\s*(?:cm|x)", m)
+            if len(medidas) < 4:
+                return {"respuesta": "Dame las 4 medidas: ancho y alto de la hoja, y ancho y alto de la pieza (ej. 'hoja 60x100 pieza 4.5x5') — no invento tamaños."}
+            ah, al, pw, ph = (float(v) for v in medidas[:4])
+            salida = rutas[1] if len(rutas) > 1 else str(_P(rutas[0]).with_name("planilla.pdf"))
+            r = await asyncio.to_thread(cc.crear_planilla, rutas[0], ah, al, pw, ph, salida)
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Planilla real: {r['piezas']} piezas ({r['columnas']}x{r['filas']}) en {r['ruta']} ({r['kb']}KB)."}
+            return {"respuesta": f"No pude armar la planilla (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if "quita el fondo" in m or "quitale el fondo" in m or "splash" in m:
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa de la imagen (el splash) y le quito el fondo y lo integro de verdad."}
+            r = await asyncio.to_thread(cc.quitar_fondo_y_agregar, rutas[0], True)
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Fondo quitado real y agregado detrás en Corel: {r.get('imagen_sin_fondo')}."}
+            return {"respuesta": f"No pude hacerlo (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if "gotero" in m or "saca el color" in m or "extrae el color" in m or "muestra el color" in m:
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa de la foto de referencia (ej. la del envase) y lo saco de verdad."}
+            mxy = re.findall(r"(\d+)\s*[,x]\s*(\d+)", mensaje)
+            if not mxy:
+                return {"respuesta": "Dame la coordenada del pixel a muestrear (ej. 'en 100,60') — no invento dónde tomar el color."}
+            x, y = int(mxy[0][0]), int(mxy[0][1])
+            r = await asyncio.to_thread(cc.extraer_y_aplicar_color, rutas[0], x, y)
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Color real tomado de ({x},{y}): RGB({r['r']},{r['g']},{r['b']}) y aplicado a la forma seleccionada en Corel."}
+            return {"respuesta": f"No pude tomar/aplicar el color (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if "combina" in m or "integra" in m:
+            if len(rutas) < 2:
+                return {"respuesta": "Para combinar el logo con el fondo necesito las 2 rutas completas (fondo y logo). Dámelas y lo hago de verdad."}
+            fondo, logo = rutas[0], rutas[1]
+            salida = rutas[2] if len(rutas) > 2 else str(_P(logo).with_name("integrado.pdf"))
+            r = await asyncio.to_thread(cc.integrar_logo_fondo, fondo, logo, salida)
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Combinado real: {r['ruta']} ({r['kb']}KB)."}
+            return {"respuesta": f"No pude combinarlo (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if "guarda una copia" in m:
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa donde guardo la copia."}
+            r = await asyncio.to_thread(cc.guardar_copia, rutas[0])
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Copia real guardada: {r['ruta']} ({r['kb']}KB)."}
+            return {"respuesta": f"No pude guardar la copia: {r.get('detalle', r.get('status'))}"}
+
+        if "escala" in m or "tamano de pagina" in m:
+            mnum = re.findall(r"(\d+(?:\.\d+)?)\s*(?:cm|x)", m)
+            if len(mnum) < 2:
+                return {"respuesta": "Dame el ancho y alto en centímetros (ej. 'escala a 20x30 cm') y lo hago de verdad."}
+            r = await asyncio.to_thread(cc.escalar_pagina, float(mnum[0]), float(mnum[1]), False)
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Página real a {r['ancho_cm']}x{r['alto_cm']}cm."}
+            return {"respuesta": f"No pude escalar: {r.get('detalle', r.get('status'))}"}
+
+        if "exporta" in m or "exportar" in m:
+            salida = rutas[0] if rutas else None
+            if not salida:
+                return {"respuesta": "Dame la ruta completa de salida (con .pdf, .png o .jpg) y lo exporto de verdad."}
+            if salida.lower().endswith(".pdf"):
+                r = await asyncio.to_thread(cc.exportar_pdf, salida)
+            else:
+                r = await asyncio.to_thread(cc.exportar_bitmap, salida, 300, _P(salida).suffix.lstrip("."))
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Exportado real: {r['ruta']} ({r['kb']}KB)."}
+            return {"respuesta": f"No pude exportarlo (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        # "info del documento" u otro caso — siempre real, nunca inventado
+        r = await asyncio.to_thread(cc.info_documento)
+        if r.get("status") == "ok":
+            return {"respuesta": f"Documento real abierto en Corel: '{r['nombre']}', {r['paginas']} página(s), {r['ancho']}x{r['alto']}."}
+        return {"respuesta": f"No pude leer Corel: {r.get('detalle', r.get('status'))}"}
 
     async def _convertir_dxf_real(self, mensaje: str) -> Dict:
         """CHAT ↔ TALLER: convierte de verdad un archivo a DXF con taller_core
@@ -1455,7 +1654,9 @@ class Consciencia:
         partes, errores = [], []
 
         # ── ÓRDENES DE TALLER ──
-        if any(k in m for k in ("orden", "entrego", "entregar", "taller")):
+        # "entrega" (no solo "entregar") para que "pendiente de entrega" —que sí dispara
+        # el candado externo— también encuentre esta sección en vez de caer al fallback.
+        if any(k in m for k in ("orden", "entrego", "entregar", "entrega", "taller")):
             try:
                 ot = await asyncio.to_thread(_cargar, "ordenes_taller", "TALLER/ordenes_taller.py")
                 data = await asyncio.to_thread(ot.listar_ordenes)
@@ -1488,7 +1689,10 @@ class Consciencia:
                 errores.append(f"inventario: {str(e)[:80]}")
 
         # ── CRM / LEADS ──
-        if any(k in m for k in ("lead", "prospecto", "embudo", "pronostico", "fuente", "cliente nuevo")):
+        # "cliente nuevo" (singular) no calzaba contra "clientes nuevos" del trigger
+        # externo — la concordancia de plural se perdía. "cliente nuevo" como substring
+        # cubre ambos casos.
+        if any(k in m for k in ("lead", "prospecto", "embudo", "pronostico", "fuente", "cliente nuevo", "clientes nuevo")):
             try:
                 import sys as _s
                 _s.path.insert(0, str(raiz / "ORACLE"))
@@ -1561,10 +1765,12 @@ class Consciencia:
         return {"respuesta": f"No la creé (te lo digo derecho): {detalle}. "
                 f"Dame la idea más concreta —qué debe recibir y qué debe devolver— y lo reintento."}
 
-    async def _editar_codigo_real(self, mensaje: str) -> Dict:
+    async def _editar_codigo_real(self, mensaje: str, session_id: str = "", saltar_confirmacion: bool = False) -> Dict:
         """CHAT ↔ IDE (EDITAR): modifica cualquier archivo con red anti-ruptura.
         Garantías mecánicas: respaldo (reversible), compila o no se aplica, y guardián
-        anti-pérdida (si el cambio dejaría menos código/funciones → revierte). Sin simular."""
+        anti-pérdida (si el cambio dejaría menos código/funciones → revierte). Sin simular.
+        Si el archivo es del NÚCLEO, pide confirmación real ANTES de generar/escribir nada
+        (antes solo avisaba DESPUÉS de haber escrito — no protegía nada de verdad)."""
         import re, shutil, subprocess, sys
         from datetime import datetime as _dt
         from pathlib import Path
@@ -1573,11 +1779,21 @@ class Consciencia:
         if not fn:
             return {"respuesta": "Dime el nombre del archivo a editar (ej. 'edita el archivo ordenes_taller.py y agrega…')."}
         nombre = fn.group(1)
-        encontrados = [p for p in root.rglob(nombre) if "__pycache__" not in str(p) and ".ide_backups" not in str(p)]
+        encontrados = [p for p in root.rglob(nombre)
+                       if "__pycache__" not in str(p) and ".ide_backups" not in str(p)
+                       and "_OBSOLETOS" not in str(p) and "_ARCHIVE" not in str(p)]
         if not encontrados:
             return {"respuesta": f"No encontré ningún archivo llamado '{nombre}'."}
         objetivo = encontrados[0]
         rel = objetivo.relative_to(root)
+        # NÚCLEO: pide confirmación real ANTES de tocar nada (no un aviso después del hecho).
+        if objetivo.name in _NUCLEO_PROTEGIDO and not saltar_confirmacion:
+            if session_id:
+                self._accion_pendiente[session_id] = {"tipo": "editar_nucleo", "mensaje": mensaje}
+            return {"respuesta": f"⚠️ '{rel}' es un archivo del NÚCLEO (sostiene la lógica central de AURORA). "
+                    f"Antes de generar y escribir el cambio necesito tu confirmación explícita — responde 'sí' "
+                    f"para continuar (igual voy a aplicar el guardián anti-pérdida, el chequeo de compilación, "
+                    f"y respaldo con reversión automática si algo sale mal)."}
         if not self._groq:
             return {"respuesta": "Para redactar el cambio necesito el LLM (Groq) y no está disponible ahora. No inventé nada."}
         try:
@@ -1660,7 +1876,8 @@ class Consciencia:
         if not fn:
             return {"respuesta": "Dime el nombre del archivo (ej. 'muéstrame el archivo ordenes_taller.py')."}
         nombre = fn.group(1)
-        encontrados = [p for p in root.rglob(nombre) if "__pycache__" not in str(p)]
+        encontrados = [p for p in root.rglob(nombre)
+                       if "__pycache__" not in str(p) and "_OBSOLETOS" not in str(p) and "_ARCHIVE" not in str(p)]
         if not encontrados:
             return {"respuesta": f"No encontré ningún archivo llamado '{nombre}'."}
         objetivo = encontrados[0]
@@ -1699,6 +1916,27 @@ class Consciencia:
         return r.choices[0].message.content.strip()
 
     async def _fallback(self, mensaje: str, ctx: Dict) -> str:
+        # RAZONADOR PROFUNDO — verdadero último recurso: solo llega aquí un mensaje que
+        # NINGÚN candado directo ni el enrutador universal (con ~690 herramientas reales)
+        # supo resolver. Antes corría PRIMERO (con umbral ciego de >180 caracteres) y con
+        # contexto vacío — así perdía cualquier mensaje largo real ANTES de intentar algo
+        # real, y cuando sí corría no sabía nada de lo que AURORA puede hacer. Ahora, si
+        # sí aplica, recibe SISTEMA_BASE + lo que la Biblioteca tenga sobre el tema real.
+        if _es_pregunta_profunda(mensaje):
+            try:
+                bib_ctx = await asyncio.to_thread(_biblioteca().contexto_para_llm, mensaje, 3)
+            except Exception:
+                bib_ctx = ""
+            contexto_real = SISTEMA_BASE
+            if bib_ctx:
+                contexto_real += "\n\n--- BIBLIOTECA (manuales reales de Anuar) ---\n" + bib_ctx
+            try:
+                res = await asyncio.to_thread(_razonador().razonar, mensaje, contexto_real)
+                if isinstance(res, dict) and res.get("status") == "ok" and res.get("respuesta"):
+                    return res["respuesta"]
+            except Exception as e:
+                logger.debug(f"Razonador profundo no aplicó, sigue con fallback normal: {e}")
+
         messages = [
             {"role": "system", "content": SISTEMA_BASE},
             {"role": "user", "content": mensaje},
@@ -1742,7 +1980,8 @@ class Consciencia:
     # ── UTILIDADES ─────────────────────────────────────────────
 
     def _tema_rapido(self, mensaje: str) -> str:
-        msg = mensaje.lower()
+        msg = _norm_txt(mensaje)  # antes .lower() sin quitar acentos — "emocion" con
+        # tilde nunca matcheaba, la unica de las 17 funciones gatillo con esa inconsistencia.
         if any(w in msg for w in ["venta","atf","retrofit","cliente"]): return "ventas"
         if any(w in msg for w in ["coaching","familia","emocion"]): return "coaching"
         if any(w in msg for w in ["precio","cotiz","costo"]): return "ventas"

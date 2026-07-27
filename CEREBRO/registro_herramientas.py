@@ -36,16 +36,26 @@ _VERBOS_LECTURA = (
     "listar", "obtener", "consultar", "buscar", "leer", "resumen", "resumir",
     "calcular", "cotizar", "analizar", "comparar", "contar", "estado", "diagnostic",
     "info", "detalle", "catalogo", "catálogo", "existe", "es_", "hay_", "tiene_",
-    "total", "listado", "reporte", "revisar", "validar", "verificar_credenciales",
+    "total", "listado", "reporte", "revisar", "validar", "verificar",
     "descubrir", "nichos", "playbook", "conocimiento", "mejores_", "prompt_",
     "construir_brief", "post_de_hoy", "racha", "dia", "proximas", "ficha", "fichas",
-    "tecnicas", "precios", "plan", "sugerencia", "perfil", "historial",
+    "tecnicas", "precios", "plan", "sugerencia", "perfil", "historial", "get_",
+)
+# Aunque el nombre empiece con un verbo de lectura (ej. "diagnosticar_y_reparar_todo"
+# empieza como "diagnostic"), si contiene uno de estos verbos de escritura real en
+# CUALQUIER parte del nombre, se fuerza peligrosa=True — encontrado real en la
+# auditoría de 2026-07-26: esa función sí modifica archivos y pasaba como "lectura".
+_VERBOS_FORZAR_PELIGROSA = (
+    "reparar", "editar", "eliminar", "borrar", "instalar", "escribir",
+    "modificar", "sobrescribir", "actualizar_archivo", "crear_motor",
 )
 
 
 def _es_peligrosa(nombre: str) -> bool:
     """True si NO se reconoce como lectura pura → se pide confirmación antes de correr."""
     n = _norm(nombre)
+    if any(v in n for v in _VERBOS_FORZAR_PELIGROSA):
+        return True
     return not any(n.startswith(v) or n == v.rstrip("_") for v in _VERBOS_LECTURA)
 
 _REGISTRO: dict = {}
@@ -68,6 +78,14 @@ def _params(node) -> list:
             continue
         out.append(a.arg)
     return out
+
+
+def _params_requeridos(node) -> list:
+    """Nombres reales sin valor por default — verificar_capacidad_real y router_universal
+    los usan para saber si args= tiene lo mínimo antes de ejecutar a ciegas."""
+    args = [a.arg for a in node.args.args if a.arg not in ("self", "cls")]
+    n_defaults = len(node.args.defaults)
+    return args if n_defaults == 0 else args[:-n_defaults]
 
 
 def descubrir(refrescar: bool = False) -> dict:
@@ -102,6 +120,7 @@ def descubrir(refrescar: bool = False) -> dict:
                         "clase": None,
                         "doc": doc,
                         "params": _params(node),
+                        "requeridos": _params_requeridos(node),
                         "peligrosa": _es_peligrosa(node.name),
                     }
                 # 2) métodos públicos dentro de clases (los motores son clases)
@@ -116,6 +135,7 @@ def descubrir(refrescar: bool = False) -> dict:
                                 "clase": node.name,
                                 "doc": doc,
                                 "params": _params(m),
+                                "requeridos": _params_requeridos(m),
                                 "peligrosa": _es_peligrosa(m.name),
                             }
     _REGISTRO = reg
@@ -171,8 +191,17 @@ def ejecutar(clave: str, kwargs: dict) -> dict:
         validos = {k: v for k, v in (kwargs or {}).items() if k in firma.parameters}
         res = fn(**validos)
         if inspect.iscoroutine(res):
+            # ejecutar() siempre corre dentro de un hilo de asyncio.to_thread (nunca en
+            # el hilo principal) — asyncio.get_event_loop() truena ahí (Python 3.12+ no
+            # crea un loop automático fuera del hilo principal). new_event_loop() sí
+            # funciona sin importar desde qué hilo se llame. Mismo bug real que ya se
+            # arregló en motor_corel (COM también lo sufría por la misma razón de fondo).
             import asyncio
-            res = asyncio.get_event_loop().run_until_complete(res)
+            loop = asyncio.new_event_loop()
+            try:
+                res = loop.run_until_complete(res)
+            finally:
+                loop.close()
         return {"status": "ok", "resultado": res}
     except Exception as e:
         return {"status": "error", "detalle": str(e)[:300]}

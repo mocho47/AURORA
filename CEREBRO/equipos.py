@@ -109,9 +109,14 @@ def activar_equipo(equipo_id: str, **kw) -> dict:
         fn = getattr(mod, funcion)
     except Exception as ex:
         return {"status": "error", "detalle": f"No pude cargar la acción del equipo: {str(ex)[:120]}"}
+    # El reintento sin kwargs solo tiene sentido si SÍ había kwargs que pudieran sobrar
+    # (función que no los acepta). Si kw ya estaba vacío, reintentar es un duplicado
+    # inútil que puede re-ejecutar un efecto secundario real que ya corrió antes de fallar.
     try:
         resultado = fn(**kw) if kw else fn()
     except TypeError:
+        if not kw:
+            raise
         resultado = fn()
     return {"status": "ok", "equipo": e["nombre"], "meta": e["meta"], "resultado": resultado}
 
