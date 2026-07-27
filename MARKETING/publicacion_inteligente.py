@@ -119,12 +119,23 @@ def preparar_publicacion(negocio: str = "atf") -> dict:
             "nota": "Preparado. Para publicar de verdad usa publicar_hoy(red=..., aprobar=True)."}
 
 
-def publicar_hoy(red: str = "facebook", descripcion: str = "", aprobar: bool = False) -> dict:
+def publicar_hoy(red: str = "facebook", descripcion: str = "", aprobar: bool = False,
+                  negocio: str = "atf") -> dict:
     """DISPARA la publicación REAL del video de hoy en la red indicada.
     aprobar=False → solo devuelve qué se publicaría (dry-run, no sube nada).
     aprobar=True  → sube de verdad (hoy: Facebook por API oficial con token permanente).
+    negocio: aísla contra publicar el video de un negocio con la página/token de otro
+    (encontrado en vivo 2026-07-27: sin esto, un flujo de Milens que use esta misma
+    función publicaría con la página/token de ATF por default, sin avisar).
     """
     red = (red or "facebook").lower().strip()
+    negocio = (negocio or "atf").lower().strip()
+    if negocio != "atf":
+        import os
+        if not (os.getenv(f"{negocio.upper()}_FB_PAGE_TOKEN") and os.getenv(f"{negocio.upper()}_FB_PAGE_ID")):
+            return {"status": "sin_configurar", "negocio": negocio,
+                    "detalle": f"No hay token/página de Facebook configurados para '{negocio}' "
+                               f"— no publico con la página de ATF por default para no mezclar negocios."}
     mon = _monetizacion()
     hoy = mon.post_de_hoy()
     if hoy.get("status") != "ok":
@@ -152,15 +163,23 @@ def publicar_hoy(red: str = "facebook", descripcion: str = "", aprobar: bool = F
         return {"status": "no_soportado_aun", "red": red,
                 "detalle": f"Hoy solo publico automático en Facebook (token oficial). "
                            f"{red.title()} necesita su propia API/token."}
+    # Reserva atómica (compare-and-set) antes de subir — cierra la condición de
+    # carrera real que permitía duplicar la publicación (ver plan_monetizacion.py).
+    res = mon.reservar_publicacion(post["id"])
+    if not res.get("reservado"):
+        return {"status": "ya_publicado", "red": red,
+                "detalle": "Ese post ya se está publicando o ya se publicó (reservado por otra llamada)."}
     pub = _publicador()
     r = pub.publicar_video_fb(ruta_video, descripcion)
     if isinstance(r, dict) and r.get("status") == "PUBLICADO":
         try:
             mon.marcar_publicado(post["id"])
+            mon.registrar_publicado_historico(post["video"])
         except Exception:
             pass
         return {"status": "PUBLICADO", "red": "facebook", "video": ruta_video,
                 "post_id": r.get("post_id"), "cuando": datetime.now().isoformat(timespec="seconds")}
+    mon.liberar_reserva(post["id"])
     return {"status": "ERROR", "red": red, "detalle": (r or {}).get("detalle", str(r))}
 
 

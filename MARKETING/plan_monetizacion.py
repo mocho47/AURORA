@@ -62,6 +62,15 @@ def init_db() -> None:
             con.execute(f"ALTER TABLE plan_redes ADD COLUMN {ddl}")
         except Exception:
             pass
+    # Registro persistente de "ya se publicó alguna vez", independiente de que el
+    # archivo se haya podido MOVER a PUBLICADOS/ después -- encontrado en vivo
+    # 2026-07-27: si el move falla, el video sigue en el pool y puede volver a
+    # seleccionarse en una rotación futura sin que nada lo detecte.
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS publicados_historico (
+            nombre_archivo TEXT PRIMARY KEY,
+            fecha TEXT
+        )""")
     con.commit()
     con.close()
 
@@ -76,11 +85,18 @@ def listar_videos() -> list:
     """
     if not VIDEOS_DIR.exists():
         return []
-    # Excluye lo YA publicado y los duplicados apartados: el pool son solo únicos vivos.
+    init_db()
+    con = _conn()
+    ya_publicados = {r["nombre_archivo"] for r in
+                      con.execute("SELECT nombre_archivo FROM publicados_historico").fetchall()}
+    con.close()
+    # Excluye lo YA publicado (carpeta física + registro persistente, por si el move
+    # falló) y los duplicados apartados: el pool son solo únicos vivos.
     _EXCLUIR = {"PUBLICADOS", "DUPLICADOS_REVISAR"}
     vids = sorted(str(p.relative_to(VIDEOS_DIR)) for p in VIDEOS_DIR.rglob("*")
                   if p.is_file() and p.suffix.lower() in VIDEO_EXT
-                  and not (_EXCLUIR & set(p.parts)))
+                  and not (_EXCLUIR & set(p.parts))
+                  and str(p.relative_to(VIDEOS_DIR)) not in ya_publicados)
     return vids
 
 
@@ -178,6 +194,43 @@ def marcar_publicado(pid: int) -> dict:
     if not n:
         return {"status": "no_encontrado", "id": pid}
     return {"status": "ok", "id": pid, **racha()}
+
+
+def reservar_publicacion(pid: int) -> dict:
+    """Reserva atómicamente un post para publicar (compare-and-set real:
+    pendiente→publicando). Encontrado en vivo 2026-07-27: sin esto, 2 llamadas
+    concurrentes (doble ejecución de la tarea de Windows, doble click, etc.) podían
+    subir el MISMO video 2 veces a Facebook porque el chequeo de "¿ya se publicó?"
+    leía un estado que pudo cambiar durante los hasta 10 min que tarda la subida real."""
+    init_db()
+    con = _conn()
+    con.execute("UPDATE plan_redes SET estado='publicando' WHERE id=? AND estado='pendiente'", (pid,))
+    con.commit()
+    n = con.execute("SELECT changes()").fetchone()[0]
+    con.close()
+    return {"status": "ok", "reservado": bool(n)}
+
+
+def liberar_reserva(pid: int) -> None:
+    """Si la subida real falla tras reservar, regresa el post a 'pendiente' para
+    que se pueda reintentar de verdad (si no, quedaría 'publicando' para siempre)."""
+    init_db()
+    con = _conn()
+    con.execute("UPDATE plan_redes SET estado='pendiente' WHERE id=? AND estado='publicando'", (pid,))
+    con.commit()
+    con.close()
+
+
+def registrar_publicado_historico(nombre_archivo: str) -> None:
+    """Registro persistente e independiente del archivo físico — ver init_db()."""
+    if not nombre_archivo:
+        return
+    init_db()
+    con = _conn()
+    con.execute("INSERT OR IGNORE INTO publicados_historico (nombre_archivo, fecha) VALUES (?, ?)",
+                (nombre_archivo, date.today().isoformat()))
+    con.commit()
+    con.close()
 
 
 def marcar_dia(fecha: str = "") -> dict:

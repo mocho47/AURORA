@@ -11,10 +11,12 @@ import json, os, re, sys, time, urllib.request, urllib.parse
 from pathlib import Path
 
 TOKEN = ""
+PAGE = ""
 for ln in open(r"C:\AURORA.worktrees\.env", encoding="utf-8", errors="ignore"):
     if ln.startswith("FB_PAGE_TOKEN="):
         TOKEN = ln.split("=", 1)[1].strip()
-PAGE = "110364004632197"
+    elif ln.startswith("FB_PAGE_ID="):
+        PAGE = ln.split("=", 1)[1].strip()
 CORRECTO = "3326148674"
 VIEJOS = ["3329879109", "3323530146"]
 LINEA_TEL = f"\n\n\U0001F4F2 WhatsApp / Llamadas: {CORRECTO}\n#ActualizaTusFaros #Faros #Retrofit #GDL"

@@ -37,7 +37,7 @@ TELEFONO_ATF = "3326148674"
 CTA = f"\n\n📲 WhatsApp / Llamadas: {TELEFONO_ATF}\n#ActualizaTusFaros #Faros #Retrofit #GDL"
 
 
-def _post(ruta, body, timeout=300):
+def _post(ruta, body, timeout=650):
     req = urllib.request.Request(
         BASE + ruta, data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"}, method="POST")
