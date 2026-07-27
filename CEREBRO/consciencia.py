@@ -352,6 +352,10 @@ _COREL_ACCIONES = (
     # Anuar usa para "exportar" y no calzaban con nada — el mensaje se iba al
     # enrutador de IA, que adivino mal (dos veces) en vez de ir al comando directo.
     "almacena", "almacenar", "guarda", "guardar", "guardalo",
+    # Encontrado en vivo 2026-07-27: "ábrelo en Corel <ruta>" no calzaba con ningun
+    # verbo de esta lista, así que el mensaje se iba al enrutador de IA, que lo
+    # abría con el visor default de Windows en vez de dentro de Corel de verdad.
+    "abre", "abrir", "abrelo",
 )
 
 
@@ -1556,6 +1560,14 @@ class Consciencia:
                 if _carpeta_real and _titulo:
                     _ext = next(e for e in ("png", "jpg", "jpeg") if e in m)
                     rutas = [str(_P.home() / _carpeta_real / f"{_titulo.group(1)}.{_ext}")]
+
+        if "abre" in m or "abrir" in m or "abrelo" in m:
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa del archivo (PDF/CDR/AI) y lo abro de verdad dentro de Corel."}
+            r = await asyncio.to_thread(cc.abrir_documento, rutas[0])
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Abierto real en Corel: '{r['nombre']}' ({r['paginas']} página(s))."}
+            return {"respuesta": f"No pude abrirlo en Corel (no te miento): {r.get('detalle', r.get('status'))}"}
 
         if "planilla" in m:
             if not rutas:

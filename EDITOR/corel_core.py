@@ -209,6 +209,24 @@ def cerrar_documento_sin_guardar(nombre: str) -> Dict:
 
 
 @_con_com
+def abrir_documento(ruta: str) -> Dict:
+    """Abre un archivo REAL (PDF, CDR, AI, etc.) dentro de CorelDRAW (OpenDocument),
+    a diferencia de abrirlo con el visor por default de Windows. Verifica que el
+    archivo exista antes de intentarlo — nunca finge abrir algo que no está ahí."""
+    try:
+        origen = Path(ruta)
+        if not origen.exists():
+            return {"status": "no_encontrado", "detalle": f"No existe el archivo: {ruta}"}
+        app = _app()
+        doc = app.OpenDocument(str(origen))
+        if not doc:
+            return {"status": "error", "detalle": "Corel no regresó un documento abierto."}
+        return {"status": "ok", "nombre": doc.Name, "paginas": doc.Pages.Count}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
 def guardar_copia(ruta_salida: str) -> Dict:
     """
     Guarda una COPIA del documento activo en ruta_salida (.cdr) sin tocar
