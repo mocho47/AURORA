@@ -144,12 +144,26 @@ Después de la corrección de arriba, Anuar probó pidiéndole a AURORA (no a m�
 
 ---
 
+## 2026-07-27 — Asistente de Alertas globales + Manual de comandos generado
+
+**Por qué**: 2 pedidos de Anuar tras cerrar los 5 grupos de auditoría — que nunca se pase por alto una publicación pendiente o que WhatsApp se desconecte, y un manual de comandos generado del código real (no escrito a mano, para que nunca se desincronice).
+
+**Alertas globales**: en vez de construir algo nuevo, se generalizó el sistema de alertas que YA existía y funcionaba para Taller (el modal que se muestra encima de todo, el badge, el aviso una vez por hora). Ahora también agrega: publicaciones sin aprobar (Facebook/Instagram/TikTok, ya comparten la misma fuente real), leads sin contactar a tiempo, y si WhatsApp real se desconecta — con un nuevo badge que titila en la pestaña del Chat, como se pidió. **Se descartó explícitamente** una alerta de Facebook Marketplace (no existe esa integración hoy, no se simula) y de "WhatsApp sin responder" (no existe ese concepto — cada mensaje se contesta automático al instante; en su lugar se alerta si la conexión de WhatsApp se cae, que es lo que sí puede fallar de verdad).
+
+**Manual de comandos**: nuevo script (`CEREBRO/generar_manual.py`) que lee directo el código de los 14 candados del chat y el registro de las ~510 herramientas reales, y arma `MANUALES/manual_comandos_aurora.md` — indexado por grupo de trabajo (Taller, Ventas, Marketing, Diseño, Conocimiento, Cerebro y Sistema), en lenguaje simple, con las frases reales que cada uno reconoce. Ligado a la pestaña "📖 Guía/Manual" que ya existía. **Probado en vivo** (no solo generado): un agente probó 8 frases reales del grupo Taller contra el servidor real — 7 de 8 funcionaron exactamente como decía el manual. La única que no (`negocio` con "cómo va") reveló que ese candado en particular necesita DOS tipos de palabra juntas en el mismo mensaje (una de pregunta + una de dominio, ej. "cómo va el inventario"), no basta una frase suelta — se agregó un aviso real en el manual explicando esto en vez de dejarlo como si funcionara solo.
+
+**Archivos que cambiaron**: `CORE/aurora_server.py` (endpoints `/alertas/resumen` y `/manuales/comandos`), `TEMPLATES/panel-completo.html` (badge, modal generalizado, CSS de parpadeo), `CEREBRO/generar_manual.py` (nuevo).
+
+**Explícitamente NO se hizo** (con razón real): no se conectó Marketplace de Facebook (no existe); no se construyó WebSocket para las alertas (el `setInterval` que ya usa todo el panel es suficiente, cambiar de arquitectura no resuelve nada real hoy); no se probaron en vivo las ~510 herramientas del enrutador universal, solo los 14 candados directos — queda declarado como próxima fase, es un trabajo mucho más grande.
+
+---
+
 ## Planes futuros (próximas sesiones)
 
-Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) que arrancó tras la corrección del enrutador general. Pendientes nuevos, para otra sesión:
+Con esto se cierran los 5 grupos de la auditoría de dominio (bajo riesgo, Fábrica/código/memoria, Negocio, Vendedor, Publicador+WhatsApp) más las 2 capacidades nuevas de alertas/manual. Pendientes para otra sesión:
 
-1. **Asistente global de Alertas/Recordatorios** (pedido 2026-07-27): notificaciones persistentes sobre publicaciones pendientes de aprobar, mensajes sin responder (WhatsApp, Marketplace), integrado a todos los negocios y redes — para que nunca se pase por alto algo real. Merece su propio plan escrito antes de empezar.
-2. **Manual de comandos + pruebas en vivo por agentes** (pedido 2026-07-27): generar, de las listas reales de triggers del código (no a mano), un manual indexado por motor/grupo, en lenguaje simple, con las variantes de frases que cada función reconoce de verdad — probado en vivo por agentes, no solo documentado en teoría.
-3. Caché de pywin32 corrupta en Corel (ver arriba) — fix rápido pendiente, no urgente.
+1. **Verificación en vivo de las ~510 herramientas del enrutador universal** (Fase 3 declarada del manual de comandos) — el piloto de hoy solo cubrió los 14 candados directos.
+2. Caché de pywin32 corrupta en Corel — fix rápido pendiente, no urgente.
+3. Generador del manual: no distingue candados con lógica compuesta (2 categorías de trigger a la vez, ej. `negocio`/`corel`) — hoy se avisa con una nota, sería mejor detectarlo automático.
 
 **Explícitamente diferido, no urgente**: fusionar los 10 candados de dominio dentro del enrutador de IA — hoy son más confiables por separado (determinístico vs. probabilístico); solo tiene sentido si en el futuro se decide que vale la pena el cambio de riesgo.
