@@ -4,6 +4,28 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 ---
 
+## 2026-07-28 — Lote "Corel al 100%" (consciencia.py + corel_core.py + pc_access.py)
+
+**Por qué**: Anuar probó Corel en vivo con amigos de 4Forte y falló en lo más básico (abrir una imagen). En vez de parchar ese caso puntual otra vez, se leyó el código real completo de Corel y se probó comando por comando contra el Corel real de Anuar.
+
+**Qué se arregló, todo verificado en vivo:**
+
+1. **Rutas con espacios sin comillas** (el caso más común al copiar de WhatsApp/Windows) no se reconocían — regex reescrita no-greedy.
+2. **Extensiones incompletas**: `.ai`, `.bmp`, `.gif`, `.tif/.tiff` no se reconocían en la ruta aunque el motor ya los soportaba.
+3. **Typo "corell"** (doble L) de Anuar, no se reconocía como "corel".
+4. **"Cerrar documento"** existía en el motor pero ningún comando de chat lo alcanzaba — ahora sí.
+5. **"Extraer el texto"** se había pedido en vivo y no existía como función real (se ignoraba en silencio) — ahora lee el texto real de Corel vía COM, y de paso cuenta las demás formas ("adornos": imágenes, rectángulos, etc.).
+6. **Escalar página** fallaba si no había ningún documento abierto — ahora crea uno nuevo automático, igual que ya pasaba con importar imágenes.
+7. **Ruta inventada por el enrutador de IA**: si ni el archivo ni la carpeta existían, se ejecutaba igual a ciegas — ahora se verifica primero.
+8. **Un cuelgue de Corel bloqueaba el chat completo para todos los usuarios** (no solo Corel) — ahora responde honesto a los 25s.
+9. Se limpió el caché corrupto de `win32com` (`gen_py`) que traía las constantes de Corel en cero — el problema real detrás de varias fallas silenciosas.
+
+**Lo que NO se logró cerrar, documentado sin fingir**: exportar directo a PNG/JPG desde Corel. Se encontró la causa real leyendo el SDK oficial (el método `ExportBitmap` requiere llamar `.Finish()` en el objeto que regresa, cosa que el código nunca hacía), y Anuar confirmó en vivo que el ejemplo oficial SÍ funciona corrido directo dentro de Corel — pero la librería de Python (pywin32) tiene una incompatibilidad real con ese método específico que no se pudo resolver esta noche pese a varios enfoques distintos, todos con evidencia real. **Exportar a PDF sí funciona 100% verificado** — es la alternativa mientras no se resuelva. Camino real identificado para la próxima sesión: en vez de llamar `ExportBitmap` desde Python, hacer que Corel corra su propia macro VBA (ya probada funcionando) y que Python solo dispare esa macro.
+
+**Bono real encontrado**: ya existe en disco el SDK/Object Model oficial completo de CorelDRAW extraído (2560 páginas HTML, `MANUALES/descargas/draw_om_extraido/`) de una sesión anterior — sirvió esta noche para diagnosticar el bug de ExportBitmap con la fuente real en vez de adivinar. Pendiente conectarlo al cartucho de Biblioteca/Manuales para consulta futura.
+
+---
+
 ## 2026-07-26/27 — Corrección de raíz del enrutador (consciencia.py + registro_herramientas.py)
 
 **Por qué**: Anuar encontró esta noche que AURORA negaba capacidades reales, entraba en respuestas circulares, y no seguía sus propias reglas. Se investigó a fondo (3 auditorías reales en paralelo, código leído línea por línea, nada especulado) antes de tocar nada, y se corrigió todo junto — no parche por parche.
