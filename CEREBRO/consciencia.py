@@ -200,6 +200,20 @@ def _norm_txt(mensaje: str) -> str:
     return "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
 
 
+async def _corel_con_timeout(fn, *args, timeout: float = 25.0):
+    """Envuelve una llamada real a Corel (COM, bloqueante) con un límite de tiempo
+    real. Encontrado en vivo 2026-07-27: si CorelDRAW no está listo/abierto o se
+    queda esperando un diálogo, la llamada se cuelga para siempre — y como el chat
+    corre con un solo worker, eso bloquea TODO el sistema para cualquier usuario
+    (síntoma real: "no ha podido hacer nada en todo el día"). Ahora se rinde
+    honesto en vez de colgar el sistema entero."""
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(fn, *args), timeout=timeout)
+    except asyncio.TimeoutError:
+        return {"status": "timeout",
+                "detalle": f"CorelDRAW no respondió en {timeout:.0f}s — revisa que esté abierto de verdad y sin ningún diálogo pendiente en pantalla."}
+
+
 _SUFIJOS_CLITICOS = (
     "selo", "sela", "selos", "selas", "melo", "mela", "melos", "melas",
     "noslo", "nosla", "noslos", "noslas", "lo", "la", "los", "las", "le", "les", "se",
@@ -393,13 +407,23 @@ def _es_conversion_dxf(mensaje: str) -> bool:
 
 # ── CHAT ↔ COREL: comandos directos y fijos, sin adivinar (motor_corel real) ──
 _COREL_TRIGGERS = (
-    "corel", "cdr",
+    # "corell" (doble L) es un typo real de Anuar encontrado en vivo 2026-07-27 —
+    # la coincidencia de palabra completa (\bcorel\b) no reconocía "corell" como
+    # la misma palabra, así que el mensaje se iba al enrutador de IA, que inventó
+    # una ruta falsa ("C:/Users/usuario/...", el usuario real es "Administrador").
+    "corel", "corell", "cdr",
 )
 _COREL_ACCIONES = (
     "exporta", "exportar", "escala", "tamano de pagina", "combina", "integra",
     "logo con el fondo", "logo y el fondo", "guarda una copia", "info del documento",
     "gotero", "saca el color", "extrae el color", "aplica el color", "muestra el color",
     "planilla", "quita el fondo", "quitale el fondo", "splash",
+    # Lote "Corel al 100%" (2026-07-28): cerrar_documento_sin_guardar ya existia
+    # en el motor pero ningun disparador de chat lo alcanzaba (muerto para el
+    # usuario). Y "extrae el texto" se habia pedido en vivo hoy mismo y no existia
+    # como funcion real — se ignoraba en silencio en vez de decir que no se podia.
+    "cierra", "cerrar documento", "cierra el documento",
+    "extrae el texto", "extraer el texto", "el texto del documento", "que texto tiene",
     # Encontrado en vivo 2026-07-27: "almacenar"/"guardar" son sinonimos reales que
     # Anuar usa para "exportar" y no calzaban con nada — el mensaje se iba al
     # enrutador de IA, que adivino mal (dos veces) en vez de ir al comando directo.
@@ -1753,7 +1777,24 @@ class Consciencia:
             return {"respuesta": f"No pude cargar el motor de Corel: {e}"}
 
         m = _norm_txt(mensaje)
-        rutas = re.findall(r"([A-Za-z]:\\[^\s\"']+\.(?:png|jpg|jpeg|pdf|cdr))", mensaje, re.I)
+        # Encontrado en vivo 2026-07-27: nombres de archivo con ESPACIOS (ej. los que
+        # genera WhatsApp por default: "WhatsApp Image 2026-07-27 at 12.03.35 PM.jpeg")
+        # no calzaban con el regex viejo (excluía \s por completo) — el candado directo
+        # de Corel se saltaba entero y el mensaje caía al chat genérico, que alucinó
+        # ("necesitas Photoshop", "no tengo acceso a la imagen") sobre una ruta real que
+        # sí se había dado. Ahora se reconoce primero la ruta ENTRE COMILLAS (permite
+        # espacios) y si no hay comillas, cae a la versión sin espacios de antes.
+        # No-greedy hasta la extensión: cubre rutas con espacios estén o no entre
+        # comillas (el caso real más común es SIN comillas, como pega la gente al
+        # copiar un nombre de archivo de Windows/WhatsApp).
+        # Extensiones alineadas con lo que el motor realmente soporta (abrir_documento
+        # acepta ai/eps/cdr/pdf; agregar_imagen_documento_activo acepta también
+        # bmp/gif/tif/tiff) — antes la regex solo reconocia png/jpg/jpeg/pdf/cdr y
+        # cualquier mensaje con un .ai o .bmp real se caia al enrutador de IA.
+        rutas = re.findall(
+            r"[A-Za-z]:\\[^\r\n]+?\.(?:png|jpg|jpeg|bmp|gif|tif|tiff|pdf|cdr|ai)",
+            mensaje, re.I)
+        rutas = [r.strip(' "\'') for r in rutas]
         # Carpeta única real para PDFs de Corel generados por AURORA — a pedido explícito
         # de Anuar (2026-07-27): "guárdalo/almacénalo como PDF" ya sabe dónde SIEMPRE, sin
         # rutas alternas para este tipo de archivo. Solo aplica a PDF (PNG/JPG conservan
@@ -1769,7 +1810,7 @@ class Consciencia:
                 else:
                     # Sin título dado: usa el nombre REAL del documento abierto en Corel
                     # (nunca inventa un nombre) — solo si el motor confirma que existe.
-                    info = await asyncio.to_thread(cc.info_documento)
+                    info = await _corel_con_timeout(cc.info_documento)
                     nombre = _P(info["nombre"]).stem if info.get("status") == "ok" else None
                 if nombre:
                     rutas = [str(_CARPETA_PDF_COREL / f"{nombre}.pdf")]
@@ -1783,11 +1824,40 @@ class Consciencia:
 
         if "abre" in m or "abrir" in m or "abrelo" in m:
             if not rutas:
-                return {"respuesta": "Dame la ruta completa del archivo (PDF/CDR/AI) y lo abro de verdad dentro de Corel."}
-            r = await asyncio.to_thread(cc.abrir_documento, rutas[0])
+                return {"respuesta": "Dame la ruta completa del archivo (PDF/CDR/AI/PNG/JPG) y lo abro de verdad dentro de Corel."}
+            # Encontrado en vivo 2026-07-27: para una imagen RASTER (PNG/JPG), abrir_documento
+            # (OpenDocument) solo mostraba una página en blanco — Corel necesita IMPORTAR el
+            # raster a un documento, no "abrirlo" como si fuera un documento nativo. Diferencia
+            # real por tipo de archivo en vez de usar siempre la misma función.
+            if _P(rutas[0]).suffix.lower() in (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff"):
+                r = await _corel_con_timeout(cc.agregar_imagen_documento_activo, rutas[0], False)
+                if r.get("status") == "ok":
+                    return {"respuesta": f"✅ Imagen real importada a Corel: '{r['forma']}'."}
+                return {"respuesta": f"No pude importarla en Corel (no te miento): {r.get('detalle', r.get('status'))}"}
+            r = await _corel_con_timeout(cc.abrir_documento, rutas[0])
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Abierto real en Corel: '{r['nombre']}' ({r['paginas']} página(s))."}
             return {"respuesta": f"No pude abrirlo en Corel (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if "cierra" in m or "cerrar documento" in m or "cierra el documento" in m:
+            info = await _corel_con_timeout(cc.info_documento)
+            if info.get("status") != "ok":
+                return {"respuesta": f"No hay documento abierto en Corel para cerrar: {info.get('detalle', info.get('status'))}"}
+            r = await _corel_con_timeout(cc.cerrar_documento_sin_guardar, info["nombre"])
+            if r.get("status") == "ok":
+                return {"respuesta": f"✅ Documento real cerrado sin guardar: '{r['cerrado']}'."}
+            return {"respuesta": f"No pude cerrarlo (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        if ("extrae el texto" in m or "extraer el texto" in m or "el texto del documento" in m
+                or "que texto tiene" in m):
+            r = await _corel_con_timeout(cc.extraer_texto_documento)
+            if r.get("status") == "ok":
+                resumen_formas = ", ".join(f"{v} {k}" for k, v in r["formas_no_texto"].items()) or "ninguna otra forma"
+                if not r["textos"]:
+                    return {"respuesta": f"El documento no tiene texto real. Otras formas (adornos) encontradas: {resumen_formas}."}
+                texto_junto = "\n".join(f"- {t}" for t in r["textos"])
+                return {"respuesta": f"✅ Texto real encontrado ({r['total_bloques_texto']} bloque(s)):\n{texto_junto}\nAdornos/otras formas: {resumen_formas}."}
+            return {"respuesta": f"No pude leer el texto (no te miento): {r.get('detalle', r.get('status'))}"}
 
         if "planilla" in m:
             if not rutas:
@@ -1797,7 +1867,7 @@ class Consciencia:
                 return {"respuesta": "Dame las 4 medidas: ancho y alto de la hoja, y ancho y alto de la pieza (ej. 'hoja 60x100 pieza 4.5x5') — no invento tamaños."}
             ah, al, pw, ph = (float(v) for v in medidas[:4])
             salida = rutas[1] if len(rutas) > 1 else str(_P(rutas[0]).with_name("planilla.pdf"))
-            r = await asyncio.to_thread(cc.crear_planilla, rutas[0], ah, al, pw, ph, salida)
+            r = await _corel_con_timeout(cc.crear_planilla, rutas[0], ah, al, pw, ph, salida)
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Planilla real: {r['piezas']} piezas ({r['columnas']}x{r['filas']}) en {r['ruta']} ({r['kb']}KB)."}
             return {"respuesta": f"No pude armar la planilla (no te miento): {r.get('detalle', r.get('status'))}"}
@@ -1805,7 +1875,7 @@ class Consciencia:
         if "quita el fondo" in m or "quitale el fondo" in m or "splash" in m:
             if not rutas:
                 return {"respuesta": "Dame la ruta completa de la imagen (el splash) y le quito el fondo y lo integro de verdad."}
-            r = await asyncio.to_thread(cc.quitar_fondo_y_agregar, rutas[0], True)
+            r = await _corel_con_timeout(cc.quitar_fondo_y_agregar, rutas[0], True)
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Fondo quitado real y agregado detrás en Corel: {r.get('imagen_sin_fondo')}."}
             return {"respuesta": f"No pude hacerlo (no te miento): {r.get('detalle', r.get('status'))}"}
@@ -1817,7 +1887,7 @@ class Consciencia:
             if not mxy:
                 return {"respuesta": "Dame la coordenada del pixel a muestrear (ej. 'en 100,60') — no invento dónde tomar el color."}
             x, y = int(mxy[0][0]), int(mxy[0][1])
-            r = await asyncio.to_thread(cc.extraer_y_aplicar_color, rutas[0], x, y)
+            r = await _corel_con_timeout(cc.extraer_y_aplicar_color, rutas[0], x, y)
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Color real tomado de ({x},{y}): RGB({r['r']},{r['g']},{r['b']}) y aplicado a la forma seleccionada en Corel."}
             return {"respuesta": f"No pude tomar/aplicar el color (no te miento): {r.get('detalle', r.get('status'))}"}
@@ -1827,7 +1897,7 @@ class Consciencia:
                 return {"respuesta": "Para combinar el logo con el fondo necesito las 2 rutas completas (fondo y logo). Dámelas y lo hago de verdad."}
             fondo, logo = rutas[0], rutas[1]
             salida = rutas[2] if len(rutas) > 2 else str(_P(logo).with_name("integrado.pdf"))
-            r = await asyncio.to_thread(cc.integrar_logo_fondo, fondo, logo, salida)
+            r = await _corel_con_timeout(cc.integrar_logo_fondo, fondo, logo, salida)
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Combinado real: {r['ruta']} ({r['kb']}KB)."}
             return {"respuesta": f"No pude combinarlo (no te miento): {r.get('detalle', r.get('status'))}"}
@@ -1835,7 +1905,7 @@ class Consciencia:
         if "guarda una copia" in m:
             if not rutas:
                 return {"respuesta": "Dame la ruta completa donde guardo la copia."}
-            r = await asyncio.to_thread(cc.guardar_copia, rutas[0])
+            r = await _corel_con_timeout(cc.guardar_copia, rutas[0])
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Copia real guardada: {r['ruta']} ({r['kb']}KB)."}
             return {"respuesta": f"No pude guardar la copia: {r.get('detalle', r.get('status'))}"}
@@ -1844,7 +1914,7 @@ class Consciencia:
             mnum = re.findall(r"(\d+(?:\.\d+)?)\s*(?:cm|x)", m)
             if len(mnum) < 2:
                 return {"respuesta": "Dame el ancho y alto en centímetros (ej. 'escala a 20x30 cm') y lo hago de verdad."}
-            r = await asyncio.to_thread(cc.escalar_pagina, float(mnum[0]), float(mnum[1]), False)
+            r = await _corel_con_timeout(cc.escalar_pagina, float(mnum[0]), float(mnum[1]), False)
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Página real a {r['ancho_cm']}x{r['alto_cm']}cm."}
             return {"respuesta": f"No pude escalar: {r.get('detalle', r.get('status'))}"}
@@ -1854,15 +1924,15 @@ class Consciencia:
             if not salida:
                 return {"respuesta": "Dame la ruta completa de salida (con .pdf, .png o .jpg) y lo exporto de verdad."}
             if salida.lower().endswith(".pdf"):
-                r = await asyncio.to_thread(cc.exportar_pdf, salida)
+                r = await _corel_con_timeout(cc.exportar_pdf, salida)
             else:
-                r = await asyncio.to_thread(cc.exportar_bitmap, salida, 300, _P(salida).suffix.lstrip("."))
+                r = await _corel_con_timeout(cc.exportar_bitmap, salida, 300, _P(salida).suffix.lstrip("."))
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Exportado real: {r['ruta']} ({r['kb']}KB)."}
             return {"respuesta": f"No pude exportarlo (no te miento): {r.get('detalle', r.get('status'))}"}
 
         # "info del documento" u otro caso — siempre real, nunca inventado
-        r = await asyncio.to_thread(cc.info_documento)
+        r = await _corel_con_timeout(cc.info_documento)
         if r.get("status") == "ok":
             return {"respuesta": f"Documento real abierto en Corel: '{r['nombre']}', {r['paginas']} página(s), {r['ancho']}x{r['alto']}."}
         return {"respuesta": f"No pude leer Corel: {r.get('detalle', r.get('status'))}"}

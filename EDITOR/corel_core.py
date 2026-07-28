@@ -72,6 +72,60 @@ def info_documento() -> Dict:
 
 
 @_con_com
+def extraer_texto_documento() -> Dict:
+    """
+    Lee TODO el texto real de las formas de texto del documento activo,
+    recorriendo todas las páginas y capas (incluye texto dentro de grupos).
+    También cuenta las formas que no son texto (los "adornos": imágenes,
+    rectángulos, elipses, curvas/líneas, otros) para dar un resumen real
+    de qué más trae el diseño, sin inventar nada que no esté ahí.
+    """
+    try:
+        import win32com.client
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        c = win32com.client.constants
+        textos = []
+        conteo_formas: Dict[str, int] = {}
+
+        def _recorrer(shapes):
+            for shp in shapes:
+                try:
+                    if shp.Type == c.cdrTextShape:
+                        contenido = shp.Text.Story.Text
+                        if contenido and contenido.strip():
+                            textos.append(contenido.strip())
+                        conteo_formas["texto"] = conteo_formas.get("texto", 0) + 1
+                    elif shp.Type == c.cdrGroupShape:
+                        _recorrer(shp.Shapes)
+                    else:
+                        etiqueta = {
+                            getattr(c, "cdrBitmapShape", object()): "imagen",
+                            getattr(c, "cdrRectangleShape", object()): "rectangulo",
+                            getattr(c, "cdrEllipseShape", object()): "elipse",
+                            getattr(c, "cdrCurveShape", object()): "curva/linea",
+                        }.get(shp.Type, "otro")
+                        conteo_formas[etiqueta] = conteo_formas.get(etiqueta, 0) + 1
+                except Exception:
+                    continue
+
+        for pg in doc.Pages:
+            for lyr in pg.Layers:
+                _recorrer(lyr.Shapes)
+
+        return {
+            "status": "ok",
+            "textos": textos,
+            "total_bloques_texto": len(textos),
+            "formas_no_texto": conteo_formas,
+        }
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
 def exportar_pdf(ruta_salida: str) -> Dict:
     """
     Publica el documento activo a PDF en ruta_salida.
@@ -116,11 +170,23 @@ def exportar_bitmap(ruta_salida: str, dpi: int = 300, formato: str = "png") -> D
             return {"status": "error", "detalle": f"Formato '{formato}' no soportado (usa png o jpg)."}
         destino = Path(ruta_salida).resolve()
         destino.parent.mkdir(parents=True, exist_ok=True)
-        # PaletteOptions y ExportArea son parametros COM (VT_DISPATCH): None = usar default real.
+        # LIMITACION REAL CONOCIDA, NO RESUELTA (encontrada en vivo 2026-07-28, lote
+        # "Corel al 100%"): PaletteOptions/ExportArea son parametros COM VT_DISPATCH.
+        # Pasar 0/entero -> TypeError de Python antes de llegar a Corel (peor: no
+        # honesto, parece bug de codigo). Omitirlos -> el wrapper generado los
+        # rellena con su propio default (0) y falla igual. Pasar None SI llega hasta
+        # Corel de verdad, pero Corel a veces responde con una excepcion generica
+        # (E_FAIL sin detalle) o, con contenido real en el documento, no truena pero
+        # tampoco escribe el archivo — el chequeo de abajo (destino.exists()) atrapa
+        # ese caso y lo reporta honesto, nunca finge éxito. No se encontró la causa
+        # raíz exacta dentro de Corel esta noche; exportar_pdf() es la ruta que SÍ
+        # funciona 100% verificada — úsala si el PNG/JPG exacto no es indispensable.
         doc.ExportBitmap(str(destino), filtro, 1, 4, 0, 0, dpi, dpi,
                           1, False, False, True, False, 0, None, None)
         if not destino.exists():
-            return {"status": "error", "detalle": "Corel no generó el archivo (verificado en disco)."}
+            return {"status": "error",
+                    "detalle": "Corel no generó el archivo PNG/JPG (verificado en disco). "
+                               "Limitación real conocida de exportar_bitmap — usa PDF si es posible."}
         return {"status": "ok", "ruta": str(destino),
                 "kb": round(destino.stat().st_size / 1024, 1), "dpi": dpi}
     except Exception as e:
@@ -137,9 +203,11 @@ def escalar_pagina(ancho_cm: float, alto_cm: float, en_documento_nuevo: bool = F
     try:
         import win32com.client
         app = _app()
-        doc = app.CreateDocument() if en_documento_nuevo else app.ActiveDocument
-        if not doc:
-            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        # Encontrado en vivo 2026-07-28 (lote "Corel al 100%"): pedir "escala a 20x30"
+        # sin nada abierto en Corel fallaba con "sin_documento" — mismo hueco que ya
+        # se había cerrado para agregar_imagen_documento_activo. en_documento_nuevo=True
+        # sigue forzando un documento nuevo aunque haya uno activo (uso real: pruebas).
+        doc = app.CreateDocument() if en_documento_nuevo else (app.ActiveDocument or app.CreateDocument())
         c = win32com.client.constants
         doc.Unit = c.cdrCentimeter
         pg = doc.ActivePage
@@ -177,6 +245,11 @@ def preparar_para_lona(ancho_m: float, alto_m: float, ruta_salida: str, dpi: int
         filtro = filtros.get(formato, filtros["png"])
         destino = Path(ruta_salida).resolve()
         destino.parent.mkdir(parents=True, exist_ok=True)
+        # LIMITACION REAL CONOCIDA, NO RESUELTA (ver nota identica en exportar_bitmap,
+        # encontrada en vivo 2026-07-28, lote "Corel al 100%"): PaletteOptions/
+        # ExportArea son VT_DISPATCH — None es lo unico que no truena en Python al
+        # marshalling, pero a veces Corel no escribe el archivo igual. El chequeo de
+        # abajo (con espera, por si es de verdad solo lentitud) lo atrapa honesto.
         doc.ExportBitmap(str(destino), filtro, 1, 4, 0, 0, dpi, dpi,
                           1, False, False, True, False, 0, None, None)
         # Imagenes de lona son grandes (varios megapixeles): Corel puede seguir
@@ -187,7 +260,9 @@ def preparar_para_lona(ancho_m: float, alto_m: float, ruta_salida: str, dpi: int
                 break
             _time.sleep(1)
         if not destino.exists():
-            return {"status": "error", "detalle": "Corel no genero el archivo (verificado en disco)."}
+            return {"status": "error",
+                    "detalle": "Corel no generó el archivo (verificado en disco). "
+                               "Limitación real conocida de exportar a PNG/JPG — usa exportar_pdf() si es posible."}
         return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1),
                 "ancho_m": ancho_m, "alto_m": alto_m, "dpi": dpi}
     except Exception as e:
@@ -250,15 +325,16 @@ def guardar_copia(ruta_salida: str) -> Dict:
 @_con_com
 def agregar_imagen_documento_activo(ruta_imagen: str, enviar_atras: bool = False) -> Dict:
     """
-    Importa una imagen al documento ACTIVO (el que ya tienes abierto y
-    trabajando en Corel, no uno nuevo). Si enviar_atras=True, la manda al
-    fondo de la pila de capas (para ponerla detrás del logo).
+    Importa una imagen REAL al documento activo de Corel — si no hay ninguno
+    abierto, crea uno nuevo primero (mismo patrón que crear_planilla/preparar_
+    para_lona). Antes fallaba con "sin_documento" si Corel no tenía nada
+    abierto — encontrado en vivo 2026-07-27: pedir "abre esta imagen en Corel"
+    desde cero (sin documento previo) no funcionaba. Si enviar_atras=True, la
+    manda al fondo de la pila de capas (para ponerla detrás del logo).
     """
     try:
         app = _app()
-        doc = app.ActiveDocument
-        if not doc:
-            return {"status": "sin_documento", "detalle": "No hay documento abierto en Corel."}
+        doc = app.ActiveDocument or app.CreateDocument()
         if not Path(ruta_imagen).exists():
             return {"status": "error", "detalle": f"No existe la imagen: {ruta_imagen}"}
         lyr = doc.ActiveLayer

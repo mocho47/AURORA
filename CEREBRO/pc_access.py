@@ -101,6 +101,14 @@ def _resolver_archivo_real(ruta: str) -> Tuple[Optional[Path], Optional[Dict]]:
             return None, {"status": "no_encontrado",
                           "mensaje": f"No encontré '{ruta}' en {p.parent}. Archivos ahí: "
                                      + ", ".join(candidatos[:15]) + (" ..." if len(candidatos) > 15 else "")}
+    if not p.exists():
+        # Encontrado en vivo 2026-07-27 (grave): si ni el archivo NI la carpeta padre
+        # existen (ej. el enrutador de IA inventó "C:/Users/usuario/..." cuando el
+        # usuario real de esta PC es "Administrador"), el bloque de arriba se saltaba
+        # entero y esta función regresaba la ruta INVENTADA como si fuera válida —
+        # se ejecutaba a ciegas sin que nadie verificara que existiera de verdad.
+        return None, {"status": "no_encontrado",
+                      "mensaje": f"'{ruta}' no existe (ni la carpeta '{p.parent}') — no invento una ruta que no es real."}
     return p, None
 
 
