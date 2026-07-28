@@ -201,6 +201,57 @@ async def _arrancar() -> None:
     except Exception as e:
         logger.warning(f"      Recordatorio no disponible: {e}")
 
+    # REPORTE MENSUAL DE CONTABILIDAD — real, con datos reales del taller ──────
+    # Pedido de Anuar 2026-07-27: reusa contabilidad_mensual() (ya corregida esta
+    # noche: no cuenta canceladas, no falsea cobros) + el envio real de WhatsApp
+    # ya probado. El dia 1 de cada mes manda por WhatsApp el resumen real del mes
+    # que acaba de cerrar. Usa el mismo WA_RECORDATORIO (numero personal real de
+    # Anuar en .env) que ya usa el recordatorio de publicaciones -- mismo candado
+    # de "sin numero configurado no se manda, nunca se adivina".
+    async def _reporte_mensual_contabilidad():
+        import os, datetime as _dt
+        from pathlib import Path as _P
+        marca = _P(__file__).resolve().parent / "MEMORIA" / ".ultimo_reporte_mensual"
+        MI_WA = os.getenv("WA_RECORDATORIO", "")
+        while True:
+            try:
+                hoy = _dt.date.today()
+                mes_actual = hoy.isoformat()[:7]
+                ya = marca.read_text(encoding="utf-8").strip() if marca.exists() else ""
+                if hoy.day == 1 and ya != mes_actual and MI_WA:
+                    mes_anterior = (hoy.replace(day=1) - _dt.timedelta(days=1)).isoformat()[:7]
+                    from TALLER import ordenes_taller as _ot
+                    cont = await asyncio.to_thread(_ot.contabilidad_mensual, mes_anterior)
+                    datos = next((x for x in cont.get("meses", []) if x["mes"] == mes_anterior), None)
+                    if datos:
+                        msg = (f"📊 AURORA - Reporte de Contabilidad ({mes_anterior})\n\n"
+                               f"💰 Ingresos: ${datos['ingresos']:,.2f}\n"
+                               f"💸 Costos: ${datos['costos']:,.2f}\n"
+                               f"✅ Utilidad: ${datos['utilidad']:,.2f} ({datos['margen_pct']}%)\n"
+                               f"💵 Cobrado: ${datos['cobrado']:,.2f}\n"
+                               f"⏳ Por cobrar: ${datos['por_cobrar']:,.2f}\n"
+                               f"📦 Órdenes del mes: {datos['ordenes']}\n\n"
+                               f"Generado automático con datos reales del taller.")
+                    else:
+                        msg = (f"📊 AURORA - Reporte de Contabilidad ({mes_anterior})\n\n"
+                               f"No hubo movimientos registrados ese mes (dato real, no error).")
+                    from INTEGRACIONES.whatsapp_integration import whatsapp as _wa
+                    r = await _wa.enviar_mensaje(MI_WA, msg)
+                    if r.get("status") == "ENVIADO":
+                        logger.info("      [Reporte mensual] Contabilidad real enviada por WhatsApp.")
+                        marca.parent.mkdir(parents=True, exist_ok=True)
+                        marca.write_text(mes_actual, encoding="utf-8")
+                    else:
+                        logger.error(f"      [Reporte mensual] FALLO envío, no se marca enviado (reintentará): {r}")
+            except Exception as e:
+                logger.warning(f"      [Reporte mensual] {e}")
+            await asyncio.sleep(3600)  # revisa cada hora (solo actua el dia 1)
+    try:
+        asyncio.create_task(_reporte_mensual_contabilidad(), name="reporte_mensual")
+        logger.info("      Reporte mensual de contabilidad activo.")
+    except Exception as e:
+        logger.warning(f"      Reporte mensual no disponible: {e}")
+
     logger.info("")
     logger.info("=" * 60)
     logger.info("  AURORA completamente inicializada")
