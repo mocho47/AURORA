@@ -249,6 +249,24 @@ def _es_abrir_navegador(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _ABRIR_NAVEGADOR_TRIGGERS)
 
 
+# ── AURORA habla de SÍ MISMA (capacidades/límites/estructura reales) ──
+# Encontrado en vivo 2026-07-27: preguntarle a AURORA por sus propias funciones
+# y límites (con amigos presentes) la mandó a hacer una BÚSQUEDA WEB genérica
+# ("funciones y limites de la herramienta" → resultados de matemáticas y
+# comparativas de apps random) en vez de responder con su propio autoconocimiento
+# real. Introspección nunca debe ir a buscar en internet.
+_ACERCA_DE_TRIGGERS = (
+    "tus funciones", "tus capacidades", "tus limites", "tu estructura",
+    "que puedes hacer", "que sabes hacer", "como funcionas", "de que estas hecha",
+    "para que estas disenada", "cuentame de ti", "hablame de ti", "quien eres",
+    "que eres tu", "que eres aurora",
+)
+
+
+def _es_acerca_de(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _ACERCA_DE_TRIGGERS)
+
+
 # ── Búsqueda web EXPLÍCITA (el usuario pide navegar/buscar en internet) ──
 _BUSQUEDA_WEB_TRIGGERS = (
     "busca en internet", "buscar en internet", "busca en la web", "busca en google",
@@ -511,6 +529,7 @@ _MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor
 _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
     ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
+    ("acerca_de",       _es_acerca_de,         "_acerca_de_real",         "auto_conocimiento"),
     ("busqueda_web",    _es_busqueda_web,      "_buscar_web_candado",     "web_search"),
     ("corel",           _es_comando_corel,     "_ejecutar_corel_real",    "motor_corel"),
     ("dxf",             _es_conversion_dxf,    "_convertir_dxf_real",     "taller_dxf"),
@@ -1093,6 +1112,47 @@ class Consciencia:
         if r.get("status") == "OK":
             return {"respuesta": f"✅ Abierta real en el navegador: {dominio.group(0)}."}
         return {"respuesta": f"No pude abrirla (no te miento): {r.get('mensaje', r.get('stderr', r.get('status')))}"}
+
+    # ── AURORA HABLA DE SÍ MISMA ─────────────────────────────────
+
+    async def _acerca_de_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
+        AURORA (nunca inventa, nunca busca en internet para hablar de sí misma).
+        Usa datos reales del propio sistema (registro de herramientas, estado de
+        integraciones) — encontrado en vivo 2026-07-27: antes esto caía a una
+        búsqueda web genérica sin sentido."""
+        try:
+            from CEREBRO.auto_conocimiento import AutoConocimiento
+            ac = AutoConocimiento()
+            cap = await ac.obtener_capacidades()
+        except Exception:
+            cap = {}
+        try:
+            reg = _registro()
+            catalogo = await asyncio.to_thread(reg.descubrir)
+            n_herramientas = len(catalogo)
+            carpetas = sorted({c.split("/")[0] for c in catalogo.keys()})
+        except Exception:
+            n_herramientas, carpetas = None, []
+        integr = cap.get("integraciones", {}) or {}
+        activas = [k for k, v in integr.items() if v]
+        n_candados = len(_CANDADOS)
+        partes = [
+            "🧠 Quién soy y cómo estoy hecha (real, no marketing):",
+            f"- Arquitectura real: {n_candados} candados directos (frases que reconozco de forma "
+            f"determinística: Corel, WhatsApp, negocio, publicar, agenda, fichas de venta, código...) "
+            f"+ un enrutador de IA que elige entre {n_herramientas or '~510'} herramientas reales "
+            f"agrupadas en {len(carpetas) or '~20'} módulos ({', '.join(carpetas[:8]) if carpetas else 'Taller, Vendedor, Publicador, CRM, Editor/Corel, Cerebro...'}...) "
+            f"cuando ninguna frase fija aplica — nunca inventa un resultado si no hay una herramienta real de por medio.",
+            f"- Integraciones reales activas hoy: {', '.join(activas) if activas else 'ninguna detectada'}.",
+            "- Memoria real (SQLite local), sin nube ajena — funciona offline salvo lo que necesita internet (búsqueda web, publicar en redes).",
+            "- Límite real encontrado hoy: el chat puede colgarse si le mandan muchas peticiones al mismo tiempo — se está corrigiendo.",
+            "¿Sirve para otro negocio? La arquitectura sí es genérica (motores/cartuchos + candados + registro de herramientas), "
+            "pero ESTA instancia está hecha a la medida del taller de Anuar (ATF/Milens): catálogos, precios, WhatsApp y "
+            "Facebook reales conectados a SUS datos. Para otro nicho se reconectaría a datos y cuentas propias — la base "
+            "de código es reusable, los datos de negocio no.",
+        ]
+        return {"respuesta": "\n".join(partes)}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
 
