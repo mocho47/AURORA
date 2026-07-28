@@ -155,6 +155,9 @@ def exportar_bitmap(ruta_salida: str, dpi: int = 300, formato: str = "png") -> D
     """
     Exporta el documento activo a PNG/JPG con el DPI exacto indicado.
     Genera un archivo NUEVO — no modifica el documento original.
+    LIMITACION REAL CONOCIDA (2026-07-28, no resuelta): incompatibilidad de pywin32
+    con este metodo especifico de Corel 2025 — puede fallar aunque el documento y
+    Corel esten bien. Si falla, usa exportar_pdf() o exporta manual desde Corel.
     """
     try:
         import win32com.client

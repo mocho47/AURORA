@@ -37,7 +37,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **corel** (motor_corel)
 - Qué hace: CHAT ↔ COREL: comandos directos y fijos sobre motor_corel (COM real).
-- Frases que reconoce: «abre», «abrir», «almacena», «almacenar», «aplica el color», «cdr», «combina», «corel», «escala», «exporta», «exportar», «extrae el color»
+- Frases que reconoce: «abre», «abrir», «almacena», «almacenar», «aplica el color», «cdr», «cerrar documento», «cierra», «cierra el documento», «combina», «corel», «corell»
 
 **dxf** (taller_dxf)
 - Qué hace: CHAT ↔ TALLER: convierte de verdad un archivo a DXF con taller_core
@@ -56,6 +56,10 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 **abrir_navegador** (pc_access)
 - Qué hace: CHAT ↔ pc_access: abre un dominio/URL real directo en el navegador
 - Frases que reconoce: «abre la pagina», «abrela», «abrelo», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto», «navegador»
+
+**acerca_de** (auto_conocimiento)
+- Qué hace: CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
+- Frases que reconoce: «como funcionas», «cuentame de ti», «de que estas hecha», «hablame de ti», «para que estas disenada», «que eres aurora», «que eres tu», «que puedes hacer», «que sabes hacer», «quien eres», «tu estructura», «tus capacidades»
 
 **intuicion** (intuicion)
 - Qué hace: (sin descripción en el código)
@@ -86,7 +90,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «descarga e instala», «desinstala», «desinstalar», «elimina», «eliminar»
 
 
-## Herramientas del enrutador universal (~510 funciones reales)
+## Herramientas del enrutador universal (~512 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -257,7 +261,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CORE/publicador_atf_profesional:PublicadorATFProfesional.obtener_estadisticas` — Obtiene estadísticas de publicaciones
 - `CORE/publicador_atf_profesional:ejemplo_uso` — Ejemplo de cómo usar el publicador profesional
 
-### EDITOR (56)
+### EDITOR (57)
 
 - `EDITOR/conversiones:aligerar_dxf` — Convierte splines a polilíneas y guarda R2000: RDWorks lo lee y pesa menos.
 - `EDITOR/conversiones:a_bw_puro` — a bw puro (conversiones)
@@ -271,6 +275,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/conversor_formatos:convertir_todo` — PDF multipágina → un archivo por página (lote). Ideal SVG/PNG para reeditar/imprimir.
 - `EDITOR/corel_core:disponible` — True si CorelDRAW responde por COM ahora mismo.
 - `EDITOR/corel_core:info_documento` — Estado real del documento activo en Corel (solo lectura).
+- `EDITOR/corel_core:extraer_texto_documento` — Lee TODO el texto real de las formas de texto del documento activo,
 - `EDITOR/corel_core:exportar_pdf` — Publica el documento activo a PDF en ruta_salida.
 - `EDITOR/corel_core:exportar_bitmap` — Exporta el documento activo a PNG/JPG con el DPI exacto indicado.
 - `EDITOR/corel_core:escalar_pagina` — Cambia el tamaño de página (cm) del documento activo.
@@ -278,7 +283,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/corel_core:cerrar_documento_sin_guardar` — Cierra un documento por nombre SIN guardar (para limpiar documentos de prueba).
 - `EDITOR/corel_core:abrir_documento` — Abre un archivo REAL (PDF, CDR, AI, etc.) dentro de CorelDRAW (OpenDocument),
 - `EDITOR/corel_core:guardar_copia` — Guarda una COPIA del documento activo en ruta_salida (.cdr) sin tocar
-- `EDITOR/corel_core:agregar_imagen_documento_activo` — Importa una imagen al documento ACTIVO (el que ya tienes abierto y
+- `EDITOR/corel_core:agregar_imagen_documento_activo` — Importa una imagen REAL al documento activo de Corel — si no hay ninguno
 - `EDITOR/corel_core:quitar_fondo_y_agregar` — Flujo real del splash: quita el fondo de la imagen (IA real, rembg) y
 - `EDITOR/corel_core:crear_planilla` — Arma una planilla real: repite ruta_pieza tantas veces como quepan en
 - `EDITOR/corel_core:extraer_color_pixel` — Gotero real: lee el color exacto del pixel (x,y) de una imagen de
@@ -358,7 +363,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `FORJA/motor_social:get_status` — get status (motor_social)
 - `FORJA/motor_social:execute` — execute (motor_social)
 
-### INTEGRACIONES (14)
+### INTEGRACIONES (15)
 
 - `INTEGRACIONES/email_integration:EmailIntegration.enviar_cotizacion` — Envía cotización por email REAL vía SMTP.
 - `INTEGRACIONES/email_integration:EmailIntegration.enviar_confirmacion_pedido` — Envía confirmación de pedido REAL vía SMTP.
@@ -369,6 +374,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `INTEGRACIONES/telegram_integration:TelegramIntegration.enviar_alerta` — Envía alertas automáticas
 - `INTEGRACIONES/telegram_integration:TelegramIntegration.crear_bot_handlers` — Define handlers para comandos del bot
 - `INTEGRACIONES/whatsapp_integration:WhatsAppIntegration.enviar_mensaje` — Envia mensaje de texto via Green API (HTTP real).
+- `INTEGRACIONES/whatsapp_integration:WhatsAppIntegration.enviar_archivo` — Envia un archivo real (PDF/imagen/etc.) via Green API sendFileByUpload
 - `INTEGRACIONES/whatsapp_integration:WhatsAppIntegration.enviar_cotizacion` — Formatea y envia una cotizacion por WhatsApp.
 - `INTEGRACIONES/whatsapp_integration:WhatsAppIntegration.enviar_confirmacion_pedido` — Envia confirmacion de pedido al cliente.
 - `INTEGRACIONES/whatsapp_integration:WhatsAppIntegration.recibir_mensajes` — Polling de mensajes nuevos desde Green API. Ya NO borra la notificación
