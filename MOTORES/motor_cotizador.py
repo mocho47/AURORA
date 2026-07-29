@@ -5,9 +5,11 @@ Genera cotizaciones reales con 3 opciones para ATF y MILENS.
 Precios reales del catálogo. Usa Groq. Sin simulaciones.
 """
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import Dict
 
 from groq import AsyncGroq
@@ -63,6 +65,91 @@ _PALABRAS_ATF = (
 )
 
 
+# ── CATALOGOS REALES, UNA SOLA FUENTE DE VERDAD (arreglo 2026-07-29) ────────
+# Problema real encontrado: este archivo tenia su PROPIA copia hardcodeada de
+# los catalogos (4 productos de ATF y 6 de MILENS) mientras los catalogos de
+# verdad, ya mantenidos, viven aparte:
+#   · CONFIG/catalogo_atf.json  -> 106 productos reales (clonado del PDF del proveedor)
+#   · CONFIG/catalogo_servicios.json -> servicios MILENS (73 items via catalogo_plano())
+# O sea el cotizador cotizaba con una lista minima y vieja, y cualquier precio
+# que Anuar actualizara en los archivos NO llegaba aqui. Ahora se leen de la
+# fuente real en cada cotizacion; si no se pueden leer, se cae a las listas de
+# abajo y se DICE en la respuesta (nunca se finge tener el catalogo completo).
+_RAIZ = Path(__file__).resolve().parent.parent
+
+
+def _catalogo_atf_real():
+    """106 productos reales del catalogo ATF. (None, motivo) si no se pudo leer."""
+    try:
+        d = json.loads((_RAIZ / "CONFIG" / "catalogo_atf.json").read_text(encoding="utf-8"))
+        prods = d.get("productos") or []
+        if not prods:
+            return None, "catalogo_atf.json no tiene productos"
+        return {p.get("sku") or p.get("nombre"): {
+                    "nombre": p.get("nombre", ""), "precio_publico": p.get("precio", 0),
+                    "categoria": p.get("categoria", ""), "sku": p.get("sku", ""),
+                } for p in prods}, None
+    except Exception as e:
+        return None, f"no pude leer catalogo_atf.json: {str(e)[:120]}"
+
+
+def _catalogo_milens_real():
+    """Servicios reales de MILENS via el cotizador de servicios ya existente."""
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location("cotizador_servicios",
+                                            _RAIZ / "TALLER" / "cotizador_servicios.py")
+        cs = _ilu.module_from_spec(spec); spec.loader.exec_module(cs)
+        r = cs.catalogo_plano()
+        items = r.get("items") or []
+        if not items:
+            return None, "catalogo_servicios no devolvio items"
+        return {it.get("nombre", f"item{i}"): {
+                    "nombre": it.get("nombre", ""), "precio_publico": it.get("precio", 0),
+                    "categoria": it.get("categoria", ""), "unidad": it.get("unidad", ""),
+                    "incluye": it.get("incluye", ""),
+                } for i, it in enumerate(items)}, None
+    except Exception as e:
+        return None, f"no pude leer el catalogo de servicios MILENS: {str(e)[:120]}"
+
+
+def _filtrar_catalogo(catalogo: dict, pedido: str, maximo: int = 25) -> dict:
+    """Devuelve solo los productos del catalogo que se parecen a lo que pidio el
+    cliente (por palabras compartidas en nombre/categoria/sku). Si ninguno calza,
+    devuelve una muestra — para que el modelo pueda decir 'hay que verificar' en
+    vez de inventar un precio."""
+    import unicodedata as _ud
+
+    def norm(s):
+        return "".join(c for c in _ud.normalize("NFD", str(s or "").lower())
+                       if _ud.category(c) != "Mn")
+
+    p = norm(pedido)
+    # Plural/singular: el cliente pide "50 TAZAS" y el producto se llama "TAZA
+    # blanca 11oz". Buscar la palabra tal cual no calza (bug real encontrado al
+    # probarlo: pedir tazas devolvia playeras). Se prueba tambien la raiz sin la
+    # 's'/'es' final, en ambos sentidos.
+    palabras = set()
+    for w in p.replace(",", " ").replace("/", " ").split():
+        if len(w) < 4:
+            continue
+        palabras.add(w)
+        if w.endswith("es") and len(w) > 5:
+            palabras.add(w[:-2])
+        elif w.endswith("s") and len(w) > 4:
+            palabras.add(w[:-1])
+    if not palabras:
+        return dict(list(catalogo.items())[:maximo])
+    calzan = {}
+    for clave, val in catalogo.items():
+        texto = norm(f"{clave} {val.get('nombre','')} {val.get('categoria','')} {val.get('sku','')}")
+        if any(w in texto for w in palabras):
+            calzan[clave] = val
+            if len(calzan) >= maximo:
+                break
+    return calzan or dict(list(catalogo.items())[:maximo])
+
+
 def _detectar_negocio(texto: str) -> str:
     """Deduce si el pedido es de MILENS (sublimacion/laser) o ATF (faros) por sus
     palabras reales. Empate o sin señales -> 'atf' (comportamiento anterior)."""
@@ -88,13 +175,32 @@ class MotorCotizador:
         # El contexto explicito manda; si no viene, se deduce del pedido real
         # (antes se asumia "atf" a ciegas — ver nota en _detectar_negocio).
         negocio = (contexto.get("negocio") or _detectar_negocio(requerimiento)).lower()
-        catalogo = CATALOGO_ATF if negocio == "atf" else CATALOGO_MILENS
+        # Catalogo REAL desde su fuente (ver nota arriba). Si falla, se usa la
+        # lista minima de respaldo y se avisa honesto en la respuesta.
+        if negocio == "atf":
+            catalogo, _err_cat = _catalogo_atf_real()
+            respaldo = CATALOGO_ATF
+        else:
+            catalogo, _err_cat = _catalogo_milens_real()
+            respaldo = CATALOGO_MILENS
+        _aviso_catalogo = ""
+        if catalogo is None:
+            catalogo = respaldo
+            _aviso_catalogo = (f"⚠️ Cotizado con la lista MINIMA de respaldo ({len(respaldo)} productos), "
+                               f"no con el catálogo completo: {_err_cat}")
         folio = f"COT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        # Con el catalogo real (106 productos ATF / 73 servicios MILENS) mandarlo
+        # completo no cabe bien en el prompt y diluye la atencion del modelo. Se
+        # filtran los productos que de verdad se parecen a lo que pidio el
+        # cliente; si nada calza, se manda una muestra para que el modelo pueda
+        # decir honestamente que hay que verificar (nunca inventar un precio).
+        catalogo_prompt = _filtrar_catalogo(catalogo, requerimiento)
         prompt_usuario = (
             f"Folio: {folio}\n"
             f"Negocio: {negocio.upper()}\n"
             f"Requerimiento del cliente: {requerimiento}\n"
-            f"Catálogo disponible: {catalogo}\n"
+            f"Catálogo disponible ({len(catalogo)} productos en total, "
+            f"estos son los que calzan con el pedido): {catalogo_prompt}\n"
             f"Contexto: {contexto}\n\n"
             f"Genera exactamente 3 opciones de cotización (Estándar / Premium / Cierre agresivo). "
             f"Incluye desglose, total y próximo paso accionable."
