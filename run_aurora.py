@@ -122,6 +122,45 @@ async def _arrancar() -> None:
                 sender = body.get("senderData", {}).get("sender", "")
                 if texto and sender:
                     telefono = sender.replace("@c.us", "")
+
+                    # ── QUIEN ESCRIBE (agregado 2026-07-29) ───────────────────
+                    # Riesgo real que señalo Anuar: WhatsApp es el 90% de su
+                    # dialogo con TODOS. Antes, su hija escribiendo "papa ya
+                    # sali" quedaba registrada como LEAD (con eso como "interes")
+                    # y recibia respuesta de ventas. AURORA nunca debe hacerse
+                    # pasar por Anuar con su familia: avisa y da un trato digno.
+                    try:
+                        from CONFIG import contactos as _cont
+                        quien = _cont.clasificar(telefono, texto)
+                    except Exception as e:
+                        logger.warning(f"      [WA] No pude clasificar el contacto, trato como cliente: {e}")
+                        quien = {"relacion": "desconocido", "vender": True, "responder": True,
+                                 "avisar_a_anuar": False, "registrar_lead": True}
+
+                    if not quien.get("registrar_lead", True) or not quien.get("vender", True):
+                        etiqueta = quien.get("titulo") or quien.get("nombre") or quien.get("relacion")
+                        logger.info(f"      [WA] {telefono} = {etiqueta} ({quien['relacion']}) "
+                                    f"-> no se vende ni se registra como lead.")
+                        # Trato configurable (CONFIG/contactos.json), no silencio seco.
+                        _resp_personal = (quien.get("respuesta") or "").strip()
+                        if quien.get("responder") and _resp_personal:
+                            r_p = await whatsapp.enviar_mensaje(telefono, _resp_personal)
+                            if r_p.get("status") != "ENVIADO":
+                                logger.error(f"      [WA] FALLO envío a {etiqueta} ({telefono}): {r_p}")
+                        # Avisar a Anuar a su numero personal real, si esta configurado.
+                        if quien.get("avisar_a_anuar"):
+                            import os as _os
+                            _mi_wa = _os.getenv("WA_RECORDATORIO", "")
+                            if _mi_wa:
+                                await whatsapp.enviar_mensaje(
+                                    _mi_wa,
+                                    f"📩 Te escribió {etiqueta} ({telefono}):\n\n\"{texto[:300]}\"\n\n"
+                                    f"No le contesté por ti — solo le dije que le avisaba.")
+                            else:
+                                logger.warning("      [WA] WA_RECORDATORIO no configurado: "
+                                               "no pude avisarle a Anuar de un mensaje personal.")
+                        return
+
                     # Captura de lead en el CRM (solo 1ra vez por telefono, sin duplicar).
                     # Best-effort: si falla, NUNCA bloquea la respuesta al cliente.
                     try:

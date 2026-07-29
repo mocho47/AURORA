@@ -1,0 +1,62 @@
+{
+  "_nota": "QUIEN escribe, no solo QUE escribe. Creado 2026-07-29 porque Anuar señalo un riesgo real: el telefono y WhatsApp son el 90% de su dialogo con TODOS — clientes, familia y amigos — y AURORA trataba a cualquiera como cliente. Su hija escribiendo 'papa ya sali' quedaba registrada como LEAD con interes 'papa ya sali' y recibia una respuesta de ventas automatica.",
+  "_como_funciona": "Dos capas. (1) Este archivo: numeros conocidos con su relacion real. (2) Si el numero NO esta aqui, se leen las palabras del mensaje: si suena personal/familiar, AURORA NO vende ni responde como si fuera Anuar — le avisa a Anuar y se queda callada. Un desconocido con mensaje de negocio si recibe atencion normal (ahi esta el valor del vendedor 24/7).",
+  "_regla_de_oro": "AURORA NUNCA se hace pasar por Anuar con su familia. Con familia avisa y calla; contestar por el a su hija seria peor que no contestar.",
+  "_pendiente_anuar": "Agregar aqui los numeros reales de familia y amigos cercanos. No se inventan numeros. Formato: '5213311112222': {'nombre': 'Hija', 'relacion': 'familia'}. Relaciones validas: familia, amigo, proveedor, cliente, equipo.",
+
+  "_como_agregar_un_contacto": "Copia un bloque y cambia el numero, el titulo y el trato. 'titulo' es como AURORA se refiere a esa persona al avisarte ('tu esposa', 'tu hija'). 'respuesta' es lo que esa persona recibe — se deja vacia ('') para que AURORA no conteste nada y solo te avise.",
+
+  "contactos": {
+    "5213326148674": {
+      "nombre": "Numero de negocio ATF (la propia instancia)",
+      "titulo": "el numero del negocio",
+      "relacion": "equipo",
+      "no_responder": true,
+      "respuesta": "",
+      "motivo": "Es el numero desde el que AURORA misma escribe — responderse a si misma seria un bucle."
+    },
+    "_EJEMPLO_BORRAR_O_LLENAR_esposa": {
+      "nombre": "Rocio",
+      "titulo": "tu esposa",
+      "relacion": "familia",
+      "respuesta": "Permitame un momento, le aviso a Anuar que le marca. 💛",
+      "_instruccion": "Cambia la clave por su numero real (ej. '5213311112222') y borra este campo. Mientras la clave empiece con _EJEMPLO, AURORA la ignora."
+    },
+    "_EJEMPLO_BORRAR_O_LLENAR_hija": {
+      "nombre": "",
+      "titulo": "tu hija",
+      "relacion": "familia",
+      "respuesta": "Hola! En un momento le aviso a tu papa que le escribiste.",
+      "_instruccion": "Cambia la clave por su numero real y borra este campo."
+    }
+  },
+
+  "politica_por_relacion": {
+    "familia":   {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
+                  "respuesta": "Permitame un momento, le aviso a Anuar que le busca."},
+    "amigo":     {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
+                  "respuesta": "Permitame un momento, le aviso a Anuar que le escribio."},
+    "proveedor": {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
+                  "respuesta": "Gracias, le paso el mensaje a Anuar en este momento."},
+    "equipo":    {"vender": false, "responder": false, "avisar_a_anuar": false, "registrar_lead": false,
+                  "respuesta": ""},
+    "cliente":   {"vender": true,  "responder": true,  "avisar_a_anuar": false, "registrar_lead": true},
+    "desconocido": {"vender": true, "responder": true, "avisar_a_anuar": false, "registrar_lead": true},
+    "personal_probable": {"vender": false, "responder": true, "avisar_a_anuar": true, "registrar_lead": false,
+                  "respuesta": "Permitame un momento, le aviso a Anuar que le busca."}
+  },
+
+  "_palabras_personales": [
+    "papa", "papá", "papi", "apa", "jefe de mi vida",
+    "mama", "mamá", "ami", "amor", "mi amor", "viejita", "viejito",
+    "hija", "hijo", "hermano", "hermana", "carnal", "primo", "prima",
+    "tio", "tia", "abuela", "abuelita", "abuelo", "sobrino", "sobrina",
+    "gordo", "gorda", "flaco", "flaca", "vieja", "viejo", "chaparro", "chaparra",
+    "mi vida", "corazon", "corazón", "cariño", "carino", "nene", "nena",
+    "te quiero", "te amo", "bendicion", "bendición", "cuidate", "cuídate",
+    "ya vienes", "ya vas a venir", "a que hora llegas", "a qué hora llegas",
+    "no olvides", "acuerdate", "acuérdate", "ya comiste", "que quieres de comer",
+    "ya sali de la escuela", "ya salí de la escuela", "pasas por mi", "pasas por mí",
+    "puedes venir por mi", "estoy en la escuela", "llegando a casa"
+  ]
+}

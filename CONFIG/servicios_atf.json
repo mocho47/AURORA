@@ -1,0 +1,84 @@
+{
+  "_nota": "SERVICIOS (mano de obra) de ATF. Creado 2026-07-29 tras un caso real que AURORA contesto MAL: un cliente que ya habia comprado lupas fue chocado, compro un faro nuevo y pidio la RECOLOCACION de su lupa. AURORA respondio 'no puedo recolocarte la lupa, puedo ofrecerte opciones para que lo hagas tu mismo' — le nego un servicio que Anuar SI hace y lo mando a hacerlo solo. Causa: catalogo_atf.json solo tiene PRODUCTOS, ningun servicio de mano de obra, y el modelo improviso.",
+  "_regla": "AURORA NUNCA debe negar un servicio que este en esta lista. Si el precio esta en null, debe decir que SI se hace y que confirma el precio — jamas inventarlo ni negar el servicio.",
+  "_pendiente_anuar": "Faltan los precios reales. Anuar los dicta y se llenan aqui. Mientras esten en null, AURORA afirma el servicio y ofrece confirmar precio.",
+
+  "servicios": [
+    {
+      "id": "recolocacion_lupa",
+      "nombre": "Recolocacion de lupa/proyector en faro nuevo",
+      "descripcion": "El cliente YA tiene la lupa (se la instalamos antes). Se desmonta del faro viejo o se toma la que trae y se instala en el faro nuevo. Caso tipico: choque y compro faro de reemplazo.",
+      "precio": null,
+      "unidad": "por faro",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["recoloca", "recolocacion", "recolocar", "reinstalar la lupa",
+                            "pasar la lupa", "cambiar la lupa al faro nuevo", "me chocaron",
+                            "faro nuevo", "trasplante de lupa"]
+    },
+    {
+      "id": "instalacion_lupa",
+      "nombre": "Instalacion de lupa/proyector (retrofit)",
+      "descripcion": "Retrofit completo: se abre el faro, se instala el proyector Bi-LED, se sella y se calibra.",
+      "precio": null,
+      "unidad": "por faro",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["instalar lupa", "poner lupas", "retrofit", "instalacion de proyector",
+                            "quiero lupas", "ponerme lupas"]
+    },
+    {
+      "id": "instalacion_led",
+      "nombre": "Instalacion de kit LED",
+      "descripcion": "Montaje de kit LED en faro existente, con arnes y canbus si aplica.",
+      "precio": null,
+      "unidad": "por par",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["instalar led", "poner los led", "instalacion de led", "montar el kit"]
+    },
+    {
+      "id": "sellado_faro",
+      "nombre": "Apertura y sellado de faro",
+      "descripcion": "Abrir el faro y volverlo a sellar (por humedad, empañado o para trabajo interno).",
+      "precio": null,
+      "unidad": "por faro",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["se empaña", "empanado", "humedad en el faro", "sellar el faro",
+                            "entra agua", "abrir el faro"]
+    },
+    {
+      "id": "calibracion",
+      "nombre": "Calibracion / alineacion de luces",
+      "descripcion": "Ajuste de altura y corte de luz para que no deslumbre y alumbre correcto.",
+      "precio": null,
+      "unidad": "por vehiculo",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["calibrar", "alinear las luces", "apuntan mal", "deslumbra",
+                            "alumbra chueco", "ajustar la altura"]
+    },
+    {
+      "id": "pulido_faro",
+      "nombre": "Pulido de faro",
+      "descripcion": "Pulido de mica opaca/amarillenta para recuperar transparencia.",
+      "precio": null,
+      "unidad": "por faro",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["pulir", "pulido", "faro opaco", "amarillento", "mica opaca"]
+    },
+    {
+      "id": "diagnostico",
+      "nombre": "Diagnostico / revision",
+      "descripcion": "Revision del problema real antes de cotizar (que falla, que necesita).",
+      "precio": null,
+      "unidad": "por vehiculo",
+      "tiempo_aprox": null,
+      "requiere_cita": true,
+      "palabras_cliente": ["revisar", "revision", "diagnostico", "no prende", "falla la luz",
+                            "que tiene", "no funciona"]
+    }
+  ]
+}

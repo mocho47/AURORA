@@ -320,6 +320,40 @@ def _es_agenda(mensaje: str) -> bool:
         "nueva cita", "crear cita", "agenda del dia"))
 
 
+_SERVICIOS_ATF_CACHE = None
+
+
+def _servicios_atf() -> list:
+    """Servicios REALES de mano de obra de ATF (CONFIG/servicios_atf.json)."""
+    global _SERVICIOS_ATF_CACHE
+    if _SERVICIOS_ATF_CACHE is None:
+        try:
+            import json as _j
+            _SERVICIOS_ATF_CACHE = _j.loads(
+                (ROOT / "CONFIG" / "servicios_atf.json").read_text(encoding="utf-8")
+            ).get("servicios", [])
+        except Exception:
+            _SERVICIOS_ATF_CACHE = []
+    return _SERVICIOS_ATF_CACHE
+
+
+def _es_servicio_atf(mensaje: str) -> bool:
+    """True si el cliente pide un SERVICIO de mano de obra de ATF.
+
+    Creado 2026-07-29 por un caso real: un cliente al que ya se le habian
+    instalado lupas fue chocado, compro un faro nuevo y pidio la RECOLOCACION.
+    AURORA le respondio "no puedo recolocarte la lupa, puedo ofrecerte opciones
+    para que lo hagas tu mismo" — nego un servicio que Anuar SI hace y perdio al
+    cliente. Causa: el catalogo de ATF solo tenia productos, ningun servicio.
+    """
+    m = _norm_txt(mensaje)
+    for s in _servicios_atf():
+        for palabra in s.get("palabras_cliente", []):
+            if _norm_txt(palabra) in m:
+                return True
+    return False
+
+
 def _es_ficha_vendedor(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), (
         "ficha de", "ficha tecnica de", "dame el pitch", "hazme un pitch",
@@ -571,6 +605,11 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("negocio",         _es_consulta_negocio,  "_consultar_negocio_real","negocio_real"),
     ("publicar",        _es_publicar,          "_publicar_real",          "publicador"),
     ("agenda",          _es_agenda,            "_agenda_real",            "agenda"),
+    # servicio_atf va ANTES de ficha_vendedor y del enrutador de IA a proposito:
+    # un cliente que pide un SERVICIO real (recolocar su lupa, sellar un faro)
+    # no debe caer en el motor de ventas generico, que en un caso real de Anuar
+    # le NEGO el servicio y lo mando a hacerlo el mismo (2026-07-29).
+    ("servicio_atf",    _es_servicio_atf,      "_servicio_atf_real",      "servicios_atf"),
     ("ficha_vendedor",  _es_ficha_vendedor,    "_vendedor_real",          "vendedor"),
     ("intuicion",       _es_intuicion,         "_intuicion_real",         "intuicion"),
     ("memoria",         _es_memoria,           "_memoria_real",           "memoria"),
@@ -1257,6 +1296,60 @@ class Consciencia:
                     + self._fmt_dict("preparar", d) + "\n\nResponde 'sí' para confirmar y publicarlo de verdad."}
         except Exception as e:
             return {"respuesta": f"No pude preparar la publicación (no lo invento): {str(e)[:200]}"}
+
+    async def _servicio_atf_real(self, mensaje: str) -> Dict:
+        """Responde a un cliente que pide un SERVICIO real de ATF.
+
+        Reglas duras (nacieron de un fallo real, ver _es_servicio_atf):
+        · NUNCA negar un servicio que esta en la lista. Se hace, punto.
+        · NUNCA inventar el precio. Si no esta capturado, se dice que se confirma.
+        · Si pide cita, se le dice lo que la agenda REAL tiene, no un horario inventado.
+        """
+        from datetime import datetime as _dt, timedelta as _td
+        m = _norm_txt(mensaje)
+
+        # Que servicio(s) reconoce, por las palabras reales del cliente.
+        encontrados = []
+        for s in _servicios_atf():
+            if any(_norm_txt(p) in m for p in s.get("palabras_cliente", [])):
+                encontrados.append(s)
+        if not encontrados:
+            return {"respuesta": "Dime qué necesitas del faro y te digo si lo hacemos y cuánto."}
+
+        partes = []
+        for s in encontrados[:3]:
+            linea = f"✅ **{s['nombre']}** — sí lo hacemos."
+            if s.get("precio"):
+                linea += f" Precio: ${s['precio']} {s.get('unidad','')}."
+            else:
+                # Honesto: el servicio existe, el precio no esta capturado todavia.
+                linea += " Te confirmo el precio en un momento (depende del faro)."
+            if s.get("descripcion"):
+                linea += f"\n   {s['descripcion']}"
+            partes.append(linea)
+
+        # ¿Pide cita/espacio? Se consulta la agenda REAL, sin inventar horarios.
+        pide_cita = any(k in m for k in ("espacio", "cita", "cuando", "cuándo", "horario",
+                                          "atender", "atenderme", "hueco", "agenda", "hoy",
+                                          "manana", "mañana"))
+        if pide_cita:
+            try:
+                ag = _agenda()
+                if hasattr(ag, "init_db"):
+                    await asyncio.to_thread(ag.init_db)
+                hoy = _dt.now().strftime("%Y-%m-%d")
+                man = (_dt.now() + _td(days=1)).strftime("%Y-%m-%d")
+                d_hoy = await asyncio.to_thread(ag.dia, hoy)
+                d_man = await asyncio.to_thread(ag.dia, man)
+                n_hoy = d_hoy.get("total", 0) if isinstance(d_hoy, dict) else 0
+                n_man = d_man.get("total", 0) if isinstance(d_man, dict) else 0
+                partes.append(f"\n📅 Agenda real: hoy ({hoy}) hay {n_hoy} cita(s) y mañana "
+                              f"({man}) hay {n_man}. Dime la hora que te acomoda y la aparto "
+                              f"— necesito tu nombre y teléfono para agendarla.")
+            except Exception as e:
+                partes.append(f"\n📅 No pude leer la agenda ahora mismo (no lo invento): {str(e)[:120]}")
+
+        return {"respuesta": "\n\n".join(partes)}
 
     async def _agenda_real(self, mensaje: str) -> Dict:
         import re

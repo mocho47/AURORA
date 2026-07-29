@@ -1,0 +1,29 @@
+{
+  "_nota": "Identidad de cada negocio en UN SOLO LUGAR (creado 2026-07-29). Antes los telefonos estaban hardcodeados en 3 archivos distintos (MARKETING/catalogo_compartible.py, PUBLICADOR/auto_publicar_atf.py, PUBLICADOR/corregir_telefono_atf.py) — esa dispersion es justo lo que causo que 175 reels salieran con un numero viejo. Si cambia un telefono, se cambia AQUI y ya.",
+  "_como_agregar_llaves_de_milens": "Las llaves NO van en este archivo (es texto plano que se sube a git). Van en .env con estos nombres exactos: FB_PAGE_TOKEN_MILENS, FB_PAGE_ID_MILENS, INSTAGRAM_ACCESS_TOKEN_MILENS, INSTAGRAM_USER_ID_MILENS. Mientras no existan, publicar como MILENS avisa honesto que falta configurarlo (no publica en la pagina equivocada).",
+
+  "negocios": {
+    "atf": {
+      "nombre": "ATF · Actualiza Tus Faros",
+      "giro": "Retrofit de faros automotrices (Guadalajara)",
+      "telefono": "3326148674",
+      "telefonos_viejos_a_erradicar": ["3329879109", "3323530146"],
+      "env_fb_token": "FB_PAGE_TOKEN",
+      "env_fb_page_id": "FB_PAGE_ID",
+      "env_ig_token": "INSTAGRAM_ACCESS_TOKEN",
+      "env_ig_user_id": "INSTAGRAM_USER_ID",
+      "catalogo": "CONFIG/catalogo_atf.json"
+    },
+    "milens": {
+      "nombre": "Creaciones Milens",
+      "giro": "Corte y grabado laser + sublimacion",
+      "telefono": "3332386943",
+      "telefonos_viejos_a_erradicar": [],
+      "env_fb_token": "FB_PAGE_TOKEN_MILENS",
+      "env_fb_page_id": "FB_PAGE_ID_MILENS",
+      "env_ig_token": "INSTAGRAM_ACCESS_TOKEN_MILENS",
+      "env_ig_user_id": "INSTAGRAM_USER_ID_MILENS",
+      "catalogo": "CONFIG/catalogo_servicios.json"
+    }
+  }
+}
