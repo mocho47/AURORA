@@ -27,6 +27,18 @@ def _permitida(path: Path) -> bool:
     return any(pr.startswith(str(b.resolve())) for b in RUTAS_ESCRITURA)
 
 
+# Carpetas que NUNCA son "el archivo que Anuar busca": librerias de terceros,
+# historial de git, manuales descargados, respaldos. Medido en vivo 2026-07-29:
+# .git=3749 archivos, MANUALES=2568, SUPER_MARKETING_SYSTEM=1253 (pydantic y
+# compania). Recorrerlas hacia que una busqueda SIN resultado tardara mas de 2
+# MINUTOS (con el chat trabado esperando), mientras encontrar un archivo real
+# tarda 13s. Excluirlas es el arreglo de raiz, no un parche de timeout.
+_CARPETAS_IGNORADAS = ("__pycache__", ".ide_backups", ".git", "node_modules",
+                       "site-packages", "SUPER_MARKETING_SYSTEM",
+                       "MANUALES\\descargas", "MANUALES/descargas",
+                       "_OBSOLETOS", "_BACKUP_DB_pre_virgen", "TOOLS\\platform-tools")
+
+
 def buscar_archivo(nombre: str) -> list[str]:
     """Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real."""
     nombre = (nombre or "").strip().lower()
@@ -38,10 +50,11 @@ def buscar_archivo(nombre: str) -> list[str]:
             continue
         try:
             for p in base.rglob("*"):
-                if "__pycache__" in str(p) or ".ide_backups" in str(p):
+                ruta_txt = str(p)
+                if any(ig in ruta_txt for ig in _CARPETAS_IGNORADAS):
                     continue
                 if p.is_file() and nombre in p.name.lower():
-                    hits.append(str(p))
+                    hits.append(ruta_txt)
                     if len(hits) >= 30:
                         return hits
         except (PermissionError, OSError):
