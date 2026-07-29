@@ -4,6 +4,19 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 ---
 
+## 2026-07-28 — Fase 3 (arranque): AGENDA completa + bloque de Monetización conectado al panel
+
+**Por qué**: Fase 3 es verificar en vivo, carpeta por carpeta, las ~510 herramientas del router universal (510 es demasiado para una sola sesión — se acordó ir cerrando carpetas completas, no arañar todas a medias). Se eligió AGENDA (9 herramientas) como primera carpeta completa de esta fase, mismo método que "Corel al 100%": leer el código real, correr la prueba propia del módulo, probar en vivo por chat, arreglar lo que falle.
+
+**Qué se encontró y se arregló:**
+1. El candado directo de "agenda" solo llamaba a `resumen()` o `proximas()` — preguntar "qué tengo hoy" o "qué tengo mañana" SIEMPRE regresaba el resumen general de todas las citas, sin filtrar por la fecha real pedida. Ahora reconoce hoy/mañana/fecha explícita y llama a `dia()` de verdad.
+2. Crear una cita nueva no tenía **ninguna** ruta por chat — se ignoraba en silencio. Ahora se puede agendar de verdad (pide fecha, hora, tipo y cliente si faltan — no los inventa).
+3. Encontrado en vivo por Anuar usando la alerta global: avisaba "12 publicaciones sin aprobar" pero el panel nunca tuvo forma de revisarlas — el endpoint real ya existía (`/monetizacion/bloque-pendiente`), solo no estaba conectado a ninguna pantalla. Se agregó una tarjeta real en la pestaña Monetización con la lista del bloque pendiente y un botón para aprobarlo.
+
+**Pendiente real**: quedan 19 carpetas más de Fase 3 (EDITOR, CORE, MOTORES, CEREBRO, TALLER, FORJA, AUTH, MEMORIA, MARKETING, PUBLICADOR, VENDEDOR, ORACLE, INTEGRACIONES, BIBLIOTECA, SISTEMA, MOTORES_CUSTOM, WEB, REDES, MANUALES, SUBLIMACION) — trabajo real de varias sesiones más, no de una noche.
+
+---
+
 ## 2026-07-28 — Lote "Corel al 100%" (consciencia.py + corel_core.py + pc_access.py)
 
 **Por qué**: Anuar probó Corel en vivo con amigos de 4Forte y falló en lo más básico (abrir una imagen). En vez de parchar ese caso puntual otra vez, se leyó el código real completo de Corel y se probó comando por comando contra el Corel real de Anuar.
