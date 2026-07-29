@@ -21,6 +21,50 @@ Se te da un archivo con un error. Devuelve SOLO el código Python corregido y co
 Sin explicaciones, sin markdown, sin comentarios extra.
 Si no es posible corregir, responde exactamente: IRREPARABLE: [motivo]"""
 
+# ── BLINDAJE (agregado 2026-07-29 tras encontrar un bug catastrofico real) ──
+# El bug: se le mandaban al LLM solo los primeros 6000 caracteres del archivo,
+# pero su respuesta REEMPLAZABA EL ARCHIVO COMPLETO. En consciencia.py (148,330
+# caracteres) el LLM veia el 4% del archivo y su salida habria borrado el otro
+# 96% — el cerebro entero de AURORA. Y py_compile lo aprobaba, porque un archivo
+# truncado compila perfecto: la "validacion" daba falsa confianza. Peor:
+# diagnosticar_y_reparar_todo() corre esto AUTOMATICAMENTE sobre cada modulo con
+# error, incluido consciencia.py. Choca de frente con la regla permanente de
+# Anuar: "NO restar funciones (2 años de trabajo limpio que YA funciona)".
+#
+# Tres candados, cada uno suficiente por si solo:
+CHARS_AL_LLM = 6000          # lo que el LLM alcanza a ver de verdad
+# 1) Archivos del nucleo: NUNCA se auto-reparan sin Anuar (son el corazon).
+ARCHIVOS_NUCLEO = {
+    "cerebro/consciencia.py", "core/aurora_server.py", "run_aurora.py",
+    "cerebro/auto_reparacion.py", "cerebro/registro_herramientas.py",
+}
+# 2) Si el archivo no cabe completo en lo que ve el LLM, se rechaza: reescribir
+#    a ciegas lo que no viste es garantia de perdida de codigo.
+# 3) Aunque quepa, si el resultado pierde mas de este % de lineas, se revierte.
+PERDIDA_LINEAS_MAX_PCT = 25.0
+
+
+def _limpiar_respuesta_llm(texto: str) -> str:
+    """Quita el envoltorio markdown que el modelo pone aunque se le pida que no.
+
+    Encontrado probandolo en vivo 2026-07-29: el auto-reparador NUNCA habia
+    reparado nada. El modelo devuelve el codigo dentro de ```python ... ``` y
+    eso jamas compila, asi que TODOS los intentos morian en FIX_INVALIDO. El
+    prompt ya pedia "sin markdown" pero el modelo (llama-3.1-8b-instant) lo
+    ignora — pedirlo no basta, hay que limpiarlo.
+    """
+    t = (texto or "").strip()
+    if not t.startswith("```"):
+        return t
+    lineas = t.splitlines()
+    # Primera linea es la apertura (```python, ```py, ``` ...): se descarta.
+    if lineas and lineas[0].lstrip().startswith("```"):
+        lineas = lineas[1:]
+    # Ultima linea de cierre, si esta.
+    while lineas and lineas[-1].strip() in ("```", ""):
+        lineas.pop()
+    return "\n".join(lineas).strip()
+
 
 class AutoReparacion:
     _instancia: Optional["AutoReparacion"] = None
@@ -44,8 +88,26 @@ class AutoReparacion:
         if not path.exists():
             return {"status": "ERROR", "detalle": f"No existe: {archivo_relativo}"}
 
+        # CANDADO 1: archivos del núcleo jamás se auto-reparan solos.
+        _rel_norm = archivo_relativo.replace("\\", "/").lstrip("./").lower()
+        if _rel_norm in ARCHIVOS_NUCLEO:
+            return {"status": "DENEGADO_NUCLEO",
+                    "detalle": f"'{archivo_relativo}' es del núcleo de AURORA. No se auto-repara "
+                               "sin que Anuar lo revise — un error aquí tumba todo el sistema."}
+
         # 1. Leer código actual
         codigo_actual = path.read_text(encoding="utf-8")
+
+        # CANDADO 2: si el archivo NO cabe completo en lo que el LLM alcanza a
+        # ver, no se toca. Reescribir a ciegas lo que no viste borra código real.
+        if len(codigo_actual) > CHARS_AL_LLM:
+            return {"status": "DEMASIADO_GRANDE",
+                    "detalle": (f"'{archivo_relativo}' tiene {len(codigo_actual):,} caracteres y el "
+                                f"modelo solo alcanza a ver {CHARS_AL_LLM:,}. Repararlo así borraría "
+                                f"el {100 - (CHARS_AL_LLM * 100 // len(codigo_actual))}% del archivo. "
+                                "No lo toco: hay que arreglarlo a mano o por partes."),
+                    "caracteres": len(codigo_actual), "limite": CHARS_AL_LLM}
+        _lineas_antes = len(codigo_actual.splitlines())
 
         # 2. LLM genera fix
         try:
@@ -53,11 +115,14 @@ class AutoReparacion:
                 model="llama-3.1-8b-instant",
                 messages=[
                     {"role": "system", "content": PROMPT_REPARACION},
-                    {"role": "user", "content": f"ERROR: {descripcion_error}\n\nARCHIVO ({archivo_relativo}):\n{codigo_actual[:6000]}"}
+                    # Ya no se recorta: el CANDADO 2 garantiza que el archivo
+                    # completo cabe. Antes el [:6000] mutilaba la entrada mientras
+                    # la salida reemplazaba el archivo entero (bug catastrofico).
+                    {"role": "user", "content": f"ERROR: {descripcion_error}\n\nARCHIVO ({archivo_relativo}):\n{codigo_actual}"}
                 ],
                 max_tokens=4096, temperature=0.1
             )
-            codigo_nuevo = resp.choices[0].message.content.strip()
+            codigo_nuevo = _limpiar_respuesta_llm(resp.choices[0].message.content)
         except Exception as e:
             return {"status": "ERROR_LLM", "detalle": str(e)}
 
@@ -79,6 +144,21 @@ class AutoReparacion:
             Path(tmp_path).unlink(missing_ok=True)
             backup_path.unlink(missing_ok=True)
             return {"status": "FIX_INVALIDO", "detalle": str(e), "codigo_propuesto": codigo_nuevo[:500]}
+
+        # CANDADO 3: compilar NO prueba que no se perdio codigo — un archivo
+        # truncado compila perfecto. Si el "fix" borro una parte grande del
+        # archivo, se rechaza y no se aplica (el original queda intacto).
+        _lineas_despues = len(codigo_nuevo.splitlines())
+        if _lineas_antes > 0:
+            _perdida_pct = (_lineas_antes - _lineas_despues) * 100.0 / _lineas_antes
+            if _perdida_pct > PERDIDA_LINEAS_MAX_PCT:
+                Path(tmp_path).unlink(missing_ok=True)
+                backup_path.unlink(missing_ok=True)
+                return {"status": "FIX_RECHAZADO_PERDIDA",
+                        "detalle": (f"El fix propuesto pasa de {_lineas_antes} a {_lineas_despues} líneas "
+                                    f"({_perdida_pct:.0f}% menos). Compila, pero perdió código real — "
+                                    "no se aplica. El archivo original quedó intacto."),
+                        "lineas_antes": _lineas_antes, "lineas_propuestas": _lineas_despues}
 
         # 5. Aplicar
         shutil.copy2(tmp_path, path)
