@@ -306,7 +306,13 @@ def _es_agenda(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), (
         "que tengo agendado", "mi agenda", "proximas citas", "proxima cita",
         "que citas tengo", "agenda de hoy", "que tengo hoy", "resumen de agenda",
-        "citas de hoy", "tengo pendientes hoy"))
+        "citas de hoy", "tengo pendientes hoy",
+        # Fase 3 (2026-07-28): "hoy"/"manana" existian como frase pero SIEMPRE
+        # regresaban el resumen general, nunca el dia real pedido (encontrado en
+        # vivo). Y agendar una cita nueva no tenia NINGUNA ruta por chat.
+        "que tengo manana", "agenda de manana", "citas de manana",
+        "agenda una cita", "agendar una cita", "agendame", "programa una cita",
+        "nueva cita", "crear cita", "agenda del dia"))
 
 
 def _es_ficha_vendedor(mensaje: str) -> bool:
@@ -1248,12 +1254,57 @@ class Consciencia:
             return {"respuesta": f"No pude preparar la publicación (no lo invento): {str(e)[:200]}"}
 
     async def _agenda_real(self, mensaje: str) -> Dict:
+        import re
+        from datetime import datetime as _dt, timedelta as _td
         m = _norm_txt(mensaje)
         try:
             ag = _agenda()
             if hasattr(ag, "init_db"):
                 await asyncio.to_thread(ag.init_db)
-            if "proxim" in m:
+
+            # Fase 3 (2026-07-28): crear cita real — no existia NINGUNA ruta de
+            # chat para agendar. No adivina titulo/cliente: si faltan, los pide.
+            if any(k in m for k in ("agenda una cita", "agendar una cita", "agendame",
+                                     "programa una cita", "nueva cita", "crear cita")):
+                tel_m = re.search(r"\b(\d{10})\b", mensaje)
+                fecha_m = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", mensaje)
+                hora_m = re.search(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", mensaje)
+                tipo_m = next((t for t in sorted(ag.TIPOS) if t in m), None)
+                cli_m = re.search(r"\bpara\s+([A-Za-zÁÉÍÓÚáéíóúÑñ ]{3,40}?)(?:\s+(?:el|para el|tel|telefono)\b|$)", mensaje, re.I)
+
+                fecha = fecha_m.group(1) if fecha_m else ("hoy" in m and _dt.now().strftime("%Y-%m-%d")) or ("manana" in m and (_dt.now() + _td(days=1)).strftime("%Y-%m-%d")) or None
+                hora = f"{hora_m.group(1).zfill(2)}:{hora_m.group(2)}" if hora_m else None
+
+                faltan = []
+                if not fecha: faltan.append("fecha (YYYY-MM-DD, o di 'hoy'/'mañana')")
+                if not hora: faltan.append("hora (HH:MM)")
+                if not tipo_m: faltan.append(f"tipo ({'/'.join(sorted(ag.TIPOS))})")
+                if not cli_m: faltan.append("cliente (di 'para <nombre>')")
+                if faltan:
+                    return {"respuesta": "Para agendar la cita real me falta: " + ", ".join(faltan) + ". No invento estos datos."}
+
+                r = await asyncio.to_thread(
+                    ag.crear_cita, cli_m.group(1).strip(), cli_m.group(1).strip(),
+                    tel_m.group(1) if tel_m else "", fecha, hora, tipo_m)
+                if r.get("status") == "ok":
+                    return {"respuesta": f"✅ Cita real agendada (id {r['id']}): {cli_m.group(1).strip()}, {fecha} {hora}, {tipo_m}."}
+                return {"respuesta": f"No pude agendarla (no te miento): {r.get('error', r.get('status'))}"}
+
+            # Dia especifico real — antes "hoy"/"manana" siempre regresaban el
+            # resumen general sin filtrar por fecha (encontrado en vivo hoy).
+            fecha_pedida = None
+            if "manana" in m:
+                fecha_pedida = (_dt.now() + _td(days=1)).strftime("%Y-%m-%d")
+            elif "hoy" in m:
+                fecha_pedida = _dt.now().strftime("%Y-%m-%d")
+            else:
+                fm = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", mensaje)
+                if fm:
+                    fecha_pedida = fm.group(1)
+
+            if fecha_pedida:
+                d = await asyncio.to_thread(ag.dia, fecha_pedida)
+            elif "proxim" in m:
                 d = await asyncio.to_thread(ag.proximas, 24)
             else:
                 d = await asyncio.to_thread(ag.resumen)
