@@ -4,6 +4,39 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 ---
 
+## 2026-07-29 — CEREBRO y TALLER: el bug más peligroso del proyecto + mejoras reales
+
+### 🚨 Lo más importante: el auto-reparador podía borrar el 96% del cerebro de AURORA
+
+`auto_reparacion` le mandaba al modelo de IA solo los **primeros 6,000 caracteres** de un archivo, pero después **reemplazaba el archivo completo** con lo que la IA devolvía. Medido real: `consciencia.py` tiene 148,330 caracteres — la IA veía el 4% y su respuesta habría borrado el otro 96%. Y la única validación que había (que compile) lo aprobaba, porque un archivo cortado a la mitad compila perfecto. Peor: `diagnosticar_y_reparar_todo()` corría eso **solo, automáticamente**, sobre cada módulo con error. Choca de frente con tu regla permanente de nunca restar funciones.
+
+**Blindado con 4 candados, los 4 probados en vivo:**
+1. Los archivos del núcleo (consciencia, aurora_server, run_aurora...) **jamás** se auto-reparan sin ti.
+2. Si el archivo no cabe completo en lo que la IA alcanza a ver, se rechaza diciendo el porcentaje exacto que se perdería.
+3. Si el arreglo pierde más del 25% de las líneas, se rechaza aunque compile.
+4. Después de aplicar, se intenta **importar de verdad** el módulo; si no importa, se restaura el respaldo solo.
+
+**Y además: esa función nunca había reparado nada en su vida.** La IA devuelve el código envuelto en markdown (` ```python `) y eso jamás compila, así que todos los intentos morían. Arreglado — verificado end-to-end con un archivo roto a propósito: ahora sí lo repara.
+
+**Mejorado** (tu pedido de "si ya repara, mejóralo"): pasó del modelo chico al grande (`llama-3.3-70b-versatile`), lo que además permitió subir el límite de 6,000 a 40,000 caracteres — la cobertura pasa de 80 a más de 170 de los 195 archivos.
+
+### 🔧 Nuevo: reparar la conexión con Corel, desde el chat
+La noche anterior se arregló **a mano** un caché corrupto de `win32com` que dejaba todas las constantes de Corel vacías, rompiendo en silencio escalar página, planilla, lona y exportar PNG. Ahora es una función real (`reparar_corel`) que AURORA ejecuta sola, y **no se conforma con borrar el caché: reconecta con Corel y confirma que quedó bien** antes de decírtelo. Se puede pedir por chat: *"arregla la conexión con Corel"* o *"Corel no responde"*.
+
+### ⚡ Cotizador láser: 288 segundos → 1.2 segundos
+Cotizar la misma pieza en 3 modos (corte / grabado / ambos) para comparar precios repetía desde cero el trabajo caro (quitar fondo con IA + vectorizar). Ahora se guarda el vectorizado: la primera cotización cuesta lo mismo, las siguientes de la misma imagen son instantáneas. **240 veces más rápido**, medido. Y ya acepta palabras naturales: "corte" en vez de tener que escribir "corte_contorno".
+
+### 🐌 Buscar archivos: de más de 2 minutos a 11 segundos
+Buscar un archivo que no existía (un typo, por ejemplo) trababa el chat más de 2 minutos, porque recorría archivo por archivo carpetas que jamás contienen lo que buscas (.git con 3,749 archivos, manuales descargados con 2,568, librerías de terceros).
+
+### 📐 Generador de cajas: decía medidas engañosas y escondía fallos
+Respondía "80x50x40cm... mm" (texto mezclado y equivocado): boxes.py trabaja en **milímetros**, así que pedir una caja "80x50x40" pensando en centímetros daba una cajita de 8×5×4 cm. Y si la conversión a DXF fallaba, respondía "OK" igual, sin DXF y sin avisar. Ambas cosas arregladas y verificadas.
+
+### Otros verificados sin bugs
+`razonador` (matemática real correcta), `paneles_cerebro`, `equipos` (5 equipos reales), órdenes de taller, reportes BI, inventario, precios.
+
+---
+
 ## 2026-07-28/29 — Fase 3 continuación: ORACLE, INTEGRACIONES, VENDEDOR, MARKETING, PUBLICADOR, AUTH, MEMORIA (7 carpetas más)
 
 **Por qué**: seguir cerrando Fase 3 carpeta por carpeta, priorizando lecturas seguras en las carpetas de alto riesgo (las que mandan WhatsApp o publican en redes reales NO se dispararon en vivo, solo se revisó el código y se probaron sus lecturas de estado).

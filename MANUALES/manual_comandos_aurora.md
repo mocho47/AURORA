@@ -16,7 +16,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **agenda** (agenda)
 - Qué hace: (sin descripción en el código)
-- Frases que reconoce: «agenda de hoy», «citas de hoy», «mi agenda», «proxima cita», «proximas citas», «que citas tengo», «que tengo agendado», «que tengo hoy», «resumen de agenda», «tengo pendientes hoy»
+- Frases que reconoce: «agenda de hoy», «agenda de manana», «agenda del dia», «agenda una cita», «agendame», «agendar una cita», «citas de hoy», «citas de manana», «crear cita», «hoy», «manana», «mi agenda»
 
 
 ### Ventas
@@ -87,10 +87,10 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **accion_fisica** (accion_sistema)
 - Qué hace: Ejecuta DE VERDAD una acción física, o dice honestamente por qué no.
-- Frases que reconoce: «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «descarga e instala», «desinstala», «desinstalar», «elimina», «eliminar»
+- Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~512 funciones reales)
+## Herramientas del enrutador universal (~514 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -149,12 +149,13 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (50)
+### CEREBRO (51)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
 - `CEREBRO/acciones_sistema:mover` — Mueve un archivo y VERIFICA (existe en destino y ya no en origen).
 - `CEREBRO/acciones_sistema:reparar_whatsapp` — Cierra WhatsApp y limpia su cache REAL. Devuelve exactamente qué hizo.
+- `CEREBRO/acciones_sistema:reparar_corel` — Repara la conexion de AURORA con CorelDRAW borrando el cache corrupto de
 - `CEREBRO/aurora_cerebro_simple:AuroraCerebro.esta_operativo` — esta operativo (AuroraCerebro)
 - `CEREBRO/aurora_cerebro_simple:AuroraCerebro.razonar` — razonar (AuroraCerebro)
 - `CEREBRO/aurora_cerebro_v4:AuroraCerebro.esta_operativo` — esta operativo (AuroraCerebro)
@@ -518,10 +519,11 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MOTORES_CUSTOM/medidor_dxf:calcular_ancho_alto` — calcular ancho alto (medidor_dxf)
 - `MOTORES_CUSTOM/medidor_dxf:obtener_estado_sistema` — obtener estado sistema (medidor_dxf)
 
-### ORACLE (15)
+### ORACLE (16)
 
 - `ORACLE/oracle_core:init_db` — init db (oracle_core)
 - `ORACLE/oracle_core:crear_lead` — crear lead (oracle_core)
+- `ORACLE/oracle_core:actualizar_lead_valor` — Actualiza el valor estimado de un lead ya creado (para cotizaciones que
 - `ORACLE/oracle_core:obtener_lead` — obtener lead (oracle_core)
 - `ORACLE/oracle_core:listar_leads` — listar leads (oracle_core)
 - `ORACLE/oracle_core:actualizar_lead_estado` — actualizar lead estado (oracle_core)
