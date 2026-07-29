@@ -4,6 +4,24 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 ---
 
+## 2026-07-28/29 — Fase 3 continuación: ORACLE, INTEGRACIONES, VENDEDOR, MARKETING, PUBLICADOR, AUTH, MEMORIA (7 carpetas más)
+
+**Por qué**: seguir cerrando Fase 3 carpeta por carpeta, priorizando lecturas seguras en las carpetas de alto riesgo (las que mandan WhatsApp o publican en redes reales NO se dispararon en vivo, solo se revisó el código y se probaron sus lecturas de estado).
+
+**Bug real encontrado y arreglado — ORACLE**: `pronostico_embudo()` (cuánto dinero traes en el embudo de ventas) siempre daba \$0, sin importar cuántos leads reales hubiera. Causa: la columna `valor_estimado` existe en la base desde una migración específica "para pronosticar", pero `crear_lead()` nunca recibía ese dato ni lo guardaba. Arreglado: `crear_lead()` ahora acepta `valor_estimado`, y se agregó `actualizar_lead_valor()` para corregirlo después. Verificado en vivo con un lead de prueba real (creado y limpiado después).
+
+**Sin bugs, verificadas con datos reales**:
+- **INTEGRACIONES**: Email/Telegram/WhatsApp — patrón honesto confirmado (nunca dicen "enviado" sin mandar nada real). WhatsApp con credenciales reales y funcionando; Email y Telegram genuinamente sin configurar (decisión pendiente de Anuar, no bug).
+- **VENDEDOR**: `verificador_core.py` (el que detecta fichas incoherentes tipo "H4 con texto de H7") probado en vivo, 0 incoherencias actuales. Resto de fichas/CRM coincide exacto con lo ya documentado.
+- **MARKETING**: `analizador_mercado` (búsqueda real de nicho con URLs reales), `asesor_core` (playbooks/diagnóstico honesto, dice "SIN_DATOS" en vez de inventar), `catalogo_compartible` (PDF real de 73 productos generado y verificado).
+- **PUBLICADOR**: estados reales de Facebook/Instagram/WhatsApp/Metricool coinciden con lo esperado (TikTok y Metricool sin configurar, resto conectado). Nada se publicó en vivo — muy alto riesgo, solo lecturas.
+- **AUTH**: usuarios (Anuar+Rocío como dueños) y automatizaciones de venta/marketing revisadas en lecturas seguras, coincide con lo documentado.
+- **MEMORIA**: 76 habilidades reales detectadas, 364 episodios registrados. Observación (no confirmado como bug): el ciclo de sueño/consolidación tiene 0 ciclos completados — probablemente porque necesita 5 min de inactividad real y esta sesión no ha parado en toda la noche, no error de código.
+
+**15 de ~21 carpetas de Fase 3 cerradas.** Quedan: EDITOR, CORE, MOTORES, CEREBRO, TALLER, FORJA.
+
+---
+
 ## 2026-07-28 — Fase 3 (arranque): AGENDA completa + bloque de Monetización conectado al panel
 
 **Por qué**: Fase 3 es verificar en vivo, carpeta por carpeta, las ~510 herramientas del router universal (510 es demasiado para una sola sesión — se acordó ir cerrando carpetas completas, no arañar todas a medias). Se eligió AGENDA (9 herramientas) como primera carpeta completa de esta fase, mismo método que "Corel al 100%": leer el código real, correr la prueba propia del módulo, probar en vivo por chat, arreglar lo que falle.
