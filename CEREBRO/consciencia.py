@@ -181,6 +181,11 @@ _ACCION_FISICA_TRIGGERS = (
     "desinstala", "desinstalar", "repara", "reparar", "limpia cache", "limpiar cache",
     "vacia cache", "borra cache", "manda a la pc", "envia a la pc", "pasa a la pc",
     "mandale a", "pasalo a la", "descarga e instala",
+    # Corel: reparar su conexion (cache corrupto de win32com). Frases COMPLETAS
+    # a proposito — poner "arregla" suelto desviaria mensajes de otros dominios
+    # al manejador de acciones fisicas (agregado 2026-07-29).
+    "arregla corel", "arregla corell", "arregla la conexion con corel",
+    "corel no responde", "corell no responde", "corel no conecta",
     # WhatsApp — enviar mensajes reales (nunca simular una conversación)
     "manda un whatsapp", "mandale un whatsapp", "envia un whatsapp", "enviale un whatsapp",
     "manda whatsapp", "envia whatsapp", "mensaje de whatsapp", "por whatsapp",
@@ -1674,6 +1679,21 @@ class Consciencia:
             r = await asyncio.to_thread(_acc.reparar_whatsapp)
             texto = "✅ WhatsApp — hecho de verdad:\n- " + "\n- ".join(r["acciones"])
             texto += f"\nLiberado: {r['mb_liberados']} MB. {r['nota']}"
+            return {"respuesta": texto}
+
+        # Corel: reparar la CONEXION con Corel (cache corrupto de win32com) — REAL.
+        # Agregado 2026-07-29: este arreglo se hizo A MANO la noche anterior porque
+        # no existia como funcion. El cache corrupto deja todas las constantes de
+        # Corel vacias y rompe en silencio escalar/planilla/lona/exportar PNG.
+        if any(k in m for k in ("corel", "corell")) and any(k in m for k in ("repar", "cache", "arregla", "no responde", "no conecta")):
+            r = await asyncio.to_thread(_acc.reparar_corel)
+            if r.get("status") != "ok":
+                return {"respuesta": f"No pude repararlo (no te miento): {r.get('detalle')}"}
+            texto = "✅ Conexión con Corel — hecho de verdad:\n- " + "\n- ".join(r["acciones"])
+            if r.get("verificado"):
+                texto += "\n\nConfirmado con Corel real: quedó funcionando."
+            else:
+                texto += f"\n\n{r.get('nota')}"
             return {"respuesta": texto}
 
         # WhatsApp: ENVIAR un ARCHIVO real (adjunto) — REAL por Green API sendFileByUpload.
