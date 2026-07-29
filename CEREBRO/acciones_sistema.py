@@ -150,6 +150,80 @@ def reparar_whatsapp() -> dict:
             "nota": "Vuelve a abrir WhatsApp; reconstruirá el cache limpio."}
 
 
+def reparar_corel() -> dict:
+    """Repara la conexion de AURORA con CorelDRAW borrando el cache corrupto de
+    win32com (gen_py). Real, verificado a mano la noche del 2026-07-28.
+
+    El problema real que arregla: cuando ese cache se corrompe, Python sigue
+    conectando con Corel pero TODAS las constantes llegan vacias
+    (win32com.client.constants con 0 entradas). Eso rompe en silencio varias
+    funciones que ya existian y funcionaban: escalar_pagina, preparar_para_lona,
+    crear_planilla y exportar a PNG/JPG — todas dependen de constantes como
+    cdrCentimeter o cdrPNG. El sintoma que se ve es confuso ("Corel no responde",
+    errores de tipo raros) y no apunta al cache, por eso se diagnostica mal.
+
+    Borrar el cache es seguro: pywin32 lo reconstruye solo la siguiente vez que
+    se conecta a Corel. No se toca nada de la instalacion de CorelDRAW.
+    """
+    acciones = []
+    # 1) Ubicar el cache real que usa pywin32 en esta maquina (no se adivina).
+    try:
+        import win32com
+        gen_path = Path(win32com.__gen_path__)
+        acciones.append(f"Cache de win32com localizado: {gen_path}")
+    except Exception as e:
+        return {"status": "error", "app": "CorelDRAW",
+                "detalle": f"No pude ubicar el cache de win32com (¿pywin32 instalado?): {str(e)[:150]}"}
+
+    # 2) Medir y borrar.
+    mb = 0.0
+    if gen_path.exists():
+        try:
+            mb = sum(f.stat().st_size for f in gen_path.rglob("*") if f.is_file()) / 1048576
+        except OSError:
+            mb = 0.0
+        try:
+            shutil.rmtree(str(gen_path), ignore_errors=True)
+            acciones.append(f"Cache borrado ({round(mb,1)} MB) — pywin32 lo reconstruye solo.")
+        except Exception as e:
+            return {"status": "error", "app": "CorelDRAW", "acciones": acciones,
+                    "detalle": f"No pude borrar el cache: {str(e)[:150]}"}
+    else:
+        acciones.append("El cache no existia (ya estaba limpio).")
+
+    # 3) VERIFICAR de verdad: reconectar y confirmar que las constantes vuelven.
+    # Sin esta prueba no se puede afirmar que quedo arreglado.
+    verificado = False
+    detalle_verif = ""
+    try:
+        import subprocess as _sp
+        codigo = (
+            "import win32com.client\n"
+            "app = win32com.client.gencache.EnsureDispatch('CorelDRAW.Application.26')\n"
+            "c = win32com.client.constants\n"
+            "print('CM=', getattr(c,'cdrCentimeter','FALTA'), 'PNG=', getattr(c,'cdrPNG','FALTA'))\n"
+        )
+        r = _sp.run([__import__("sys").executable, "-c", codigo],
+                    capture_output=True, text=True, timeout=180)
+        salida = (r.stdout or "") + (r.stderr or "")
+        if "CM= 4" in salida and "PNG= 802" in salida:
+            verificado = True
+            acciones.append("Verificado real: Corel responde y las constantes volvieron (cdrCentimeter=4, cdrPNG=802).")
+        else:
+            detalle_verif = salida.strip()[-250:]
+            acciones.append("Cache borrado, pero no pude confirmar la reconexion "
+                            "(lo mas probable: CorelDRAW no esta abierto ahora mismo).")
+    except Exception as e:
+        detalle_verif = str(e)[:200]
+        acciones.append(f"Cache borrado; la verificacion no se pudo correr: {detalle_verif}")
+
+    return {"status": "ok", "app": "CorelDRAW", "acciones": acciones,
+            "mb_liberados": round(mb, 1), "verificado": verificado,
+            "detalle_verificacion": detalle_verif,
+            "nota": ("Si no se verifico, abre CorelDRAW y vuelve a pedirlo — el cache se "
+                     "reconstruye al primer contacto real con Corel.")}
+
+
 if __name__ == "__main__":
     import json
     print(json.dumps({"buscar_4forte": buscar_archivo("4forte")}, ensure_ascii=False, indent=2))

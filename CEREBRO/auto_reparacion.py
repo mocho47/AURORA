@@ -32,7 +32,14 @@ Si no es posible corregir, responde exactamente: IRREPARABLE: [motivo]"""
 # Anuar: "NO restar funciones (2 años de trabajo limpio que YA funciona)".
 #
 # Tres candados, cada uno suficiente por si solo:
-CHARS_AL_LLM = 6000          # lo que el LLM alcanza a ver de verdad
+# Mejora 2026-07-29: se pasa del modelo chico (llama-3.1-8b-instant) al grande
+# (llama-3.3-70b-versatile, verificado disponible con la llave real de Anuar).
+# Reescribir codigo es justo la tarea donde el modelo chico se equivoca; y su
+# contexto de 128k permite subir el limite de tamaño de 6,000 a 40,000
+# caracteres SIN romper la garantia de "el archivo cabe completo": eso pasa la
+# cobertura de 80 a mas de 170 de los 195 archivos propios de AURORA.
+MODELO_REPARACION = "llama-3.3-70b-versatile"
+CHARS_AL_LLM = 40000         # lo que el LLM alcanza a ver de verdad
 # 1) Archivos del nucleo: NUNCA se auto-reparan sin Anuar (son el corazon).
 ARCHIVOS_NUCLEO = {
     "cerebro/consciencia.py", "core/aurora_server.py", "run_aurora.py",
@@ -42,6 +49,31 @@ ARCHIVOS_NUCLEO = {
 #    a ciegas lo que no viste es garantia de perdida de codigo.
 # 3) Aunque quepa, si el resultado pierde mas de este % de lineas, se revierte.
 PERDIDA_LINEAS_MAX_PCT = 25.0
+
+
+def _puede_importarse(path: Path):
+    """Intenta importar el archivo en un proceso APARTE (para no contaminar el
+    actual ni dejar el modulo a medias cargado). Devuelve (True, "") si importa,
+    o (False, error_real) si no. Es la prueba que compilar NO da: un archivo
+    puede compilar perfecto y aun asi estar roto por dentro."""
+    import subprocess as _sp
+    codigo = (
+        "import importlib.util, sys\n"
+        f"spec = importlib.util.spec_from_file_location('_verif_fix', r'''{path}''')\n"
+        "m = importlib.util.module_from_spec(spec)\n"
+        "spec.loader.exec_module(m)\n"
+        "print('IMPORT_OK')\n"
+    )
+    try:
+        r = _sp.run([sys_path_guard.executable, "-c", codigo], capture_output=True,
+                    text=True, timeout=60, cwd=str(ROOT))
+        if "IMPORT_OK" in (r.stdout or ""):
+            return True, ""
+        return False, ((r.stderr or r.stdout or "").strip() or "no importó, sin detalle")
+    except Exception as e:
+        # Si no se pudo ni hacer la verificacion, se es honesto: no se afirma que
+        # esta bien. Se trata como fallo para que se revierta (lado seguro).
+        return False, f"no se pudo verificar el import: {str(e)[:150]}"
 
 
 def _limpiar_respuesta_llm(texto: str) -> str:
@@ -112,7 +144,7 @@ class AutoReparacion:
         # 2. LLM genera fix
         try:
             resp = await self._groq.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=MODELO_REPARACION,
                 messages=[
                     {"role": "system", "content": PROMPT_REPARACION},
                     # Ya no se recorta: el CANDADO 2 garantiza que el archivo
@@ -163,6 +195,22 @@ class AutoReparacion:
         # 5. Aplicar
         shutil.copy2(tmp_path, path)
         Path(tmp_path).unlink(missing_ok=True)
+
+        # CANDADO 4 (mejora 2026-07-29): compilar solo prueba que la SINTAXIS
+        # esta bien; un archivo puede compilar y estar roto por dentro (un
+        # import que ya no existe, una constante borrada, indentacion que
+        # cambio el significado). Aqui se intenta IMPORTAR de verdad el modulo
+        # ya aplicado, en un proceso aparte para no contaminar este. Si no
+        # importa, se restaura el respaldo automaticamente: el archivo original
+        # NUNCA se queda roto por un fix malo.
+        _import_ok, _import_err = _puede_importarse(path)
+        if not _import_ok:
+            shutil.copy2(backup_path, path)      # rollback real inmediato
+            return {"status": "FIX_REVERTIDO_NO_IMPORTA",
+                    "detalle": (f"El fix compilaba pero el módulo ya no se puede importar, "
+                                f"así que se restauró el original automáticamente. "
+                                f"Error real: {_import_err[:200]}"),
+                    "archivo": archivo_relativo, "revertido": True}
 
         # 6. Registrar en memoria episódica
         try:
