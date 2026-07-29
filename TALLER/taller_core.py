@@ -89,11 +89,26 @@ def caja(x: float = 80, y: float = 50, h: float = 40, thickness: float = 3,
         if not svg.exists():
             return {"status": "ERROR", "detalle": (r.stderr or r.stdout)[-300:]}
         dxf = OUT / (svg.stem + ".dxf")
-        _ink([str(svg), "--export-type=dxf", f"--export-filename={dxf}"])
-        res = {"status": "OK", "generador": generador, "medidas": f"{x}x{y}x{h}cm... mm",
+        # Encontrado en vivo 2026-07-29 (Fase 3): el resultado de _ink se ignoraba
+        # por completo — si Inkscape fallaba o tardaba de mas (su arranque en frio
+        # puede pasar de 60s), la funcion igual respondia "OK" sin DXF y sin decir
+        # nada. Ahora se revisa de verdad y se reporta honesto. Timeout mas amplio
+        # por el arranque en frio real de Inkscape.
+        _code, _salida = _ink([str(svg), "--export-type=dxf", f"--export-filename={dxf}"],
+                              timeout=240)
+        # boxes.py trabaja en MILIMETROS. La etiqueta anterior decia "cm... mm", que
+        # es peligrosamente confuso: pedir "80x50x40" pensando en centimetros daba
+        # una caja de 8x5x4 cm (verificado real: el SVG salio de 151.90mm x 165.30mm).
+        res = {"status": "OK", "generador": generador,
+               "medidas_mm": f"{x} x {y} x {h} mm",
+               "medidas_cm": f"{x/10:g} x {y/10:g} x {h/10:g} cm",
                "svg": str(svg)}
         if dxf.exists():
             res["dxf"] = str(dxf); res["kb"] = round(dxf.stat().st_size/1024, 1)
+        else:
+            res["dxf"] = None
+            res["aviso_dxf"] = ("El SVG SI se genero, pero la conversion a DXF con Inkscape "
+                                f"no produjo archivo (codigo {_code}). Detalle: {(_salida or '')[-200:]}")
         return res
     except Exception as e:
         return {"status": "ERROR", "detalle": str(e)[:300]}
