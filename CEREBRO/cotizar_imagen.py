@@ -29,6 +29,89 @@ def _cargar_mod(nombre: str, ruta: Path):
     return mod
 
 
+# ── CACHE del trabajo caro (mejora 2026-07-29, Fase 3) ────────────────────
+# Los pasos 1 y 2 (quitar fondo con IA + vectorizar con Inkscape) son los
+# lentos de verdad: entre los dos se pueden llevar 1-2 minutos por imagen.
+# El uso real en el taller es cotizar LA MISMA pieza en 3 modos (corte,
+# grabado, ambos) para comparar precios — antes eso repetia todo el trabajo
+# caro 3 veces (medido: mas de 5 minutos para 5 cotizaciones de una imagen).
+# Ahora el DXF vectorizado se guarda en cache por (ruta, fecha, tamaño) de la
+# imagen: la primera cotizacion cuesta lo mismo que antes, las siguientes de
+# la misma imagen son practicamente instantaneas. La cache se invalida sola
+# si la imagen cambia, y si el DXF guardado desaparece se re-vectoriza.
+_CACHE_DXF: dict = {}
+
+
+def _clave_cache(img: Path):
+    try:
+        st = img.stat()
+        return (str(img.resolve()).lower(), int(st.st_mtime), st.st_size)
+    except Exception:
+        return None
+
+
+def _preparar_dxf(img: Path, pasos: list):
+    """Pasos 1 y 2 (los lentos): quita el fondo con IA y vectoriza a DXF.
+    Devuelve (ruta_dxf, None) si sale bien, o (None, dict_error) si falla — nunca
+    inventa un resultado. Con cache: si esta misma imagen (misma fecha y tamaño)
+    ya se vectorizo antes, reusa el DXF y no repite nada del trabajo caro."""
+    ck = _clave_cache(img)
+    if ck:
+        cacheado = _CACHE_DXF.get(ck)
+        if cacheado and Path(cacheado).exists():
+            pasos.append(f"DXF reusado de cache (esta imagen ya se habia vectorizado): {Path(cacheado).name}")
+            return cacheado, None
+        if cacheado:
+            _CACHE_DXF.pop(ck, None)       # el DXF guardado ya no esta en disco
+
+    # 1) QUITAR FONDO (IA rembg) — sobre blanco para que el trazo sea limpio (B&N).
+    try:
+        conv = _cargar_mod("conversiones", ROOT / "EDITOR" / "conversiones.py")
+        r_fondo = conv.quitar_fondo(str(img), "", True)  # sobre_blanco=True
+        if r_fondo.get("status") != "ok":
+            return None, {"status": "error", "paso": "quitar_fondo", "detalle": r_fondo}
+        sin_fondo = r_fondo["salida"]
+        pasos.append(f"Fondo eliminado (rembg): {Path(sin_fondo).name} [{r_fondo.get('px')}]")
+    except Exception as e:
+        return None, {"status": "error", "paso": "quitar_fondo",
+                      "detalle": f"No pude quitar el fondo (no lo invento): {str(e)[:300]}"}
+
+    # 2) VECTORIZAR a DXF. Primero el vectorizador oficial (Inkscape/taller_core); si en
+    # esta máquina no traza (produce DXF vacío), caemos al trazador REAL por contornos (cv2).
+    import ezdxf as _ez
+    sin_fondo_trazo = _reducir_para_trazo(sin_fondo, 1100)
+    if sin_fondo_trazo != sin_fondo:
+        pasos.append(f"Raster reducido para trazo rápido: {Path(sin_fondo_trazo).name}")
+    dxf_ruta = None
+    try:
+        taller = _cargar_mod("taller_core", ROOT / "TALLER" / "taller_core.py")
+        r_vec = taller.vectorizar(sin_fondo_trazo)
+        cand = r_vec.get("dxf") if isinstance(r_vec, dict) else None
+        if cand and Path(cand).exists():
+            try:
+                if sum(1 for _ in _ez.readfile(cand).modelspace()) > 0:
+                    dxf_ruta = cand
+                    pasos.append(f"Vectorizado a DXF (Inkscape): {Path(cand).name}")
+            except Exception:
+                dxf_ruta = None
+    except Exception:
+        dxf_ruta = None
+    if not dxf_ruta:
+        # Fallback REAL por contornos (cv2) — no depende de Inkscape.
+        dxf_cv2 = str(ROOT / "TALLER_OUT" / (Path(sin_fondo_trazo).stem + "_cv2.dxf"))
+        r_cv2 = _vectorizar_contornos_cv2(sin_fondo_trazo, dxf_cv2)
+        if r_cv2.get("status") != "ok":
+            return None, {"status": "error", "paso": "vectorizar",
+                          "detalle": f"Ni Inkscape ni cv2 trazaron la imagen (no lo invento): {r_cv2.get('detalle')}"}
+        dxf_ruta = r_cv2["dxf"]
+        pasos.append(f"Vectorizado a DXF (contornos cv2): {Path(dxf_ruta).name} "
+                     f"({r_cv2.get('contornos')} contornos)")
+
+    if ck:
+        _CACHE_DXF[ck] = dxf_ruta
+    return dxf_ruta, None
+
+
 def _velocidad_grabado_config(default: float = 200.0) -> float:
     """Lee la velocidad de grabado REAL de la config; si no está, usa el default explícito."""
     try:
@@ -120,48 +203,10 @@ def cotizar_imagen_laser(imagen_ruta: str, material: str = "MDF 2.7mm (Hoja)",
     if not img.exists():
         return {"status": "error", "mensaje": f"No existe la imagen: {imagen_ruta}"}
 
-    # 1) QUITAR FONDO (IA rembg) — sobre blanco para que el trazo sea limpio (B&N).
-    try:
-        conv = _cargar_mod("conversiones", ROOT / "EDITOR" / "conversiones.py")
-        r_fondo = conv.quitar_fondo(str(img), "", True)  # sobre_blanco=True
-        if r_fondo.get("status") != "ok":
-            return {"status": "error", "paso": "quitar_fondo", "detalle": r_fondo}
-        sin_fondo = r_fondo["salida"]
-        pasos.append(f"Fondo eliminado (rembg): {Path(sin_fondo).name} [{r_fondo.get('px')}]")
-    except Exception as e:
-        return {"status": "error", "paso": "quitar_fondo",
-                "detalle": f"No pude quitar el fondo (no lo invento): {str(e)[:300]}"}
-
-    # 2) VECTORIZAR a DXF. Primero el vectorizador oficial (Inkscape/taller_core); si en
-    # esta máquina no traza (produce DXF vacío), caemos al trazador REAL por contornos (cv2).
-    import ezdxf as _ez
-    sin_fondo_trazo = _reducir_para_trazo(sin_fondo, 1100)
-    if sin_fondo_trazo != sin_fondo:
-        pasos.append(f"Raster reducido para trazo rápido: {Path(sin_fondo_trazo).name}")
-    dxf_ruta = None
-    try:
-        taller = _cargar_mod("taller_core", ROOT / "TALLER" / "taller_core.py")
-        r_vec = taller.vectorizar(sin_fondo_trazo)
-        cand = r_vec.get("dxf") if isinstance(r_vec, dict) else None
-        if cand and Path(cand).exists():
-            try:
-                if sum(1 for _ in _ez.readfile(cand).modelspace()) > 0:
-                    dxf_ruta = cand
-                    pasos.append(f"Vectorizado a DXF (Inkscape): {Path(cand).name}")
-            except Exception:
-                dxf_ruta = None
-    except Exception:
-        dxf_ruta = None
-    if not dxf_ruta:
-        # Fallback REAL por contornos (cv2) — no depende de Inkscape.
-        dxf_cv2 = str(ROOT / "TALLER_OUT" / (Path(sin_fondo_trazo).stem + "_cv2.dxf"))
-        r_cv2 = _vectorizar_contornos_cv2(sin_fondo_trazo, dxf_cv2)
-        if r_cv2.get("status") != "ok":
-            return {"status": "error", "paso": "vectorizar",
-                    "detalle": f"Ni Inkscape ni cv2 trazaron la imagen (no lo invento): {r_cv2.get('detalle')}"}
-        dxf_ruta = r_cv2["dxf"]
-        pasos.append(f"Vectorizado a DXF (contornos cv2): {Path(dxf_ruta).name} "
-                     f"({r_cv2.get('contornos')} contornos)")
+    # 1 y 2) QUITAR FONDO + VECTORIZAR (los dos pasos lentos, con cache real).
+    dxf_ruta, _err = _preparar_dxf(img, pasos)
+    if _err:
+        return _err
 
     # 3) ESCALAR el DXF a la altura pedida (altura_cm)
     try:
@@ -246,7 +291,21 @@ def cotizar_imagen_laser(imagen_ruta: str, material: str = "MDF 2.7mm (Hoja)",
         t_min = long_mm / (vel * 60.0) if vel > 0 else 0.0
         return round(t_min, 2), round(t_min * costo_min, 2)
 
-    modo = (modo or "corte_contorno").lower()
+    # Mejora 2026-07-29 (Fase 3): antes exigia escribir EXACTO "corte_contorno" —
+    # pedir "corte" (la palabra natural, y la que usa cualquiera en el taller)
+    # fallaba con "Modo no valido". Ahora se aceptan los sinonimos reales que se
+    # usan de verdad, sin cambiar los nombres internos de los modos.
+    _SINONIMOS_MODO = {
+        "corte": "corte_contorno", "cortar": "corte_contorno",
+        "contorno": "corte_contorno", "silueta": "corte_contorno",
+        "corte contorno": "corte_contorno", "solo corte": "corte_contorno",
+        "grabar": "grabado", "grabado laser": "grabado", "grabado láser": "grabado",
+        "solo grabado": "grabado", "marcar": "grabado", "marcado": "grabado",
+        "los dos": "ambos", "todo": "ambos", "corte y grabado": "ambos",
+        "grabado y corte": "ambos", "completo": "ambos",
+    }
+    modo = (modo or "corte_contorno").strip().lower()
+    modo = _SINONIMOS_MODO.get(modo, modo)
     costo_corte = costo_grabado = 0.0
     t_corte = t_grabado = 0.0
     long_medida_mm = 0.0
@@ -275,7 +334,9 @@ def cotizar_imagen_laser(imagen_ruta: str, material: str = "MDF 2.7mm (Hoja)",
                         f"+ corta el contorno ({contorno_mm/1000:.2f} m @ {v_corte} mm/s).")
     else:
         return {"status": "error", "paso": "modo",
-                "detalle": f"Modo '{modo}' no válido. Usa: corte_contorno, grabado o ambos."}
+                "detalle": f"No entendí el modo '{modo}'. Dime una de estas: "
+                           "'corte' (solo la silueta), 'grabado' (todo el detalle) "
+                           "o 'ambos' (graba el detalle y corta la silueta)."}
 
     total = round(costo_corte + costo_grabado + costo_material, 2)
 
