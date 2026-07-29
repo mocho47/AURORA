@@ -71,18 +71,36 @@ def init_db() -> None:
 # ==================== LEADS (captacion) ====================
 
 def crear_lead(nombre: str, telefono: str = "", fuente: str = "", negocio: str = "atf",
-               vehiculo: str = "", interes: str = "", notas: str = "") -> Dict:
+               vehiculo: str = "", interes: str = "", notas: str = "",
+               valor_estimado: float = 0) -> Dict:
     if not nombre or not nombre.strip():
         raise ValueError("El nombre del lead es obligatorio")
     ahora = datetime.now().isoformat(timespec="seconds")
     with _conn() as c:
         cur = c.execute(
+            # Fase 3 (2026-07-28), bug real encontrado: la columna valor_estimado
+            # existe desde una migracion especificamente "para PRONOSTICAR ventas
+            # del embudo", pero crear_lead() nunca la recibia ni la insertaba —
+            # pronostico_embudo() siempre daba $0 sin importar cuantos leads reales
+            # hubiera. Ahora se puede capturar desde la creacion del lead.
             """INSERT INTO leads (nombre, telefono, fuente, negocio, vehiculo, interes,
-                                  estado, notas, creado, actualizado)
-               VALUES (?, ?, ?, ?, ?, ?, 'nuevo', ?, ?, ?)""",
-            (nombre.strip(), telefono, fuente, negocio, vehiculo, interes, notas, ahora, ahora))
+                                  estado, notas, valor_estimado, creado, actualizado)
+               VALUES (?, ?, ?, ?, ?, ?, 'nuevo', ?, ?, ?, ?)""",
+            (nombre.strip(), telefono, fuente, negocio, vehiculo, interes, notas,
+             float(valor_estimado or 0), ahora, ahora))
         new_id = cur.lastrowid
     return obtener_lead(new_id)
+
+
+def actualizar_lead_valor(lead_id: int, valor_estimado: float) -> Dict:
+    """Actualiza el valor estimado de un lead ya creado (para cotizaciones que
+    llegan despues del contacto inicial, o correcciones)."""
+    if obtener_lead(lead_id) is None:
+        raise ValueError(f"Lead {lead_id} no existe")
+    with _conn() as c:
+        c.execute("UPDATE leads SET valor_estimado = ?, actualizado = ? WHERE id = ?",
+                  (float(valor_estimado or 0), datetime.now().isoformat(timespec="seconds"), lead_id))
+    return obtener_lead(lead_id)
 
 
 def obtener_lead(lead_id: int) -> Optional[Dict]:
