@@ -15,6 +15,17 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 **Pendiente real**: quedan 19 carpetas más de Fase 3 (EDITOR, CORE, MOTORES, CEREBRO, TALLER, FORJA, AUTH, MEMORIA, MARKETING, PUBLICADOR, VENDEDOR, ORACLE, INTEGRACIONES, BIBLIOTECA, SISTEMA, MOTORES_CUSTOM, WEB, REDES, MANUALES, SUBLIMACION) — trabajo real de varias sesiones más, no de una noche.
 
+**Continuación misma noche — 7 carpetas chicas más, cerradas completas:**
+- **SISTEMA** (6/6 ok): `optimizador.py` (diagnóstico real de RAM/CPU/disco, limpieza de temporales con confirmación real antes de borrar) y `organizador_archivos.py` (escaneo real de 3972 archivos/12.91GB probado en Downloads, blindaje real que nunca toca AURORA/Windows/AppData) — ambos sin bugs, ya bien construidos.
+- **SUBLIMACION** (3/3 ok): lienzo en blanco y montaje de diseño a 300DPI, PDF+PNG reales generados y verificados.
+- **REDES** (3/3 ok): diagnóstico real de dispositivos Google Cast en la LAN — encontró un dispositivo real y dio diagnóstico real de señal/pérdida de paquetes. Útil para el pendiente de la Mini "Oficina 2" cuando se corra en esa red.
+- **WEB** (verificada): búsqueda real, lectura de página real, todo probado con datos reales de internet.
+- **MANUALES** (verificada): confirmó que el sistema de aprendizaje de manuales es el mismo que ya trajo los PDFs de Corel esta noche — y de paso se descubrió que **el manual de Vectric Aspire (48 páginas) ya estaba ingerido**, contradiciendo lo que se le dijo antes a Anuar sobre no tener documentación de Aspire.
+- **BIBLIOTECA** (6/6 ok): motor de búsqueda híbrido (texto + semántico) probado en vivo con una consulta real en español ("velocidad de corte") que encontró contenido técnico real en inglés de los manuales de RDWorks — el glosario ES→EN funciona.
+- **MOTORES_CUSTOM** (5/5, 1 bug real arreglado): `medidor_dxf.py` usaba `.query()` de ezdxf incorrectamente (nunca fue la API real para bounding box, y solo buscaba bloques INSERT, ignorando toda otra geometría) — con un DXF real de prueba (rectángulo 10x5) siempre fallaba con "error_desconocido". Arreglado con `ezdxf.bbox.extents()`, la API real; verificado exacto (10.0 x 5.0).
+
+**8 de 20 carpetas de Fase 3 cerradas esta noche** (AGENDA + estas 7). Quedan 12: EDITOR, CORE, MOTORES, CEREBRO, TALLER, FORJA, AUTH, MEMORIA, MARKETING, PUBLICADOR, VENDEDOR, ORACLE, INTEGRACIONES.
+
 ---
 
 ## 2026-07-28 — Lote "Corel al 100%" (consciencia.py + corel_core.py + pc_access.py)
