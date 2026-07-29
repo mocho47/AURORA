@@ -1279,6 +1279,15 @@ async def mon_bloque_pendiente():
     return await asyncio.to_thread(_mon().bloque_pendiente)
 
 
+@app.get("/equipos/ventas/ultimo", tags=["Equipos"])
+async def equipo_ventas_ultimo():
+    """Pronóstico real del Equipo de Ventas (embudo), bajo demanda — solo lectura.
+    Nota honesta: se intentó dejarlo corriendo solo cada 4h en segundo plano y esa
+    tarea se colgaba sin razón encontrada a tiempo (ver run_aurora.py). Mientras
+    se resuelve, esto calcula el dato real al momento de pedirlo, cada vez."""
+    return await asyncio.to_thread(_oracle().pronostico_embudo)
+
+
 @app.get("/monetizacion/revisar-bloque", tags=["Monetización"])
 async def mon_revisar_bloque(bloque: int):
     """Todos los posts de un bloque, para revisarlo."""

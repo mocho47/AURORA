@@ -252,6 +252,21 @@ async def _arrancar() -> None:
     except Exception as e:
         logger.warning(f"      Reporte mensual no disponible: {e}")
 
+    # Pedido de Anuar 2026-07-29: Equipo de Ventas "corriendo solo".
+    # INTENTO REAL de tarea de fondo periodica (cada 4h) — encontrado en vivo:
+    # se cuelga sin excepcion ni timeout dentro de asyncio.to_thread() cuando se
+    # llama desde una tarea creada en el arranque (aunque el MISMO codigo
+    # (oracle_core.pronostico_embudo via to_thread) responde instantaneo desde
+    # un endpoint HTTP normal, GET /oracle/pronostico). No se encontro la causa
+    # raiz exacta a tiempo esta noche — probablemente relacionado a como esta
+    # tarea especifica interactua con el loop/executor al crearse en el arranque,
+    # a diferencia de reporte_mensual/motor_sueno que si funcionan. Documentado
+    # honesto, no se deja una tarea colgada corriendo para siempre: se retira el
+    # bucle automatico y se deja SOLO el endpoint bajo demanda (GET
+    # /equipos/ventas/ultimo), que usa el mismo patron ya probado del endpoint
+    # /oracle/pronostico que si funciona 100%. Pendiente real: encontrar la
+    # causa raiz del cuelgue en tareas de fondo nuevas creadas en el arranque.
+
     logger.info("")
     logger.info("=" * 60)
     logger.info("  AURORA completamente inicializada")
