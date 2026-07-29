@@ -41,6 +41,38 @@ Nunca inventas precios. Si el producto no está en catálogo, dices que necesita
 
 _MODELO = "llama-3.1-8b-instant"
 
+# Deteccion del negocio por lo que el cliente REALMENTE pide (arreglo 2026-07-29).
+# Bug encontrado en vivo: negocio se tomaba SIEMPRE como "atf" por default y nunca
+# se miraba el texto — cotizar "50 tazas ceramica sublimadas" (trabajo de MILENS)
+# usaba el catalogo de FAROS de ATF, o sea precios del negocio equivocado en la
+# mitad de las cotizaciones. Ahora se deduce del pedido; el contexto explicito
+# sigue mandando por encima de la deteccion.
+_PALABRAS_MILENS = (
+    "taza", "termo", "playera", "polo", "gorra", "sublima", "sublimad", "vaso",
+    "laser", "láser", "grabado", "grabar", "mdf", "acrilico", "acrílico", "madera",
+    "sello", "llavero", "bolsa", "caja", "posavaso", "servilletero", "dtf", "vinil",
+    "copa", "caballito", "tarro", "agenda", "boligrafo", "bolígrafo", "mousepad",
+    "rompecabezas", "azulejo", "peluche", "planilla", "sticker",
+)
+_PALABRAS_ATF = (
+    "faro", "faros", "led h", "h4", "h7", "h11", "h13", "9005", "9006",
+    "retrofit", "proyector", "bi-led", "biled", "aozoom", "ojo de angel",
+    "ojos de angel", "ojo demonio", "ojos demonio", "demonio", "cuartos",
+    "calavera", "stop", "direccional", "canbus", "balastro", "xenon", "xenón",
+    "fibra optica", "fibra óptica", "tira secuencial", "tiras secuenciales",
+)
+
+
+def _detectar_negocio(texto: str) -> str:
+    """Deduce si el pedido es de MILENS (sublimacion/laser) o ATF (faros) por sus
+    palabras reales. Empate o sin señales -> 'atf' (comportamiento anterior)."""
+    import unicodedata as _ud
+    t = "".join(c for c in _ud.normalize("NFD", (texto or "").lower())
+                if _ud.category(c) != "Mn")
+    n_milens = sum(1 for p in _PALABRAS_MILENS if p in t)
+    n_atf = sum(1 for p in _PALABRAS_ATF if p in t)
+    return "milens" if n_milens > n_atf else "atf"
+
 
 class MotorCotizador:
     def __init__(self):
@@ -53,7 +85,9 @@ class MotorCotizador:
         if not self._groq:
             return {"status": "ERROR", "detalle": "Sin GROQ_API_KEY"}
         contexto = contexto or {}
-        negocio = contexto.get("negocio", "atf").lower()
+        # El contexto explicito manda; si no viene, se deduce del pedido real
+        # (antes se asumia "atf" a ciegas — ver nota en _detectar_negocio).
+        negocio = (contexto.get("negocio") or _detectar_negocio(requerimiento)).lower()
         catalogo = CATALOGO_ATF if negocio == "atf" else CATALOGO_MILENS
         folio = f"COT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         prompt_usuario = (
