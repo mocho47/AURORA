@@ -110,6 +110,10 @@ class ResultadoBusqueda:
     productos: List[ProductoEncontrado] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
     tiempo_busqueda_segundos: float = 0.0
+    # Por que no hubo resultados, en palabras claras. Antes se devolvia una lista
+    # vacia sin ninguna pista y la causa mas comun (falta GOOGLE_API_KEY) quedaba
+    # invisible. Cadena vacia = si hubo resultados (agregado 2026-07-29).
+    motivo_sin_resultados: str = ""
 
     def obtener_mejor_opcion(self) -> Optional[ProductoEncontrado]:
         """Retorna el mejor producto basado en puntuación"""
@@ -343,6 +347,23 @@ class BuscadorWebProfesional:
         self._guardar_cache(query, productos_unicos)
 
         logger.info(f"✅ Búsqueda completada: {len(productos_unicos)} opciones en {tiempo_busqueda:.1f}s")
+
+        # HONESTIDAD (agregado 2026-07-29): antes, si no encontraba nada devolvia
+        # 0 resultados sin decir POR QUE — y la causa real mas comun es que falta
+        # GOOGLE_API_KEY en el .env, asi que la busqueda de Google ni se intenta
+        # (linea 301: "if incluir_google and self.google_api_key"). Verificado en
+        # vivo: 0 opciones en 5.1s sin ninguna pista del motivo. Ahora se dice.
+        if not productos_unicos:
+            motivos = []
+            if incluir_google and not self.google_api_key:
+                motivos.append("falta GOOGLE_API_KEY en el .env, así que la búsqueda de "
+                               "Google no se intentó siquiera")
+            if not tareas:
+                motivos.append("no se habilitó ninguna fuente de búsqueda")
+            resultado.motivo_sin_resultados = (
+                "; ".join(motivos) if motivos
+                else "las fuentes respondieron pero ninguna trajo productos para esta consulta")
+            logger.warning(f"⚠️ Sin resultados: {resultado.motivo_sin_resultados}")
 
         return resultado
 
