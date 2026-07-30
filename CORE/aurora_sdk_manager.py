@@ -115,29 +115,70 @@ class AuroraSDKManager:
         except Exception as e:
             raise Exception(f"Zai error: {str(e)}")
 
-    async def _call_ollama(self, prompt: str, history: List[dict]) -> str:
-        """Llama a Ollama (local)"""
+    # Preferencia de modelos LOCALES, del mejor al mas ligero. Se elige el primero
+    # que de verdad este instalado (arreglo 2026-07-29): antes estaba hardcodeado
+    # "mistral", que NO esta instalado en esta maquina -> Ollama respondia 404 y el
+    # manager caia en relevo a Groq EN SILENCIO. Parecia funcionar, pero la
+    # capacidad OFFLINE (la que aguanta sin WiFi) estaba muerta en este modulo.
+    # ORDEN POR HARDWARE REAL, no por "cual es el mejor modelo" (medido en vivo
+    # 2026-07-29): esta PC tiene 7.2 GB de RAM. Un modelo de 7B (qwen2.5:7b,
+    # dolphin-mistral:7b) en CPU con esa RAM se pasa de 120s y no contesta —
+    # probado. llama3.2:3b es el que ya usa consciencia.py y SI responde. Los 7B
+    # quedan al final: solo servirian en una maquina con mas RAM.
+    PREFERENCIA_OLLAMA = ("llama3.2:3b", "qwen2.5-coder:1.5b",
+                          "qwen2.5:7b", "dolphin-mistral:7b", "mistral")
 
+    async def _modelo_ollama_disponible(self) -> str:
+        """Pregunta a Ollama que modelos tiene y devuelve el mejor segun la
+        preferencia. Cadena vacia si Ollama no responde (no se adivina)."""
+        if getattr(self, "_modelo_ollama_cache", None):
+            return self._modelo_ollama_cache
         try:
             import httpx
+            async with httpx.AsyncClient() as client:
+                r = await client.get(f"{self.ollama_url}/api/tags", timeout=10)
+            instalados = [m.get("name", "") for m in r.json().get("models", [])]
+        except Exception:
+            return ""
+        for preferido in self.PREFERENCIA_OLLAMA:
+            if preferido in instalados:
+                self._modelo_ollama_cache = preferido
+                return preferido
+        # Ninguno de los preferidos: se usa el primero instalado que no sea de
+        # embeddings ni de vision (esos no sirven para conversar).
+        for nombre in instalados:
+            if not any(x in nombre for x in ("embed", "moondream", "vision")):
+                self._modelo_ollama_cache = nombre
+                return nombre
+        return ""
+
+    async def _call_ollama(self, prompt: str, history: List[dict]) -> str:
+        """Llama a Ollama (local, funciona sin internet)."""
+        try:
+            import httpx
+
+            modelo = await self._modelo_ollama_disponible()
+            if not modelo:
+                raise Exception("Ollama no responde o no tiene ningún modelo de chat instalado "
+                                "(revisa que Ollama esté corriendo: ollama list)")
 
             messages = history.copy() if history else []
             messages.append({"role": "user", "content": prompt})
 
-            data = {
-                "model": "mistral",
-                "messages": messages,
-                "stream": False
-            }
-
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.ollama_url}/api/chat",
-                    json=data,
-                    timeout=30
+                    json={"model": modelo, "messages": messages, "stream": False},
+                    timeout=120,   # un modelo local en CPU tarda mas que la nube
                 )
 
             result = response.json()
+            # Error honesto: si Ollama contesta con {"error": ...} se dice cual fue,
+            # en vez de reventar con un KeyError incomprensible ('message').
+            if "error" in result:
+                raise Exception(f"Ollama rechazó la petición (modelo '{modelo}'): {result['error']}")
+            if "message" not in result:
+                raise Exception(f"Ollama respondió sin 'message' (modelo '{modelo}'): {str(result)[:150]}")
             return result["message"]["content"]
 
         except Exception as e:
