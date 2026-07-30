@@ -59,7 +59,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **acerca_de** (auto_conocimiento)
 - Qué hace: CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
-- Frases que reconoce: «como funcionas», «cuentame de ti», «de que estas hecha», «hablame de ti», «para que estas disenada», «que eres aurora», «que eres tu», «que puedes hacer», «que sabes hacer», «quien eres», «tu estructura», «tus capacidades»
+- Frases que reconoce: «auto describete», «autodescribete», «autodescribirte», «como funcionas», «cuales son tus funciones», «cuantas herramientas», «cuentame de ti», «de que eres capaz», «de que estas hecha», «describete», «descripcion de ti», «descríbete»
 
 **servicio_atf** (servicios_atf)
 - Qué hace: Responde a un cliente que pide un SERVICIO real de ATF.
@@ -94,7 +94,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~514 funciones reales)
+## Herramientas del enrutador universal (~516 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -592,7 +592,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (49)
+### TALLER (51)
 
 - `TALLER/administracion:listar_precios` — Costo por minuto + lista de materiales/artículos con su precio de hoja.
 - `TALLER/administracion:set_costo_minuto` — Actualiza el costo por minuto de máquina.
@@ -638,7 +638,9 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/reportes_bi:execute` — execute (reportes_bi)
 - `TALLER/taller_core:disponible` — disponible (taller_core)
 - `TALLER/taller_core:catalogo` — Indexa la biblioteca de trabajos DXF ya terminados (Downloads\DXF).
+- `TALLER/taller_core:pdf_tiene_vectores` — ¿El PDF trae dibujo VECTORIAL de verdad, o solo una imagen adentro?
 - `TALLER/taller_core:convertir_a_dxf` — Convierte SVG/PDF/AI/EPS a DXF para laser.
+- `TALLER/taller_core:pdf_pagina_a_imagen` — Saca UNA página de un PDF como imagen PNG, lista para vectorizar.
 - `TALLER/taller_core:vectorizar` — Imagen (PNG/JPG B&N) -> SVG vectorial -> DXF, trazando con Inkscape.
 - `TALLER/taller_core:caja` — Genera una caja paramétrica para corte láser (boxes.py) en SVG + DXF.
 - `TALLER/taller_core:reajustar_grosor` — Escalador de grosor: regenera la pieza al NUEVO grosor de material (ej. 2.7mm)

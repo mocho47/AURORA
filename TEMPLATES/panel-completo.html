@@ -1882,15 +1882,57 @@ function vozToggle(){
   b.style.color = window.VOZ_ON ? '#22c55e' : '#6b7280';
   if(!window.VOZ_ON && window.speechSynthesis) speechSynthesis.cancel();
 }
+// Encontrado en vivo 2026-07-29: AURORA leía su auto-descripción y se callaba
+// en el punto 4. Causa: .slice(0,600) cortaba el texto a 600 caracteres.
+// Pero quitar el límite a secas NO basta: Chrome tiene un bug conocido y deja
+// de hablar en textos largos (~15 s). El arreglo real es partir el texto en
+// frases y encolarlas una tras otra, que es como sí lee mensajes completos.
+function _vozPartir(texto, max){
+  // Corta en punto/salto de línea, sin partir palabras a la mitad.
+  const frases = (texto||'').split(/(?<=[.!?:;])\s+|\n+/).filter(s=>s.trim());
+  const partes = []; let buf = '';
+  for(const f of frases){
+    if((buf + ' ' + f).trim().length <= max){ buf = (buf + ' ' + f).trim(); }
+    else {
+      if(buf) partes.push(buf);
+      // Frase sola más larga que el máximo: se parte por comas o por longitud.
+      if(f.length > max){
+        let resto = f;
+        while(resto.length > max){
+          let corte = resto.lastIndexOf(',', max);
+          if(corte < max*0.5) corte = resto.lastIndexOf(' ', max);
+          if(corte < 1) corte = max;
+          partes.push(resto.slice(0, corte).trim());
+          resto = resto.slice(corte).trim();
+        }
+        buf = resto;
+      } else { buf = f; }
+    }
+  }
+  if(buf) partes.push(buf);
+  return partes;
+}
 function vozHablar(texto){
   try{
     if(!window.speechSynthesis) return;
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance((texto||'').replace(/[#*_`>]/g,'').slice(0,600));
-    u.lang='es-MX'; u.rate=1.05; u.pitch=1;
-    const v=speechSynthesis.getVoices().find(x=>/es(-|_)?(MX|ES|US)?/i.test(x.lang));
-    if(v) u.voice=v;
-    speechSynthesis.speak(u);
+    // Se limpia el formato markdown y los emojis (el lector los deletrea feo).
+    const limpio = (texto||'')
+      .replace(/[#*_`>]/g,'')
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,'')
+      .replace(/[ \t]{2,}/g,' ')
+      .trim();
+    if(!limpio) return;
+    const partes = _vozPartir(limpio, 220);
+    const voz = speechSynthesis.getVoices().find(x=>/es(-|_)?(MX|ES|US)?/i.test(x.lang));
+    partes.forEach((p, i) => {
+      const u = new SpeechSynthesisUtterance(p);
+      u.lang='es-MX'; u.rate=1.05; u.pitch=1;
+      if(voz) u.voice = voz;
+      // Si el usuario silencia a media lectura, se corta todo lo encolado.
+      u.onstart = () => { if(!window.VOZ_ON) speechSynthesis.cancel(); };
+      speechSynthesis.speak(u);
+    });
   }catch(e){}
 }
 let _reconn=null;

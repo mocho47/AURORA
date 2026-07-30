@@ -11,10 +11,20 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "TALLER_OUT"
 OUT.mkdir(parents=True, exist_ok=True)
 
-def _ink(args, timeout=120):
+# Timeout medido en vivo 2026-07-29 con un PDF real de Anuar ("Animal - Perro -
+# Pitbull (Cabeza).pdf"): Inkscape se paso de 120s convirtiendo a DXF y la
+# conversion murio. Su arranque en frio ya se habia medido pasando de 60s, y un
+# PDF con detalle real tarda mucho mas que eso. 120s era demasiado corto para
+# trabajo de verdad; 300s da margen sin colgar el chat para siempre.
+def _ink(args, timeout=300):
     try:
         r = subprocess.run([INK] + args, capture_output=True, text=True, timeout=timeout)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
+    except subprocess.TimeoutExpired:
+        # Error honesto y accionable, no un volcado tecnico incomprensible.
+        return 1, (f"Inkscape se pasó de {timeout}s convirtiendo el archivo. Suele pasar con "
+                   f"PDFs de mucho detalle o si Inkscape arranca en frío. Vuelve a pedirlo "
+                   f"(la segunda vez es más rápida) o simplifica el diseño.")
     except Exception as e:
         return 1, str(e)
 
@@ -37,22 +47,123 @@ def catalogo() -> dict:
                               "carpeta": lib, "ruta": str(f)})
     return {"status": "OK", "total": len(items), "trabajos": items[:200]}
 
+def pdf_tiene_vectores(ruta: str) -> dict:
+    """¿El PDF trae dibujo VECTORIAL de verdad, o solo una imagen adentro?
+
+    Encontrado en vivo 2026-07-29 con un PDF real de Anuar ("Animal - Perro -
+    Pitbull (Cabeza).pdf", 10 páginas): tenía 0 dibujos vectoriales y 1 imagen
+    raster. Inkscape no puede exportar vectores que no existen, así que generaba
+    un DXF de 0.2 KB con CERO entidades y aun así se reportaba "OK". Un PDF así
+    hay que VECTORIZARLO (trazar la imagen), no convertirlo.
+    """
+    try:
+        import fitz
+        d = fitz.open(ruta)
+        pag = d[0]
+        info = {"status": "ok", "paginas": len(d),
+                "vectores": len(pag.get_drawings()),
+                "imagenes": len(pag.get_images())}
+        info["es_solo_imagen"] = info["vectores"] == 0 and info["imagenes"] > 0
+        d.close()
+        return info
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:150], "es_solo_imagen": False}
+
+
+def _dxf_tiene_contenido(ruta) -> int:
+    """Cuántas entidades REALES trae un DXF. 0 = archivo inútil para cortar.
+    Existe porque un DXF vacío pesa ~0.2 KB y 'existe', y sin esto se reportaba
+    como éxito un archivo que no sirve."""
+    try:
+        import ezdxf
+        return sum(1 for _ in ezdxf.readfile(str(ruta)).modelspace())
+    except Exception:
+        return 0
+
+
 def convertir_a_dxf(ruta: str) -> dict:
-    """Convierte SVG/PDF/AI/EPS a DXF para laser."""
+    """Convierte SVG/PDF/AI/EPS a DXF para laser.
+    Si el PDF resulta ser solo una imagen (sin vectores), lo dice claro y manda
+    a vectorizar — antes devolvia un DXF vacio diciendo 'OK'."""
     ruta = _clean(ruta)
     if not os.path.isfile(ruta):
         return {"status": "ERROR", "detalle": f"No existe: {ruta}"}
+
+    # Aviso ANTES de gastar minutos en una conversion que no puede funcionar.
+    if Path(ruta).suffix.lower() == ".pdf":
+        info = pdf_tiene_vectores(ruta)
+        if info.get("es_solo_imagen"):
+            return {"status": "ERROR", "paso": "diagnostico",
+                    "detalle": (f"Ese PDF no tiene dibujo vectorial: trae {info['imagenes']} imagen(es) "
+                                f"adentro y 0 vectores"
+                                + (f" (son {info['paginas']} páginas)" if info.get("paginas", 1) > 1 else "")
+                                + ". Convertirlo daría un DXF vacío. Hay que VECTORIZARLO "
+                                  "(trazar la imagen) — pídemelo como 'vectoriza este archivo'."),
+                    "sugerencia": "vectorizar", **{k: v for k, v in info.items() if k != "status"}}
+
     dst = OUT / (Path(ruta).stem + ".dxf")
     code, log = _ink([ruta, "--export-type=dxf", f"--export-filename={dst}"])
     if dst.exists():
-        return {"status": "OK", "salida": str(dst), "kb": round(dst.stat().st_size/1024, 1)}
+        n = _dxf_tiene_contenido(dst)
+        if n == 0:
+            # Honesto: el archivo existe pero NO sirve para cortar.
+            return {"status": "ERROR", "paso": "conversion_vacia",
+                    "detalle": ("Se generó el DXF pero salió VACÍO (0 entidades), o sea no sirve "
+                                "para cortar. Suele pasar cuando el origen no tiene vectores reales. "
+                                "Prueba vectorizándolo en vez de convertirlo."),
+                    "salida": str(dst)}
+        return {"status": "OK", "salida": str(dst), "entidades": n,
+                "kb": round(dst.stat().st_size/1024, 1)}
     return {"status": "ERROR", "detalle": log[-300:]}
 
-def vectorizar(ruta: str) -> dict:
-    """Imagen (PNG/JPG B&N) -> SVG vectorial -> DXF, trazando con Inkscape."""
+def pdf_pagina_a_imagen(ruta: str, pagina: int = 1, dpi: int = 300) -> dict:
+    """Saca UNA página de un PDF como imagen PNG, lista para vectorizar.
+
+    Agregado 2026-07-29: los packs de diseños de Anuar vienen en PDFs de varias
+    páginas (el del pitbull trae 10, cada una un diseño distinto) y con solo una
+    imagen adentro por página. Antes no había forma de sacar la página 7 — se
+    convertía la 1 y se perdían las otras 9.
+    """
     ruta = _clean(ruta)
     if not os.path.isfile(ruta):
         return {"status": "ERROR", "detalle": f"No existe: {ruta}"}
+    try:
+        import fitz
+        doc = fitz.open(ruta)
+        total = len(doc)
+        if pagina < 1 or pagina > total:
+            doc.close()
+            return {"status": "ERROR",
+                    "detalle": f"Ese PDF tiene {total} página(s); pediste la {pagina}."}
+        pg = doc[pagina - 1]
+        pix = pg.get_pixmap(dpi=dpi)
+        salida = OUT / f"{Path(ruta).stem}_p{pagina}.png"
+        OUT.mkdir(parents=True, exist_ok=True)
+        pix.save(str(salida))
+        doc.close()
+        return {"status": "OK", "salida": str(salida), "pagina": pagina,
+                "total_paginas": total, "dpi": dpi,
+                "kb": round(salida.stat().st_size / 1024, 1)}
+    except Exception as e:
+        return {"status": "ERROR", "detalle": f"No pude extraer la página: {str(e)[:200]}"}
+
+
+def vectorizar(ruta: str, pagina: int = 1) -> dict:
+    """Imagen (PNG/JPG B&N) -> SVG vectorial -> DXF, trazando con Inkscape.
+    Si le das un PDF, saca primero la página indicada como imagen y la traza
+    (antes un PDF de varias páginas no se podía vectorizar por página)."""
+    ruta = _clean(ruta)
+    if not os.path.isfile(ruta):
+        return {"status": "ERROR", "detalle": f"No existe: {ruta}"}
+
+    nota_pagina = ""
+    if Path(ruta).suffix.lower() == ".pdf":
+        r_pag = pdf_pagina_a_imagen(ruta, pagina)
+        if r_pag.get("status") != "OK":
+            return r_pag
+        nota_pagina = f"Página {r_pag['pagina']} de {r_pag['total_paginas']} extraída a 300 DPI. "
+        ruta = r_pag["salida"]
+
     svg = OUT / (Path(ruta).stem + "_vector.svg")
     # trazar bitmap a vector y exportar SVG
     code, log = _ink([ruta, "--actions=select-all;trace-bitmap;export-filename:" + str(svg) + ";export-do",
@@ -63,8 +174,22 @@ def vectorizar(ruta: str) -> dict:
     dxf = OUT / (Path(ruta).stem + "_vector.dxf")
     _ink([str(svg), "--export-type=dxf", f"--export-filename={dxf}"])
     res = {"status": "OK", "svg": str(svg)}
+    if nota_pagina:
+        res["nota"] = nota_pagina.strip()
     if dxf.exists():
-        res["dxf"] = str(dxf); res["kb"] = round(dxf.stat().st_size/1024, 1)
+        # Mismo candado honesto que en convertir_a_dxf: un DXF vacio pesa ~0.2 KB,
+        # "existe", y sin revisar entidades se reportaba como exito algo inservible.
+        n = _dxf_tiene_contenido(dxf)
+        res["dxf"] = str(dxf)
+        res["entidades"] = n
+        res["kb"] = round(dxf.stat().st_size / 1024, 1)
+        if n == 0:
+            res["status"] = "PARCIAL"
+            res["aviso"] = ("El SVG SÍ se generó, pero el DXF salió vacío (0 entidades) y no sirve "
+                            "para cortar. Usa el SVG, o pásalo a DXF desde Inkscape a mano.")
+    else:
+        res["status"] = "PARCIAL"
+        res["aviso"] = "Se generó el SVG pero no el DXF. Usa el SVG mientras tanto."
     return res
 
 PY = r"C:\Program Files\Python312\python.exe"

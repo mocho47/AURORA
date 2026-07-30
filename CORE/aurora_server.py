@@ -597,6 +597,19 @@ async def manual_comandos():
     return FileResponse(str(ruta), media_type="text/plain; charset=utf-8")
 
 
+@app.get("/manuales/verificados", tags=["Manuales"])
+async def manual_verificados():
+    """Los comandos que se PROBARON EN VIVO y respondieron bien (auditoría Fase 3).
+    Distinto del manual general: aquí solo va lo comprobado contra el sistema real,
+    más lo que honestamente NO funciona todavía. Escrito a mano a propósito —
+    es el resultado de pruebas reales, no algo que se pueda generar del código."""
+    ruta = _ROOT / "MANUALES" / "COMANDOS_VERIFICADOS.md"
+    if not ruta.exists():
+        return JSONResponse({"status": "no_existe",
+                              "detalle": "Falta MANUALES/COMANDOS_VERIFICADOS.md"})
+    return FileResponse(str(ruta), media_type="text/plain; charset=utf-8")
+
+
 @app.get("/taller/catalogo", tags=["Taller"])
 async def taller_catalogo():
     """Catálogo combinado (ATF + Milens) para el buscador de productos."""

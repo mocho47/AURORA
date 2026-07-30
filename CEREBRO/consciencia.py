@@ -279,6 +279,15 @@ _ACERCA_DE_TRIGGERS = (
     "que puedes hacer", "que sabes hacer", "como funcionas", "de que estas hecha",
     "para que estas disenada", "cuentame de ti", "hablame de ti", "quien eres",
     "que eres tu", "que eres aurora",
+    # Encontrado en vivo 2026-07-29: Anuar pidio "podrias autodescribirte a
+    # detalle" y NINGUNA frase de arriba calzo, asi que cayo en motor_analisis,
+    # que INVENTO capacidades falsas (diseño de interiores, ciencia, "puedo crear
+    # diseños graficos", "aprendo y mejoro continuamente"). Nada de eso es real.
+    # Justo el caso que hay que evitar frente a un cliente.
+    "autodescribete", "autodescribirte", "auto describete", "describete",
+    "descripcion de ti", "descríbete", "presentate", "preséntate",
+    "que herramientas tienes", "cuantas herramientas", "de que eres capaz",
+    "cuales son tus funciones", "tus habilidades", "tu inventario",
 )
 
 
@@ -2108,8 +2117,17 @@ class Consciencia:
         from pathlib import Path as _P
         raiz = _P(__file__).resolve().parent.parent
         # 1) ruta explícita en el mensaje
-        mruta = re.search(r"([A-Za-z]:\\[^\s\"']+\.(?:svg|pdf|ai|eps|cdr|png|jpg|jpeg))", mensaje, re.I)
-        ruta = mruta.group(1) if mruta else None
+        # Encontrado en vivo 2026-07-29 con un archivo real de Anuar:
+        # "Animal - Perro - Pitbull (Cabeza).pdf". El regex viejo excluia
+        # espacios ([^\s"']+), asi que con CUALQUIER nombre con espacios o
+        # parentesis —que es lo normal en sus diseños— no encontraba la ruta,
+        # pedia el archivo de nuevo, y al insistir el mensaje caia al enrutador
+        # de IA que respondio "No puedo ejecutar conversiones en la PC" (falso).
+        # Es el MISMO bug que ya se habia corregido en el candado de Corel, que
+        # aqui habia quedado sin corregir. No-greedy hasta la extension: sirve
+        # con o sin comillas, con espacios y con parentesis.
+        mruta = re.search(r"[A-Za-z]:\\[^\r\n]+?\.(?:svg|pdf|ai|eps|cdr|dxf|png|jpg|jpeg)", mensaje, re.I)
+        ruta = mruta.group(0).strip(' "\'') if mruta else None
         # 2) si no, buscar por nombre de archivo
         if not ruta:
             # El nombre puede traer espacios ("Porta carritos.pdf"). Tomamos el bloque
