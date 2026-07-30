@@ -350,3 +350,101 @@ class TestNoFingeAcciones:
             "Volvió el riesgo de que invente que ejecutó una acción")
         assert "vectorizado_con_coreldraw" in texto, (
             "Se perdió la referencia al caso real que enseña qué NO hacer")
+
+
+# ===========================================================================
+# BUG 12 (RAÍZ) — AURORA inventaba: fingía acciones, comandos y archivos
+# 7 casos reales el 29-30 jul. Causa común: cuando la frase no calzaba con un
+# candado, caía a un modelo sin acceso al sistema que respondía igual.
+# El validador es CÓDIGO: un modelo chico no lo puede ignorar como al prompt.
+# ===========================================================================
+class TestNoPuedeInventar:
+
+    @staticmethod
+    def _claves():
+        rh = _cargar("registro_herramientas", "CEREBRO/registro_herramientas.py")
+        return set(rh.descubrir())
+
+    def test_atrapa_que_fingio_que_corel_trabajo(self):
+        """El invento textual real del 2026-07-29."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        texto = ("CorelDRAW: PDF cargado correctamente\n"
+                 "CorelDRAW: Vectorizacion finalizada\n"
+                 "resultado: vectorizado_con_coreldraw.pdf")
+        _, inf = vh.revisar(texto, motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert inf["corregida"], "Volvería a fingir que Corel trabajó"
+        assert inf["afirmo_accion_sin_hacerla"]
+
+    def test_atrapa_comandos_inventados(self):
+        """El 'MANUAL MAESTRO' real traía 6 de 8 comandos falsos."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        texto = "Ejecuta AGENDA/agrega_usuario y luego CORE/evalua_expresion"
+        _, inf = vh.revisar(texto, motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert "AGENDA/agrega_usuario" in inf["comandos_inventados"]
+        assert "CORE/evalua_expresion" in inf["comandos_inventados"]
+
+    def test_atrapa_archivos_inventados(self):
+        """El 'kit de configuración' real mandaba usar 3 .bat inexistentes."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        texto = "Si se congela ejecuta REINICIAR_NGROK.bat o NEXUS.bat"
+        _, inf = vh.revisar(texto, motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert "REINICIAR_NGROK.bat" in inf["archivos_inexistentes"]
+
+    def test_no_estorba_a_una_ejecucion_real(self):
+        """Un candado que SÍ ejecutó no debe recibir advertencias."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        texto = "Documento real cerrado sin guardar: 'Sin titulo-1'."
+        _, inf = vh.revisar(texto, motores_usados=["motor_corel"],
+                            registro_claves=self._claves())
+        assert not inf["corregida"], "Molestaría en respuestas legítimas"
+
+    def test_no_marca_un_comando_que_si_existe(self):
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        texto = "Puedes usar MARKETING/catalogo_compartible:generar_catalogo_pdf"
+        _, inf = vh.revisar(texto, motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert not inf["comandos_inventados"]
+
+    def test_una_promesa_no_es_una_mentira(self):
+        """'Voy a hacerlo' es válido; 'ya lo hice' sin hacerlo no."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        _, inf = vh.revisar("Voy a convertirlo en cuanto me des la ruta.",
+                            motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert not inf["corregida"]
+
+    def test_esta_conectado_al_punto_unico_de_salida(self):
+        """De nada sirve el validador si no se llama donde salen TODAS las respuestas."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "validador_honestidad" in fuente, (
+            "El validador existe pero no está conectado: las respuestas saldrían sin revisar")
+
+
+# ===========================================================================
+# BUG 13 — La navegación web no se activaba con lenguaje natural
+# ===========================================================================
+class TestBusquedaWebConLenguajeNatural:
+
+    @pytest.mark.parametrize("frase", [
+        "investiga el precio de faros led h4",
+        "buscame proveedores de acrilico",
+        "que dicen de los proyectores aozoom",
+        "compara precios de termos",
+        "busca en internet cuanto cuesta",
+    ])
+    def test_reconoce_como_se_pide_de_verdad(self, frase):
+        import ast
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        disparadores = None
+        for nodo in ast.walk(ast.parse(fuente)):
+            if isinstance(nodo, ast.Assign):
+                for d in nodo.targets:
+                    if isinstance(d, ast.Name) and d.id == "_BUSQUEDA_WEB_TRIGGERS":
+                        disparadores = [e.value for e in nodo.value.elts
+                                        if isinstance(e, ast.Constant)]
+        assert disparadores, "No encontré la lista de frases de búsqueda web"
+        assert any(t in frase for t in disparadores), (
+            f"'{frase}' no activa la búsqueda web — respondería inventando")

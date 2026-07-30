@@ -300,6 +300,20 @@ _BUSQUEDA_WEB_TRIGGERS = (
     "busca en internet", "buscar en internet", "busca en la web", "busca en google",
     "googlea", "navega", "en internet busca", "investiga en la web", "busca en linea",
     "buscar en la web", "consulta en internet", "revisa en internet", "busca en la red",
+    # Encontrado en vivo 2026-07-30: Anuar reporto que "la navegacion web no esta
+    # conectada en el chat, solo en la pestaña Web en vivo". La causa real no era
+    # falta de conexion — el motor web SI funciona — sino que estas frases eran
+    # demasiado rigidas: solo calzaban si decia literalmente "busca en internet".
+    # Preguntar natural ("investiga el precio de X", "que dicen de este producto")
+    # no calzaba con nada y caia al motor generico, que inventa y luego se corrige
+    # solo. Mismo patron que ya paso con la autodescripcion.
+    "investiga", "investigame", "buscame", "búscame", "checa en internet",
+    "checa en la web", "busca informacion", "informacion sobre", "info sobre",
+    "que dicen de", "que dice la gente de", "que hay de nuevo",
+    "precio de mercado", "precios del mercado", "cuanto cuesta en el mercado",
+    "como esta el precio", "compara precios", "comparar precios",
+    "en mercadolibre", "en amazon", "ultimas noticias", "noticias de",
+    "cotizacion del dolar", "tipo de cambio",
 )
 
 
@@ -770,6 +784,36 @@ class Consciencia:
             resultado["respuesta"] = await self._verificar_capacidad_real(mensaje, resultado.get("respuesta", ""))
         except Exception as e:
             logger.debug(f"_verificar_capacidad_real no aplicó: {e}")
+
+        # ── CANDADO ANTI-SIMULACIÓN (agregado 2026-07-30) ─────────────────
+        # El candado de arriba atrapa cuando AURORA NIEGA algo que sí puede.
+        # Este es su espejo, y es el que faltaba: atrapa cuando AFIRMA algo que
+        # NO hizo. Corrección de raíz a los 7 inventos del 29-30 de julio
+        # (fingir que Corel vectorizó, inventar 6 comandos en un "manual",
+        # inventar 3 archivos .bat en un "kit de configuración"...).
+        # Todos venían de lo mismo: la frase no calzaba con ningún candado, caía
+        # a un modelo de texto sin acceso al sistema, y respondía igual.
+        # Agregar frases una por una es infinito; esto cierra la clase entera:
+        # aunque no entienda la orden, lo peor que puede pasar es un "no te
+        # entendí", nunca una mentira. Es CÓDIGO, no una regla de prompt que un
+        # modelo chico pueda ignorar (ya pasó varias veces).
+        try:
+            from CEREBRO import validador_honestidad as _vh
+            try:
+                _claves = set(await asyncio.to_thread(_registro().descubrir))
+            except Exception:
+                _claves = None      # sin registro no se revisan comandos, el resto sí
+            _resp, _informe = _vh.revisar(
+                resultado.get("respuesta", ""),
+                motores_usados=resultado.get("motores_usados"),
+                registro_claves=_claves,
+            )
+            if _informe.get("corregida"):
+                resultado["respuesta"] = _resp
+                resultado["honestidad"] = _informe
+                logger.warning(f"[ANTI-SIMULACIÓN] Respuesta corregida: {_informe}")
+        except Exception as e:
+            logger.debug(f"validador_honestidad no aplicó: {e}")
         return resultado
 
     async def _procesar_interno(
