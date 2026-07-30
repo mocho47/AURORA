@@ -61,6 +61,10 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Qué hace: CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
 - Frases que reconoce: «como funcionas», «cuentame de ti», «de que estas hecha», «hablame de ti», «para que estas disenada», «que eres aurora», «que eres tu», «que puedes hacer», «que sabes hacer», «quien eres», «tu estructura», «tus capacidades»
 
+**servicio_atf** (servicios_atf)
+- Qué hace: Responde a un cliente que pide un SERVICIO real de ATF.
+- Frases que reconoce: «palabras_cliente»
+
 **intuicion** (intuicion)
 - Qué hace: (sin descripción en el código)
 - Frases que reconoce: «prediccion», «predice», «que deberia hacer», «que me recomiendas», «que me sugieres», «que sigue», «sugerencia proactiva», «tu intuicion»

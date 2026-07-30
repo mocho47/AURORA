@@ -4,6 +4,31 @@ Registro en español simple, para que Anuar pueda saber qué cambió y por qué 
 
 ---
 
+## 🏁 2026-07-29 — FASE 3 COMPLETA: las 20 carpetas verificadas comando por comando
+
+Se cerró la verificación en vivo de las ~514 herramientas del enrutador universal, carpeta por carpeta, probando contra el sistema real (nada simulado). **FORJA quedó excluida por decisión de Anuar** (es otro proyecto independiente e inconcluso).
+
+**Carpetas cerradas (20):** AGENDA, SISTEMA, SUBLIMACION, REDES, WEB, MANUALES, BIBLIOTECA, MOTORES_CUSTOM, ORACLE, INTEGRACIONES, VENDEDOR, MARKETING, PUBLICADOR, AUTH, MEMORIA, TALLER, CEREBRO, EDITOR, MOTORES, CORE.
+
+### Los 3 bugs más graves que se encontraron y arreglaron
+
+1. **El auto-reparador podía borrar el 96% del cerebro de AURORA.** Le mandaba al modelo solo los primeros 6,000 caracteres de un archivo pero reemplazaba el archivo completo. En `consciencia.py` (148,330 caracteres) eso habría destruido casi todo. Y además nunca había reparado nada en su vida (la IA devolvía el código en markdown y eso jamás compila). Hoy tiene 4 candados y sí repara de verdad.
+
+2. **El cotizador usaba precios del negocio equivocado.** Siempre asumía ATF: cotizar 50 tazas sublimadas (trabajo de Milens) usaba el catálogo de faros. Y tenía su propia copia hardcodeada de 4 productos ATF y 6 de Milens, mientras los catálogos reales tienen 98 y 73. Ahora detecta el negocio del pedido y lee los catálogos de verdad.
+
+3. **La capacidad offline estaba muerta.** El multi-SDK pedía un modelo local (`mistral`) que no está instalado, así que Ollama devolvía 404 y caía a la nube en silencio. Si se iba el internet, no había respaldo real. Ahora elige el mejor modelo instalado según la RAM de la máquina (probado: 81s real sin internet).
+
+### Otros arreglos verificados
+`medidor_dxf` nunca midió nada (API mal usada) · `pronostico_embudo` siempre daba $0 · buscar archivos tardaba +2 minutos cuando no encontraba · el generador de cajas decía medidas engañosas ("80x50x40cm... mm" cuando son milímetros) y escondía fallos de DXF · la agenda ignoraba la fecha pedida · el cotizador láser tardaba 288s en cada cotización de la misma pieza (ahora 1.2s) · el buscador web devolvía 0 resultados sin decir que faltaba una llave.
+
+### Lo que se encontró y NO se tocó (decisión de Anuar)
+5 módulos en CORE que el sistema vivo no usa pero que el enrutador cree disponibles: la arquitectura paralela `aurora.py`+`aurora_selector` (con un bug de enrutamiento: manda 5 de 6 mensajes al motor equivocado), un segundo sistema de WhatsApp que corrió una sola vez, un publicador duplicado y dos módulos de crisis que se duplican entre sí. Nada se borró.
+
+### Balance honesto
+No todo lo que parecía roto lo estaba: dos "bugs" en los renderizadores de taza y en el catálogo de fondos eran errores míos leyendo el código — los 60 fondos funcionan perfecto. Y varias carpetas (SISTEMA, WEB, MANUALES, VENDEDOR, MARKETING) salieron limpias, sin un solo bug.
+
+---
+
 ## 2026-07-29 — CEREBRO y TALLER: el bug más peligroso del proyecto + mejoras reales
 
 ### 🚨 Lo más importante: el auto-reparador podía borrar el 96% del cerebro de AURORA
