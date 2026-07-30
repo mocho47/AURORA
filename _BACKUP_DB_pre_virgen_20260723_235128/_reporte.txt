@@ -1,0 +1,8 @@
+Respaldo en: C:\AURORA.worktrees\_BACKUP_DB_pre_virgen_20260723_235128
+
+  inventario.db :: movimientos  → borradas 25 filas
+  taller.db :: ordenes  → borradas 34 filas
+  vendedor.db :: ventas  → borradas 2 filas
+  vendedor.db :: detalles_venta  → borradas 2 filas
+
+LISTO. Catálogos/productos/materiales/fichas/usuarios CONSERVADOS. Respaldo intacto por si algo.
