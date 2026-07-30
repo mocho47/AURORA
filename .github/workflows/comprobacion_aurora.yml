@@ -1,0 +1,56 @@
+name: Comprobación de AURORA
+
+# Corre solo, gratis, en los servidores de GitHub cada vez que se sube código.
+# No gasta la PC de Anuar ni su límite de uso.
+#
+# LÍMITE HONESTO: en los servidores de GitHub NO hay CorelDRAW, ni Inkscape, ni
+# el WhatsApp real, ni las bases de datos del taller. Por eso aquí solo se
+# prueba la LÓGICA PURA (cotizador, contactos, medidor DXF, candados,
+# blindajes del auto-reparador). Lo que depende de esos programas se sigue
+# probando a mano en la PC. Que esto pase en verde NO significa que Corel
+# funcione — significa que la lógica del sistema no se rompió.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:        # permite correrlo a mano desde la web de GitHub
+
+jobs:
+  pruebas-de-regresion:
+    name: Pruebas de regresión (bugs reales)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar solo lo necesario para probar
+        # Se instala lo mínimo a propósito: las dependencias pesadas de AURORA
+        # (Corel/COM, rembg, opencv) no existen ni sirven en Linux, y las
+        # pruebas de lógica pura no las necesitan.
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest ezdxf
+
+      - name: Correr las pruebas de regresión
+        # Cada prueba corresponde a un bug REAL que ya ocurrió (auditoría Fase 3).
+        # Si algo aquí se pone rojo, es que un bug viejo volvió.
+        run: python -m pytest tests/test_regresion_bugs_reales.py -v --tb=short
+
+      - name: Resumen
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "OK — ningún bug viejo volvió."
+          else
+            echo "ATENCIÓN: una prueba falló. Un bug que ya se había arreglado volvió a aparecer."
+            echo "Revisa arriba cuál fue: el nombre de cada prueba dice qué bug protege."
+          fi

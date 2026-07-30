@@ -1,18 +1,12 @@
+# Limpieza 2026-07-29: este archivo importaba 12 librerías que NO usa
+# (rembg, vtracer, ddgs, numpy, requests, groq, fitz, PIL, json, sqlite3,
+# datetime, BytesIO). Verificado uno por uno contando usos reales en el código.
+# rembg sola arrastra un motor de IA completo — cargar este módulo tardaba
+# segundos sin necesidad, y hacía imposible probarlo en un servidor limpio.
+# Solo queda lo que de verdad se usa.
 import os
 import ezdxf
-import requests
-import json
-import sqlite3
 import psutil
-import fitz
-import vtracer
-import ddgs
-import rembg
-import numpy as np
-from PIL import Image
-from io import BytesIO
-from datetime import datetime
-from groq import Groq
 
 META = {"id": "medidor_dxf", "nombre": "Medidor DXF", "descripcion": "Medidor de ancho y alto de archivos DXF", "categoria": "Medición"}
 

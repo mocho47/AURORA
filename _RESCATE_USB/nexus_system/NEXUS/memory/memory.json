@@ -1,0 +1,33 @@
+{
+  "created": "2026-01-15T22:57:40.298203",
+  "last_update": "2026-01-15T22:57:40.495465",
+  "state": {
+    "last_skill": "status"
+  },
+  "log": [
+    {
+      "time": "2026-01-15T22:57:40.307670",
+      "event": "Nexus iniciado"
+    },
+    {
+      "time": "2026-01-15T22:57:40.433179",
+      "event": "Skill ejecutado: status"
+    },
+    {
+      "time": "2026-01-15T22:57:40.445208",
+      "event": "Nexus finalizado"
+    },
+    {
+      "time": "2026-01-15T22:57:40.449300",
+      "event": "Nexus iniciado"
+    },
+    {
+      "time": "2026-01-15T22:57:40.479579",
+      "event": "Skill ejecutado: status"
+    },
+    {
+      "time": "2026-01-15T22:57:40.495465",
+      "event": "Nexus finalizado"
+    }
+  ]
+}
