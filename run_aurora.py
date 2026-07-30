@@ -137,28 +137,73 @@ async def _arrancar() -> None:
                         quien = {"relacion": "desconocido", "vender": True, "responder": True,
                                  "avisar_a_anuar": False, "registrar_lead": True}
 
+                    # Aprende que este numero ya hablo con Anuar (pedido suyo:
+                    # "que aprenda que numeros ya han tenido interaccion conmigo").
+                    try:
+                        _cont.recordar_interaccion(telefono)
+                    except Exception:
+                        pass
+
                     if not quien.get("registrar_lead", True) or not quien.get("vender", True):
                         etiqueta = quien.get("titulo") or quien.get("nombre") or quien.get("relacion")
                         logger.info(f"      [WA] {telefono} = {etiqueta} ({quien['relacion']}) "
                                     f"-> no se vende ni se registra como lead.")
-                        # Trato configurable (CONFIG/contactos.json), no silencio seco.
+                        # Trato configurable (CONFIG/contactos.json), con su NOMBRE
+                        # si se conoce ("Hola Luis! En un momento te responde Anuar").
                         _resp_personal = (quien.get("respuesta") or "").strip()
+                        if _resp_personal:
+                            _resp_personal = _cont.saludo_personal(telefono, _resp_personal)
                         if quien.get("responder") and _resp_personal:
                             r_p = await whatsapp.enviar_mensaje(telefono, _resp_personal)
                             if r_p.get("status") != "ENVIADO":
                                 logger.error(f"      [WA] FALLO envío a {etiqueta} ({telefono}): {r_p}")
-                        # Avisar a Anuar a su numero personal real, si esta configurado.
+                        # AVISAR A ANUAR POR TODOS LOS MEDIOS REALES DISPONIBLES
+                        # (pedido suyo). Se deja constancia en disco SIEMPRE — asi
+                        # el aviso no depende de que WhatsApp funcione, y el panel
+                        # lo muestra como alerta pendiente hasta que el lo vea.
                         if quien.get("avisar_a_anuar"):
-                            import os as _os
+                            import os as _os, json as _js, datetime as _d
+                            from pathlib import Path as _Pt
+                            _nom = ""
+                            try:
+                                _nom = _cont.nombre_conocido(telefono)
+                            except Exception:
+                                pass
+                            _quien_txt = _nom or etiqueta
+                            # 1) Constancia en disco (el medio que nunca falla).
+                            try:
+                                _bandeja = _Pt(__file__).resolve().parent / "MEMORIA" / "mensajes_personales.json"
+                                _prev = []
+                                if _bandeja.exists():
+                                    try:
+                                        _prev = _js.loads(_bandeja.read_text(encoding="utf-8"))
+                                        if not isinstance(_prev, list):
+                                            _prev = []
+                                    except Exception:
+                                        _prev = []
+                                _prev.append({"cuando": _d.datetime.now().isoformat(timespec="seconds"),
+                                              "telefono": telefono, "quien": _quien_txt,
+                                              "relacion": quien.get("relacion", ""),
+                                              "mensaje": texto[:500], "visto": False})
+                                _bandeja.parent.mkdir(parents=True, exist_ok=True)
+                                _bandeja.write_text(_js.dumps(_prev[-200:], ensure_ascii=False, indent=2),
+                                                    encoding="utf-8")
+                            except Exception as e:
+                                logger.warning(f"      [WA] No pude guardar el aviso personal: {e}")
+                            # 2) WhatsApp a su numero personal real, si esta configurado.
                             _mi_wa = _os.getenv("WA_RECORDATORIO", "")
                             if _mi_wa:
-                                await whatsapp.enviar_mensaje(
+                                r_av = await whatsapp.enviar_mensaje(
                                     _mi_wa,
-                                    f"📩 Te escribió {etiqueta} ({telefono}):\n\n\"{texto[:300]}\"\n\n"
+                                    f"📩 Te escribió {_quien_txt} ({telefono}):\n\n\"{texto[:300]}\"\n\n"
                                     f"No le contesté por ti — solo le dije que le avisaba.")
+                                if r_av.get("status") != "ENVIADO":
+                                    logger.error(f"      [WA] FALLO el aviso a Anuar: {r_av} "
+                                                 f"(pero quedó guardado en MEMORIA/mensajes_personales.json)")
                             else:
-                                logger.warning("      [WA] WA_RECORDATORIO no configurado: "
-                                               "no pude avisarle a Anuar de un mensaje personal.")
+                                logger.warning("      [WA] WA_RECORDATORIO no configurado: el aviso "
+                                               "quedó guardado en MEMORIA/mensajes_personales.json y "
+                                               "aparecerá en el panel.")
                         return
 
                     # Captura de lead en el CRM (solo 1ra vez por telefono, sin duplicar).

@@ -531,6 +531,32 @@ async def alertas_resumen():
     NUNCA inventa una fuente sin datos reales detrás (Marketplace de FB, por
     ejemplo, no está integrado hoy y por eso no aparece aquí)."""
     items = []
+    # Mensajes PERSONALES sin ver (agregado 2026-07-29). Van primero a proposito:
+    # que tu hija o tu esposa te escriban y no te enteres es mas urgente que
+    # cualquier pendiente de marketing. AURORA les contesta "un momento le aviso"
+    # y este aviso vive aqui hasta que Anuar lo vea, aunque el WhatsApp falle.
+    try:
+        import json as _js
+        from pathlib import Path as _Pt
+        _b = _Pt(__file__).resolve().parent.parent / "MEMORIA" / "mensajes_personales.json"
+        if _b.exists():
+            _msgs = _js.loads(_b.read_text(encoding="utf-8"))
+            _sin_ver = [m for m in _msgs if isinstance(m, dict) and not m.get("visto")]
+            if _sin_ver:
+                _quienes = []
+                for m in _sin_ver[-5:]:
+                    q = m.get("quien") or m.get("telefono", "")
+                    if q and q not in _quienes:
+                        _quienes.append(q)
+                items.append({
+                    "tipo": "mensaje_personal",
+                    "cantidad": len(_sin_ver),
+                    "detalle": (f"{len(_sin_ver)} mensaje(s) personal(es) sin ver"
+                                + (f" — de {', '.join(_quienes)}" if _quienes else "")),
+                    "ir_a": "chat",
+                })
+    except Exception as e:
+        logger.warning(f"[alertas] mensajes personales: {e}")
     try:
         bloque = await asyncio.to_thread(_mon().bloque_pendiente)
         if bloque.get("pendiente"):

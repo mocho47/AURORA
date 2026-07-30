@@ -33,7 +33,7 @@
 
   "politica_por_relacion": {
     "familia":   {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
-                  "respuesta": "Permitame un momento, le aviso a Anuar que le busca."},
+                  "respuesta": "Hola {nombre}! En un momento te responde Anuar, permiteme — ya le estoy avisando."},
     "amigo":     {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
                   "respuesta": "Permitame un momento, le aviso a Anuar que le escribio."},
     "proveedor": {"vender": false, "responder": true,  "avisar_a_anuar": true, "registrar_lead": false,
@@ -43,16 +43,38 @@
     "cliente":   {"vender": true,  "responder": true,  "avisar_a_anuar": false, "registrar_lead": true},
     "desconocido": {"vender": true, "responder": true, "avisar_a_anuar": false, "registrar_lead": true},
     "personal_probable": {"vender": false, "responder": true, "avisar_a_anuar": true, "registrar_lead": false,
-                  "respuesta": "Permitame un momento, le aviso a Anuar que le busca."}
+                  "respuesta": "Hola {nombre}! En un momento te responde Anuar, permiteme — ya le estoy avisando."}
   },
+
+  "_por_que_NO_esta_amigo": "'amigo' se dejo FUERA a proposito: en Mexico un cliente desconocido si escribe 'amigo, tiene faros para Jetta?'. Meterlo haria que clientes reales se clasifiquen como personales y pierdan la cotizacion automatica 24/7. Mismo criterio para 'jefe' y 'joven', que tambien se usan con desconocidos en tono comercial. Si Anuar quiere incluirlos, se agregan aqui y listo — pero sabiendo el costo.",
+
+  "_regla_intencion_gana": "Si el mensaje trae intencion de COMPRA clara, se atiende como cliente AUNQUE venga en tono informal. Un compa que escribe 'wey cuanto cuestan las lupas?' esta comprando — mandarlo a 'un momento te aviso' seria perder una venta con alguien de confianza. Los clientes tambien escriben cortado y sin articulos ('precio foco h4', 'sr oiga tiene lupas'), y eso se atiende igual.",
+
+  "_palabras_compra": [
+    "cuanto", "cuánto", "cuesta", "cuestan", "precio", "precios", "costo", "cotiza",
+    "cotizar", "cotizacion", "cotización", "presupuesto", "tienes", "tienen", "hay",
+    "vendes", "venden", "manejas", "manejan", "disponible", "disponibles",
+    "me interesa", "quiero comprar", "quiero uno", "quiero unas", "quiero unos",
+    "para mi carro", "para mi camioneta", "instalar", "instalacion", "instalación",
+    "foco", "focos", "faro", "faros", "lupa", "lupas", "proyector", "kit",
+    "taza", "tazas", "termo", "termos", "playera", "playeras", "grabado",
+    "sublimad", "laser", "láser", "mdf", "acrilico", "acrílico",
+    "sr", "señor", "senor", "oiga", "disculpe", "buenas", "buen dia", "buen día"
+  ],
 
   "_palabras_personales": [
     "papa", "papá", "papi", "apa", "jefe de mi vida",
     "mama", "mamá", "ami", "amor", "mi amor", "viejita", "viejito",
     "hija", "hijo", "hermano", "hermana", "carnal", "primo", "prima",
     "tio", "tia", "abuela", "abuelita", "abuelo", "sobrino", "sobrina",
-    "gordo", "gorda", "flaco", "flaca", "vieja", "viejo", "chaparro", "chaparra",
-    "mi vida", "corazon", "corazón", "cariño", "carino", "nene", "nena",
+    "gordo", "gorda", "gordito", "gordita", "flaco", "flaca", "flaquito", "flaquita",
+    "vieja", "viejo", "chaparro", "chaparra", "chaparrito", "chaparrita",
+    "amor", "amorcito", "mi vida", "vidita", "corazon", "corazón", "corazoncito",
+    "cariño", "carino", "cariñito", "carinito", "nene", "nena", "bebe", "bebé",
+    "papito", "mamita", "hijita", "hijito", "mijo", "mija", "mijito", "mijita",
+    "manito", "manita", "chino", "china", "guero", "güero", "guera", "güera",
+    "wey", "güey", "guey", "buey", "cabron", "cabrón", "pinche", "vato", "perro",
+    "compa", "compadre", "carnalito", "morro", "chavo", "banda", "raza",
     "te quiero", "te amo", "bendicion", "bendición", "cuidate", "cuídate",
     "ya vienes", "ya vas a venir", "a que hora llegas", "a qué hora llegas",
     "no olvides", "acuerdate", "acuérdate", "ya comiste", "que quieres de comer",
