@@ -5,157 +5,202 @@
 > ANTES de tocar código. Esto es cirugía en `consciencia.py`, el corazón del
 > sistema. Hacerlo a medias es peor que no hacerlo.
 
+> ## ⚠️ ESTE PLAN REEMPLAZA UNA VERSIÓN ANTERIOR QUE ESTABA EQUIVOCADA
+>
+> La versión previa decía que había "tres enrutadores peleándose" y proponía
+> rediseñar el corazón de `consciencia.py` en 6 etapas. **Era un diagnóstico
+> equivocado.** Se midió antes de cortar y los datos lo tumbaron.
+>
+> Si alguien encuentra una copia del plan viejo: **no lo ejecute.** Habría
+> gastado una sesión entera rediseñando algo que no está roto.
+
 ---
 
-## 1. El problema, dicho en una frase
+## 1. La causa real, medida
 
-**Hay tres enrutadores haciendo el trabajo de uno**, y se pisan entre ellos.
+**AURORA no es lenta. Groq está rechazando las peticiones por límite de cuota y
+el cliente reintenta tres veces con espera.**
 
-Lo detectó Anuar el 2026-07-31 después de seis fallas seguidas: *"no se trata
-de un solo comando, es global el asunto"*. Tenía razón — yo estaba arreglando
-síntomas de uno en uno.
-
-### Lo que pasa hoy con cada mensaje
+Evidencia directa del log del servidor (2026-07-31):
 
 ```
-mensaje
-  ↓
-1. _routing_rapido      heurístico por palabras           (rápido, sin IA)
-  ↓ si no decide
-2. _routing_llm         ← LLAMADA A IA #1                 (~1-3 s)
-  ↓
-3. ~18 candados         cada uno con frases a mano        (rápido)
-  ↓ si ninguno calzó
-4. _router_universal    ← LLAMADA A IA #2 + buscar en registro  (~2-5 s)
-  ↓ si no aplicó
-5. motor elegido        ← LLAMADA A IA #3 para redactar    (~10-25 s)
+HTTP/1.1 429 Too Many Requests
+groq._base_client: Retrying request in 3.000000 seconds
+HTTP/1.1 429 Too Many Requests
+groq._base_client: Retrying request in 4.000000 seconds
+HTTP/1.1 429 Too Many Requests
+groq._base_client: Retrying request in 3.000000 seconds
 ```
 
-**Hasta tres llamadas a IA en serie para contestar una pregunta.** Medido en
-vivo: 16.1 s y 33.8 s en preguntas normales.
+Tiempos medidos en vivo contra `/chat`:
 
-### Las seis fallas son UN problema saliendo por seis lados
-
-Todas del 30-31 de julio, todas encontradas por Anuar usando AURORA normal:
-
-| Lo que escribió | Qué pasó | Capa culpable |
+| Tiempo | Motor | Qué hace |
 |---|---|---|
-| "coreldrau vectorizar" | fue al enrutador y propuso `preparar_para_lona` | 3 → 4 |
-| solo una ruta de archivo | negó falsamente poder abrirla | 3 |
-| "tiene instalado el plugin" | 33.8 s y una vaguedad de `motor_negocios` | 1/2 |
-| "diagnostica" | cayó en el candado de servicios de faros | 3 |
-| "edita tu archivo" | nunca llegó al cartucho IDE | 3 |
-| "coachéame" | pidió permiso para *platicar* | 4 |
+| **0.7 s** | `negocio_real` | candado directo, **sin llamar a Groq** |
+| **1.0 s** | `router_universal` | el enrutador universal, **una llamada que sí pasó** |
+| **16.0 s** | `agenda` | candado que llama a Groq → reintentos |
+| **22.5 s** | `motor_negocios` | motor que llama a Groq → reintentos |
 
-**No son seis bugs. Es que tres capas deciden cosas distintas sobre el mismo
-mensaje.** Agregar frases una por una es infinito: siempre habrá una forma de
-decir las cosas que nadie anticipó.
+**Todo lo que no toca Groq responde en menos de un segundo.** El enrutador
+universal —que el plan viejo señalaba como el culpable lento— tarda **1 segundo**
+y es de lo más rápido que hay.
+
+El modelo en uso es `llama-3.1-8b-instant` (`_MODELO`, línea 682), que responde
+en 1-2 s cuando la petición pasa. La lentitud **no es del modelo**: son las tres
+esperas de los reintentos.
+
+Esto también explica algo que nadie entendía: por qué a veces contesta rápido y
+a veces no. No depende del mensaje — depende de si en ese momento hay cuota.
 
 ---
 
-## 2. El diseño destino
+## 2. Qué hacer (3 etapas, ninguna toca la arquitectura)
 
-**Un solo punto de decisión.**
+Cada etapa cierra con las 76 pruebas en verde y su propio commit.
+
+### ETAPA 1 — Ver cuántas llamadas hace AURORA por mensaje
+**Lo primero, porque puede ser la causa del 429.**
+
+Si un solo mensaje del usuario dispara 3-4 llamadas a Groq, la cuota se agota
+sola. Contar antes de cambiar nada.
+
+- Instrumentar con `logger.warning` cada llamada a `self._groq.chat.completions.create`
+  en `CEREBRO/consciencia.py` (hay ~10 puntos, buscar `model=_MODELO`).
+- Mandar 5 mensajes normales y contar cuántas llamadas genera cada uno.
+- Escribir el resultado en `_CONTEXTO/LINEA_BASE.md`.
+- **Si un mensaje genera más de 2 llamadas, ahí está el desperdicio** y hay que
+  reportarlo antes de seguir.
+- Quitar los logs temporales al terminar.
+
+**Entregable:** cuántas llamadas por mensaje, medidas de verdad.
+
+### ETAPA 2 — Bajar los reintentos de 3 a 1
+**La más simple y la que más alivio da de inmediato.**
+
+En `CEREBRO/consciencia.py` línea ~725:
+
+```python
+self._groq = AsyncGroq(api_key=api_key) if api_key else None
+```
+
+pasa a:
+
+```python
+# max_retries=1: con el default (2 reintentos + el original) un 429 costaba
+# 16-22 s de espera antes de responder. Medido el 2026-07-31. Si Groq dice que
+# no, es mejor caer rápido a Ollama que esperar tres veces por lo mismo.
+self._groq = AsyncGroq(api_key=api_key, max_retries=1) if api_key else None
+```
+
+**Verificar:** volver a cronometrar los 4 mensajes de la tabla de arriba. El
+caso lento debe bajar de ~16-22 s a ~6-8 s. **Si no baja, parar y reportar** —
+significa que la espera viene de otro lado.
+
+### ETAPA 3 — Caer a Ollama cuando Groq diga 429
+**La que de verdad lo resuelve.**
+
+AURORA ya tiene Ollama local funcionando (`llama3.2:3b`, se usa en modo offline).
+Hoy, cuando Groq responde 429, AURORA espera y a veces falla. Debería usar el
+modelo local, que responde en ~3 s y siempre está disponible.
+
+- Localizar dónde se manejan los errores de las llamadas a Groq.
+- Al recibir un 429 (o cualquier fallo de Groq), reintentar **una vez con Ollama**
+  antes de rendirse.
+- La respuesta debe decir honestamente que se usó el modelo local si aplica —
+  **regla del proyecto: nunca simular ni ocultar de dónde salió una respuesta.**
+- Si Ollama tampoco está, responder honesto: "no pude conectarme al modelo".
+  **Nunca inventar la respuesta.**
+
+**Verificar:** apagar temporalmente la llave de Groq en el entorno (NO borrarla
+del `.env`) y comprobar que AURORA sigue respondiendo con Ollama, en segundos.
+
+---
+
+## 3. Lo que NO hay que hacer
+
+- **No rediseñar el enrutamiento.** Tarda 1 segundo. No está roto.
+- **No eliminar `_routing_llm`** por lentitud. No es la causa. *(Si algún día se
+  quita, que sea por simplificar, no por velocidad, y con su propia medición.)*
+- **No quitar candados.** Los rápidos (0.7 s) son justamente los que no llaman
+  a Groq: son la parte buena del diseño.
+- **No cambiar de modelo.** `llama-3.1-8b-instant` responde en 1-2 s cuando pasa.
+- **No tocar `validador_honestidad`.** Intocable.
+
+---
+
+## 4. Prompt para Copilot (modo agente)
+
+Una etapa a la vez. Cambiar el número en cada corrida.
 
 ```
-mensaje
-  ↓
-1. CANDADOS DETERMINISTAS   solo lo crítico. Sin IA. Instantáneos.
-  ↓ si ninguno calzó
-2. ENRUTADOR UNIVERSAL      UNA llamada. Elige y ejecuta del registro real.
-  ↓ si no aplica ninguna herramienta
-3. RESPUESTA CONVERSACIONAL una llamada para redactar.
+Trabajas sobre AURORA en C:\AURORA.worktrees. Es PRODUCCIÓN: dos años de
+trabajo operando dos negocios reales. Nada aquí es un ejercicio.
+
+Lee COMPLETOS antes de escribir una línea:
+  _CONTEXTO\LEEME_PRIMERO.md
+  _CONTEXTO\ESTADO_REAL.md
+  _CONTEXTO\PLAN_UN_SOLO_ENRUTADOR.md
+
+TAREA: ejecuta ÚNICAMENTE la ETAPA <N> de ese plan.
+No adelantes otras etapas. No aproveches para arreglar nada más.
+
+CÓMO ARRANCAR AURORA
+  python run_aurora.py          (tarda ~90 segundos)
+  Verifica: http://127.0.0.1:5000/health
+  Usa 127.0.0.1, NO localhost — con localhost falla por IPv6.
+
+CÓMO PROBAR
+  POST http://127.0.0.1:5000/chat
+  {"mensaje": "...", "session_id": "prueba", "canal": "api"}
+
+REGLAS QUE NO SE NEGOCIAN
+- Nada simulado. Si algo no se puede hacer de verdad, PARAS y lo dices con
+  esas palabras exactas.
+- Nada se declara hecho sin la salida real del comando pegada. Un resumen no
+  es prueba.
+- NO restar funciones. Lo que funciona hoy se conserva.
+- consciencia.py está BLINDADO por una razón real: el auto-reparador casi borró
+  el 96% de ese archivo una vez. Cambios mínimos y quirúrgicos únicamente.
+- Ante cualquier riesgo de romper algo: PARAS y preguntas.
+- Español en el código y los comentarios, en el estilo del que ya está ahí.
+- NUNCA imprimas el valor de una variable del .env. Solo su nombre.
+
+AL CERRAR LA ETAPA
+  python -m pytest tests/ -q     → deben ser 76 passed. Pega la salida completa.
+  Un solo commit para esta etapa (para poder revertir si algo sale mal).
+
+ENTREGAS
+a) Qué cambiaste y por qué
+b) La prueba real: el comando y su salida pegada
+c) Los tiempos medidos antes y después (en las etapas 2 y 3)
+d) Qué NO quedó cubierto y por qué. Esta sección nunca va vacía.
 ```
 
-**Máximo dos llamadas a IA, nunca tres.**
+**Orden:** 1 → 2 → 3.
 
-### Qué se conserva
-- Los candados de **acción real y crítica**: Corel, DXF, WhatsApp, publicar,
-  agenda, acción física, ruta_sola. Son deterministas, instantáneos y probados.
-- `_router_universal` completo (517 herramientas) — es la pieza buena.
-- `validador_honestidad` en el punto único de salida. **Intocable.**
-- Las 76 pruebas de regresión. **Deben seguir pasando todas.**
-
-### Qué se elimina
-- **`_routing_llm`** — la capa redundante que más cuesta y menos aporta. El
-  enrutador universal ya elige mejor, con datos reales del registro.
-- Los candados **de tema, no de acción** (los que solo eligen "de qué habla"):
-  esos son justo los que se roban mensajes ajenos, como el de servicios de ATF
-  con la palabra "diagnostica".
-
-### Qué se corrige de paso
-- **Charla no pide confirmación.** Solo se confirma lo que toca algo real
-  (escribir, borrar, enviar, publicar). Coaching, consultas y análisis, jamás.
-- **`motor_negocios` deja de ser cajón de sastre.** Si la pregunta no es de
-  negocio, pasa de largo en vez de contestar vaguedades.
-- **Nunca quedarse muda.** Si nada aplica, decir qué sí puede hacer.
+La etapa 1 va primero porque puede cambiar todo: si resulta que un mensaje
+dispara 4 llamadas a Groq, el problema es el desperdicio, no los reintentos.
 
 ---
 
-## 3. Orden de ejecución
+## 5. Lo que Anuar hace, y no se delega
 
-Cada etapa cierra con las 76 pruebas en verde. Si una no cierra, no se sigue.
-
-| # | Etapa | Cómo se comprueba |
-|---|---|---|
-| **0** | **Medir antes.** Cronometrar 10 mensajes reales (los 6 de la tabla + 4 normales). Guardar los tiempos. | Sin la línea base no se puede saber si mejoró |
-| **1** | Separar los candados en dos listas: ACCIÓN (se quedan) y TEMA (se van). No borrar nada todavía, solo clasificar. | Las 76 pruebas siguen verdes |
-| **2** | Eliminar `_routing_llm`. Cuando el heurístico no decida, pasar directo a los candados de acción. | Cronometrar de nuevo: debe bajar 1-3 s por mensaje |
-| **3** | Quitar los candados de TEMA. El enrutador universal los cubre. | Los 6 casos de la tabla deben mejorar, no empeorar |
-| **4** | Marcar qué herramientas necesitan confirmación de verdad (solo escritura/envío/borrado). Charla, nunca. | "coachéame" debe responder directo, sin pedir permiso |
-| **5** | Red de honestidad final: si nada aplicó, responder qué SÍ puede hacer. Nunca silencio. | Ninguno de los 10 mensajes puede quedar sin respuesta útil |
-| **6** | Medir después y comparar contra la etapa 0. | Objetivo: **de 16-34 s a 3-5 s** |
-
-### Criterio de terminado
-- Las **76 pruebas** pasan.
-- Los **6 casos reales** de la tabla se comportan bien, verificados en vivo.
-- El tiempo bajó de forma medible contra la línea base de la etapa 0.
-- **Ninguna función se perdió.** Regla #1 de Anuar.
-
-### Si algo sale mal
-`git revert` del commit de la etapa. Por eso **una etapa = un commit**, nunca
-todo junto.
+1. **Correr él mismo** `python -m pytest tests/ -q` al cerrar cada etapa.
+   Deben ser **76 passed**. Si no, `git revert` de ese commit.
+2. **Cronometrar él mismo.** Si Copilot dice que bajó de 20 s a 5 s, comprobarlo
+   escribiéndole a AURORA y contando.
+3. **No creerle un "ya está" sin salida de comando pegada.** Ya pasó: el 30 de
+   julio AURORA describió un respaldo, un borrado y una compilación que nunca
+   ocurrieron. El candado de honestidad la delató. Copilot no tiene ese candado.
 
 ---
 
-## 4. ¿Puede hacerlo Copilot con estas instrucciones?
+## 6. La lección que costó esta sesión
 
-Pregunta real de Anuar. Respuesta honesta, por partes:
+El plan anterior era sólido, detallado, con etapas y criterios de verificación
+— **y apuntaba al lugar equivocado**, porque se escribió razonando sobre el
+código en vez de midiendo el sistema corriendo.
 
-**Lo que Copilot sí hace bien:** completar código, escribir funciones sueltas,
-refactors mecánicos dentro de un archivo abierto. Para eso es excelente y es
-más barato.
+Cuatro mediciones de treinta segundos lo tumbaron entero.
 
-**Por qué este trabajo en particular NO es para Copilot:**
-
-1. **No puede ejecutar ni verificar.** Este plan es 80% verificación: correr las
-   76 pruebas, cronometrar antes y después, probar los 6 casos en vivo contra el
-   servidor. Copilot sugiere código; no reinicia AURORA, no corre pytest, no mide
-   tiempos, no lee la respuesta real de `/chat`. Y la regla de este proyecto es
-   *nada se declara listo sin prueba real ejecutada*.
-2. **`consciencia.py` no cabe.** Son ~148,000 caracteres. Este cambio toca el
-   pipeline completo, no una función. Copilot trabaja bien en la ventana
-   alrededor del cursor, no sobre la arquitectura de un archivo así.
-3. **Requiere juicio, no autocompletado.** Decidir qué candado es de ACCIÓN y
-   cuál de TEMA es una decisión de diseño con consecuencias reales — si se
-   equivoca, se pierde una función que hoy sirve. Ese es exactamente el tipo de
-   decisión donde no se puede aceptar una sugerencia a ciegas.
-4. **El riesgo no es simétrico.** Si Copilot acierta, ahorras dinero. Si falla en
-   este archivo, rompes lo que da de comer. Ya pasó una vez: el auto-reparador
-   casi borra el 96% de este mismo archivo.
-
-**Dónde SÍ conviene usarlo, y ahorra de verdad:** los motores nuevos y los
-cartuchos, que son archivos chicos y aislados con su propia prueba. Ahí Copilot
-rinde y el riesgo es cero — si sale mal, se borra el archivo y ya.
-
-**Veredicto:** el corazón se toca con algo que pueda ejecutar y verificar.
-Todo lo demás, con lo más barato que sirva. No es lealtad a una herramienta;
-es dónde duele si se equivoca.
-
----
-
-## 5. Lo que NO entra en este plan
-- No se toca `validador_honestidad`.
-- No se agregan funciones nuevas. Esto es simplificar, no crecer.
-- No se toca ningún motor. Solo el enrutamiento.
-- No se cambia el panel ni los endpoints.
+**Antes de cortar, medir. Siempre.** Sobre todo cuando el plan suena convincente.
