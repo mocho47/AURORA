@@ -466,6 +466,13 @@ class BuscadorWebProfesional:
 
     async def _buscar_web_scraping(self, query: str) -> List[ProductoEncontrado]:
         """Web scraping en sitios específicos"""
+        # Desactivado 2026-07-31: apuntaba a 'ejemplo-distribuidor.com', un sitio que
+        # no existe. Este archivo SÍ corre en producción (lo usa consciencia.py), así
+        # que cada llamada gastaba el tiempo de espera completo y dejaba un error en
+        # el log sin devolver jamás un producto. Las fuentes que sí funcionan (Google
+        # Custom Search y la API de MercadoLibre) no se tocan. El esqueleto se
+        # conserva por si algún día se implementa scraping de verdad.
+        return []
 
         productos = []
 
