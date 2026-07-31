@@ -854,6 +854,21 @@ class Consciencia:
         inicio = datetime.utcnow()
         self._sueno.registrar_actividad()
 
+        # Si se pide algo SOBRE UN ARCHIVO pero sin dar la ruta, se recuerda: es
+        # muy probable que la ruta llegue sola en el siguiente mensaje (así habla
+        # la gente). Solo en ese caso, para no combinar cosas que no tienen que
+        # ver — "cuánto vendí este mes" + una ruta sería absurdo.
+        # Va AQUÍ, antes de los candados: si se pone después, un mensaje que
+        # dispara un candado (como "abre esta imagen en corel") retorna antes de
+        # llegar y nunca se guarda. Ese fue el error de la primera versión.
+        if session_id and not _es_ruta_sola(mensaje):
+            _m = _norm_txt(mensaje)
+            if any(k in _m for k in ("archivo", "imagen", "foto", "documento", "esto",
+                                     "este", "esta", "corel", "vectoriza", "convierte",
+                                     "dxf", "abre", "abrir")) \
+                    and not re.search(r"[A-Za-z]:\\", mensaje):
+                self._ultima_peticion[session_id] = mensaje.strip()
+
         # 1. CONTEXTO COMPLETO
         ctx_usuario = await self._ctx.obtener(user_id, canal)
         historial_sesion = self._memoria_corto.get(session_id, [])
@@ -881,18 +896,6 @@ class Consciencia:
         # bajo un session_id que coincida con el de un cliente real de WhatsApp, esperando
         # que lo confirme sin saberlo con un "sí" cualquiera — encontrado en la auditoría
         # 2026-07-27. Revisar el canal aquí, no solo al crear el pendiente, cierra eso.
-        # Si se pide algo SOBRE UN ARCHIVO pero sin dar la ruta, se recuerda: es
-        # muy probable que la ruta llegue sola en el siguiente mensaje (así habla
-        # la gente). Solo se guarda en ese caso, para no combinar cosas que no
-        # tienen que ver — "cuánto vendí este mes" + una ruta sería absurdo.
-        if session_id and not _es_ruta_sola(mensaje):
-            _m = _norm_txt(mensaje)
-            _habla_de_archivo = any(k in _m for k in (
-                "archivo", "imagen", "foto", "documento", "esto", "este", "esta",
-                "corel", "vectoriza", "convierte", "dxf", "abre", "abrir"))
-            if _habla_de_archivo and not re.search(r"[A-Za-z]:\\", mensaje):
-                self._ultima_peticion[session_id] = mensaje.strip()
-
         if session_id in self._accion_pendiente:
             if canal == "whatsapp":
                 self._accion_pendiente.pop(session_id, None)

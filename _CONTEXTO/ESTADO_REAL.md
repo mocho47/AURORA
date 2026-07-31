@@ -1,5 +1,5 @@
 # 📊 ESTADO REAL DE AURORA
-### Última actualización: 2026-07-30
+### Última actualización: 2026-07-31
 
 > **Regla de este archivo:** aquí solo entra lo **verificado**, con evidencia.
 > Nada de "debería funcionar". Si algo no se probó, va en la sección de
@@ -12,7 +12,7 @@
 
 | Qué | Evidencia |
 |---|---|
-| **63 pruebas de regresión** | `python -m pytest tests/ -q` → 63 passed en 46 s. Una prueba por bug real que de verdad ocurrió |
+| **74 pruebas de regresión** | `python -m pytest tests/ -q` → 74 passed en 61 s. Una prueba por bug real que de verdad ocurrió |
 | **Candado anti-invención** | `CEREBRO/validador_honestidad.py` — 4/4 en vivo contra los inventos reales |
 | **Fase 3 completa** | Las 20 carpetas del enrutador (~517 herramientas) revisadas comando por comando |
 | **Navegación web natural** | 4/4 frases naturales con resultados reales (Amazon, proveedores de Guadalajara) |
@@ -54,7 +54,22 @@
    dice "ábrelo". Ya no es inseguro, pero sigue siendo la herramienta equivocada.
 3. `generar_manual.py` no detecta candados con lógica compuesta (dos categorías
    de disparador a la vez, como `negocio` o `corel`). Hoy se avisa con nota a mano.
-4. **FALSA NEGACIÓN al mandar solo una ruta.** Encontrado en vivo 2026-07-31:
+4. **Ruta sola: no completa sola la petición anterior (mitad pendiente).**
+   La falsa negación YA se arregló (candado `ruta_sola`, verificado): mandar solo
+   una ruta ya no responde "no puedo abrir archivos en la PC" — ahora ofrece las
+   acciones reales con la ruta puesta. **Lo que falta** es la otra mitad: que la
+   ruta complete sola la petición previa ("abre esta imagen en corel" + ruta →
+   ejecutar). El código está escrito (`self._ultima_peticion` +
+   `_ruta_sola_real`) pero **no se activa**.
+   *Dos hipótesis descartadas el 2026-07-31:* (a) que el bloque de guardado
+   estuviera después de los candados — se movió al inicio de `_procesar_interno`
+   y siguió sin activarse; (b) que fuera el `session_id` — se verificó igual en
+   ambos mensajes.
+   *Sospecha viva sin comprobar:* el estado de instancia no persiste entre
+   peticiones HTTP como se asumió. Comprobarlo primero antes de tocar más código.
+   No es urgente: la mitad que funciona ya resuelve el problema real.
+
+5. **FALSA NEGACIÓN al mandar solo una ruta.** Encontrado en vivo 2026-07-31:
    tras pedir "abre esto en Corel", al mandar solo `C:\...alon.jpg` (sin verbo)
    ningún candado la agarró, cayó a `motor_analisis` y contestó *"no tengo acceso
    a la PC"* — **es mentira, AURORA sí abre archivos en Corel.**
@@ -66,11 +81,11 @@
    Es el patrón inverso al que se cerró: `_verificar_capacidad_real` debía
    atraparlo y no lo hizo.
 
-5. **5 módulos muertos en CORE** que el enrutador cree disponibles. Quitarlos es
+6. **5 módulos muertos en CORE** que el enrutador cree disponibles. Quitarlos es
    decisión de Anuar (regla: no restar funciones sin su visto bueno).
-6. Fichas del vendedor: solo 4 de 29 están completas. La del LED H4 tiene una
+7. Fichas del vendedor: solo 4 de 29 están completas. La del LED H4 tiene una
    incoherencia real (el texto menciona H7).
-7. Videoteca: 296 archivos = ~127 únicos (169 duplicados sin depurar).
+8. Videoteca: 296 archivos = ~127 únicos (169 duplicados sin depurar).
 
 ---
 
