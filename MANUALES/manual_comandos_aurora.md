@@ -48,7 +48,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **busqueda_web** (web_search)
 - Qué hace: Envoltorio delgado para que _buscar_web calce con la firma uniforme
-- Frases que reconoce: «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «buscar en internet», «buscar en la web», «consulta en internet», «en internet busca», «googlea», «investiga en la web», «navega»
+- Frases que reconoce: «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «busca informacion», «buscame», «buscar en internet», «buscar en la web», «búscame», «checa en internet», «checa en la web»
 
 
 ### Cerebro y Sistema
@@ -94,7 +94,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~516 funciones reales)
+## Herramientas del enrutador universal (~517 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -153,7 +153,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (51)
+### CEREBRO (52)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -206,6 +206,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/pc_access:PcAccess.apps_instaladas` — apps instaladas (PcAccess)
 - `CEREBRO/razonador:razonar` — Razona en profundidad: piensa paso a paso, se autocritica y da la respuesta final.
 - `CEREBRO/razonador:ejecutar` — ejecutar (razonador)
+- `CEREBRO/validador_honestidad:revisar` — Revisa una respuesta ANTES de que salga y le agrega la corrección honesta.
 
 ### CORE (56)
 

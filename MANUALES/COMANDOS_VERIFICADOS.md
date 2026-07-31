@@ -4,7 +4,7 @@
 
 Si un comando no está en esta lista, no significa que no funcione — significa que **no se probó**, y ahí sí hay que verificarlo antes de confiar.
 
-Actualizado: 2026-07-29 · 17 candados directos · 516 herramientas en el enrutador
+Actualizado: 2026-07-30 · 17 candados directos · 517 herramientas en el enrutador
 
 ---
 
@@ -55,6 +55,42 @@ Tipos válidos: `instalacion`, `entrega`, `cita`, `cotizacion`.
 | `vectoriza C:\ruta\imagen.png` | Traza la imagen y genera SVG + DXF | ✅ (avisa si el DXF sale vacío) |
 
 ⚠️ **PDF que solo trae una imagen adentro:** AURORA ahora lo detecta y avisa que hay que vectorizarlo, en vez de entregar un DXF vacío diciendo "OK". Si el PDF tiene varias páginas, se puede vectorizar por página.
+
+---
+
+## 🌐 Navegación web (verificado 2026-07-30, en vivo con resultados reales)
+
+Antes solo respondía a frases muy rígidas. Ahora entiende como se pide de verdad:
+
+| Escribe esto | Qué hace | Comprobado |
+|---|---|---|
+| `investiga el precio de faros led h4 en mexico` | Busca en internet de verdad y resume | ✅ resultados reales |
+| `buscame proveedores de acrilico en guadalajara` | Búsqueda real, proveedores locales | ✅ |
+| `que dicen de los proyectores aozoom` | Opiniones y reseñas reales | ✅ |
+| `compara precios de termos para sublimar` | Compara precios de mercado | ✅ |
+
+También reconoce: `busca en internet`, `precio de mercado`, `en mercadolibre`, `qué hay de nuevo en`.
+
+---
+
+## 🛡️ Candado anti-invención (2026-07-30)
+
+Desde este día AURORA **no puede afirmar que hizo algo que no hizo**. Toda
+respuesta pasa por `CEREBRO/validador_honestidad.py` antes de salir, y se revisa
+contra la realidad: las acciones afirmadas, los comandos contra el registro real
+y los archivos contra el disco.
+
+Si detecta un invento, **no borra la respuesta** — le agrega la corrección
+visible: *"Arriba dije que ya había hecho algo, pero no ejecuté nada"*.
+
+Ejemplo real de la diferencia:
+
+| Antes (29 jul) | Ahora (30 jul) |
+|---|---|
+| *"CorelDRAW: Vectorización finalizada → vectorizado_con_coreldraw.pdf"* (ese archivo nunca existió) | *"Dame la ruta completa de salida y lo exporto de verdad."* |
+
+Probado en vivo contra los 4 inventos reales: **4/4 sin mentir.** Protegido por
+12 pruebas de regresión (suite completa: 63/63).
 
 ---
 
