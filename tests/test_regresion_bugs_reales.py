@@ -448,3 +448,34 @@ class TestBusquedaWebConLenguajeNatural:
         assert disparadores, "No encontré la lista de frases de búsqueda web"
         assert any(t in frase for t in disparadores), (
             f"'{frase}' no activa la búsqueda web — respondería inventando")
+
+
+# ===========================================================================
+# BUG 14 — El enrutador inventaba la INTENCIÓN, no solo el dato
+# A "usa coreldraw para vectorizar el archivo que tengo abierto" respondió
+# proponiendo 'preparar_para_lona'. Nadie habló de lonas. La herramienta SÍ
+# existe, así que el validador de honestidad la dejaba pasar: este es el hueco.
+# Regla de Anuar: "prefiero que se niegue o que exija la información real,
+# pero que no responda invenciones".
+# ===========================================================================
+class TestRouterNoInventaLaIntencion:
+
+    def test_descarta_la_herramienta_si_faltan_TODOS_sus_datos(self):
+        """Que falten todos los requeridos no es 'me falta un dato' —
+        es que la herramienta está mal elegida."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "len(faltantes) == len(requeridos)" in fuente, (
+            "Volvería a proponer una herramienta que no viene al caso")
+
+    def test_no_nombra_la_herramienta_equivocada(self):
+        """Nombrarla es peor que callar: el usuario cree que existe esa capacidad."""
+        import ast
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        arbol = ast.parse(fuente)
+        # La respuesta del descarte no debe interpolar la clave de la herramienta
+        for nodo in ast.walk(arbol):
+            if isinstance(nodo, ast.Constant) and isinstance(nodo.value, str):
+                if "No tengo una herramienta que haga eso" in nodo.value:
+                    assert "{clave}" not in nodo.value
+                    return
+        pytest.fail("No encontré el mensaje de descarte del enrutador")

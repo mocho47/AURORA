@@ -1771,6 +1771,21 @@ class Consciencia:
         # lineal), pero el sistema que lo rodea no tiene por qué heredar esa duda.
         requeridos = h.get("requeridos", h.get("params", []))
         faltantes = [p for p in requeridos if p not in args]
+
+        # Si faltan TODOS los datos, la herramienta está mal elegida — no es que
+        # falte un dato. Encontrado en vivo 2026-07-30: a "usa coreldraw para
+        # vectorizar el archivo que tengo abierto" respondió proponiendo
+        # 'preparar_para_lona' (faltaban ancho_m, alto_m Y ruta_salida). Nadie
+        # habló de lonas: inventó la INTENCIÓN. La herramienta sí existe, así que
+        # el validador de honestidad la deja pasar — este es el hueco que cierra.
+        # Nombrar una herramienta que no viene al caso es peor que callar: el
+        # usuario cree que existe una capacidad relacionada con lo que pidió.
+        if requeridos and len(faltantes) == len(requeridos):
+            logger.warning(f"[ROUTER] Descartada '{clave}': faltan TODOS sus datos {faltantes}")
+            return {"respuesta": (
+                "No tengo una herramienta que haga eso. Dime con otras palabras qué "
+                "necesitas —o la ruta completa del archivo— y lo reviso de verdad.")}
+
         if confianza == "baja" or faltantes:
             otras = [c for c in candidatas if c["clave"] != clave][:2]
             sugeridas = "".join(f"\n- {c['clave']}: {c.get('doc','')}" for c in otras)
