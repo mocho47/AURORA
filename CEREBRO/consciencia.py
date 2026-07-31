@@ -713,9 +713,6 @@ class Consciencia:
         self._agente_en_creacion: Dict[str, Dict] = {}
         # Enrutador universal: herramienta peligrosa elegida, esperando "sí" de Anuar
         self._accion_pendiente: Dict[str, Dict] = {}
-        # Última petición por sesión, para cuando el siguiente mensaje sea solo
-        # una ruta de archivo (ver _es_ruta_sola / _ruta_sola_real).
-        self._ultima_peticion: Dict[str, str] = {}
         # Si una acción pendiente se abandona porque el siguiente mensaje no calzó como
         # confirmación, aquí queda el aviso para no perderla en silencio (se prepende a
         # la respuesta del turno actual y se limpia).
@@ -854,21 +851,6 @@ class Consciencia:
         inicio = datetime.utcnow()
         self._sueno.registrar_actividad()
 
-        # Si se pide algo SOBRE UN ARCHIVO pero sin dar la ruta, se recuerda: es
-        # muy probable que la ruta llegue sola en el siguiente mensaje (así habla
-        # la gente). Solo en ese caso, para no combinar cosas que no tienen que
-        # ver — "cuánto vendí este mes" + una ruta sería absurdo.
-        # Va AQUÍ, antes de los candados: si se pone después, un mensaje que
-        # dispara un candado (como "abre esta imagen en corel") retorna antes de
-        # llegar y nunca se guarda. Ese fue el error de la primera versión.
-        if session_id and not _es_ruta_sola(mensaje):
-            _m = _norm_txt(mensaje)
-            if any(k in _m for k in ("archivo", "imagen", "foto", "documento", "esto",
-                                     "este", "esta", "corel", "vectoriza", "convierte",
-                                     "dxf", "abre", "abrir")) \
-                    and not re.search(r"[A-Za-z]:\\", mensaje):
-                self._ultima_peticion[session_id] = mensaje.strip()
-
         # 1. CONTEXTO COMPLETO
         ctx_usuario = await self._ctx.obtener(user_id, canal)
         historial_sesion = self._memoria_corto.get(session_id, [])
@@ -964,6 +946,12 @@ class Consciencia:
                 real = await self._crear_capacidad_real(mensaje, canal=canal)
             elif _nombre_candado == "publicar":
                 real = await self._publicar_real(mensaje, session_id=session_id)
+            elif _nombre_candado == "ruta_sola":
+                # Necesita la sesión para leer qué se pidió en el mensaje anterior.
+                # Sin esta rama recibía session_id="" (el default de la firma) y
+                # buscaba el historial de una sesión vacía: esa fue la causa real
+                # de que no completara la petición previa, no dónde se guardaba.
+                real = await self._ruta_sola_real(mensaje, session_id=session_id, canal=canal)
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -1732,7 +1720,26 @@ class Consciencia:
             return {"respuesta": f"No encontré ese archivo en el disco:\n`{ruta}`\n"
                                  "Revisa la ruta y te lo trabajo."}
 
-        previo = (self._ultima_peticion.pop(session_id, "") or "").strip()
+        # Se lee del historial de sesión, que YA persiste entre mensajes y está
+        # probado (es el que alimenta el contexto del chat). El primer intento usó
+        # un diccionario nuevo y nunca se activó — la memoria de sesión ya resolvía
+        # esto y no hacía falta inventar otro mecanismo.
+        previo = ""
+        for turno in reversed(self._memoria_corto.get(session_id, [])):
+            if turno.get("rol") != "user":
+                continue
+            texto = (turno.get("contenido") or "").strip()
+            if not texto or _es_ruta_sola(texto):
+                continue
+            _t = _norm_txt(texto)
+            # Solo se completa si lo anterior hablaba de un archivo. "Cuánto vendí
+            # este mes" + una ruta sería absurdo.
+            if any(k in _t for k in ("archivo", "imagen", "foto", "documento",
+                                     "corel", "vectoriza", "convierte", "dxf",
+                                     "abre", "abrir", "esto", "este", "esta")):
+                previo = texto
+            break
+
         if previo:
             # No se recursa: el combinado ya no es una ruta sola, así que este
             # candado no se vuelve a disparar.

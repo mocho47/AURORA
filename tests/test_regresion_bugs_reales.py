@@ -563,3 +563,29 @@ class TestRutaSolaNoNiegaFalsamente:
         i_ruta = fuente.index('("ruta_sola",')
         i_corel = fuente.index('("corel",')
         assert i_ruta < i_corel, "ruta_sola debe ir antes que los demás candados"
+
+
+# ===========================================================================
+# BUG 17 — El candado ruta_sola recibía session_id vacío
+# El pipeline llama getattr(self, metodo)(mensaje): SOLO el mensaje. Los
+# candados que necesitan la sesión llevan su propia rama. Sin ella,
+# _ruta_sola_real leía el historial de una sesión "" (siempre vacía) y nunca
+# completaba la petición anterior. Tres hipótesis fallaron antes de ver esto:
+# el problema no era dónde se guardaba el dato, era que no sabía de qué sesión.
+# ===========================================================================
+class TestCandadosQueNecesitanLaSesionLaReciben:
+
+    def test_ruta_sola_recibe_session_id(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert '_ruta_sola_real(mensaje, session_id=session_id' in fuente, (
+            "Sin su rama en el pipeline, ruta_sola recibe session_id='' y el "
+            "historial que lee siempre está vacío")
+
+    def test_lee_del_historial_que_si_persiste(self):
+        """_memoria_corto persiste entre mensajes; un dict nuevo no hacía falta."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        i = fuente.index("async def _ruta_sola_real")
+        cuerpo = fuente[i:i + 2500]
+        assert "_memoria_corto" in cuerpo, "Debe leer del historial de sesión real"
+        assert "_ultima_peticion" not in fuente, (
+            "Quedó el mecanismo viejo que nunca funcionó — código huérfano")
