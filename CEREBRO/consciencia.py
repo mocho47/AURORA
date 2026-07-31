@@ -618,8 +618,29 @@ _MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor
 # genérico al final (_es_accion_fisica es el único catch-all de "acción sobre el
 # sistema" — si algo más específico ya aplicaba, ya se resolvió arriba y nunca
 # llega aquí; no necesita excluir manualmente a los demás).
+_RE_RUTA_SOLA = re.compile(r'^["\'\s]*([A-Za-z]:\\[^\r\n"\']+?\.[A-Za-z0-9]{2,5})["\'\s.]*$')
+
+
+def _es_ruta_sola(mensaje: str) -> bool:
+    """El mensaje es SOLO la ruta de un archivo, sin verbo ni contexto.
+
+    Caso real 2026-07-31: Anuar pidió "abre esta imagen en corel" y en el
+    siguiente mensaje mandó solo la ruta. Ningún candado la agarró (el de Corel
+    exige corel + acción) y cayó a motor_analisis, que contestó "no puedo abrir
+    archivos en la PC, pídele a Anuar que lo haga" — una MENTIRA, y encima le
+    decía a Anuar que le pidiera a Anuar.
+
+    Mandar la ruta sola después de pedir algo es como habla la gente. La ruta no
+    es una pregunta nueva: es el dato que faltaba para lo que ya se pidió.
+    """
+    return bool(_RE_RUTA_SOLA.match((mensaje or "").strip()))
+
+
 _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
+    # ruta_sola va PRIMERO: completa la petición anterior con el dato que faltaba,
+    # antes de que cualquier otro candado o el enrutador la malinterpreten.
+    ("ruta_sola",       _es_ruta_sola,         "_ruta_sola_real",         "contexto_archivo"),
     ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
     ("acerca_de",       _es_acerca_de,         "_acerca_de_real",         "auto_conocimiento"),
     ("busqueda_web",    _es_busqueda_web,      "_buscar_web_candado",     "web_search"),
@@ -692,6 +713,9 @@ class Consciencia:
         self._agente_en_creacion: Dict[str, Dict] = {}
         # Enrutador universal: herramienta peligrosa elegida, esperando "sí" de Anuar
         self._accion_pendiente: Dict[str, Dict] = {}
+        # Última petición por sesión, para cuando el siguiente mensaje sea solo
+        # una ruta de archivo (ver _es_ruta_sola / _ruta_sola_real).
+        self._ultima_peticion: Dict[str, str] = {}
         # Si una acción pendiente se abandona porque el siguiente mensaje no calzó como
         # confirmación, aquí queda el aviso para no perderla en silencio (se prepende a
         # la respuesta del turno actual y se limpia).
@@ -857,6 +881,18 @@ class Consciencia:
         # bajo un session_id que coincida con el de un cliente real de WhatsApp, esperando
         # que lo confirme sin saberlo con un "sí" cualquiera — encontrado en la auditoría
         # 2026-07-27. Revisar el canal aquí, no solo al crear el pendiente, cierra eso.
+        # Si se pide algo SOBRE UN ARCHIVO pero sin dar la ruta, se recuerda: es
+        # muy probable que la ruta llegue sola en el siguiente mensaje (así habla
+        # la gente). Solo se guarda en ese caso, para no combinar cosas que no
+        # tienen que ver — "cuánto vendí este mes" + una ruta sería absurdo.
+        if session_id and not _es_ruta_sola(mensaje):
+            _m = _norm_txt(mensaje)
+            _habla_de_archivo = any(k in _m for k in (
+                "archivo", "imagen", "foto", "documento", "esto", "este", "esta",
+                "corel", "vectoriza", "convierte", "dxf", "abre", "abrir"))
+            if _habla_de_archivo and not re.search(r"[A-Za-z]:\\", mensaje):
+                self._ultima_peticion[session_id] = mensaje.strip()
+
         if session_id in self._accion_pendiente:
             if canal == "whatsapp":
                 self._accion_pendiente.pop(session_id, None)
@@ -1676,6 +1712,49 @@ class Consciencia:
         else:
             texto = f"{titulo}:\n{str(salida)[:1500]}"
         return {"respuesta": texto}
+
+    async def _ruta_sola_real(self, mensaje: str, session_id: str = "", canal: str = "api") -> Dict:
+        """Llegó solo una ruta. Es el dato que faltaba para lo que se pidió antes.
+
+        Se pega la ruta al último mensaje de la sesión y se reprocesa: si antes
+        dijo "abre esta imagen en corel", el combinado SÍ calza con el candado de
+        Corel y se ejecuta de verdad. Sin contexto previo, se ofrece lo que
+        REALMENTE se puede hacer con ese tipo de archivo — nunca un "no puedo".
+        """
+        ruta = _RE_RUTA_SOLA.match(mensaje.strip()).group(1)
+        existe = Path(ruta).exists()
+        ext = Path(ruta).suffix.lower().lstrip(".")
+
+        if not existe:
+            return {"respuesta": f"No encontré ese archivo en el disco:\n`{ruta}`\n"
+                                 "Revisa la ruta y te lo trabajo."}
+
+        previo = (self._ultima_peticion.pop(session_id, "") or "").strip()
+        if previo:
+            # No se recursa: el combinado ya no es una ruta sola, así que este
+            # candado no se vuelve a disparar.
+            combinado = f"{previo} {ruta}"
+            logger.info(f"[RUTA SOLA] Completando la petición anterior: {combinado[:90]}")
+            r = await self._procesar_interno(combinado, "anuar", session_id, canal)
+            r["respuesta"] = (f"(Tomé la ruta como el dato que faltaba para: «{previo}»)\n\n"
+                              + r.get("respuesta", ""))
+            return r
+
+        # Sin contexto: se ofrecen las acciones REALES según el tipo de archivo.
+        if ext in ("jpg", "jpeg", "png", "bmp", "webp"):
+            puede = ("• `corel abre {r}` — la importa a Corel\n"
+                     "• `vectoriza {r}` — la traza y genera SVG + DXF\n"
+                     "• `corel quita el fondo {r}` — la limpia y la mete a Corel")
+        elif ext in ("pdf", "cdr", "ai", "eps"):
+            puede = ("• `corel abre {r}` — lo abre en Corel\n"
+                     "• `convierte a dxf {r}` — lo pasa a DXF para corte")
+        elif ext in ("svg", "dxf"):
+            puede = "• `convierte a dxf {r}` — lo prepara para corte"
+        else:
+            puede = "• `corel abre {r}` — intenta abrirlo en Corel"
+
+        return {"respuesta": f"Tengo el archivo `{Path(ruta).name}`. ¿Qué le hago?\n\n"
+                             + puede.format(r=ruta)}
 
     async def _confirmar_accion_pendiente(self, session_id: str) -> Dict:
         """El usuario dijo 'sí' a una acción peligrosa propuesta antes. La ejecuta de verdad.

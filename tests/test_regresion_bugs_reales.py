@@ -512,3 +512,54 @@ class TestValidadorNoHaceRuido:
                             motores_usados=["motor_analisis"],
                             registro_claves=self._claves())
         assert "AGENDA/agrega_usuario" in inf["comandos_inventados"]
+
+
+# ===========================================================================
+# BUG 16 — Mandar solo una ruta provocaba una NEGACIÓN FALSA
+# Tras pedir "abre esta imagen en corel", mandar solo C:\...\balon.jpg caía en
+# motor_analisis: "no puedo abrir archivos en la PC, pídele a Anuar que lo
+# haga". Mentira (AURORA sí abre en Corel) y encima le decía a Anuar que le
+# pidiera a Anuar.
+# ===========================================================================
+class TestRutaSolaNoNiegaFalsamente:
+
+    @pytest.mark.parametrize("msg", [
+        r'"C:\Users\Administrador\Downloads\balon.jpg"',
+        r"C:\Users\Administrador\Downloads\balon.jpg",
+        r"  C:\ruta con espacios\archivo.pdf  ",
+    ])
+    def test_reconoce_una_ruta_sola(self, msg):
+        import importlib.util, sys as _s
+        spec = importlib.util.spec_from_file_location("_c", RAIZ / "CEREBRO" / "consciencia.py")
+        # Se lee el módulo sin ejecutarlo: importar consciencia levanta medio sistema.
+        import ast, re as _re
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        for nodo in ast.walk(ast.parse(fuente)):
+            if isinstance(nodo, ast.Assign):
+                for d in nodo.targets:
+                    if isinstance(d, ast.Name) and d.id == "_RE_RUTA_SOLA":
+                        patron = nodo.value.args[0].value
+                        assert _re.match(patron, msg.strip()), f"No reconoce: {msg}"
+                        return
+        pytest.fail("No encontré _RE_RUTA_SOLA")
+
+    def test_una_frase_normal_no_es_una_ruta_sola(self):
+        import ast, re as _re
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        for nodo in ast.walk(ast.parse(fuente)):
+            if isinstance(nodo, ast.Assign):
+                for d in nodo.targets:
+                    if isinstance(d, ast.Name) and d.id == "_RE_RUTA_SOLA":
+                        patron = nodo.value.args[0].value
+                        for frase in (r"corel abre C:\x\y.jpg", "cuanto vendi este mes"):
+                            assert not _re.match(patron, frase), f"Falso positivo: {frase}"
+                        return
+        pytest.fail("No encontré _RE_RUTA_SOLA")
+
+    def test_el_candado_va_primero_y_esta_conectado(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert '("ruta_sola",' in fuente, "El candado no está registrado"
+        assert "_ruta_sola_real" in fuente, "Falta el ejecutor"
+        i_ruta = fuente.index('("ruta_sola",')
+        i_corel = fuente.index('("corel",')
+        assert i_ruta < i_corel, "ruta_sola debe ir antes que los demás candados"
