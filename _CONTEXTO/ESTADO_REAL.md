@@ -54,11 +54,23 @@
    dice "ábrelo". Ya no es inseguro, pero sigue siendo la herramienta equivocada.
 3. `generar_manual.py` no detecta candados con lógica compuesta (dos categorías
    de disparador a la vez, como `negocio` o `corel`). Hoy se avisa con nota a mano.
-4. **5 módulos muertos en CORE** que el enrutador cree disponibles. Quitarlos es
+4. **FALSA NEGACIÓN al mandar solo una ruta.** Encontrado en vivo 2026-07-31:
+   tras pedir "abre esto en Corel", al mandar solo `C:\...alon.jpg` (sin verbo)
+   ningún candado la agarró, cayó a `motor_analisis` y contestó *"no tengo acceso
+   a la PC"* — **es mentira, AURORA sí abre archivos en Corel.**
+   *Causa:* el candado de Corel exige corel + acción, y el mensaje no traía
+   ninguna de las dos; se perdió el hilo del mensaje anterior.
+   *Arreglo de raíz propuesto:* si el mensaje es **solo una ruta de archivo** y el
+   anterior pedía una acción sobre un archivo, usar esa ruta para completar la
+   acción pendiente (ya existe el mecanismo: `_confirmar_accion_pendiente`).
+   Es el patrón inverso al que se cerró: `_verificar_capacidad_real` debía
+   atraparlo y no lo hizo.
+
+5. **5 módulos muertos en CORE** que el enrutador cree disponibles. Quitarlos es
    decisión de Anuar (regla: no restar funciones sin su visto bueno).
-5. Fichas del vendedor: solo 4 de 29 están completas. La del LED H4 tiene una
+6. Fichas del vendedor: solo 4 de 29 están completas. La del LED H4 tiene una
    incoherencia real (el texto menciona H7).
-6. Videoteca: 296 archivos = ~127 únicos (169 duplicados sin depurar).
+7. Videoteca: 296 archivos = ~127 únicos (169 duplicados sin depurar).
 
 ---
 

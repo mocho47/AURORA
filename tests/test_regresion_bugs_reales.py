@@ -479,3 +479,36 @@ class TestRouterNoInventaLaIntencion:
                     assert "{clave}" not in nodo.value
                     return
         pytest.fail("No encontré el mensaje de descarte del enrutador")
+
+
+# ===========================================================================
+# BUG 15 — El validador daba avisos FALSOS ("PDF/CDR" no es un comando)
+# Marcaba formatos de archivo como comandos inventados. Un candado que hace
+# ruido se ignora, y deja de servir para lo que existe.
+# ===========================================================================
+class TestValidadorNoHaceRuido:
+
+    @staticmethod
+    def _claves():
+        rh = _cargar("registro_herramientas", "CEREBRO/registro_herramientas.py")
+        return set(rh.descubrir())
+
+    @pytest.mark.parametrize("texto", [
+        "Puedo abrir PDF/CDR/AI dentro de Corel",
+        "Exportar a PNG/JPG no funciona, usa PDF",
+        "Formatos soportados: SVG/DXF y EPS/AI",
+    ])
+    def test_los_formatos_de_archivo_no_son_comandos(self, texto):
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        _, inf = vh.revisar(texto, motores_usados=["motor_corel"],
+                            registro_claves=self._claves())
+        assert not inf["comandos_inventados"], (
+            f"Aviso falso sobre {inf['comandos_inventados']} — el candado hace ruido")
+
+    def test_pero_sigue_atrapando_los_inventos_de_verdad(self):
+        """El arreglo del ruido no debe apagar la detección real."""
+        vh = _cargar("validador_honestidad", "CEREBRO/validador_honestidad.py")
+        _, inf = vh.revisar("Ejecuta AGENDA/agrega_usuario para darlo de alta",
+                            motores_usados=["motor_analisis"],
+                            registro_claves=self._claves())
+        assert "AGENDA/agrega_usuario" in inf["comandos_inventados"]

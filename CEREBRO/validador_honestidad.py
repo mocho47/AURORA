@@ -100,11 +100,19 @@ def _comandos_inventados(texto: str, registro_claves) -> List[str]:
     """Comandos con formato de herramienta que NO están en el registro real."""
     if not registro_claves:
         return []
+    # Solo se juzgan carpetas que EXISTEN de verdad en el registro. Sin esto el
+    # regex marcaba "PDF/CDR" y "PNG/JPG" como comandos inventados (encontrado en
+    # vivo 2026-07-31): son formatos de archivo, no comandos. Un candado que da
+    # avisos falsos se vuelve ruido, se ignora, y deja de servir para lo que existe.
+    carpetas_reales = {k.split("/", 1)[0] for k in registro_claves if "/" in k}
+    if not carpetas_reales:
+        return []
+
     inventados, vistos = [], set()
     for m in _RE_COMANDO.finditer(texto):
         carpeta, modulo, funcion = m.group(1), m.group(2), m.group(3)
         mencion = m.group(0)
-        if mencion in vistos:
+        if mencion in vistos or carpeta not in carpetas_reales:
             continue
         vistos.add(mencion)
         # Se acepta si existe tal cual, o si algo del registro empieza igual
