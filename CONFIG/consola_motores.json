@@ -1,7 +1,6 @@
 {
   "desactivados": [
-    "crm",
-    "seguimiento"
+    "tprecios"
   ],
   "loadouts": {}
 }

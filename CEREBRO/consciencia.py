@@ -200,9 +200,40 @@ def _es_accion_fisica(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _ACCION_FISICA_TRIGGERS)
 
 
+def _es_intencion_operativa(mensaje: str) -> bool:
+    """True si el mensaje pide operar algo real (archivo/sistema/web/herramienta)."""
+    if not mensaje:
+        return False
+    return (
+        _es_busqueda_web(mensaje)
+        or _es_comando_corel(mensaje)
+        or _es_conversion_dxf(mensaje)
+        or _es_accion_fisica(mensaje)
+        or _es_consulta_codigo(mensaje)
+        or _es_editar_codigo(mensaje)
+        or _es_agenda(mensaje)
+        or _es_consulta_negocio(mensaje)
+        or _es_servicio_atf(mensaje)
+    )
+
+
 def _norm_txt(mensaje: str) -> str:
     import unicodedata as _ud
-    return "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
+    m = "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
+    # Variantes reales de escritura rápida/errores frecuentes del chat.
+    reemplazos = {
+        "coreldrau": "coreldraw",
+        "corel draw": "coreldraw",
+        "corell": "corel",
+        "vektor": "vector",
+        "wasap": "whatsapp",
+        "watsap": "whatsapp",
+        "kiero": "quiero",
+        "xfa": "porfa",
+    }
+    for viejo, nuevo in reemplazos.items():
+        m = m.replace(viejo, nuevo)
+    return " ".join(m.split())
 
 
 async def _corel_con_timeout(fn, *args, timeout: float = 25.0):
@@ -318,7 +349,19 @@ _BUSQUEDA_WEB_TRIGGERS = (
 
 
 def _es_busqueda_web(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), _BUSQUEDA_WEB_TRIGGERS)
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _BUSQUEDA_WEB_TRIGGERS):
+        return True
+    # Forma natural: "busca/investiga X" sin la frase literal "en internet".
+    if re.search(r"\b(busca|buscame|investiga|googlea|consulta|checa)\b", m):
+        # Evitar colisión con pedidos internos del propio sistema.
+        if any(k in m for k in (
+            "codigo", "archivo", "funcion", "agenda", "cita", "corel", "dxf",
+            "whatsapp", "editor", "memoria", "agente", "motor", "capacidad",
+        )):
+            return False
+        return True
+    return False
 
 
 # ── Detectores de motores conectados directo al chat (acción real) ──────
@@ -479,7 +522,7 @@ _COREL_TRIGGERS = (
     # la coincidencia de palabra completa (\bcorel\b) no reconocía "corell" como
     # la misma palabra, así que el mensaje se iba al enrutador de IA, que inventó
     # una ruta falsa ("C:/Users/usuario/...", el usuario real es "Administrador").
-    "corel", "corell", "cdr",
+    "corel", "corell", "coreldraw", "coreldrau", "cdr",
 )
 _COREL_ACCIONES = (
     "exporta", "exportar", "escala", "tamano de pagina", "combina", "integra",
@@ -499,7 +542,8 @@ _COREL_ACCIONES = (
     # Encontrado en vivo 2026-07-27: "ábrelo en Corel <ruta>" no calzaba con ningun
     # verbo de esta lista, así que el mensaje se iba al enrutador de IA, que lo
     # abría con el visor default de Windows en vez de dentro de Corel de verdad.
-    "abre", "abrir",
+    "abre", "abrir", "mete", "meter", "importa", "importar",
+    "vectoriza", "vectorizar", "vectorizado", "traza", "trazar",
     # Nota: formas como "guardarlo"/"ábrelo"/"exportarlo" (verbo + pronombre pegado)
     # ya NO necesitan su propia entrada aquí — _contiene_trigger() ahora reconoce el
     # mismo verbo con "-lo/-la/-los/-las/-le/-les/-se" pegado como la misma palabra
@@ -997,6 +1041,16 @@ class Consciencia:
         else:
             respuesta_final = list(respuestas.values())[0]
 
+        # Cero simulación en operaciones: si cayó solo en un motor conversacional
+        # para un pedido operativo, no se permite una respuesta "inventada".
+        motores_respuesta = set(respuestas.keys())
+        if _es_intencion_operativa(mensaje) and (not motores_respuesta or motores_respuesta == {"motor_analisis"}):
+            respuesta_final = (
+                "No ejecuté ninguna acción real para ese pedido. "
+                "No voy a simular resultado. Reescríbelo con el objetivo directo "
+                "(ej. abrir/convertir/buscar en web con ruta o dato concreto) y lo ejecuto de verdad."
+            )
+
         # 5. APRENDIZAJE
         asyncio.create_task(self._perfil.analizar_interaccion(mensaje, respuesta_final, list(respuestas.keys())))
         # Antes esta llamada NO estaba en try/except: si fallaba (DB bloqueada, disco
@@ -1342,15 +1396,10 @@ class Consciencia:
                 return f"Resultados de precios/productos para '{consulta}':\n{resumen}"
         except Exception:
             pass
-        # Fallback: LLM con conocimiento propio
-        if self._groq:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[{"role":"user","content":f"Busca y responde sobre: {consulta}. Sé honesto si no tienes datos actuales."}],
-                max_tokens=400
-            )
-            return r.choices[0].message.content.strip()
-        return "Búsqueda web no disponible."
+        # Cero simulación: si no hubo fuente real, NO responder de memoria del LLM.
+        return ("No pude obtener resultados web reales en este momento. "
+                "No voy a inventarte datos de internet: si quieres, lo reintento o "
+                "te doy solo lo que sí está verificado localmente.")
 
     # ── MOTORES CONECTADOS DIRECTO AL CHAT (acción real, sin simular) ──
 
