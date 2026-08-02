@@ -582,6 +582,36 @@ def _formato_destino(mensaje: str) -> str:
     return ""
 
 
+def _dpi_pedido(mensaje: str) -> int:
+    """DPI a usar al rasterizar. 300 por defecto (el estándar de Anuar).
+
+    Acepta el número directo ("a 150 dpi") y también como se dice en el taller:
+    para sublimar y para grabado se necesita el detalle fino; una lona se ve a
+    metros de distancia y a 300 dpi el archivo pesa de más sin ganar nada.
+    """
+    m = _norm_txt(mensaje)
+    n = re.search(r"\b(\d{2,4})\s*dpi\b", m) or re.search(r"\ba\s+(\d{2,4})\s*(?:de\s+)?resolucion", m)
+    if n:
+        return max(72, min(1200, int(n.group(1))))
+    if _contiene_trigger(m, ("lona", "gran formato", "espectacular", "manta", "baja resolucion")):
+        return 150
+    if _contiene_trigger(m, ("alta resolucion", "maxima calidad", "muy nitido", "para imprenta")):
+        return 600
+    return 300      # sublimación, láser, impresión normal
+
+
+def _pagina_pedida(mensaje: str):
+    """Qué página del PDF. None = la primera. -1 = todas."""
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, ("todas las paginas", "todas las hojas", "el pdf completo",
+                             "todo el pdf", "cada pagina", "pagina por pagina")):
+        return -1
+    n = re.search(r"\b(?:pagina|hoja)\s+(\d{1,3})\b", m)
+    if n:
+        return max(0, int(n.group(1)) - 1)      # el usuario cuenta desde 1
+    return None
+
+
 def _es_conversion(mensaje: str) -> bool:
     """Pide convertir un archivo a algún formato real que sabemos producir."""
     m = _norm_txt(mensaje)
@@ -2526,13 +2556,28 @@ class Consciencia:
                 cf = _ilu.module_from_spec(spec); spec.loader.exec_module(cf)
             except Exception as e:
                 return {"respuesta": f"No pude cargar el conversor de formatos: {str(e)[:120]}"}
+            dpi = _dpi_pedido(mensaje)
+            pagina = _pagina_pedida(mensaje)
             try:
-                r = await asyncio.to_thread(cf.convertir, ruta, destino)
+                if pagina == -1:
+                    # PDF completo, una imagen por página. La función existía y
+                    # tampoco tenía forma de pedírsele desde el chat.
+                    r = await asyncio.to_thread(cf.convertir_todo, ruta, destino, dpi)
+                else:
+                    r = await asyncio.to_thread(cf.convertir, ruta, destino, "", dpi, pagina)
             except Exception as e:
                 return {"respuesta": f"Falló la conversión (no te lo adorno): {str(e)[:150]}"}
+
             if isinstance(r, dict) and str(r.get("status", "")).lower() in ("ok", "exito", "éxito"):
+                nota = f" a {dpi} DPI" if destino in ("png", "jpg", "jpeg") else ""
+                if pagina == -1:
+                    cuantas = r.get("total") or len(r.get("archivos") or []) or "varias"
+                    donde = r.get("carpeta") or r.get("salida") or ""
+                    return {"respuesta": f"✅ Convertidas de verdad {cuantas} páginas a "
+                                         f"{destino.upper()}{nota}:\n{donde}"}
                 salida = r.get("salida") or r.get("ruta") or r.get("archivo") or ""
-                return {"respuesta": f"✅ Convertido de verdad a {destino.upper()}:\n{salida}"}
+                cual = f" (página {pagina + 1})" if isinstance(pagina, int) and pagina >= 0 else ""
+                return {"respuesta": f"✅ Convertido de verdad a {destino.upper()}{nota}{cual}:\n{salida}"}
             detalle = r.get("mensaje") or r.get("detalle") or r if isinstance(r, dict) else r
             return {"respuesta": f"No se logró convertir a {destino.upper()}: {detalle}"}
 
