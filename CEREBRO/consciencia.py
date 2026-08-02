@@ -293,10 +293,45 @@ _ABRIR_NAVEGADOR_TRIGGERS = (
 )
 
 
+# Sitios que se nombran sin decir el dominio. Nadie dice "abre youtube.com":
+# dice "abre youtube". Anuar, 2026-08-02: "no abre youtube ni páginas, no es un
+# navegador". Sí lo era — solo que exigía el punto-com para reconocerlo.
+_SITIOS_CONOCIDOS = {
+    "youtube": "https://www.youtube.com", "facebook": "https://www.facebook.com",
+    "instagram": "https://www.instagram.com", "tiktok": "https://www.tiktok.com",
+    "whatsapp": "https://web.whatsapp.com", "gmail": "https://mail.google.com",
+    "correo": "https://mail.google.com", "drive": "https://drive.google.com",
+    "mercadolibre": "https://www.mercadolibre.com.mx", "meli": "https://www.mercadolibre.com.mx",
+    "amazon": "https://www.amazon.com.mx", "google": "https://www.google.com",
+    "maps": "https://maps.google.com", "chatgpt": "https://chat.openai.com",
+    "github": "https://github.com", "aliexpress": "https://es.aliexpress.com",
+    "temu": "https://www.temu.com", "shein": "https://mx.shein.com",
+    "canva": "https://www.canva.com", "netflix": "https://www.netflix.com",
+    "spotify": "https://open.spotify.com", "linkedin": "https://www.linkedin.com",
+    "twitter": "https://x.com", "x": "https://x.com",
+}
+_ABRIR_VERBOS = ("abre", "abrir", "abreme", "llevame a", "vamos a", "entra a",
+                 "metete a", "ponme", "muestrame la pagina", "ve a")
+
+
+def _sitio_conocido(mensaje: str) -> str:
+    """Devuelve la URL si el mensaje nombra un sitio conocido, o cadena vacía."""
+    m = _norm_txt(mensaje)
+    for nombre, url in _SITIOS_CONOCIDOS.items():
+        if re.search(rf"\b{re.escape(nombre)}\b", m):
+            return url
+    return ""
+
+
 def _es_abrir_navegador(mensaje: str) -> bool:
-    if not _DOMINIO_RE.search(mensaje):
-        return False
-    return _contiene_trigger(_norm_txt(mensaje), _ABRIR_NAVEGADOR_TRIGGERS)
+    m = _norm_txt(mensaje)
+    # 1) Un dominio explícito + intención de abrirlo (como funcionaba antes)
+    if _DOMINIO_RE.search(mensaje) and _contiene_trigger(m, _ABRIR_NAVEGADOR_TRIGGERS):
+        return True
+    # 2) Un sitio conocido por su nombre + un verbo de abrir. "abre youtube".
+    if _sitio_conocido(mensaje) and _contiene_trigger(m, _ABRIR_VERBOS):
+        return True
+    return False
 
 
 # ── AURORA habla de SÍ MISMA (capacidades/límites/estructura reales) ──
@@ -695,8 +730,34 @@ _EDITAR_CODIGO_TRIGGERS = (
 )
 
 
+_VERBOS_EDITAR = ("edita", "editar", "modifica", "modificar", "cambia en", "cambiar en",
+                  "agrega en", "agregar en", "reemplaza", "reemplazar", "corrige",
+                  "corregir", "arregla", "arreglar", "quita de", "quitar de",
+                  "borra la linea", "comenta", "descomenta")
+
+
 def _es_editar_codigo(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), _EDITAR_CODIGO_TRIGGERS)
+    """Pide editar código. Se reconoce por INTENCIÓN, no por la frase exacta.
+
+    Antes exigía "edita el archivo" literal. Anuar escribió "edita TU archivo
+    CORE/buscador_web_profesional.py" (2026-07-31) y no calzó: el mensaje cayó en
+    motor_analisis, que le inventó un respaldo, un borrado de líneas y una
+    compilación que nunca ocurrieron. El candado de honestidad lo delató.
+
+    Ahora basta con: un verbo de editar + algo que sea claramente un archivo
+    (ruta de Windows, nombre con extensión de código, o CARPETA/modulo).
+    """
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _EDITAR_CODIGO_TRIGGERS):
+        return True
+    if not _contiene_trigger(m, _VERBOS_EDITAR):
+        return False
+    texto = mensaje or ""
+    return bool(
+        re.search(r"[A-Za-z]:\\", texto)                                  # ruta de Windows
+        or re.search(r"\b[\w\-.]+\.(?:py|json|md|html|js|css|txt|bat|ps1|yml)\b", texto, re.I)
+        or re.search(r"\b[A-Z][A-Z_]{2,}/[\w.]+", texto)                  # CARPETA/modulo
+    )
 
 
 def _contar_defs(txt: str) -> int:
@@ -1453,11 +1514,15 @@ class Consciencia:
         clave. No inventa la URL: usa el dominio real que escribió Anuar."""
         from CEREBRO.pc_access import pc_access
         dominio = _DOMINIO_RE.search(mensaje)
-        if not dominio:
-            return {"respuesta": "Dame el dominio o la URL exacta (ej. ameede.com) y la abro de verdad."}
-        r = await pc_access.abrir_url(dominio.group(0))
+        # El dominio escrito manda; si no lo hay, se resuelve el nombre del sitio.
+        # Nadie dice "abre youtube.com" — dice "abre youtube".
+        destino = dominio.group(0) if dominio else _sitio_conocido(mensaje)
+        if not destino:
+            return {"respuesta": "Dime qué página abro (ej. youtube, facebook, "
+                                 "mercadolibre) o el dominio exacto, y la abro de verdad."}
+        r = await pc_access.abrir_url(destino)
         if r.get("status") == "OK":
-            return {"respuesta": f"✅ Abierta real en el navegador: {dominio.group(0)}."}
+            return {"respuesta": f"✅ Abierta real en el navegador: {destino}"}
         return {"respuesta": f"No pude abrirla (no te miento): {r.get('mensaje', r.get('stderr', r.get('status')))}"}
 
     # ── AURORA HABLA DE SÍ MISMA ─────────────────────────────────
@@ -2766,6 +2831,23 @@ class Consciencia:
             original = objetivo.read_text(encoding="utf-8", errors="replace")
         except Exception as e:
             return {"respuesta": f"No pude leer {rel}: {str(e)[:120]}"}
+
+        # El archivo tiene que caber COMPLETO en el modelo: entra completo y sale
+        # completo. Antes se mandaba al modelo chico y devolvía 413 después de
+        # gastar la llamada (real 2026-08-02 con buscador_web_profesional.py, de
+        # 21 KB). Ahora se usa el modelo grande y se avisa ANTES si no cabe.
+        # ~4 caracteres por token, y el archivo viaja dos veces (entrada y salida).
+        # Medido el 2026-08-02 contra Groq real: buscador_web_profesional.py
+        # (21,621 caracteres ≈ 5,400 tokens) devolvía 413 incluso con el modelo
+        # grande — el tope del plan es por tokens-por-minuto, no por contexto.
+        # 14,000 caracteres es lo que de verdad pasa, con margen.
+        _tokens_aprox = len(original) // 4
+        if len(original) > 14000:
+            return {"respuesta": (
+                f"'{rel}' es demasiado grande para editarlo así ({len(original):,} caracteres). "
+                "Tendría que reproducirlo completo y no cabe en el modelo — si lo intentara, "
+                "te devolvería el archivo cortado a la mitad. No lo toco.\n\n"
+                "Dime qué función o qué líneas quieres cambiar y lo hago sobre ese pedazo.")}
         # El LLM redacta el archivo COMPLETO ya con el cambio, sin comentarios extra.
         # max_tokens subido de 4000 a 7800 (medido: consciencia.py necesitaria ~30,000
         # tokens para reproducirse completo, asi que ni esto alcanza para los archivos
@@ -2773,7 +2855,11 @@ class Consciencia:
         # proteccion real, no el numero en si).
         try:
             r = await self._groq.chat.completions.create(
-                model=_MODELO,
+                # Modelo GRANDE a propósito: editar código exige reproducir el
+                # archivo entero, y el chico (llama-3.1-8b-instant) devolvía 413
+                # con archivos de 20 KB. Aquí la precisión importa más que la
+                # velocidad — es el único lugar donde se escribe código real.
+                model=_MODELO_SELECTOR,
                 messages=[{"role": "system", "content": "Eres un editor de código preciso. Te doy un archivo COMPLETO y una instrucción. Devuelve el archivo COMPLETO ya modificado, SIN quitar nada que no se te pidió, SIN comentarios ni explicaciones, SIN ```. Conserva todo el código existente."},
                           {"role": "user", "content": f"Archivo {rel}:\n{original}\n\nInstrucción: {mensaje}\n\nDevuelve el archivo completo modificado:"}],
                 max_tokens=7800, temperature=0.1)
