@@ -564,9 +564,36 @@ _CONVERSION_TRIGGERS = (
 )
 
 
-def _es_conversion_dxf(mensaje: str) -> bool:
+# Formatos a los que EDITOR/conversor_formatos.convertir() sabe llegar de verdad.
+# Antes el candado exigía la palabra "dxf": pedir "convierte a pdf" no calzaba con
+# nada y se iba al enrutador. Anuar lo dijo el 2026-07-31: "entiende convierte
+# pero a pdf no". La capacidad existía; le faltaba la puerta.
+_FORMATOS_DESTINO = ("dxf", "pdf", "svg", "png", "jpg", "jpeg", "eps", "ps")
+
+
+def _formato_destino(mensaje: str) -> str:
+    """A qué formato quiere convertir. Cadena vacía si no lo dice."""
     m = _norm_txt(mensaje)
-    return "dxf" in m and _contiene_trigger(m, _CONVERSION_TRIGGERS)
+    for f in _FORMATOS_DESTINO:
+        # "a pdf", "en pdf", "a .pdf", "formato pdf" — pero NO el .pdf de la ruta
+        # de entrada, que es el archivo que se va a convertir, no el destino.
+        if re.search(rf"\b(?:a|en|formato|hacia)\s+\.?{f}\b", m):
+            return "jpg" if f == "jpeg" else f
+    return ""
+
+
+def _es_conversion(mensaje: str) -> bool:
+    """Pide convertir un archivo a algún formato real que sabemos producir."""
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _CONVERSION_TRIGGERS):
+        return False
+    # Con destino explícito, o "vectoriza" (que siempre produce SVG+DXF), o la
+    # palabra dxf suelta, que es como se pedía antes.
+    return bool(_formato_destino(mensaje)) or "vectoriza" in m or "dxf" in m
+
+
+# Nombre viejo conservado: lo usan el generador de manual y las pruebas.
+_es_conversion_dxf = _es_conversion
 
 
 # ── CHAT ↔ COREL: comandos directos y fijos, sin adivinar (motor_corel real) ──
@@ -2481,9 +2508,34 @@ class Consciencia:
                             ruta = hits[0]; break
                 except Exception:
                     pass
+        destino = _formato_destino(mensaje) or "dxf"
+
         if not ruta:
-            return {"respuesta": "Dime qué archivo convierto a DXF (nombre o ruta completa). "
-                                 "Acepto SVG, PDF, AI, EPS y también imágenes (las vectorizo)."}
+            return {"respuesta": f"Dime qué archivo convierto a {destino.upper()} "
+                                 "(nombre o ruta completa). Sé pasar entre SVG, PDF, AI, "
+                                 "EPS, PNG y DXF, y también vectorizar imágenes."}
+
+        # A DXF sigue yendo por taller_core, que además vectoriza imágenes y ya
+        # está probado. Cualquier otro destino usa EDITOR/conversor_formatos, que
+        # existía completo pero no tenía forma de pedírsele desde el chat: pedir
+        # "convierte a pdf" no calzaba con ningún candado (Anuar, 2026-07-31).
+        if destino != "dxf":
+            try:
+                spec = _ilu.spec_from_file_location(
+                    "conversor_formatos", raiz / "EDITOR" / "conversor_formatos.py")
+                cf = _ilu.module_from_spec(spec); spec.loader.exec_module(cf)
+            except Exception as e:
+                return {"respuesta": f"No pude cargar el conversor de formatos: {str(e)[:120]}"}
+            try:
+                r = await asyncio.to_thread(cf.convertir, ruta, destino)
+            except Exception as e:
+                return {"respuesta": f"Falló la conversión (no te lo adorno): {str(e)[:150]}"}
+            if isinstance(r, dict) and str(r.get("status", "")).lower() in ("ok", "exito", "éxito"):
+                salida = r.get("salida") or r.get("ruta") or r.get("archivo") or ""
+                return {"respuesta": f"✅ Convertido de verdad a {destino.upper()}:\n{salida}"}
+            detalle = r.get("mensaje") or r.get("detalle") or r if isinstance(r, dict) else r
+            return {"respuesta": f"No se logró convertir a {destino.upper()}: {detalle}"}
+
         try:
             spec = _ilu.spec_from_file_location("taller_core", raiz / "TALLER" / "taller_core.py")
             tc = _ilu.module_from_spec(spec); spec.loader.exec_module(tc)
