@@ -40,6 +40,18 @@ _VERBOS_LECTURA = (
     "descubrir", "nichos", "playbook", "conocimiento", "mejores_", "prompt_",
     "construir_brief", "post_de_hoy", "racha", "dia", "proximas", "ficha", "fichas",
     "tecnicas", "precios", "plan", "sugerencia", "perfil", "historial", "get_",
+    # Conversar y analizar NO es peligroso. Antes, todo lo que no empezara con un
+    # verbo de lectura se marcaba peligroso "por si acaso", así que hasta pedirle
+    # consejo al coach pedía confirmación. Caso real 2026-07-31: Anuar escribió
+    # "como mi coach que me puedes aportar" y AURORA le respondió "responde sí
+    # para confirmar" — pedir permiso para platicar. Él lo dijo claro: solo se
+    # confirma lo irreversible o lo que sale de la casa (publicar, enviar,
+    # borrar, editar el núcleo). Estos verbos solo producen texto en pantalla.
+    "coach", "conversar", "platicar", "opinar", "aconsejar", "asesorar",
+    "analizar", "evaluar", "comparar", "explicar", "resumir", "interpretar",
+    "responder", "redactar", "proponer", "recomendar", "generar_contenido",
+    "generar_texto", "generar_ideas", "brainstorm", "cotizar", "calcular",
+    "estimar", "simular_precio", "traducir", "corregir_texto",
 )
 # Aunque el nombre empiece con un verbo de lectura (ej. "diagnosticar_y_reparar_todo"
 # empieza como "diagnostic"), si contiene uno de estos verbos de escritura real en

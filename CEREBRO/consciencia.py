@@ -420,6 +420,38 @@ def _es_servicio_atf(mensaje: str) -> bool:
     return False
 
 
+# ── Guardia: el chat técnico y el chat de negocio no se pisan ────────────────
+# Los candados de venta buscan palabras sueltas del catálogo dentro del mensaje.
+# Eso hace que se traguen mensajes que no son de un cliente. Casos reales del
+# 2026-07-31, todos de Anuar hablando de su propio sistema:
+#   "diagnostica el problema"        -> cayó en el servicio de diagnóstico de faros
+#   "corel tiene instalado el plugin"-> cayó en motor_negocios
+#   "edita tu archivo X.py"          -> lo interceptaron antes de llegar al IDE
+# Un cliente jamás escribe "consciencia.py" ni "candado" ni "pytest". Anuar sí,
+# porque usa AURORA de las dos formas. Si el mensaje habla del sistema, los
+# candados de venta se saltan.
+_TECNICO_DEL_SISTEMA = (
+    "aurora", "consciencia", "candado", "motor_", "pytest", "commit", "repositorio",
+    "endpoint", "servidor", "puerto 5000", "log", "traceback", "bug", "codigo",
+    "código", "script", "modulo", "módulo", "funcion py", "archivo py",
+    "plugin", "instalado", "version", "versión", "enrutador", "registro de herramientas",
+)
+_EXT_CODIGO = (".py", ".json", ".md", ".bat", ".ps1", ".html", ".js", ".yml", ".log")
+
+
+def _es_tema_del_sistema(mensaje: str) -> bool:
+    """True si el mensaje habla del propio AURORA o de código, no de un pedido
+    de cliente. Sirve para que los candados de venta no lo intercepten."""
+    m = _norm_txt(mensaje)
+    if any(m.endswith(e) or (e + " ") in m or (e + ",") in m for e in _EXT_CODIGO):
+        return True
+    if re.search(r"[A-Za-z]:\\", mensaje or ""):     # una ruta de Windows
+        return True
+    if re.search(r"\b[A-Z][A-Z_]{2,}/[a-z_]+", mensaje or ""):   # CARPETA/modulo
+        return True
+    return _contiene_trigger(m, _TECNICO_DEL_SISTEMA)
+
+
 def _es_ficha_vendedor(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), (
         "ficha de", "ficha tecnica de", "dame el pitch", "hazme un pitch",
@@ -458,11 +490,32 @@ def _es_confirmacion(mensaje: str) -> bool:
     # que escribe corrido y con muletillas cortas) — sigue siendo igualdad exacta tras
     # strip, no substring, para no capturar por accidente una respuesta no relacionada.
     m = _norm_txt(mensaje).strip(" .,!¡¿?")
-    return m in ("si", "sip", "simon", "simone", "confirmo", "confirmado", "hazlo", "adelante",
-                 "dale", "dale pues", "va", "va sale", "vale", "ok", "okay", "ok hazlo",
-                 "ok hazlo ya", "correcto", "afirmativo", "procede", "hazle", "sale",
-                 "si confirmo", "si hazlo", "si adelante", "si porfavor", "si por favor",
-                 "si porfa", "si dale", "si va", "si sale", "claro que si", "obvio")
+    if m in ("si", "sip", "simon", "simone", "confirmo", "confirmado", "hazlo", "adelante",
+             "dale", "dale pues", "va", "va sale", "vale", "ok", "okay", "ok hazlo",
+             "ok hazlo ya", "correcto", "afirmativo", "procede", "hazle", "sale",
+             "si confirmo", "si hazlo", "si adelante", "si porfavor", "si por favor",
+             "si porfa", "si dale", "si va", "si sale", "claro que si", "obvio"):
+        return True
+
+    # La lista exacta nunca alcanza — ese fue el vicio de todo el proyecto.
+    # Caso real 2026-07-31: AURORA preparó la publicación del día, pidió
+    # confirmar, Anuar contestó "si publicalo", y como esa frase no estaba en la
+    # lista canceló la publicación Y ADEMÁS dijo "no puedo publicar contenido en
+    # tu nombre", que es falso. Se perdió el post.
+    #
+    # Ahora se reconoce el PATRÓN: afirmación al inicio + orden corta, sin nada
+    # que la eche para atrás. Se exige que sea corta (máx 3 palabras) para no
+    # confundir una frase larga con un sí, y esto solo se evalúa cuando ya hay
+    # una acción esperando confirmación.
+    palabras = m.split()
+    if not palabras or len(palabras) > 3:
+        return False
+    if palabras[0] not in ("si", "ok", "okay", "dale", "va", "vale", "sale",
+                           "claro", "orale", "andale", "hazlo", "adelante", "procede"):
+        return False
+    return not any(p in ("no", "nunca", "mejor", "espera", "aun", "todavia",
+                         "despues", "luego", "manana", "cancela", "cancelalo",
+                         "olvidalo") for p in palabras[1:])
 
 
 def _es_listar_agentes(mensaje: str) -> bool:
@@ -721,6 +774,16 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
 # URLs en la PC real del taller, o publicara de verdad en Facebook. Un solo punto de
 # verdad aquí, no un candado a mano por función.
 _CANDADOS_SOLO_DUENIO = {"accion_fisica", "publicar", "abrir_navegador", "editar_codigo", "crear_capacidad"}
+
+# Candados que atienden a un CLIENTE. Se saltan cuando el mensaje habla del
+# propio sistema (ver _es_tema_del_sistema): "diagnostica el problema" es una
+# pregunta técnica de Anuar, no un cliente pidiendo diagnóstico de faros.
+_CANDADOS_DE_VENTA = {"servicio_atf", "negocio", "ficha_vendedor", "cotizar"}
+
+# Lo mismo para el enrutamiento de motores: cuando el mensaje habla del propio
+# sistema, estos no compiten. "corel tiene instalado el plugin" no es un cliente.
+_MOTORES_DE_VENTA = frozenset({"motor_negocios", "motor_vendedor", "motor_cotizador",
+                               "motor_ventas", "vendedor", "oracle"})
 _MSG_SOLO_DUENIO = "Esa acción es del dueño desde el panel — no la ejecuto desde WhatsApp."
 
 _MODELO = "llama-3.1-8b-instant"
@@ -766,7 +829,11 @@ class Consciencia:
         if self._listo:
             return
         api_key = os.getenv("GROQ_API_KEY", "")
-        self._groq = AsyncGroq(api_key=api_key) if api_key else None
+        # max_retries=1: medido el 2026-07-31, un 429 de Groq costaba 16-22 s de
+        # espera (tres reintentos con backoff) antes de responder. Todo lo que NO
+        # llama a Groq responde en menos de un segundo. Si Groq dice que no, es
+        # mejor caer rápido que esperar tres veces por lo mismo.
+        self._groq = AsyncGroq(api_key=api_key, max_retries=1) if api_key else None
 
         # Cargar prompts de cada motor y metadata
         await asyncio.to_thread(self._cargar_prompts_y_metadata)
@@ -977,8 +1044,15 @@ class Consciencia:
         # no necesita excluir manualmente a los demás (como sí lo necesitaba antes).
         # Sí conserva su única exclusión real: si el routing rápido (paso 2) ya
         # decidió que esto es para pc_cmd/self_repair, se les cede el paso a esos.
+        # Si el mensaje habla del propio sistema, los candados de VENTA no lo tocan.
+        # Un cliente no escribe "consciencia.py" ni "plugin instalado"; Anuar sí,
+        # porque usa AURORA de las dos formas y los dos chats se estaban pisando.
+        _tema_sistema = _es_tema_del_sistema(mensaje)
+
         for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
+                continue
+            if _tema_sistema and _nombre_candado in _CANDADOS_DE_VENTA:
                 continue
             if not _trigger(mensaje):
                 continue
@@ -1130,7 +1204,15 @@ class Consciencia:
         msg = _norm_txt(mensaje)
         scores: Dict[str, int] = {}
 
+        # Los motores de venta no atienden preguntas sobre el propio sistema.
+        # Caso real 2026-07-31: "corel tiene instalado el plugin laser" acabó en
+        # motor_negocios, que tardó 33 s en soltar una vaguedad. No era un cliente
+        # preguntando por un producto: era Anuar preguntando por su software.
+        _fuera = _MOTORES_DE_VENTA if _es_tema_del_sistema(mensaje) else frozenset()
+
         for motor_id, patrones in _ROUTING_PATRONES.items():
+            if motor_id in _fuera:
+                continue
             score = sum(1 for p in patrones if p in msg)
             if score:
                 scores[motor_id] = score
@@ -1835,7 +1917,10 @@ class Consciencia:
         reg = _registro()
         r = await self._ejecutar_herramienta_real(reg, pendiente["clave"], pendiente["args"], pendiente["h"])
         params_usados = ", ".join(f"{k}={v}" for k, v in pendiente["args"].items()) or "sin datos extra"
-        r["respuesta"] = f"Confirmado — ejecutando {pendiente['clave']} ({params_usados}):\n" + r["respuesta"]
+        # Antes re-leía la clave y todos los parámetros con signos. Al confirmar
+        # ya no hace falta repetir QUÉ se va a hacer: se hace y se entrega el
+        # resultado. Anuar lo pidió textual: es tedioso y largo, sobre todo por voz.
+        r["respuesta"] = "Hecho. " + r["respuesta"]
         return r
 
     async def _router_universal(self, mensaje: str, session_id: str = "", canal: str = "api") -> Optional[Dict]:
@@ -1942,11 +2027,61 @@ class Consciencia:
                 return {"respuesta": _MSG_SOLO_DUENIO}
             if session_id:
                 self._accion_pendiente[session_id] = {"clave": clave, "args": args, "h": h}
-            params_usados = ", ".join(f"{k}={v}" for k, v in args.items()) or "sin datos extra"
-            return {"respuesta": f"Voy a usar {clave} ({params_usados}). Responde 'sí' para confirmar y lo hago."}
+            # Se pregunta EN CRISTIANO, no con la clave técnica y los parámetros
+            # con signos. Anuar, 2026-07-31: "regresa con la lectura de lo que
+            # ejecutará, puntos, comas, símbolos — eso no me interesa, además de
+            # escucharse tedioso y largo". Y por voz es peor todavía.
+            # El detalle técnico sigue guardado en el pendiente, solo no se lee.
+            return {"respuesta": f"{self._en_cristiano(clave, args, h)} ¿Le doy?"}
 
         # No peligrosa → ejecutar de verdad.
         return await self._ejecutar_herramienta_real(reg, clave, args, h)
+
+    def _en_cristiano(self, clave: str, args: Dict, h: Dict) -> str:
+        """Describe en lenguaje humano lo que se va a hacer, para preguntarlo.
+
+        Anuar, 2026-07-31: "regresa con la lectura de lo que ejecutará, puntos,
+        comas, símbolos — eso no me interesa, además de escucharse tedioso y
+        largo". Por voz es peor: leer `MOTORES/motor_x:Clase.metodo (a=1, b=2)`
+        es insoportable.
+
+        Se usa la descripción real de la herramienta (su docstring, que ya está
+        en el registro). Si no la tiene, se arma una frase del nombre de la
+        función. Nunca se leen la clave técnica ni los parámetros con signos.
+        """
+        doc = (h.get("doc") or "").strip().split("\n")[0].strip()
+        if doc:
+            frase = doc.rstrip(".")
+            frase = frase[0].lower() + frase[1:] if len(frase) > 1 else frase
+            # El docstring suele venir conjugado en tercera persona ("Genera el
+            # contenido...") y pegarlo tal cual daba "Voy a genera contenido".
+            # Se pasa a infinitivo el primer verbo.
+            primera, _, resto = frase.partition(" ")
+            for terminacion, inf in (("a", "ar"), ("e", "er"), ("e", "ir")):
+                if primera.endswith(terminacion) and len(primera) > 3:
+                    primera = primera[:-1] + inf
+                    break
+            frase = (primera + " " + resto).strip()
+            base = f"Voy a {frase}."
+        else:
+            funcion = clave.split(":")[-1].split(".")[-1].replace("_", " ").strip()
+            base = f"Voy a {funcion}." if funcion else "Voy a ejecutarlo."
+
+        # Solo se mencionan los datos que un humano reconoce: nombres de archivo,
+        # números y textos cortos. Nada de ids, banderas ni diccionarios.
+        utiles = []
+        for k, v in (args or {}).items():
+            if isinstance(v, (dict, list)) or v in (None, "", True, False):
+                continue
+            texto = str(v).strip()
+            if not texto or len(texto) > 60:
+                continue
+            if "\\" in texto or "/" in texto:
+                texto = Path(texto).name          # solo el nombre, no la ruta entera
+            utiles.append(texto)
+        if utiles:
+            base += " " + ", ".join(utiles[:3]) + "."
+        return base
 
     def _fmt_dict(self, titulo: str, d) -> str:
         """Formatea el resultado REAL de un motor en texto legible, sin inventar."""
