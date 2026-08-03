@@ -577,9 +577,20 @@ async def alertas_resumen():
         logger.warning(f"[alertas] seguimiento pendientes falló: {e}")
     try:
         wa = await whatsapp_estado()
-        if wa.get("status") == "ok" and wa.get("estado") != "authorized":
+        estado_wa = wa.get("estado", "")
+        # Green API tiene estados TRANSITORIOS que no son una desconexión:
+        # "starting" (la instancia está levantando) y "sleepMode" (el celular
+        # está dormido y ya despertará solo). Alertar por ellos es una falsa
+        # alarma sobre el canal de ventas. Caso real 2026-08-03: saltó una vez
+        # el aviso de "WhatsApp desconectado" con la instancia sana — al
+        # comprobarlo de inmediato respondía "authorized" en 1.1 s.
+        _TRANSITORIOS = ("starting", "sleepMode", "")
+        if wa.get("status") == "ok" and estado_wa not in ("authorized",) + _TRANSITORIOS:
+            grave = estado_wa == "blocked"
             items.append({"tipo": "whatsapp_desconectado", "cantidad": 1,
-                          "detalle": f"WhatsApp real desautorizado (estado: {wa.get('estado')}) — reconectar en el panel",
+                          "detalle": (f"WhatsApp BLOQUEADO por Green API — revisa la cuenta"
+                                      if grave else
+                                      f"WhatsApp sin autorizar (estado: {estado_wa}) — hay que reescanear el QR"),
                           "ir_a": "whatsapp"})
     except Exception as e:
         logger.warning(f"[alertas] whatsapp_estado falló: {e}")
