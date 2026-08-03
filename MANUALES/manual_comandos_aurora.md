@@ -11,98 +11,102 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 ### Taller
 
 **negocio** (negocio_real)
-- Qué hace: CHAT ↔ MOTORES DE NEGOCIO. Lee datos REALES (órdenes, inventario, CRM,
-- Frases que reconoce: «bajo minimo», «cierre de caja», «clientes nuevos», «cobrar», «como va», «como vamos de ventas», «contabilidad», «corte de caja», «corte del dia», «cuadre de caja», «cuales», «cuantas»
+- Qué hace: Las cifras reales de tus negocios: contabilidad del mes, órdenes del taller, inventario bajo mínimo, pronóstico del embudo y de qué fuente vienen tus leads (contabilidad_mensual, listar_ordenes, bajo_minimo, pronostico_embudo, fuentes_efectivas).
+- Frases que reconoce: «bajo minimo», «cierre de caja», «clientes nuevos», «cobrar», «como va», «como vamos de ventas», «contabilidad», «corte de caja», «corte del dia», «cuadre de caja», «cuanto cayo hoy», «cuanto entro ayer»
 
 **agenda** (agenda)
-- Qué hace: (sin descripción en el código)
-- Frases que reconoce: «agenda de hoy», «agenda de manana», «agenda del dia», «agenda una cita», «agendame», «agendar una cita», «citas de hoy», «citas de manana», «crear cita», «hoy», «manana», «mi agenda»
+- Qué hace: Tus citas de hoy, de mañana y las próximas 24 h, y agenda nuevas. Si le faltan la fecha, la hora o el cliente, los pide en vez de inventarlos (usa dia, proximas, resumen y crear_cita de la agenda real).
+- Frases que reconoce: «agenda de hoy», «agenda de manana», «agenda del dia», «agenda una cita», «agendame», «agendar una cita», «citas de hoy», «citas de manana», «crear cita», «mi agenda», «nueva cita», «programa una cita»
 
 
 ### Ventas
 
 **ficha_vendedor** (vendedor)
-- Qué hace: (sin descripción en el código)
+- Qué hace: Arma la ficha técnica y los argumentos de venta de un producto de tu catálogo, para que puedas cerrar sin buscar datos (ficha + construir_brief).
 - Frases que reconoce: «argumentos de venta», «brief de venta», «como vender el», «como vendo el», «dame el pitch», «ficha de», «ficha tecnica de», «hazme un pitch»
 
 
 ### Marketing
 
 **publicar** (publicador)
-- Qué hace: CHAT ↔ PUBLICADOR: muestra el preview real de HOY y deja pendiente la
+- Qué hace: Te enseña qué se publicaría hoy y lo sube a redes solo cuando confirmas. También te da la estrategia de ingresos del día (preparar_publicacion, estrategia_ingresos).
 - Frases que reconoce: «estrategia de ingresos», «postea hoy», «prepara la publicacion», «preparar publicacion», «publica el reel», «publica en atf», «publica en facebook», «publica hoy», «publicalo de verdad», «publicalo ya», «publicar hoy», «que publico hoy»
 
 
 ### Diseño
 
 **corel** (motor_corel)
-- Qué hace: CHAT ↔ COREL: comandos directos y fijos sobre motor_corel (COM real).
-- Frases que reconoce: «abre», «abrir», «add-on», «addon», «almacena», «almacenar», «aplica el color», «cdr», «cerrar documento», «cierra», «cierra el documento», «combina»
+- Qué hace: Maneja CorelDRAW de verdad por COM: abre archivos, exporta a PDF, escala la página, extrae el texto del diseño, quita fondos, arma planillas, saca colores con gotero y te dice qué plugins tienes instalados.
+- Frases que reconoce: «add-on», «addon», «almacena», «almacenar», «aplica el color», «cerrar documento», «cierra el documento», «combina», «complemento», «complementos», «coreldrau», «coreldraw»
 
 **dxf** (taller_dxf)
-- Qué hace: CHAT ↔ TALLER: convierte de verdad un archivo a DXF con taller_core
-- Frases que reconoce: «a dxf», «convertir», «convierte», «conviertelo», «dxf», «en dxf», «exporta a dxf», «pasa a dxf», «pasalo a dxf», «vectoriza», «vectorizar»
+- Qué hace: Convierte tus archivos entre DXF, PDF, PNG, SVG y EPS, con el DPI y la página que le pidas, y vectoriza imágenes para la láser. Si le das solo el nombre, busca el archivo en tu disco (convertir, convertir_todo).
+- Frases que reconoce: «a dxf», «convertir», «convierte», «conviertelo», «en dxf», «exporta a dxf», «pasa a dxf», «pasalo a dxf», «vectoriza», «vectorizar»
 
 
 ### Conocimiento
 
 **busqueda_web** (web_search)
-- Qué hace: Envoltorio delgado para que _buscar_web calce con la firma uniforme
-- Frases que reconoce: «\b(busca|buscame|investiga|googlea|consulta|checa)\b», «agenda», «agente», «archivo», «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «busca informacion», «busca/investiga X», «buscame»
+- Qué hace: Busca en internet de verdad y te devuelve resultados con su fuente. No responde de memoria: si no encuentra, lo dice.
+- Frases que reconoce: «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «busca informacion», «busca/investiga X», «buscame», «buscar en internet», «buscar en la web», «búscame», «capacidad»
 
 
 ### Cerebro y Sistema
 
+**voz** (voz)
+- Qué hace: Prende o apaga la voz: te escucha por el micrófono y te contesta hablando, con voz mexicana. También te avisa si la PC se queda sin memoria.
+- Frases que reconoce: «activa la voz», «apaga la voz», «callate», «como suenas», «deja de escuchar», «desactiva la voz», «di algo», «enciende la voz», «escuchame», «hablame», «modo voz», «prende la voz»
+
 **ver_aprendizaje** (aprendizaje)
-- Qué hace: Muestra o borra lo que AURORA aprendió de cómo habla su dueño.
-- Frases que reconoce: «borra lo aprendido», «lo que has aprendido», «muestrame lo aprendido», «olvida», «olvida todo lo aprendido», «olvidalo todo», «que aprendiste», «que has aprendido», «que sabes de como hablo»
+- Qué hace: Te muestra las formas de hablar que te ha aprendido y te deja borrar las que estén mal, con «olvida <la frase>» (listar, olvidar, olvidar_todo).
+- Frases que reconoce: «borra lo aprendido», «lo que has aprendido», «muestrame lo aprendido», «olvida todo lo aprendido», «olvidalo todo», «que aprendiste», «que has aprendido», «que sabes de como hablo»
 
 **ruta_sola** (contexto_archivo)
-- Qué hace: Llegó solo una ruta. Es el dato que faltaba para lo que se pidió antes.
-- Frases que reconoce: «abre esta imagen en corel», «return bool(_RE_RUTA_SOLA.match((mensaje or»
+- Qué hace: Si le mandas solo la ruta de un archivo, lo encuentra —aunque le falte la extensión— y te dice qué puede hacer con él. Si venías pidiendo algo, completa esa petición con ese archivo.
+- Frases que reconoce: «abre esta imagen en corel»
 
 **abrir_navegador** (pc_access)
-- Qué hace: CHAT ↔ pc_access: abre un dominio/URL real directo en el navegador
-- Frases que reconoce: «abre», «abre la pagina», «abre youtube», «abrela», «abrelo», «abreme», «abrir», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta»
+- Qué hace: Abre páginas en tu navegador de verdad. Entiende «abre youtube» sin que tengas que decir el punto-com; reconoce 24 sitios por su nombre (abrir_url).
+- Frases que reconoce: «abre la pagina», «abre youtube», «abrela», «abrelo», «abreme», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto», «entra a»
 
 **acerca_de** (auto_conocimiento)
-- Qué hace: CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
+- Qué hace: Te dice qué puede hacer de verdad, con los números reales del sistema y sus límites — nunca inventa capacidades (obtener_capacidades + descubrir).
 - Frases que reconoce: «auto describete», «autodescribete», «autodescribirte», «como funcionas», «cuales son tus funciones», «cuantas herramientas», «cuentame de ti», «de que eres capaz», «de que estas hecha», «describete», «descripcion de ti», «descríbete»
 
 **servicio_atf** (servicios_atf)
-- Qué hace: Responde a un cliente que pide un SERVICIO real de ATF.
+- Qué hace: Atiende a un cliente que pide un servicio de mano de obra de ATF —recolocar una lupa, instalar un retrofit— y **nunca niega uno que sí haces**. Existe porque una vez le negó el servicio a un cliente real.
 - Frases que reconoce: «palabras_cliente»
 
 **intuicion** (intuicion)
-- Qué hace: (sin descripción en el código)
+- Qué hace: Te propone el siguiente paso a partir de tu perfil real de trabajo: qué sueles hacer, qué está pendiente y qué conviene ahora. No adivina, lee tus datos (obtener_perfil + sugerencia_proactiva).
 - Frases que reconoce: «prediccion», «predice», «que deberia hacer», «que me recomiendas», «que me sugieres», «que sigue», «sugerencia proactiva», «tu intuicion»
 
 **memoria** (memoria)
-- Qué hace: (sin descripción en el código)
+- Qué hace: Busca en lo que ya se habló y se aprendió antes, para no repetir ni perder contexto entre sesiones.
 - Frases que reconoce: «que recuerdas de», «que recuerdas sobre», «que sabes de», «que tienes guardado sobre», «recuerdas cuando», «recuerdas que», «tu memoria»
 
 **equipos** (equipos)
-- Qué hace: (sin descripción en el código)
+- Qué hace: Coordina varios motores a la vez cuando un trabajo necesita más de uno (por ejemplo cotizar + agendar + avisar al cliente).
 - Frases que reconoce: «activa el equipo», «activar equipo», «arma el equipo», «equipo de marketing», «equipo de ventas», «lista de equipos», «pon a trabajar el equipo», «que equipos tienes»
 
 **crear_capacidad** (fabrica)
-- Qué hace: CHAT ↔ FÁBRICA: crea un motor/capacidad nuevo DE VERDAD (aislado y validado).
+- Qué hace: Crear motores nuevos ya no lo hace AURORA: es trabajo de AURORITA XP, la fábrica que vive aparte. Aquí solo se cargan motores ya probados.
 - Frases que reconoce: «agregate la capacidad», «agregate la funcion», «construye un motor», «crea un motor», «crea una capacidad», «creame un motor», «creame una capacidad», «fabrica un motor», «fabrica una capacidad», «fabricame un motor», «hazte capaz de», «motor nuevo que»
 
 **consulta_codigo** (ide)
-- Qué hace: CHAT ↔ IDE (SOLO LECTURA): lee/busca/explica código real. NUNCA edita el núcleo.
-- Frases que reconoce: «.ai», «.bmp», «.cdr», «.dwg», «.dxf», «.eps», «.jpeg», «.jpg», «.pdf», «.plt», «.png», «.psd»
+- Qué hace: Te lee y te explica el código de la propia AURORA, sin modificar nada.
+- Frases que reconoce: «.bmp», «.cdr», «.dwg», «.dxf», «.eps», «.jpeg», «.jpg», «.pdf», «.plt», «.png», «.psd», «.svg»
 
 **editar_codigo** (ide_editor)
-- Qué hace: CHAT ↔ IDE (EDITAR): modifica cualquier archivo con red anti-ruptura.
-- Frases que reconoce: «\b[A-Z][A-Z_]{2,}/[\w.]+», «\b[\w\-.]+\.(?:py|json|md|html|js|css|txt|bat|ps1|yml)\b», «agrega en», «agrega en el archivo», «agregar en», «arregla», «arregla el archivo», «arreglar», «borra la linea», «cambia en», «cambia en el archivo», «cambiar en»
+- Qué hace: Edita archivos de código de verdad: hace respaldo antes, verifica que compile después y revierte solo si algo sale mal. El corazón del sistema está blindado y te pide confirmación explícita.
+- Frases que reconoce: «agrega en», «agrega en el archivo», «agregar en», «arregla», «arregla el archivo», «arreglar», «borra la linea», «cambia en», «cambia en el archivo», «cambiar en», «comenta», «corregir»
 
 **accion_fisica** (accion_sistema)
-- Qué hace: Ejecuta DE VERDAD una acción física, o dice honestamente por qué no.
+- Qué hace: Abre programas y archivos de tu PC de verdad (Corel, Silhouette, carpetas, documentos).
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~525 funciones reales)
+## Herramientas del enrutador universal (~535 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -161,7 +165,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (58)
+### CEREBRO (62)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -220,6 +224,10 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/pc_access:PcAccess.apps_instaladas` — apps instaladas (PcAccess)
 - `CEREBRO/razonador:razonar` — Razona en profundidad: piensa paso a paso, se autocritica y da la respuesta final.
 - `CEREBRO/razonador:ejecutar` — ejecutar (razonador)
+- `CEREBRO/respaldo_local:modelos_disponibles` — modelos disponibles (respaldo_local)
+- `CEREBRO/respaldo_local:elegir_modelo` — El primero de la lista de preferidos que esté instalado.
+- `CEREBRO/respaldo_local:_Completions.create` — create (_Completions)
+- `CEREBRO/respaldo_local:ClienteConRespaldo.modelo_local` — modelo local (ClienteConRespaldo)
 - `CEREBRO/validador_honestidad:revisar` — Revisa una respuesta ANTES de que salga y le agrega la corrección honesta.
 
 ### CORE (56)
@@ -409,7 +417,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MANUALES/aprendizaje:aprender` — Busca el manual de 'herramienta', lo descarga (si es PDF) y lo ingiere a la Biblioteca.
 - `MANUALES/aprendizaje:ingerir_url` — Ruta manual: Anuar pega la URL exacta del PDF y AURORA lo descarga+ingiere.
 
-### MARKETING (29)
+### MARKETING (35)
 
 - `MARKETING/analizador_mercado:nichos` — Nichos disponibles para analizar (para poblar el panel).
 - `MARKETING/analizador_mercado:analizar` — Análisis de mercado REAL de un nicho: busca en vivo (varias consultas),
@@ -420,6 +428,12 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MARKETING/asesor_core:diagnostico` — Diagnostica sobre métricas REALES por red y sugiere acciones concretas.
 - `MARKETING/asesor_core:construir_brief_para_cerebro` — Arma el contexto (conocimiento + datos reales) para que el cerebro genere el plan.
 - `MARKETING/catalogo_compartible:generar_catalogo_pdf` — Genera el PDF del catálogo y devuelve la ruta + conteos.
+- `MARKETING/motor_video:info_video` — Ancho, alto, duración y peso reales. Nada estimado.
+- `MARKETING/motor_video:a_vertical` — Deja el video en 9:16, listo para TikTok, Reels y Shorts.
+- `MARKETING/motor_video:miniatura` — Saca un fotograma para usar de portada del post.
+- `MARKETING/motor_video:buscar_duplicados` — Encuentra videos repetidos por su CONTENIDO. Solo reporta: no borra nada.
+- `MARKETING/motor_video:listos_para_publicar` — Revisa la videoteca y dice cuáles ya sirven y cuáles hay que voltear.
+- `MARKETING/motor_video:preparar_lote` — Voltea de golpe los primeros N videos horizontales y les saca portada.
 - `MARKETING/plan_monetizacion:init_db` — init db (plan_monetizacion)
 - `MARKETING/plan_monetizacion:listar_videos` — TODOS los videos REALES de Anuar, RECURSIVO (incluye subcarpetas: r11, terminados,
 - `MARKETING/plan_monetizacion:catalogo` — UNIFICA y AGRUPA los videos en un índice por carpeta (sin mover ni borrar nada).
