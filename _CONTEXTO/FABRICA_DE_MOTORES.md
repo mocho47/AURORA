@@ -62,8 +62,21 @@ motor_<nombre>/
 | `generado_por`, `verificado_el`, `commit` | trazabilidad |
 
 **Regla de oro:** un motor solo toca el núcleo por lo que declaró en
-`necesita_del_nucleo`. Si necesita algo no declarado, no pasa el Juez. Esto es
-lo que hace que "agregar motor" sea copiar una carpeta.
+`necesita_del_nucleo`. Si necesita algo no declarado, no pasa el Juez.
+
+**Y esto es lo que hace posible poner y quitar motores:**
+
+| Acción | Qué pasa de verdad |
+|---|---|
+| **Agregar** | se copia la carpeta a `MOTORES/` y se carga |
+| **Quitar** | se **mueve** a `MOTORES_GUARDADOS/`. Deja de cargarse, pero **sigue existiendo** |
+| **Volver a poner** | se mueve de regreso. Queda igual que antes |
+| **Borrar** | **nunca lo hace la fábrica ni AURORA.** Solo Anuar, a mano |
+
+> ⚠️ **Quitar un motor NO es borrarlo** (Anuar, 2026-08-02). Es sacar el
+> cartucho, no destruirlo. Es la regla #1 del proyecto aplicada aquí: no restar
+> funciones. Un motor que se quitó hoy puede hacer falta mañana, o servirle a
+> otro cliente. **La motorteca conserva todo; la consola solo carga lo activo.**
 
 ---
 
