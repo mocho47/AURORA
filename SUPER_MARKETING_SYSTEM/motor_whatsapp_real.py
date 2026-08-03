@@ -10,7 +10,7 @@ logger = logging.getLogger("WhatsAppMotor")
 class WhatsAppMotorReal:
     def __init__(self):
         # Leer credenciales reales del entorno .env
-        self.instance_id = os.getenv("GREEN_API_INSTANCE_ID", "7107622171")
+        self.instance_id = os.getenv("GREEN_API_INSTANCE", "7107622171")
         self.token = os.getenv("GREEN_API_TOKEN")
         # URL UNIVERSAL Y OFICIAL DE GREEN-API (Evita errores DNS)
         self.host = "https://greenapi.com"

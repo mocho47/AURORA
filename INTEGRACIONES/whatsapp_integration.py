@@ -17,8 +17,8 @@ logger = logging.getLogger("aurora.whatsapp")
 
 class WhatsAppIntegration:
     def __init__(self):
-        self.instance_id = os.getenv("GREEN_API_INSTANCE", os.getenv("GREEN_INSTANCE_ID", ""))
-        self.token = os.getenv("GREEN_API_TOKEN", os.getenv("GREEN_API_KEY", ""))
+        self.instance_id = os.getenv("GREEN_API_INSTANCE", os.getenv("GREEN_API_INSTANCE", ""))
+        self.token = os.getenv("GREEN_API_TOKEN", os.getenv("GREEN_API_TOKEN", ""))
         srv = os.getenv("GREEN_API_SERVER", "")
         host = f"https://{srv}.api.greenapi.com" if srv else "https://api.green-api.com"
         self._base = f"{host}/waInstance{self.instance_id}"
