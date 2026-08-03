@@ -543,6 +543,16 @@ def _es_tema_del_sistema(mensaje: str) -> bool:
     return _contiene_trigger(m, _TECNICO_DEL_SISTEMA)
 
 
+def _es_comando_voz(mensaje: str) -> bool:
+    """Prender, apagar o probar la voz. Portada del NEXUS de Anuar."""
+    m = _norm_txt(mensaje)
+    return _contiene_trigger(m, (
+        "activa la voz", "prende la voz", "enciende la voz", "modo voz",
+        "escuchame", "quiero hablarte", "apaga la voz", "desactiva la voz",
+        "callate", "deja de escuchar", "prueba la voz", "como suenas",
+        "di algo", "hablame"))
+
+
 def _es_ver_aprendizaje(mensaje: str) -> bool:
     """Anuar quiere ver o borrar lo que AURORA aprendió de cómo habla.
 
@@ -970,6 +980,7 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
     # ruta_sola va PRIMERO: completa la petición anterior con el dato que faltaba,
     # antes de que cualquier otro candado o el enrutador la malinterpreten.
+    ("voz",             _es_comando_voz,       "_voz_real",               "voz"),
     ("ver_aprendizaje", _es_ver_aprendizaje,   "_ver_aprendizaje_real",   "aprendizaje"),
     ("ruta_sola",       _es_ruta_sola,         "_ruta_sola_real",         "contexto_archivo"),
     ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
@@ -2251,6 +2262,67 @@ class Consciencia:
         else:
             texto = f"{titulo}:\n{str(salida)[:1500]}"
         return {"respuesta": texto}
+
+    async def _voz_real(self, mensaje: str) -> Dict:
+        """Prende, apaga o prueba la voz.
+
+        Portada del sistema de NEXUS que Anuar ya tenía funcionando: VOSK local
+        vigila el nombre (gratis, sin internet) y Whisper de Groq transcribe el
+        comando. Lo importante del cableado: el comando entra por el MISMO
+        `procesar()` que el chat, así que hereda el candado de honestidad. Si la
+        voz hablara directo con el modelo, podría mentir sin que nadie la revise
+        — y por voz es peor, porque no queda por escrito.
+        """
+        m = _norm_txt(mensaje)
+        try:
+            from VOZ import servicio_voz as _sv
+        except Exception as e:
+            return {"respuesta": f"No pude cargar la voz: {str(e)[:120]}"}
+
+        if _contiene_trigger(m, ("apaga", "desactiva", "callate", "deja de escuchar")):
+            if getattr(self, "_voz", None):
+                self._voz.detener()
+                self._voz = None
+                return {"respuesta": "Listo, dejo de escuchar."}
+            return {"respuesta": "La voz ya estaba apagada."}
+
+        if _contiene_trigger(m, ("prueba", "como suenas", "di algo", "hablame")):
+            cfg = _sv.config()
+            ok = await asyncio.to_thread(
+                _sv.hablar, f"Soy {cfg['nombre']}. Así me oigo. "
+                            f"Dime mi nombre y te escucho.")
+            return {"respuesta": ("🔊 Acabo de hablar por las bocinas." if ok else
+                                  "No pude hablar: revisa que las bocinas estén encendidas.")}
+
+        if getattr(self, "_voz", None) and self._voz.corriendo:
+            return {"respuesta": f"Ya te estoy escuchando. Dime «{_sv.config()['nombre']}»."}
+
+        def _atender(texto_oido: str) -> str:
+            """Lo que se oyó entra al cerebro completo, igual que si se escribiera."""
+            try:
+                bucle = asyncio.new_event_loop()
+                try:
+                    r = bucle.run_until_complete(
+                        self.procesar(texto_oido, "anuar", session_id="voz", canal="voz"))
+                finally:
+                    bucle.close()
+                return r.get("respuesta", "")
+            except Exception as e:
+                logger.error(f"[VOZ] falló al procesar: {e}")
+                return "Algo falló. No te invento el resultado."
+
+        try:
+            self._voz = _sv.ServicioVoz(_atender)
+            self._voz.arrancar()
+        except Exception as e:
+            return {"respuesta": f"No pude encender el micrófono: {str(e)[:130]}"}
+
+        cfg = _sv.config()
+        return {"respuesta": (
+            f"🎤 Te escucho. Dime **«{cfg['nombre']}»** y luego lo que necesites.\n"
+            f"Ejemplo: «{cfg['nombre']}, cuánto llevo vendido este mes».\n\n"
+            "También te aviso hablando si la PC se queda sin memoria. "
+            "Para que pare: «apaga la voz».")}
 
     async def _ver_aprendizaje_real(self, mensaje: str) -> Dict:
         """Muestra o borra lo que AURORA aprendió de cómo habla su dueño."""
