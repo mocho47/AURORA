@@ -174,6 +174,10 @@ _QUE_HACE = {
     "crear_capacidad":
         "Crear motores nuevos ya no lo hace AURORA: es trabajo de AURORITA XP, la "
         "fábrica que vive aparte. Aquí solo se cargan motores ya probados.",
+    "video":
+        "Trabaja con tus 296 videos: te dice cuáles ya sirven para Reels, voltea "
+        "los horizontales a 9:16 con su portada, y encuentra los repetidos por su "
+        "contenido (no por el nombre). Solo reporta los duplicados: borrar lo decides tú.",
     "cotizar":
         "Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 "
         "servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.",

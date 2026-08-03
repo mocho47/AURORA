@@ -53,6 +53,14 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 ### Cerebro y Sistema
 
+**cotizar** (cotizador)
+- Qué hace: Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.
+- Frases que reconoce: «cual es el precio», «cuanto cobras», «cuanto cuesta», «cuanto cuesta el faro aozoom x5», «cuanto me sale», «cuanto sale», «cuanto vale», «en cuanto sale», «precio de», «que precio»
+
+**video** (motor_video)
+- Qué hace: Trabaja con tus 296 videos: te dice cuáles ya sirven para Reels, voltea los horizontales a 9:16 con su portada, y encuentra los repetidos por su contenido (no por el nombre). Solo reporta los duplicados: borrar lo decides tú.
+- Frases que reconoce: «clip», «clips», «convertir», «convierte», «duplicado», «duplicados», «listos», «miniatura», «portada», «prepara», «preparar», «publicar»
+
 **voz** (voz)
 - Qué hace: Prende o apaga la voz: te escucha por el micrófono y te contesta hablando, con voz mexicana. También te avisa si la PC se queda sin memoria.
 - Frases que reconoce: «activa la voz», «apaga la voz», «callate», «como suenas», «deja de escuchar», «desactiva la voz», «di algo», «enciende la voz», «escuchame», «hablame», «modo voz», «prende la voz»

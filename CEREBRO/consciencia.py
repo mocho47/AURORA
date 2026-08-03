@@ -543,6 +543,48 @@ def _es_tema_del_sistema(mensaje: str) -> bool:
     return _contiene_trigger(m, _TECNICO_DEL_SISTEMA)
 
 
+def _es_cotizar(mensaje: str) -> bool:
+    """Pide un precio o una cotización.
+
+    No existía candado para esto — la función que más dinero puede traer era la
+    única sin puerta. Encontrado el 2026-08-03: "cuanto cuesta el faro aozoom x5"
+    no llegaba al cotizador teniendo el producto en el catálogo a $1,599, y
+    AURORA mandaba a Anuar a buscarlo a MercadoLibre.
+    """
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, ("cotiza", "cotizame", "cotizacion", "cotizar",
+                             "presupuesto", "presupuestame")):
+        return True
+    # "cuánto cuesta / sale / vale" + algo que se venda.
+    pregunta_precio = _contiene_trigger(m, (
+        "cuanto cuesta", "cuanto sale", "cuanto vale", "que precio", "precio de",
+        "cual es el precio", "en cuanto sale", "cuanto me sale", "cuanto cobras"))
+    if not pregunta_precio:
+        return False
+    # Se excluye lo que ya atiende otro candado mejor.
+    if _es_tema_del_sistema(mensaje) or _es_servicio_atf(mensaje):
+        return False
+    return True
+
+
+def _es_comando_video(mensaje: str) -> bool:
+    """Pide algo con los videos de la videoteca.
+
+    Existe porque Anuar tiene 296 videos (9.92 GB) de trabajos reales parados en
+    el disco: ~190 no se publican solo por estar horizontales. El motor ya podía
+    voltearlos; le faltaba la puerta desde el chat.
+    """
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, ("video", "videos", "reel", "reels", "tiktok",
+                                 "short", "shorts", "clip", "clips", "videoteca")):
+        return False
+    return _contiene_trigger(m, (
+        "vertical", "9:16", "9 16", "voltea", "voltear", "convierte", "convertir",
+        "prepara", "preparar", "listos", "publicar", "duplicado", "duplicados",
+        "repetido", "repetidos", "miniatura", "portada", "cuantos", "revisa",
+        "que hay", "cuales"))
+
+
 def _es_comando_voz(mensaje: str) -> bool:
     """Prender, apagar o probar la voz. Portada del NEXUS de Anuar."""
     m = _norm_txt(mensaje)
@@ -980,6 +1022,8 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
     # ruta_sola va PRIMERO: completa la petición anterior con el dato que faltaba,
     # antes de que cualquier otro candado o el enrutador la malinterpreten.
+    ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
+    ("video",           _es_comando_video,     "_video_real",             "motor_video"),
     ("voz",             _es_comando_voz,       "_voz_real",               "voz"),
     ("ver_aprendizaje", _es_ver_aprendizaje,   "_ver_aprendizaje_real",   "aprendizaje"),
     ("ruta_sola",       _es_ruta_sola,         "_ruta_sola_real",         "contexto_archivo"),
@@ -1411,6 +1455,49 @@ class Consciencia:
         # sin LLM) y sigue el flujo normal.
         if len(_norm_txt(mensaje).split()) >= 2:
             real = await self._router_universal(mensaje, session_id, canal)
+
+            # AQUÍ SE CORTA, y esto es el arreglo de fondo.
+            #
+            # Si el mensaje pedía ALGO REAL y el enrutador —que conoce las 535
+            # herramientas— no encontró ninguna, seguir hacia los motores solo
+            # sirve para dos cosas malas: gastar de 20 a 70 segundos, y que un
+            # modelo sin acceso al sistema conteste con seguridad algo que no
+            # sabe. Medido el 2026-08-02 sobre 40 frases reales de Anuar: TODAS
+            # las que llegaron a motor_analisis fallaron o mintieron; TODAS las
+            # que atendió un candado o el enrutador salieron bien en menos de 3 s.
+            #
+            # Antes esto se atrapaba DESPUÉS, cuando el daño (la espera) ya estaba
+            # hecho. Cortar antes es lo que convierte "20 puertas para 535
+            # herramientas" en "una puerta que de verdad responde por todas":
+            # el enrutador universal ya era esa puerta; lo que faltaba era no
+            # dejar que otro contestara por ella.
+            if real is None and _es_intencion_operativa(mensaje):
+                _ops = []
+                try:
+                    _reg = _registro()
+                    for _c in (await asyncio.to_thread(_reg.buscar, _norm_txt(mensaje), 4))[:3]:
+                        _d = (_c.get("doc") or "").strip().split("\n")[0].strip().rstrip(".")
+                        if _d:
+                            _ops.append(f"• {_d}")
+                except Exception:
+                    pass
+                try:
+                    from CEREBRO import aprende_del_usuario as _apr
+                    _apr.registrar_fallo(session_id, mensaje, time.time())
+                except Exception:
+                    pass
+                _txt = (("No encontré cómo hacer eso todavía. Esto sí lo puedo hacer "
+                         "de verdad:\n" + "\n".join(_ops) + "\n\nPídemelo así y lo corro.")
+                        if _ops else
+                        ("Eso no lo sé hacer todavía, y prefiero decírtelo a inventarte "
+                         "algo.\nSi es sobre un archivo, dame la ruta completa. Si es de "
+                         "tu negocio, dime cuál dato y lo saco de tus datos reales."))
+                self._agregar_sesion(session_id, mensaje, _txt)
+                ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
+                return {"respuesta": _txt, "motores_usados": ["sin_herramienta"],
+                        "temperatura_lead": "frio", "duracion_ms": ms,
+                        "timestamp": inicio.isoformat()}
+
             if real is not None:
                 self._agregar_sesion(session_id, mensaje, real["respuesta"])
                 ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
@@ -2262,6 +2349,160 @@ class Consciencia:
         else:
             texto = f"{titulo}:\n{str(salida)[:1500]}"
         return {"respuesta": texto}
+
+    async def _cotizar_real(self, mensaje: str) -> Dict:
+        """Cotiza con los precios REALES del catálogo. Si no encuentra, lo dice.
+
+        Usa el catálogo del negocio que corresponda: ATF (98 productos) o Milens
+        (73 servicios). Nunca inventa un precio — es lo que le diría a un cliente.
+        """
+        import importlib.util as _ilu
+        from pathlib import Path as _P
+        raiz = _P(__file__).resolve().parent.parent
+        try:
+            spec = _ilu.spec_from_file_location("motor_cotizador", raiz / "MOTORES" / "motor_cotizador.py")
+            mc = _ilu.module_from_spec(spec); spec.loader.exec_module(mc)
+        except Exception as e:
+            return {"respuesta": f"No pude cargar el cotizador: {str(e)[:120]}"}
+
+        negocio = mc._detectar_negocio(mensaje)
+        catalogo, err = (mc._catalogo_atf_real() if negocio == "atf"
+                         else mc._catalogo_milens_real())
+        if not catalogo:
+            return {"respuesta": f"No pude leer el catálogo de {negocio.upper()}: {err}"}
+
+        # Cuántas piezas pide, si lo dice.
+        cantidad = 1
+        mn = re.search(r"\b(\d{1,4})\s*(?:pz|pzs|piezas?|unidades?)?\b", _norm_txt(mensaje))
+        if mn and int(mn.group(1)) <= 5000:
+            cantidad = max(1, int(mn.group(1)))
+
+        # Un código de modelo manda sobre todo lo demás. Caso real 2026-08-03:
+        # "cuanto cuesta el faro aozoom x5" devolvía faros LED genéricos porque
+        # la palabra "faro" calzaba con muchos, cuando el X5 es un producto
+        # exacto del catálogo (Proyector Bi-LED X5 2.5", $1,599, sku AOZ-X5).
+        # Si el cliente dice el modelo, quiere ESE, no algo parecido.
+        _codigos = re.findall(r"\b([a-zA-Z]{1,3}\s?-?\s?\d{1,3})\b", _norm_txt(mensaje))
+        encontrados = {}
+        for cod in _codigos:
+            c = cod.replace(" ", "").replace("-", "").lower()
+            if len(c) < 2 or c.isdigit():
+                continue
+            exactos = {
+                k: v for k, v in catalogo.items()
+                if c in _norm_txt(str(v.get("sku", ""))).replace("-", "")
+                or re.search(rf"\b{re.escape(c)}\b", _norm_txt(str(v.get("nombre", ""))).replace("-", ""))
+            }
+            if exactos:
+                encontrados = exactos
+                break
+
+        if not encontrados:
+            encontrados = mc._filtrar_catalogo(catalogo, mensaje)
+        if not encontrados:
+            # Segunda pasada: se quitan los adjetivos que no están en el catálogo.
+            # Caso real: "20 playeras negras talla g" no encontraba nada, teniendo
+            # playeras a $260 — el color y la talla tumbaban la búsqueda entera.
+            _RUIDO = ("negras", "negra", "blancas", "blanca", "rojas", "roja", "azules",
+                      "azul", "verdes", "verde", "talla", "chica", "mediana", "grande",
+                      "chicas", "medianas", "grandes", "personalizada", "personalizadas",
+                      "con logo", "logo", "estampada", "estampadas", "por favor", "porfa")
+            limpio = _norm_txt(mensaje)
+            for r in _RUIDO:
+                limpio = re.sub(rf"\b{re.escape(r)}\b", " ", limpio)
+            limpio = re.sub(r"\s{2,}", " ", limpio).strip()
+            if limpio and limpio != _norm_txt(mensaje):
+                encontrados = mc._filtrar_catalogo(catalogo, limpio)
+
+        if not encontrados:
+            ejemplos = ", ".join(list(catalogo.values())[i].get("nombre", "")
+                                 for i in range(min(4, len(catalogo))))
+            return {"respuesta": (
+                f"No encontré eso en el catálogo de {negocio.upper()} — y **no te "
+                f"invento un precio**.\n\nAhí tengo cosas como: {ejemplos}.\n"
+                "Dime el nombre como aparece en tu catálogo y te lo cotizo al instante.")}
+
+        lineas, total = [], 0.0
+        for v in list(encontrados.values())[:6]:
+            nombre = v.get("nombre", "?")
+            precio = float(v.get("precio") or v.get("precio_publico") or 0)
+            if not precio:
+                lineas.append(f"• {nombre} — sin precio en el catálogo")
+                continue
+            sub = precio * cantidad
+            total += sub
+            lineas.append(f"• {nombre} — ${precio:,.2f}"
+                          + (f" x{cantidad} = **${sub:,.2f}**" if cantidad > 1 else ""))
+
+        cab = f"💰 Cotización con tus precios reales de **{negocio.upper()}**:"
+        pie = (f"\n\n**Total: ${total:,.2f}**" if cantidad > 1 and total else "")
+        if len(encontrados) > 6:
+            pie += f"\n_(hay {len(encontrados) - 6} coincidencias más; afina el nombre)_"
+        return {"respuesta": f"{cab}\n" + "\n".join(lineas) + pie}
+
+    async def _video_real(self, mensaje: str) -> Dict:
+        """Trabaja con la videoteca: revisar, voltear a 9:16 y buscar repetidos."""
+        m = _norm_txt(mensaje)
+        try:
+            from MARKETING import motor_video as _mv
+        except Exception as e:
+            return {"respuesta": f"No pude cargar el motor de video: {str(e)[:120]}"}
+
+        # ¿Cuántos videos hay repetidos?
+        if _contiene_trigger(m, ("duplicado", "duplicados", "repetido", "repetidos")):
+            r = await asyncio.to_thread(_mv.buscar_duplicados)
+            if r.get("status") != "OK":
+                return {"respuesta": f"No pude revisar: {r.get('mensaje')}"}
+            if not r["grupos_repetidos"]:
+                return {"respuesta": f"Revisé {r['revisados']} videos y no hay repetidos."}
+            ejemplos = "\n".join(
+                f"• {Path(g['conservar']).name} — {len(g['repetidos'])} copia(s), {g['mb']} MB c/u"
+                for g in r["grupos"][:8])
+            return {"respuesta": (
+                f"De {r['revisados']} videos, **{r['copias_de_mas']} son copias repetidas** "
+                f"({r['gb_desperdiciados']} GB de más).\n\n{ejemplos}\n\n"
+                "Solo te lo reporto — borrar lo decides tú.")}
+
+        # Voltear un archivo concreto que venga en el mensaje.
+        mruta = re.search(r"[A-Za-z]:\\[^\r\n]+?\.(?:mp4|mov|avi|mkv|webm)", mensaje, re.I)
+        if mruta:
+            modo = "recorte" if _contiene_trigger(m, ("recorta", "recorte", "centro")) else "fondo"
+            r = await asyncio.to_thread(_mv.a_vertical, mruta.group(0), "", modo)
+            if r.get("status") != "OK":
+                return {"respuesta": f"No pude convertirlo: {r.get('mensaje')}"}
+            p = await asyncio.to_thread(_mv.miniatura, r["salida"])
+            extra = f"\nPortada: {p['salida']}" if p.get("status") == "OK" else ""
+            return {"respuesta": (f"✅ Listo para TikTok/Reels:\n{r['salida']}\n"
+                                  f"({r['de']} → {r['a']}, {r['mb']} MB){extra}")}
+
+        # Preparar un lote: es lo que de verdad hace falta para publicar hoy.
+        if _contiene_trigger(m, ("prepara", "preparar", "voltea", "voltear", "convierte",
+                                 "convertir", "listos para publicar")):
+            n = 10
+            mn = re.search(r"\b(\d{1,3})\b", m)
+            if mn:
+                n = max(1, min(50, int(mn.group(1))))
+            r = await asyncio.to_thread(_mv.preparar_lote, n, "fondo")
+            if r.get("status") != "OK":
+                return {"respuesta": f"No pude: {r.get('mensaje')}"}
+            if not r.get("convertidos"):
+                return {"respuesta": r.get("mensaje", "No había videos horizontales pendientes.")}
+            return {"respuesta": (
+                f"✅ Dejé **{r['convertidos']} videos listos** para TikTok y Reels, "
+                f"cada uno con su portada.\n📁 {r['carpeta']}\n"
+                + (f"Faltan {r['faltan']} horizontales por voltear.\n" if r.get("faltan") else "")
+                + (f"⚠️ {r['fallidos']} no se pudieron.\n" if r.get("fallidos") else ""))}
+
+        # Por defecto: el estado de la videoteca.
+        r = await asyncio.to_thread(_mv.listos_para_publicar)
+        if r.get("status") != "OK":
+            return {"respuesta": f"No pude revisar la videoteca: {r.get('mensaje')}"}
+        return {"respuesta": (
+            f"📹 Tu videoteca ({r['revisados']} videos):\n"
+            f"• **{r['ya_sirven']}** ya sirven para Reels tal cual (verticales)\n"
+            f"• **{r['hay_que_voltear']}** hay que voltear a 9:16\n"
+            f"• {r['muy_largos']} son muy largos (más de 90 s)\n\n"
+            "Dime «prepara 10 videos para publicar» y te los dejo listos con portada.")}
 
     async def _voz_real(self, mensaje: str) -> Dict:
         """Prende, apaga o prueba la voz.
