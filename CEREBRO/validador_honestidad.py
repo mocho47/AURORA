@@ -152,7 +152,21 @@ def _archivos_inexistentes(texto: str) -> List[str]:
     return faltantes
 
 
-def revisar(respuesta: str, motores_usados=None, registro_claves=None) -> Tuple[str, Dict]:
+# Formas de dar por hecho lo que se estaba PREGUNTANDO. La trampa es que suenan
+# naturales y útiles: "con el plugin instalado, podemos...". Nadie dijo que
+# estuviera instalado.
+_DA_POR_HECHO = (
+    r"\bcon (?:el|la|los|las) [\w\s]{2,30} (?:instalad|activad|configurad|conectad|habilitad)",
+    r"\bya que (?:tienes|cuentas con|dispones de)\b",
+    r"\bcomo (?:tienes|ya tienes|cuentas con)\b",
+    r"\bpuesto que (?:tienes|esta|está)\b",
+    r"\baprovechando que (?:tienes|esta|está)\b",
+    r"\b(?:excelente|perfecto|genial|muy bien)[,.]? (?:dato|entonces|ya que|con)\b",
+)
+
+
+def revisar(respuesta: str, motores_usados=None, registro_claves=None,
+            pregunta: str = "") -> Tuple[str, Dict]:
     """Revisa una respuesta ANTES de que salga y le agrega la corrección honesta.
 
     Devuelve (respuesta_final, informe). El informe dice qué se detectó — sirve
@@ -161,13 +175,34 @@ def revisar(respuesta: str, motores_usados=None, registro_claves=None) -> Tuple[
     NUNCA borra la respuesta: agrega la corrección al final, visible, para que
     Anuar vea qué se dijo y por qué no es confiable.
     """
-    informe = {"afirmo_accion_sin_hacerla": False, "comandos_inventados": [],
+    informe = {"afirmo_accion_sin_hacerla": False, "dio_por_hecho": False,
+               "comandos_inventados": [],
                "archivos_inexistentes": [], "corregida": False}
     if not respuesta or not respuesta.strip():
         return respuesta, informe
 
     avisos: List[str] = []
     ejecuto = _hubo_ejecucion_real(motores_usados)
+
+    # 0) ¿Da por hecho un dato que nadie le dio?
+    # Encontrado en vivo 2026-08-02. Anuar preguntó "corel tiene instalado el
+    # plugin laser" — o sea, PREGUNTÓ si lo tiene. AURORA respondió "Con el
+    # plugin Laser instalado en CorelDRAW, podemos aprovechar...". Nadie le dijo
+    # que estuviera instalado: lo dio por cierto para poder seguir hablando.
+    # Es más sutil que inventar un archivo, pero es la misma falla: afirmar sin
+    # comprobar. Y frente a un cliente es igual de caro.
+    if not ejecuto and pregunta:
+        _p = pregunta.lower()
+        if re.search(r"\b(?:tiene[s]?|hay|existe|esta|está|cuenta con|dispone de)\b", _p) \
+                and re.search(r"\?|\bsi\b|\bcual\b|\bcuál\b|\bque\b|\bqué\b", _p):
+            for patron in _DA_POR_HECHO:
+                if re.search(patron, respuesta.lower()):
+                    informe["dio_por_hecho"] = True
+                    avisos.append(
+                        "⚠️ Me preguntaste si eso existe y respondí como si ya supiera que sí. "
+                        "**No lo comprobé** — no tengo forma de revisarlo desde aquí. "
+                        "Tómalo como suposición, no como dato.")
+                    break
 
     # 1) ¿Dice que hizo algo, sin haber ejecutado nada?
     if not ejecuto:

@@ -2494,6 +2494,17 @@ class FabricarReq(BaseModel):
 
 @app.post("/motor/fabricar", tags=["Fabrica"])
 async def motor_fabricar(req: FabricarReq):
+    # Fabricar motores salió de AURORA (decisión de Anuar, 2026-08-02): eso lo
+    # hace AURORITA XP, un proyecto aparte. AURORA carga y ejecuta motores ya
+    # probados, no los crea. Un sistema que escribe y ejecuta código nuevo en la
+    # máquina del cliente es superficie de ataque y fuente de facturas.
+    # El interruptor único vive en CEREBRO/consciencia.py (FABRICA_HABILITADA).
+    # No se borró nada: fabrica_motores.py sigue intacto por si se reactiva.
+    from CEREBRO.consciencia import FABRICA_HABILITADA
+    if not FABRICA_HABILITADA:
+        return {"status": "DESACTIVADO",
+                "mensaje": "Fabricar motores es trabajo de AURORITA XP (C:\\AURORITA_XP). "
+                           "AURORA carga y ejecuta motores ya probados, no los crea."}
     _guard(req.token)   # solo el dueño puede crear motores
     return await asyncio.to_thread(_fab().crear_motor, req.nombre, req.descripcion)
 

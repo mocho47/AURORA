@@ -678,6 +678,11 @@ _COREL_ACCIONES = (
     # en el motor pero ningun disparador de chat lo alcanzaba (muerto para el
     # usuario). Y "extrae el texto" se habia pedido en vivo hoy mismo y no existia
     # como funcion real — se ignoraba en silencio en vez de decir que no se podia.
+    # Agregado 2026-08-02: Anuar preguntó "corel tiene instalado el plugin laser"
+    # y AURORA no tenía forma de saberlo, así que soltó un ensayo dando por hecho
+    # que sí. Ahora lo lee del disco de verdad (EDITOR/corel_core.listar_plugins).
+    "plugin", "plugins", "macro", "macros", "complemento", "complementos",
+    "que tiene instalado", "tiene instalado", "esta instalado", "add-on", "addon",
     "cierra", "cerrar documento", "cierra el documento",
     "extrae el texto", "extraer el texto", "el texto del documento", "que texto tiene",
     # Encontrado en vivo 2026-07-27: "almacenar"/"guardar" son sinonimos reales que
@@ -893,6 +898,25 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
 # verdad aquí, no un candado a mano por función.
 _CANDADOS_SOLO_DUENIO = {"accion_fisica", "publicar", "abrir_navegador", "editar_codigo", "crear_capacidad"}
 
+# ── LA FÁBRICA SALE DE AURORA (decisión de Anuar, 2026-08-02) ────────────────
+# Crear motores y agentes ya no es trabajo de AURORA: es de AURORITA XP, un
+# proyecto aparte (C:\AURORITA_XP) que produce motores terminados y verificados.
+#
+# Por qué importa, más allá del orden: un sistema que puede escribir y ejecutar
+# código nuevo en la máquina del cliente es una superficie de ataque y una
+# fuente de facturas. La regla de oro de Anuar era "AURORA tiene Fábrica pero
+# NUNCA la usa sin mi autorización" — esto la vuelve estructural en vez de
+# depender de que nadie se equivoque.
+#
+# NO SE BORRA CÓDIGO: se cierra la puerta. fabrica_agentes.py y fabrica_motores.py
+# siguen ahí intactos. Poner esto en True los reactiva tal como estaban.
+# Cuando AURORITA XP entregue motores de verdad, entonces sí se archivan.
+FABRICA_HABILITADA = False
+_MSG_FABRICA_FUERA = (
+    "Crear motores ya no lo hago yo: eso es trabajo de AURORITA XP, la fábrica "
+    "que vive aparte. Yo cargo y ejecuto los motores que ella produce ya probados.\n"
+    "Si necesitas una capacidad nueva, se fabrica allá y aquí solo se instala.")
+
 # Candados que atienden a un CLIENTE. Se saltan cuando el mensaje habla del
 # propio sistema (ver _es_tema_del_sistema): "diagnostica el problema" es una
 # pregunta técnica de Anuar, no un cliente pidiendo diagnóstico de faros.
@@ -1057,6 +1081,9 @@ class Consciencia:
                 resultado.get("respuesta", ""),
                 motores_usados=resultado.get("motores_usados"),
                 registro_claves=_claves,
+                # La pregunta hace falta para detectar cuándo da por hecho justo
+                # lo que se le estaba preguntando ("¿tienes X?" → "con X instalado…").
+                pregunta=mensaje,
             )
             if _informe.get("corregida"):
                 resultado["respuesta"] = _resp
@@ -1131,6 +1158,16 @@ class Consciencia:
 
         # 2.45 FÁBRICA DE AGENTES — diálogo "pregunta-antes-de-crear". Si hay un agente
         # en construcción para esta sesión, este mensaje es el CONTEXTO que da Anuar.
+        # CREAR agentes salió de AURORA (ver FABRICA_HABILITADA). Correr y listar
+        # los que YA existen se conserva: eso no es fabricar, es usar.
+        if not FABRICA_HABILITADA and (_es_crear_agente(mensaje)
+                                       or session_id in self._agente_en_creacion):
+            self._agente_en_creacion.pop(session_id, None)
+            self._agregar_sesion(session_id, mensaje, _MSG_FABRICA_FUERA)
+            ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
+            return {"respuesta": _MSG_FABRICA_FUERA, "motores_usados": ["fabrica_fuera"],
+                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
+
         if session_id in self._agente_en_creacion and not _es_crear_agente(mensaje):
             real = await self._fabrica_agentes_contexto(session_id, mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -1171,6 +1208,14 @@ class Consciencia:
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
                 continue
             if _tema_sistema and _nombre_candado in _CANDADOS_DE_VENTA:
+                continue
+            if _nombre_candado == "crear_capacidad" and not FABRICA_HABILITADA:
+                if _trigger(mensaje):
+                    self._agregar_sesion(session_id, mensaje, _MSG_FABRICA_FUERA)
+                    ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
+                    return {"respuesta": _MSG_FABRICA_FUERA, "motores_usados": ["fabrica_fuera"],
+                            "temperatura_lead": "frio", "duracion_ms": ms,
+                            "timestamp": inicio.isoformat()}
                 continue
             if not _trigger(mensaje):
                 continue
@@ -1293,27 +1338,66 @@ class Consciencia:
         mandarla. Si niega una capacidad que SÍ existe en el registro real de herramientas,
         la corrige citando la herramienta real — sin importar qué modelo la escribió, esto
         es código, no una instrucción que un modelo chico pueda ignorar (como pasó hoy)."""
-        if not respuesta:
-            return respuesta
         import re as _re
-        baja = respuesta.lower()
-        if not any(_re.search(p, baja) for p in self._PATRONES_NEGACION_FALSA):
+        baja = (respuesta or "").lower().strip()
+
+        # Tres formas de dejar al usuario sin nada. Las tres se atienden igual:
+        # ofreciendo lo que SÍ se puede hacer, sacado del registro real.
+        niega = bool(baja) and any(_re.search(p, baja) for p in self._PATRONES_NEGACION_FALSA)
+
+        # (a) Se quedó muda. Peor que un "no puedo": no sabes si falló o te ignoró.
+        muda = len(baja) < 15
+
+        # (b) Contestó una vaguedad de relleno. Caso real 2026-07-31: a "corel
+        # tiene instalado el plugin laser" respondió "Excelente, gracias por
+        # recordarme... estoy lista para ayudar si es necesario" — 33 segundos
+        # para no decir nada.
+        hueca = (
+            len(baja) < 320
+            and not _re.search(r"\d|✅|⚠️|❌|[A-Za-z]:\\|\.(?:py|pdf|png|dxf|svg|json)\b", respuesta or "")
+            and any(f in baja for f in (
+                "estoy lista para ayudar", "estoy listo para ayudar", "en que puedo ayudarte",
+                "no tengo ninguna tarea", "gracias por recordarme", "excelente, gracias",
+                "puedes preguntarme", "hay algo en particular", "estoy aqui para ayudar",
+                "como puedo asistirte", "dime en que te ayudo"))
+        )
+
+        if not (niega or muda or hueca):
             return respuesta
+
         try:
             reg = _registro()
             candidatos = await asyncio.to_thread(reg.buscar, mensaje, 4)
         except Exception:
-            return respuesta
+            candidatos = []
+
         if not candidatos:
-            return respuesta  # de verdad no hay herramienta real — la negación queda tal cual
-        reales = "\n".join(
-            f"- {c.get('clave', c.get('funcion',''))}: {(c.get('doc') or '')[:100]}"
-            for c in candidatos[:4]
-        )
-        return (respuesta.strip() +
-                f"\n\n(Corrección real antes de enviarte esto: lo de arriba no es del todo "
-                f"cierto — SÍ tengo herramientas conectadas que aplican aquí:\n{reales}\n"
-                f"Pídemelo de nuevo directo y las uso de verdad.)")
+            # De verdad no hay herramienta. Aun así no se deja al usuario colgado:
+            # una negación honesta y clara vale más que el silencio o el relleno.
+            if niega:
+                return respuesta          # la negación era cierta, se respeta
+            return ("Eso no lo sé hacer todavía — y prefiero decírtelo a inventarte algo.\n"
+                    "Pregúntame de otra forma, o pídeme la lista de lo que sí puedo hacer.")
+
+        # En cristiano, no con las claves técnicas: Anuar pidió que no le leyera
+        # "MOTORES/motor_x:Clase.metodo" con puntos y comas.
+        opciones = []
+        for c in candidatos[:3]:
+            doc = (c.get("doc") or "").strip().split("\n")[0].strip().rstrip(".")
+            if doc:
+                opciones.append(f"• {doc}")
+        if not opciones:
+            for c in candidatos[:3]:
+                nombre = str(c.get("clave", "")).split(":")[-1].split(".")[-1].replace("_", " ")
+                if nombre:
+                    opciones.append(f"• {nombre}")
+        lista = "\n".join(opciones)
+
+        if niega:
+            return (respuesta.strip() +
+                    f"\n\n(Corrección: lo de arriba no es del todo cierto. Esto sí lo puedo "
+                    f"hacer de verdad:\n{lista}\nPídemelo directo y lo hago.)")
+        return f"No estoy segura de qué necesitas. Esto es lo que puedo hacer aquí:\n{lista}"
 
     # ── ROUTING ────────────────────────────────────────────────
 
@@ -2404,6 +2488,46 @@ class Consciencia:
             return {"respuesta": f"No pude cargar el motor de Corel: {e}"}
 
         m = _norm_txt(mensaje)
+
+        # ¿Qué plugins/macros tiene Corel? Se lee del DISCO, no de Corel, así que
+        # funciona con Corel cerrado. Va primero porque es una consulta, no una
+        # acción sobre un documento.
+        if _contiene_trigger(m, ("plugin", "macro", "complemento", "add-on", "addon",
+                                 "que tiene instalado", "tiene instalado", "esta instalado")):
+            # Si nombra uno en concreto, se responde por ese; si no, se listan todos.
+            buscado = ""
+            for palabra in ("laser", "lightburn", "rdworks", "print", "corte", "grabado",
+                            "sublima", "calendar", "color", "converter", "curves"):
+                if palabra in m:
+                    buscado = palabra
+                    break
+            if buscado:
+                r = await asyncio.to_thread(cc.tiene_plugin, buscado)
+                if r.get("status") != "OK":
+                    return {"respuesta": f"No pude revisar los plugins: {r.get('mensaje', r)}"}
+                if r.get("instalado"):
+                    nombres = ", ".join(p["nombre"] for p in r["coincidencias"])
+                    return {"respuesta": f"Sí, lo tienes: {nombres}.\n"
+                                         f"(Revisé los {r['total_revisados']} instalados en disco.)"}
+                return {"respuesta": (
+                    f"No, no tienes ningún plugin de '{buscado}' instalado. "
+                    f"Revisé los {r['total_revisados']} que hay en disco y ninguno coincide.\n"
+                    "Si lo acabas de instalar y no aparece, míralo en Corel: "
+                    "Herramientas → Macros → Administrador de macros.")}
+
+            r = await asyncio.to_thread(cc.listar_plugins)
+            if r.get("status") != "OK":
+                return {"respuesta": f"No pude revisar los plugins: {r}"}
+            if not r["total"]:
+                return {"respuesta": "No encontré ninguna macro ni plugin de Corel en el disco."}
+            lineas = "\n".join(
+                f"• {p['nombre']} ({p['kb']} KB)" + ("" if p["de_fabrica"] else "  ← instalado por ti")
+                for p in r["plugins"][:15])
+            extra = (f"\n{r['instalados_por_ti']} instalados por ti, "
+                     f"{r['de_fabrica']} de fábrica.") if r["instalados_por_ti"] else \
+                    "\nTodos son los que trae Corel de fábrica — ninguno tuyo."
+            return {"respuesta": f"Corel tiene {r['total']} macros/plugins:\n{lineas}{extra}"}
+
         # Encontrado en vivo 2026-07-27: nombres de archivo con ESPACIOS (ej. los que
         # genera WhatsApp por default: "WhatsApp Image 2026-07-27 at 12.03.35 PM.jpeg")
         # no calzaban con el regex viejo (excluía \s por completo) — el candado directo

@@ -532,3 +532,82 @@ def integrar_logo_fondo(ruta_fondo: str, ruta_logo: str, ruta_salida_pdf: str) -
         return {"status": "ok", "ruta": str(destino), "kb": round(destino.stat().st_size / 1024, 1)}
     except Exception as e:
         return {"status": "error", "detalle": str(e)[:250]}
+
+
+# ── ¿QUÉ MACROS/PLUGINS TIENE COREL? ─────────────────────────────────────────
+# Agregado 2026-08-02 por un caso real: Anuar preguntó "corel tiene instalado el
+# plugin laser" y AURORA, que no tenía forma de saberlo, contestó un ensayo sobre
+# plugins dando por hecho que sí estaba instalado. No era capacidad de más: era
+# capacidad de MENOS. Los plugins de Corel son archivos .gms en carpetas
+# conocidas, así que se pueden leer del disco SIN que Corel esté abierto.
+_CARPETAS_GMS = (
+    r"%APPDATA%\Corel",                                   # los que instala el usuario
+    r"C:\Program Files\Corel",                            # los que trae Corel
+    r"C:\Program Files (x86)\Corel",
+)
+
+
+def listar_plugins() -> Dict:
+    """Lista las macros y plugins (.gms) instalados en CorelDRAW, leyendo el disco.
+
+    No necesita que Corel esté abierto. Devuelve lo que hay de verdad: si no
+    encuentra nada, lo dice — nunca supone que un plugin está instalado.
+    """
+    import os
+    encontrados, carpetas = [], []
+    for base in _CARPETAS_GMS:
+        raiz = Path(os.path.expandvars(base))
+        if not raiz.exists():
+            continue
+        try:
+            for gms in raiz.rglob("*.gms"):
+                try:
+                    kb = round(gms.stat().st_size / 1024, 1)
+                except OSError:
+                    kb = 0
+                encontrados.append({
+                    "nombre": gms.stem,
+                    "archivo": gms.name,
+                    "kb": kb,
+                    "de_fabrica": "Program Files" in str(gms),
+                    "ruta": str(gms),
+                })
+                if str(gms.parent) not in carpetas:
+                    carpetas.append(str(gms.parent))
+        except OSError:
+            continue
+
+    propios = [p for p in encontrados if not p["de_fabrica"]]
+    return {
+        "status": "OK",
+        "total": len(encontrados),
+        "de_fabrica": len(encontrados) - len(propios),
+        "instalados_por_ti": len(propios),
+        "plugins": sorted(encontrados, key=lambda p: (p["de_fabrica"], p["nombre"])),
+        "carpetas": carpetas,
+        "nota": ("Leído del disco, no de Corel — no hace falta tenerlo abierto. "
+                 "Un plugin puede estar en disco y aun así no cargado en Corel; "
+                 "eso se ve en Herramientas → Macros → Administrador de macros."),
+    }
+
+
+def tiene_plugin(nombre: str) -> Dict:
+    """¿Está instalado un plugin/macro que se llame así? Responde con la verdad.
+
+    Busca por coincidencia parcial e insensible a mayúsculas, porque nadie
+    recuerda el nombre exacto del archivo.
+    """
+    todos = listar_plugins()
+    if todos.get("status") != "OK":
+        return todos
+    busca = (nombre or "").strip().lower()
+    if not busca:
+        return {"status": "ERROR", "mensaje": "Dime qué plugin busco."}
+    coinciden = [p for p in todos["plugins"] if busca in p["nombre"].lower()]
+    return {
+        "status": "OK",
+        "buscado": nombre,
+        "instalado": bool(coinciden),
+        "coincidencias": coinciden,
+        "total_revisados": todos["total"],
+    }
