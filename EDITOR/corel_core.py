@@ -295,11 +295,29 @@ def abrir_documento(ruta: str) -> Dict:
         origen = Path(ruta)
         if not origen.exists():
             return {"status": "no_encontrado", "detalle": f"No existe el archivo: {ruta}"}
+        # Una CARPETA también pasa exists(). Caso real 2026-08-03: se pidió abrir
+        # "...\Bart_simpson\Bart_simpson", que al descomprimir el .rar quedó como
+        # carpeta anidada. Corel no la abrió, pero se leyó el documento activo
+        # ("Sin título-1.cdr") y se reportó "✅ Abierto real" — una mentira.
+        if origen.is_dir():
+            dentro = [f.name for f in sorted(origen.iterdir())[:10]] if any(origen.iterdir()) else []
+            return {"status": "es_carpeta", "carpeta": str(origen), "contiene": dentro,
+                    "detalle": (f"Eso es una carpeta, no un archivo. "
+                                + (f"Adentro hay: {', '.join(dentro)}" if dentro
+                                   else "Y está vacía."))}
         app = _app()
         doc = app.OpenDocument(str(origen))
         if not doc:
             return {"status": "error", "detalle": "Corel no regresó un documento abierto."}
-        return {"status": "ok", "nombre": doc.Name, "paginas": doc.Pages.Count}
+        # Corel puede devolver el documento que YA estaba activo si la apertura
+        # falló. Se compara el nombre contra lo pedido: si no coincide, NO se
+        # canta éxito. Esta es la diferencia entre informar y adivinar.
+        abierto = str(doc.Name or "")
+        if abierto and origen.stem.lower() not in abierto.lower():
+            return {"status": "no_abrio", "esperado": origen.name, "activo": abierto,
+                    "detalle": (f"Corel no abrió '{origen.name}'. El documento activo "
+                                f"sigue siendo '{abierto}', así que no cuento esto como hecho.")}
+        return {"status": "ok", "nombre": abierto, "paginas": doc.Pages.Count}
     except Exception as e:
         return {"status": "error", "detalle": str(e)[:250]}
 

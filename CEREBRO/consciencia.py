@@ -223,7 +223,59 @@ _VERBOS_DE_ACCION = (
     "corrige", "arregla", "borra", "mueve", "copia", "genera", "generame",
     "crea", "creame", "calcula", "calculame", "dame", "pasame", "muestrame",
     "ensename", "revisa", "checa", "chekame", "prende", "apaga", "corre", "ejecuta",
+    # Vocabulario de taller. Caso real 2026-08-03: "extrae el mapa de bits" no
+    # traía ningún verbo conocido, así que no contaba como intención operativa,
+    # ningún candado la agarró y la contestó motor_analisis — un modelo sin
+    # manos, que respondió "no puedo ejecutar acciones físicas en la PC" DOS
+    # mensajes después de haber importado la imagen a Corel de verdad.
+    "extrae", "extraeme", "extraelo", "saca", "sacame", "sacale", "sacalo",
+    "traza", "trazalo", "rasteriza", "importa", "importame", "recorta",
+    "voltea", "gira", "rota", "quita", "quitale", "limpia", "mide", "cuenta",
+    "lista", "listame", "prepara", "preparame", "separa", "junta", "une",
+    "alinea", "duplica", "renombra", "comprime", "sube", "baja", "pasa",
+    "pasalo", "aplica", "aplicale", "marca", "registra", "actualiza",
+    "elimina", "agrega", "agregale", "analiza", "verifica", "repara",
+    "escanea", "configura", "aprueba", "resume", "olvida", "construye",
 )
+
+# Los verbos de arriba se escriben a mano porque son la forma en que habla
+# Anuar. Estos otros salen SOLOS del registro real de herramientas: cuando
+# nace una herramienta nueva, su verbo entra aquí sin que nadie lo agregue.
+# Esa es la diferencia entre tapar el hueco de hoy y cerrar la fuente de
+# huecos: la lista a mano siempre se va a quedar corta.
+_VERBOS_PLOMERIA = frozenset((
+    "get", "set", "init", "main", "health", "execute", "login", "create",
+    "add", "update", "delete", "run", "test", "load", "save", "build",
+    "por", "prompt", "ficha", "contexto", "formatos", "ejemplo", "info",
+    "estado", "catalogo", "disponible", "pdf", "generate", "resumen",
+))
+_verbos_registro_cache: Optional[frozenset] = None
+
+
+def _verbos_del_registro() -> frozenset:
+    """Verbos en infinitivo sacados de los nombres reales de las herramientas.
+
+    Se calcula una sola vez. Si el registro no carga, se sigue con la lista
+    escrita a mano: nunca se cae por esto.
+    """
+    global _verbos_registro_cache
+    if _verbos_registro_cache is not None:
+        return _verbos_registro_cache
+    verbos = set()
+    try:
+        for clave in _registro().descubrir():
+            # Las claves vienen como "carpeta/modulo:funcion", y algunas traen
+            # además la clase pegada ("AnaliticaMarketing.actualizar"): se parte
+            # por los dos, si no se guardan verbos que nadie va a escribir nunca.
+            fn = clave.split(":")[-1].split(".")[-1].lstrip("_").lower()
+            v = fn.split("_")[0]
+            # Solo infinitivos reales: 4+ letras y terminación de verbo.
+            if len(v) >= 4 and v.endswith(("ar", "er", "ir")) and v not in _VERBOS_PLOMERIA:
+                verbos.add(v)
+    except Exception as e:  # el registro es opcional para esta comprobación
+        logger.debug(f"[VERBOS] No pude leer el registro ({e}); uso solo la lista fija.")
+    _verbos_registro_cache = frozenset(verbos)
+    return _verbos_registro_cache
 _DATOS_DEL_NEGOCIO = (
     "precio", "cuanto cuesta", "cuanto sale", "cuanto vale", "cotizacion",
     "venta", "ventas", "vendido", "factura", "caja", "ingreso", "utilidad",
@@ -254,6 +306,11 @@ def _es_intencion_operativa(mensaje: str) -> bool:
     if palabras and palabras[0] in _VERBOS_DE_ACCION:
         return True
     if _contiene_trigger(m, _VERBOS_DE_ACCION) and len(palabras) <= 12:
+        return True
+    # Un verbo que existe de verdad en alguna de las 535 herramientas, dicho en
+    # infinitivo ("quiero extraer...", "puedes convertir..."). Así el próximo
+    # verbo que nadie previó ya no cae en motor_analisis.
+    if palabras and _verbos_del_registro().intersection(palabras):
         return True
     # Pregunta por un dato del negocio: son datos que están en las bases, no
     # opiniones que se puedan redactar.
@@ -832,6 +889,14 @@ _COREL_ACCIONES = (
     # abría con el visor default de Windows en vez de dentro de Corel de verdad.
     "abre", "abrir", "mete", "meter", "importa", "importar",
     "vectoriza", "vectorizar", "vectorizado", "traza", "trazar",
+    # Encontrado en vivo 2026-08-03: "extrae el mapa de bits" justo después de
+    # importar una imagen a Corel. No calzaba con nada, se fue a motor_analisis
+    # y contestó que no podía ejecutar acciones en la PC — dos mensajes después
+    # de haberla importado él mismo. En Corel "mapa de bits" es ambiguo (puede
+    # ser rasterizar, trazar o sacar la imagen incrustada), así que se atiende
+    # aquí y se pregunta cuál de las tres, en vez de adivinar o de negar.
+    "mapa de bits", "mapa de bit", "mapadebits", "bitmap", "rasteriza",
+    "rasterizar", "convertir a mapa", "convierte a mapa",
     # Nota: formas como "guardarlo"/"ábrelo"/"exportarlo" (verbo + pronombre pegado)
     # ya NO necesitan su propia entrada aquí — _contiene_trigger() ahora reconoce el
     # mismo verbo con "-lo/-la/-los/-las/-le/-les/-se" pegado como la misma palabra
@@ -840,8 +905,22 @@ _COREL_ACCIONES = (
 )
 
 
+# Vocabulario que SOLO se usa en Corel: si alguien lo dice, está hablando de
+# Corel aunque no escriba la palabra. Caso real 2026-08-03: después de importar
+# una imagen, Anuar pidió "ahora extrae el mapa de bits" — sin repetir "corel",
+# porque ya se estaba trabajando ahí. Al exigir las dos señales, el mensaje no
+# calzó, cayó en motor_analisis y contestó que no podía ejecutar acciones en la
+# PC: dos mensajes después de haberlo hecho de verdad.
+_COREL_SIN_NOMBRARLO = (
+    "mapa de bits", "mapa de bit", "mapadebits", "bitmap", "rasteriza",
+    "rasterizar", "curvas a mapa", "objeto a mapa",
+)
+
+
 def _es_comando_corel(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _COREL_SIN_NOMBRARLO):
+        return True
     return _contiene_trigger(m, _COREL_TRIGGERS) and _contiene_trigger(m, _COREL_ACCIONES)
 
 
@@ -3141,6 +3220,29 @@ class Consciencia:
                      f"{r['de_fabrica']} de fábrica.") if r["instalados_por_ti"] else \
                     "\nTodos son los que trae Corel de fábrica — ninguno tuyo."
             return {"respuesta": f"Corel tiene {r['total']} macros/plugins:\n{lineas}{extra}"}
+
+        # "Mapa de bits" en Corel son TRES cosas distintas y ninguna se puede
+        # adivinar sin equivocarse: rasterizar un vector, trazar una imagen para
+        # convertirla en vector, o sacar la imagen incrustada del documento.
+        # Caso real 2026-08-03: se pidió "extrae el mapa de bits" y la respuesta
+        # fue un "no puedo ejecutar acciones físicas" inventado. Se pregunta cuál
+        # de las tres, con lo que de verdad se puede hacer en cada una.
+        if _contiene_trigger(m, ("mapa de bits", "mapa de bit", "mapadebits",
+                                 "bitmap", "rasteriza", "rasterizar")):
+            ruta_bmp = re.search(r'([A-Za-z]:\\[^\r\n"\']+?\.\w{2,4})\b', mensaje or "")
+            arch = f" (para `{_P(ruta_bmp.group(1)).name}`)" if ruta_bmp else ""
+            return {"respuesta": (
+                f"«Mapa de bits» en Corel puede ser tres cosas distintas{arch}, y no quiero "
+                "adivinar cuál. Dime cuál y lo hago:\n\n"
+                "• **Trazarlo para corte** (lo más común aquí) — lo convierte de imagen a "
+                "vector y te deja SVG + DXF listos para la láser.\n"
+                f"   → `vectoriza{' ' + ruta_bmp.group(1) if ruta_bmp else ' <ruta>'}`\n\n"
+                "• **Quitarle el fondo y meterlo a Corel** — lo limpia y lo importa.\n"
+                f"   → `corel quita el fondo{' ' + ruta_bmp.group(1) if ruta_bmp else ' <ruta>'}`\n\n"
+                "• **Sacar el documento como imagen** — aquí sí te debo la verdad: la "
+                "exportación a PNG/JPG **no me funciona** por una limitación real de Corel "
+                "con pywin32 (a PDF sí sale al 100%).\n"
+                "   → `corel exporta a pdf` y de ahí lo paso a la imagen que necesites.")}
 
         # Encontrado en vivo 2026-07-27: nombres de archivo con ESPACIOS (ej. los que
         # genera WhatsApp por default: "WhatsApp Image 2026-07-27 at 12.03.35 PM.jpeg")

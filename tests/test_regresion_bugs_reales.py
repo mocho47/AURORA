@@ -753,3 +753,131 @@ class TestAprendeComoHablaSuDuenio:
         precargadas = [i for i in a.listar() if i.get("precargado")]
         assert len(precargadas) >= 5, (
             "Se perdió el perfil de Anuar (coreldrau, corte de caja, wats...)")
+
+
+# ===========================================================================
+# BUG 21 — "extrae el mapa de bits": faltaba el VERBO, y por eso mintió
+# Caso real 2026-08-03 en el chat de Anuar. Importó trailer.jpg a Corel (bien,
+# motor_corel, real) y en el siguiente mensaje pidió "ahora extrae el mapa de
+# bits". Ningún candado lo agarró: _es_comando_corel exige nombrar "corel" Y
+# una acción conocida, y "extrae" ni siquiera estaba en _VERBOS_DE_ACCION. Al
+# no contar como intención operativa, contestó motor_analisis — un modelo sin
+# manos — con "no puedo ejecutar acciones físicas en la PC, hazlo tú manualmente
+# en Corel". DOS MENSAJES después de haber importado la imagen él mismo.
+#
+# El arreglo NO fue agregar "extrae" a la lista: eso deja el próximo hueco
+# abierto. Los verbos ahora se leen del REGISTRO REAL de las 535 herramientas,
+# así que una herramienta nueva trae su verbo sola.
+# ===========================================================================
+class TestVerbosSalenDelRegistroNoDeUnaListaAMano:
+
+    def _fuente(self):
+        return (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("frase", [
+        "ahora extrae el mapa de bits",
+        "extrae el mapa de bits",
+        "rasteriza el documento",
+        "convierte a mapa de bits",
+    ])
+    def test_el_caso_real_llega_a_corel(self, frase):
+        """Las frases exactas que mintieron. Deben terminar en motor_corel."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc"] = mod
+        spec.loader.exec_module(mod)
+        assert mod._es_comando_corel(frase), (
+            f"'{frase}' no llega a Corel: vuelve a caer en motor_analisis")
+
+    def test_extrae_es_intencion_operativa(self):
+        """Si no es operativa, el corte router-first no la protege y miente."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc2", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc2"] = mod
+        spec.loader.exec_module(mod)
+        for frase in ("extrae el mapa de bits", "sacale el dibujo lineal",
+                      "quiero extraer el texto", "pasalo a corte", "voltea los videos"):
+            assert mod._es_intencion_operativa(frase), f"'{frase}' no cuenta como operativa"
+
+    def test_platicar_sigue_sin_ser_operativo(self):
+        """Ampliar los verbos no debe volver operativa una plática normal."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc3", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc3"] = mod
+        spec.loader.exec_module(mod)
+        for frase in ("gracias, muy amable", "como estas", "que opinas del clima"):
+            assert not mod._es_intencion_operativa(frase), f"Falso positivo: '{frase}'"
+
+    def test_los_verbos_se_leen_del_registro_real(self):
+        """La defensa de fondo: la lista a mano SIEMPRE se queda corta."""
+        fuente = self._fuente()
+        assert "_verbos_del_registro" in fuente, (
+            "Se volvió a una lista de verbos escrita a mano: el próximo verbo "
+            "que nadie previó vuelve a caer en motor_analisis y a mentir")
+        assert "_VERBOS_PLOMERIA" in fuente, (
+            "Sin filtro, 'get'/'init'/'main' entran como verbos de Anuar")
+
+    def test_corel_se_reconoce_sin_nombrarlo(self):
+        """'mapa de bits' solo se dice en Corel: exigir la palabra 'corel'
+        rompía la conversación en cuanto él dejaba de repetirla."""
+        fuente = self._fuente()
+        assert "_COREL_SIN_NOMBRARLO" in fuente, "Falta el vocabulario propio de Corel"
+
+    def test_no_promete_exportar_bitmap_que_esta_roto(self):
+        """exportar_bitmap NO funciona por pywin32. Prometerlo sería mentir."""
+        fuente = self._fuente()
+        i = fuente.index("_COREL_SIN_NOMBRARLO")
+        bloque = fuente[i:i + 12000]
+        assert "pywin32" in bloque or "PDF" in bloque, (
+            "La respuesta de mapa de bits debe decir que PNG/JPG no sale y PDF sí")
+
+
+# ===========================================================================
+# BUG 22 — "✅ Abierto real" de un archivo que NUNCA se abrió
+# Caso real 2026-08-03. Anuar pidió abrir
+# "...\Downloads\Bart_simpson\Bart_simpson" y convertirlo a DXF. AURORA
+# contestó "✅ Abierto real en Corel: 'Sin título-1.cdr'" — el documento VACÍO
+# que ya estaba en pantalla. Dos fallas encadenadas:
+#   1. Path.exists() da True para CARPETAS, y eso era una carpeta (quedó
+#      anidada al descomprimir Bart_simpson.rar). Pasó el filtro.
+#   2. Al abrir, se leía doc.Name SIN compararlo con lo pedido. Corel devuelve
+#      el documento activo cuando la apertura falla, así que se cantó éxito
+#      de algo que no ocurrió.
+# Es exactamente el tipo de mentira que los candados existen para impedir, solo
+# que aquí venía desde el motor, por debajo del validador.
+# ===========================================================================
+class TestCorelNoCantaExitoDeLoQueNoAbrio:
+
+    def _fuente(self):
+        return (RAIZ / "EDITOR" / "corel_core.py").read_text(encoding="utf-8")
+
+    def test_una_carpeta_no_pasa_por_archivo(self):
+        fuente = self._fuente()
+        i = fuente.index("def abrir_documento")
+        bloque = fuente[i:i + 2600]
+        assert "is_dir()" in bloque, (
+            "exists() da True para carpetas: sin is_dir() se le manda una "
+            "carpeta a Corel y se reporta abierta")
+        assert "es_carpeta" in bloque, "Debe decir que es una carpeta, no fallar en silencio"
+
+    def test_compara_lo_abierto_contra_lo_pedido(self):
+        """La defensa de fondo: si el documento activo no es el que se pidió,
+        NO se cuenta como hecho."""
+        fuente = self._fuente()
+        i = fuente.index("def abrir_documento")
+        bloque = fuente[i:i + 2600]
+        assert "no_abrio" in bloque, (
+            "Sin esta comparación, Corel devuelve el documento que ya estaba "
+            "y AURORA lo reporta como abierto: la mentira del 2026-08-03")
+        assert "origen.stem.lower()" in bloque, "Falta comparar el nombre real"
+
+    def test_la_carpeta_del_caso_real_se_detecta(self):
+        """Se prueba con la ruta real que falló, sin necesitar Corel abierto."""
+        from pathlib import Path as _P
+        ruta = _P(r"C:\Users\Administrador\Downloads\Bart_simpson\Bart_simpson")
+        if not ruta.exists():
+            pytest.skip("La carpeta del caso real ya no está en este disco")
+        assert ruta.is_dir(), "El caso real era una CARPETA con .pdo adentro"
