@@ -1,0 +1,89 @@
+{
+  "nota": "Cómo habla el dueño de esta AURORA. Las marcadas 'precargado' vienen de fábrica; el resto las aprendió sola cuando él reformuló algo hasta que funcionó. Ver con 'qué has aprendido', quitar con 'olvida <frase>'.",
+  "perfil": "anuar",
+  "de_donde_salieron": "Frases reales de Anuar Milán registradas entre el 2026-07-28 y el 2026-08-02 usando AURORA en su taller. No son inventadas: cada una falló de verdad alguna vez.",
+  "para_el_demo": "Una AURORA nueva arranca con esta lista VACÍA y aprende del cliente en su primera semana. Cada negocio habla distinto: un despacho no dice 'chécame el corte de caja'.",
+  "aprendido": [
+    {
+      "clave": "abreme coreldrau porfa",
+      "como_lo_dijo": "abreme coreldrau porfa",
+      "que_si_funciono": "abre corel",
+      "herramienta": "motor_corel",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Escribe 'coreldrau' y 'corell'. La falta de ortografía desarmaba el candado."
+    },
+    {
+      "clave": "hazme un corte de caja",
+      "como_lo_dijo": "hazme un corte de caja",
+      "que_si_funciono": "como va la contabilidad",
+      "herramienta": "negocio_real",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Corte de caja es el cuadre del día. AURORA lo entendió como cortar una caja en la láser."
+    },
+    {
+      "clave": "cuanto cayo hoy",
+      "como_lo_dijo": "cuanto cayo hoy",
+      "que_si_funciono": "cuanto llevo vendido este mes",
+      "herramienta": "negocio_real",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Así pregunta por el dinero del día."
+    },
+    {
+      "clave": "chekame el diseno abierto",
+      "como_lo_dijo": "chekame el diseno abierto",
+      "que_si_funciono": "corel extrae el texto del documento",
+      "herramienta": "motor_corel",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Usa 'chékame' y 'checa' para pedir que revise algo."
+    },
+    {
+      "clave": "mandale un wats al cliente",
+      "como_lo_dijo": "mandale un wats al cliente",
+      "que_si_funciono": "manda un whatsapp",
+      "herramienta": "accion_sistema",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Dice 'wats' por WhatsApp."
+    },
+    {
+      "clave": "sacale el dibujo lineal",
+      "como_lo_dijo": "sacale el dibujo lineal",
+      "que_si_funciono": "extrae el dibujo lineal",
+      "herramienta": "router_universal",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Vocabulario de taller: 'sácale', 'pásalo', 'déjalo listo'."
+    },
+    {
+      "clave": "pasalo a corte",
+      "como_lo_dijo": "pasalo a corte",
+      "que_si_funciono": "convierte a dxf",
+      "herramienta": "taller_dxf",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "'Pasar a corte' es dejarlo listo para la láser: eso es DXF."
+    },
+    {
+      "clave": "cuanto sale la instalacion de lupas",
+      "como_lo_dijo": "cuanto sale la instalacion de lupas",
+      "que_si_funciono": "quiero lupas cuanto sale la instalacion",
+      "herramienta": "servicios_atf",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Servicio real de ATF. Se le negó a un cliente real por una palabra que faltaba."
+    },
+    {
+      "clave": "si publicalo",
+      "como_lo_dijo": "si publicalo",
+      "que_si_funciono": "si",
+      "herramienta": "publicador",
+      "veces": 1,
+      "precargado": true,
+      "por_que": "Confirma con el verbo pegado. Por esto se perdió una publicación real."
+    }
+  ]
+}

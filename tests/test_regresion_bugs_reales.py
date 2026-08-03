@@ -673,3 +673,83 @@ class TestBasesAguantanDosPersonasALaVez:
         con.execute("DELETE FROM ordenes WHERE cliente LIKE 'ConcurrenciaTest%'")
         con.commit()
         con.close()
+
+
+# ===========================================================================
+# BUG 19 — AURORA no aprendía cómo habla su dueño
+# Idea de Anuar (2026-08-02): "también podría ser que aprendiera del usuario
+# cómo es que se expresa, tal cual tú lo haces; así no tendrías que inventar el
+# fix, solo copiarlo".
+#
+# Durante dos días el arreglo fue siempre el mismo: él escribía algo, no se
+# entendía, y se agregaba su frase a una lista a mano. Eso no se acaba nunca.
+# Medido en vivo: "echale un ojo a las cuentas del changarro" pasó de 25.4 s
+# inventando en motor_analisis, a 0.6 s con el dato real. Sin tocar una lista.
+# ===========================================================================
+class TestAprendeComoHablaSuDuenio:
+
+    @staticmethod
+    def _mod():
+        return _cargar("aprende_del_usuario", "CEREBRO/aprende_del_usuario.py")
+
+    def test_aprende_aunque_las_frases_no_compartan_palabras(self):
+        """La primera versión exigía que las dos frases compartieran una palabra
+        y por eso NUNCA aprendía: una reformulación de verdad casi nunca repite
+        las palabras — precisamente por eso es una reformulación."""
+        import time
+        a = self._mod()
+        ahora = time.time()
+        a.registrar_fallo("prueba_regresion", "echale un ojo a las cuentas del changarro", ahora)
+        r = a.registrar_exito("prueba_regresion", "como va la contabilidad",
+                              "negocio_real", ahora + 5)
+        try:
+            assert r, "No aprendió: dos frases sin palabras en común son el caso normal"
+            assert r["herramienta"] == "negocio_real"
+            hallado = a.buscar("echale un ojo a las cuentas del changarro")
+            assert hallado and hallado["herramienta"] == "negocio_real"
+        finally:
+            a.olvidar("changarro")      # no dejar basura en el archivo real
+
+    def test_no_aprende_si_nada_ejecuto(self):
+        """Sin un éxito real detrás, no hay nada que aprender."""
+        import time
+        a = self._mod()
+        antes = len(a.listar())
+        a.registrar_fallo("p2", "una frase cualquiera que no funciono", time.time())
+        assert len(a.listar()) == antes
+
+    def test_no_aprende_si_paso_mucho_tiempo(self):
+        """Dos mensajes seguidos son una reformulación; con media hora de por
+        medio son dos temas distintos."""
+        import time
+        a = self._mod()
+        ahora = time.time()
+        a.registrar_fallo("p3", "algo que fallo hace rato", ahora)
+        r = a.registrar_exito("p3", "otra cosa distinta", "agenda",
+                              ahora + a.SEGUNDOS_MAX_ENTRE_INTENTOS + 60)
+        assert r is None, "Aprendió de dos mensajes sin relación"
+
+    def test_no_confunde_frases_distintas(self):
+        """Enrutar mal por un alias flojo es peor que no tener alias."""
+        a = self._mod()
+        for ajena in ("que hora es", "hola como estas", "gracias"):
+            hallado = a.buscar(ajena)
+            if hallado:
+                assert hallado.get("parecido", 0) >= 0.6, (
+                    f"'{ajena}' calzó con un alias flojo: {hallado}")
+
+    def test_anuar_puede_ver_y_borrar(self):
+        """Un sistema que aprende solo tiene que poder mirarse y deshacerse."""
+        a = self._mod()
+        assert callable(a.listar) and callable(a.olvidar) and callable(a.olvidar_todo)
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "_es_ver_aprendizaje" in fuente, (
+            "Sin el candado para verlo, aprende a espaldas de Anuar")
+
+    def test_el_perfil_de_anuar_viene_precargado(self):
+        """Su versión trae sus modismos de fábrica; la del demo arranca vacía y
+        aprende del cliente."""
+        a = self._mod()
+        precargadas = [i for i in a.listar() if i.get("precargado")]
+        assert len(precargadas) >= 5, (
+            "Se perdió el perfil de Anuar (coreldrau, corte de caja, wats...)")

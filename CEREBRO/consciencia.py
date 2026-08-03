@@ -7,7 +7,7 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 Ruta: C:/AURORA/CEREBRO/consciencia.py
 """
-import asyncio, importlib, json, logging, os, re
+import asyncio, importlib, json, logging, os, re, time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -543,6 +543,19 @@ def _es_tema_del_sistema(mensaje: str) -> bool:
     return _contiene_trigger(m, _TECNICO_DEL_SISTEMA)
 
 
+def _es_ver_aprendizaje(mensaje: str) -> bool:
+    """Anuar quiere ver o borrar lo que AURORA aprendió de cómo habla.
+
+    Sin esto, un sistema que aprende solo es un sistema que cambia a tus
+    espaldas. Él tiene que poder mirarlo y quitárselo.
+    """
+    m = _norm_txt(mensaje)
+    return _contiene_trigger(m, (
+        "que has aprendido", "que aprendiste", "que sabes de como hablo",
+        "muestrame lo aprendido", "lo que has aprendido", "olvida ",
+        "olvidalo todo", "borra lo aprendido", "olvida todo lo aprendido"))
+
+
 def _es_ficha_vendedor(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), (
         "ficha de", "ficha tecnica de", "dame el pitch", "hazme un pitch",
@@ -957,6 +970,7 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
     # ruta_sola va PRIMERO: completa la petición anterior con el dato que faltaba,
     # antes de que cualquier otro candado o el enrutador la malinterpreten.
+    ("ver_aprendizaje", _es_ver_aprendizaje,   "_ver_aprendizaje_real",   "aprendizaje"),
     ("ruta_sola",       _es_ruta_sola,         "_ruta_sola_real",         "contexto_archivo"),
     ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
     ("acerca_de",       _es_acerca_de,         "_acerca_de_real",         "auto_conocimiento"),
@@ -1296,6 +1310,17 @@ class Consciencia:
         # no necesita excluir manualmente a los demás (como sí lo necesitaba antes).
         # Sí conserva su única exclusión real: si el routing rápido (paso 2) ya
         # decidió que esto es para pc_cmd/self_repair, se les cede el paso a esos.
+        # ¿Ya aprendimos que Anuar dice las cosas así? Si esta forma de pedirlo
+        # falló antes y él la reformuló hasta que funcionó, se salta directo al
+        # candado que sí sirvió. Es la idea de Anuar del 2026-08-02: en vez de que
+        # yo le agregue sus frases a mano una por una, AURORA las aprende de él.
+        _aprendido = None
+        try:
+            from CEREBRO import aprende_del_usuario as _apr
+            _aprendido = _apr.buscar(mensaje)
+        except Exception:
+            pass
+
         # Si el mensaje habla del propio sistema, los candados de VENTA no lo tocan.
         # Un cliente no escribe "consciencia.py" ni "plugin instalado"; Anuar sí,
         # porque usa AURORA de las dos formas y los dos chats se estaban pisando.
@@ -1306,6 +1331,9 @@ class Consciencia:
                 continue
             if _tema_sistema and _nombre_candado in _CANDADOS_DE_VENTA:
                 continue
+            # El disparador normal manda; lo aprendido es la segunda oportunidad.
+            _por_aprendizaje = (_aprendido is not None
+                                and _aprendido.get("herramienta") == _motor_id_candado)
             if _nombre_candado == "crear_capacidad" and not FABRICA_HABILITADA:
                 if _trigger(mensaje):
                     self._agregar_sesion(session_id, mensaje, _MSG_FABRICA_FUERA)
@@ -1314,8 +1342,11 @@ class Consciencia:
                             "temperatura_lead": "frio", "duracion_ms": ms,
                             "timestamp": inicio.isoformat()}
                 continue
-            if not _trigger(mensaje):
+            if not _trigger(mensaje) and not _por_aprendizaje:
                 continue
+            if _por_aprendizaje and not _trigger(mensaje):
+                logger.info(f"[APRENDIDO] '{mensaje[:40]}' → {_nombre_candado} "
+                            f"(parecido {_aprendido.get('parecido')})")
             if canal == "whatsapp" and _nombre_candado in _CANDADOS_SOLO_DUENIO:
                 real = {"respuesta": _MSG_SOLO_DUENIO}
             elif _nombre_candado == "editar_codigo":
@@ -1333,6 +1364,16 @@ class Consciencia:
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
+            # Un candado ejecutó de verdad. Si el mensaje anterior de esta misma
+            # conversación no había ejecutado nada, las dos formas significan lo
+            # mismo y AURORA lo aprende sola (idea de Anuar, 2026-08-02).
+            try:
+                from CEREBRO import aprende_del_usuario as _apr
+                _ap = _apr.registrar_exito(session_id, mensaje, _motor_id_candado, time.time())
+                if _ap:
+                    logger.info(f"[APRENDIÓ] '{_ap['como_lo_dijo'][:50]}' → {_motor_id_candado}")
+            except Exception:
+                pass
             ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
             return {"respuesta": real["respuesta"], "motores_usados": [_motor_id_candado],
                     "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
@@ -1393,6 +1434,15 @@ class Consciencia:
                         _sugeridas.append(f"• {_doc}")
             except Exception:
                 pass
+            # Se anota que ESTA forma de decirlo no funcionó. Si en el siguiente
+            # mensaje Anuar la reformula y esa sí ejecuta, AURORA aprende que las
+            # dos significan lo mismo — y ya no hay que agregarle la frase a mano.
+            try:
+                from CEREBRO import aprende_del_usuario as _apr
+                _apr.registrar_fallo(session_id, mensaje, time.time())
+            except Exception:
+                pass
+
             if _sugeridas:
                 respuesta_final = ("No ejecuté nada todavía — no quiero inventarte un "
                                    "resultado. Esto sí lo puedo hacer de verdad:\n"
@@ -1403,6 +1453,18 @@ class Consciencia:
                     "Eso no lo sé hacer todavía, y prefiero decírtelo a inventarte algo.\n"
                     "Si es sobre un archivo, dame la ruta completa. Si es del negocio "
                     "(ventas, órdenes, citas, precios), dime cuál y lo saco de tus datos reales.")
+
+        # Si la respuesta salió SOLO de un motor de texto, no se ejecutó nada real.
+        # Se anota aunque el guardia de arriba no la haya atrapado: la primera
+        # versión solo registraba dentro del guardia, y por eso no aprendía cuando
+        # motor_analisis contestaba "normal" (probado en vivo el 2026-08-02).
+        try:
+            if motores_respuesta and motores_respuesta <= {"motor_analisis", "conversacional",
+                                                           "razonador", "motor_coaching"}:
+                from CEREBRO import aprende_del_usuario as _apr
+                _apr.registrar_fallo(session_id, mensaje, time.time())
+        except Exception:
+            pass
 
         # 5. APRENDIZAJE
         asyncio.create_task(self._perfil.analizar_interaccion(mensaje, respuesta_final, list(respuestas.keys())))
@@ -2176,6 +2238,45 @@ class Consciencia:
         else:
             texto = f"{titulo}:\n{str(salida)[:1500]}"
         return {"respuesta": texto}
+
+    async def _ver_aprendizaje_real(self, mensaje: str) -> Dict:
+        """Muestra o borra lo que AURORA aprendió de cómo habla su dueño."""
+        from CEREBRO import aprende_del_usuario as _apr
+        m = _norm_txt(mensaje)
+
+        if _contiene_trigger(m, ("olvidalo todo", "borra lo aprendido",
+                                 "olvida todo lo aprendido")):
+            r = await asyncio.to_thread(_apr.olvidar_todo)
+            return {"respuesta": f"Listo, olvidé las {r['borrados']} formas que había "
+                                 "aprendido. Empiezo de cero contigo."}
+
+        if m.startswith("olvida ") or " olvida " in m:
+            que = re.sub(r".*\bolvida\b", "", mensaje, flags=re.I).strip(" \"'")
+            r = await asyncio.to_thread(_apr.olvidar, que)
+            if r.get("status") != "OK":
+                return {"respuesta": r.get("mensaje", "Dime qué olvido.")}
+            if not r["borrados"]:
+                return {"respuesta": f"No tenía nada aprendido con «{que}». "
+                                     f"Me quedan {r['quedan']} formas."}
+            return {"respuesta": f"Olvidé {r['borrados']} forma(s) con «{que}». "
+                                 f"Me quedan {r['quedan']}."}
+
+        lista = await asyncio.to_thread(_apr.listar)
+        if not lista:
+            return {"respuesta": "Todavía no he aprendido nada de cómo hablas.\n"
+                                 "Aprendo sola: cuando algo no lo entiendo y me lo "
+                                 "dices de otra forma que sí funciona, me quedo con las dos."}
+        propias = [i for i in lista if not i.get("precargado")]
+        semilla = [i for i in lista if i.get("precargado")]
+        lineas = [f"• «{i['como_lo_dijo']}» → {i['herramienta']}"
+                  + (f"  ({i['veces']} veces)" if int(i.get("veces", 1)) > 1 else "")
+                  for i in (propias or lista)[:15]]
+        extra = (f"\n\nY {len(semilla)} formas que ya traía cargadas de fábrica."
+                 if semilla and propias else "")
+        cab = ("Esto he aprendido de cómo hablas:" if propias
+               else "Todo lo que tengo viene precargado, aún no aprendo nada tuyo:")
+        return {"respuesta": f"{cab}\n" + "\n".join(lineas) + extra +
+                             "\n\nSi algo está mal, dime «olvida <la frase>»."}
 
     async def _ruta_sola_real(self, mensaje: str, session_id: str = "", canal: str = "api") -> Dict:
         """Llegó solo una ruta. Es el dato que faltaba para lo que se pidió antes.
