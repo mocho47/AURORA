@@ -577,6 +577,37 @@ def listar_plugins() -> Dict:
         except OSError:
             continue
 
+    # No todo lo que se integra con Corel es una macro .gms. Encontrado en vivo
+    # el 2026-08-03: Anuar preguntó si tenía el plugin de láser, se buscaron solo
+    # macros y se le respondió que NO — cuando RDWorks estaba instalado DENTRO de
+    # la carpeta de Corel (`Corel\RDWorksV8\RDWorksV8.exe`), que es justo como se
+    # integra. La respuesta era cierta para .gms y engañosa para él.
+    for base in _CARPETAS_GMS:
+        raiz = Path(os.path.expandvars(base))
+        if not raiz.exists():
+            continue
+        try:
+            for exe in raiz.rglob("*.exe"):
+                nombre = exe.stem.lower()
+                if any(k in nombre for k in ("rdwork", "lasercut", "lightburn",
+                                             "laserwork", "rdcam", "printcut")):
+                    if any(p["ruta"] == str(exe) for p in encontrados):
+                        continue
+                    try:
+                        kb = round(exe.stat().st_size / 1024, 1)
+                    except OSError:
+                        kb = 0
+                    encontrados.append({
+                        "nombre": exe.stem,
+                        "archivo": exe.name,
+                        "kb": kb,
+                        "de_fabrica": False,        # esto lo instaló el usuario
+                        "tipo": "programa integrado",
+                        "ruta": str(exe),
+                    })
+        except OSError:
+            continue
+
     propios = [p for p in encontrados if not p["de_fabrica"]]
     return {
         "status": "OK",
@@ -603,7 +634,26 @@ def tiene_plugin(nombre: str) -> Dict:
     busca = (nombre or "").strip().lower()
     if not busca:
         return {"status": "ERROR", "mensaje": "Dime qué plugin busco."}
-    coinciden = [p for p in todos["plugins"] if busca in p["nombre"].lower()]
+
+    # Anuar pregunta por "el plugin de láser", no por "RDWorksV8". Nadie llama a
+    # los programas por el nombre de su ejecutable. Sin esto se le respondió que
+    # NO tenía plugin de láser, teniendo RDWorks instalado dentro de Corel
+    # (2026-08-03) — cierto para el nombre del archivo, engañoso para él.
+    _SINONIMOS = {
+        "laser": ("rdwork", "lasercut", "lightburn", "laserwork", "rdcam"),
+        "corte": ("rdwork", "lasercut", "lightburn", "printcut"),
+        "grabado": ("rdwork", "lasercut", "lightburn"),
+        "sublima": ("filecon", "colorchart"),
+        "calendario": ("calendar",),
+        "color": ("colorchart",),
+        "curvas": ("converttocurves", "convertall"),
+    }
+    palabras = [busca] + list(_SINONIMOS.get(busca, ()))
+
+    coinciden = [p for p in todos["plugins"]
+                 # El desinstalador no es un plugin: confunde el conteo.
+                 if not p["nombre"].lower().endswith("uninstall")
+                 and any(w in p["nombre"].lower() for w in palabras)]
     return {
         "status": "OK",
         "buscado": nombre,

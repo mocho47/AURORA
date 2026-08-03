@@ -2787,8 +2787,14 @@ class Consciencia:
         # ¿Qué plugins/macros tiene Corel? Se lee del DISCO, no de Corel, así que
         # funciona con Corel cerrado. Va primero porque es una consulta, no una
         # acción sobre un documento.
-        if _contiene_trigger(m, ("plugin", "macro", "complemento", "add-on", "addon",
-                                 "que tiene instalado", "tiene instalado", "esta instalado")):
+        # Va ANTES que cualquier comando de documento: preguntar qué plugins hay
+        # no necesita Corel abierto, se lee del disco. El 2026-08-03 "que macros
+        # tiene corel" se fue al comando de documento y respondió "no hay
+        # documento abierto", que no tiene nada que ver con lo que se preguntó.
+        if _contiene_trigger(m, ("plugin", "plugins", "macro", "macros", "complemento",
+                                 "complementos", "add-on", "addon", "extension",
+                                 "que tiene instalado", "tiene instalado", "esta instalado",
+                                 "que trae instalado")):
             # Si nombra uno en concreto, se responde por ese; si no, se listan todos.
             buscado = ""
             for palabra in ("laser", "lightburn", "rdworks", "print", "corte", "grabado",
