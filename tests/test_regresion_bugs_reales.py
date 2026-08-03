@@ -583,9 +583,18 @@ class TestCandadosQueNecesitanLaSesionLaReciben:
 
     def test_lee_del_historial_que_si_persiste(self):
         """_memoria_corto persiste entre mensajes; un dict nuevo no hacía falta."""
+        import ast
         fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
-        i = fuente.index("async def _ruta_sola_real")
-        cuerpo = fuente[i:i + 2500]
+        # Se recorta la función COMPLETA con AST, no una ventana de N caracteres:
+        # la primera versión miraba 2,500 caracteres fijos y se puso en rojo sola
+        # cuando la función creció al manejar rutas sin extensión. Una prueba que
+        # se rompe porque el código creció no protege nada, solo estorba.
+        cuerpo = ""
+        for nodo in ast.walk(ast.parse(fuente)):
+            if isinstance(nodo, ast.AsyncFunctionDef) and nodo.name == "_ruta_sola_real":
+                cuerpo = ast.get_source_segment(fuente, nodo) or ""
+                break
+        assert cuerpo, "No encontré _ruta_sola_real"
         assert "_memoria_corto" in cuerpo, "Debe leer del historial de sesión real"
         assert "_ultima_peticion" not in fuente, (
             "Quedó el mecanismo viejo que nunca funcionó — código huérfano")
