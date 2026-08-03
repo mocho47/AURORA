@@ -19,8 +19,20 @@ ESTADOS_ORDEN = ["en_proceso", "terminado", "entregado"]
 
 
 def _conn() -> sqlite3.Connection:
-    c = sqlite3.connect(str(DB))
+    # timeout + WAL + busy_timeout, igual que el taller. Antes abría pelado, que
+    # es exactamente la configuración que provocó los "database is locked" en
+    # taller.db el 27-jul. oracle.db guarda los LEADS: perder uno es perder un
+    # cliente que ya había levantado la mano. Encontrado en la auditoría del
+    # 2026-08-02, cuando esta base todavía estaba en journal de rollback.
+    #
+    # OJO con `with _conn() as c:` — el context manager de sqlite3 hace commit
+    # o rollback, pero NO cierra la conexión. En este archivo hay 14 usos así y
+    # ninguna llamada a close(). Por eso el timeout importa todavía más aquí:
+    # sostiene la espera mientras el recolector de basura libera las anteriores.
+    c = sqlite3.connect(str(DB), timeout=10)
     c.row_factory = sqlite3.Row
+    c.execute("PRAGMA journal_mode=WAL")
+    c.execute("PRAGMA busy_timeout=10000")
     return c
 
 

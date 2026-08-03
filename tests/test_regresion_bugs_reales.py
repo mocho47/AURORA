@@ -589,3 +589,78 @@ class TestCandadosQueNecesitanLaSesionLaReciben:
         assert "_memoria_corto" in cuerpo, "Debe leer del historial de sesión real"
         assert "_ultima_peticion" not in fuente, (
             "Quedó el mecanismo viejo que nunca funcionó — código huérfano")
+
+
+# ===========================================================================
+# BUG 18 — Escrituras simultáneas en las bases del taller
+# El 27-jul aparecieron en el log: "UNIQUE constraint failed: ordenes.folio" y
+# "database is locked". Se arreglaron en crear_orden y _con(), pero init_db()
+# quedó sin timeout ni WAL, y editar_orden leía y escribía sin transacción.
+#
+# Lo peor no era que tronara: editar sin transacción NO truena y NO queda en el
+# log — dos ediciones a la vez y la segunda pisa a la primera. Un anticipo
+# cobrado podía desaparecer del saldo sin dejar rastro.
+# Anuar y Rocío usan el panel al mismo tiempo: no es hipotético.
+# ===========================================================================
+class TestBasesAguantanDosPersonasALaVez:
+
+    def test_todas_las_conexiones_del_taller_llevan_timeout(self):
+        """Sin timeout se rinden a los 5 s por defecto: eso es el 'database is locked'."""
+        fuente = (RAIZ / "TALLER" / "ordenes_taller.py").read_text(encoding="utf-8")
+        conexiones = [l for l in fuente.splitlines() if "sqlite3.connect(" in l]
+        assert conexiones, "No encontré ninguna conexión — ¿cambió el archivo?"
+        for linea in conexiones:
+            assert "timeout=" in linea, f"Conexión sin timeout: {linea.strip()}"
+
+    def test_el_taller_usa_WAL(self):
+        """Sin WAL, un lector bloquea a un escritor."""
+        fuente = (RAIZ / "TALLER" / "ordenes_taller.py").read_text(encoding="utf-8")
+        assert fuente.count("journal_mode=WAL") >= 2, (
+            "init_db() o _con() se quedó sin WAL")
+
+    def test_editar_orden_es_una_sola_transaccion(self):
+        """Leer y escribir por separado deja pasar un 'lost update' silencioso:
+        el anticipo cobrado desaparece y nadie se entera."""
+        fuente = (RAIZ / "TALLER" / "ordenes_taller.py").read_text(encoding="utf-8")
+        i = fuente.index("def editar_orden")
+        cuerpo = fuente[i:i + 3000]
+        assert "BEGIN IMMEDIATE" in cuerpo, (
+            "editar_orden volvió a leer y escribir sin transacción")
+        assert "rollback" in cuerpo, (
+            "Si se sale a media transacción sin rollback, la base queda bloqueada")
+
+    def test_oracle_no_repite_el_error_del_taller(self):
+        """oracle.db guarda los LEADS. Estaba en la misma configuración que
+        rompió el taller: sin timeout y sin WAL."""
+        fuente = (RAIZ / "ORACLE" / "oracle_core.py").read_text(encoding="utf-8")
+        i = fuente.index("def _conn")
+        cuerpo = fuente[i:i + 900]
+        assert "timeout=" in cuerpo, "oracle_core._conn() sin timeout"
+        assert "journal_mode=WAL" in cuerpo, "oracle_core._conn() sin WAL"
+
+    def test_dos_ordenes_al_mismo_tiempo_no_chocan(self):
+        """La prueba de verdad: dos hilos creando órdenes a la vez, como cuando
+        Anuar y Rocío usan el panel al mismo tiempo."""
+        import concurrent.futures as cf
+        ot = _cargar("ordenes_taller", "TALLER/ordenes_taller.py")
+
+        def crear(n):
+            return ot.crear_orden({
+                "solicitante": "Anuar", "cliente": f"ConcurrenciaTest{n}",
+                "trabajo": "prueba de concurrencia", "piezas": 1,
+                "valor_total": 100, "anticipo": 0,
+            })
+
+        with cf.ThreadPoolExecutor(max_workers=5) as ex:
+            resultados = list(ex.map(crear, range(5)))
+
+        ok = [r for r in resultados if str(r.get("status", "")).lower() in ("ok", "exito", "éxito")]
+        assert len(ok) == 5, f"Solo {len(ok)}/5 órdenes simultáneas se crearon: {resultados}"
+        folios = [r.get("folio") for r in ok]
+        assert len(set(folios)) == 5, f"Folios repetidos: {folios}"
+
+        # Limpieza: no dejar basura en la base real de Anuar.
+        con = ot._con()
+        con.execute("DELETE FROM ordenes WHERE cliente LIKE 'ConcurrenciaTest%'")
+        con.commit()
+        con.close()

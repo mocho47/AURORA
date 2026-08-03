@@ -25,7 +25,14 @@ IMG_DIR = ROOT / "UPLOADS" / "ordenes"
 
 
 def init_db() -> None:
-    con = sqlite3.connect(str(DB))
+    # Con timeout y WAL, igual que _con(). Era el ÚNICO punto del camino del
+    # dinero que quedó sin el arreglo del 27-jul (commit 77423a0), y se llama al
+    # inicio de CADA operación del taller: crear orden, editar, cambiar estado,
+    # listar, alertas, contabilidad. Sin timeout se rendía a los 5 s por defecto,
+    # que es justo como aparece "database is locked" en el log.
+    con = sqlite3.connect(str(DB), timeout=10)
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("PRAGMA busy_timeout=10000")
     con.execute("""
         CREATE TABLE IF NOT EXISTS ordenes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -281,19 +288,30 @@ def editar_orden(orden_id: int, data: dict) -> dict:
     Evita duplicar: en vez de crear otra orden, actualiza la actual."""
     init_db()
     con = _con()
+    # BEGIN IMMEDIATE: se lee y se escribe DENTRO de la misma transacción.
+    # Sin esto, dos ediciones simultáneas de la misma orden (Anuar en la PC y
+    # Rocío en 192.168.1.38, por ejemplo) provocaban un "lost update": la
+    # segunda pisaba a la primera. Y lo peor no era el choque — era que NO
+    # TRUENA y NO QUEDA EN EL LOG. Un anticipo cobrado podía desaparecer del
+    # saldo sin dejar rastro. Encontrado en la auditoría del 2026-08-02.
+    con.execute("BEGIN IMMEDIATE")
     row = con.execute("SELECT * FROM ordenes WHERE id=?", (orden_id,)).fetchone()
     if not row:
+        con.rollback()
+        con.rollback()   # cierra la transacción abierta arriba
         con.close()
         return {"status": "error", "mensaje": "Orden no encontrada."}
     actual = dict(row)
 
     solicitante = (data.get("solicitante") or actual["solicitante"]).strip()
     if solicitante not in SOLICITANTES:
+        con.rollback()   # cierra la transacción abierta arriba
         con.close()
         return {"status": "error", "mensaje": f"Solicitante inválido. Debe ser: {', '.join(SOLICITANTES)}"}
     cliente = (data.get("cliente") if data.get("cliente") is not None else actual["cliente"]).strip()
     trabajo = (data.get("trabajo") if data.get("trabajo") is not None else actual["trabajo"]).strip()
     if not cliente or not trabajo:
+        con.rollback()   # cierra la transacción abierta arriba
         con.close()
         return {"status": "error", "mensaje": "Cliente y trabajo solicitado son obligatorios."}
 
