@@ -42,6 +42,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def _primera_var(*nombres: str):
+    """El primer nombre de variable que EXISTE y trae valor.
+
+    Existe porque una llave bien puesta con el nombre equivocado falla en
+    silencio: se ve correcta en el .env y el codigo nunca la usa. Aceptar los
+    alias sale mas barato que exigir el nombre exacto.
+    """
+    # Sin distinguir mayusculas: Anuar escribio google_search_api_key en
+    # minusculas y el codigo buscaba GOOGLE_API_KEY. La llave estaba bien puesta
+    # y la busqueda seguia sin usarla, en silencio (2026-08-03).
+    entorno = {k.upper(): v for k, v in os.environ.items()}
+    for n in nombres:
+        v = entorno.get(n.upper())
+        if v and v.strip():
+            return v.strip()
+    return None
+
+
 
 class FuenteBusqueda(Enum):
     """Fuentes de búsqueda reales"""
@@ -197,8 +215,19 @@ class BuscadorWebProfesional:
         google_api_key: Optional[str] = None,
         google_search_engine_id: Optional[str] = None
     ):
-        self.google_api_key = google_api_key or os.getenv("GOOGLE_API_KEY")
-        self.google_search_engine_id = google_search_engine_id or os.getenv("GOOGLE_SEARCH_ENGINE_ID")
+        # Se aceptan varios nombres para la MISMA llave. Nadie recuerda si es
+        # GOOGLE_API_KEY o GOOGLE_SEARCH_API_KEY, y equivocarse fallaba en
+        # silencio: la llave estaba puesta, se veía bien en el .env, y la
+        # búsqueda seguía sin usarla. El mismo error acababa de aparecer con
+        # Green API (2026-08-03), donde el código pedía GREEN_INSTANCE_ID y el
+        # .env tenía GREEN_API_INSTANCE. Es más barato aceptar los alias que
+        # obligar a escribirlo exacto.
+        self.google_api_key = google_api_key or _primera_var(
+            "GOOGLE_API_KEY", "GOOGLE_SEARCH_API_KEY", "GOOGLE_CSE_KEY",
+            "GOOGLE_CUSTOM_SEARCH_KEY")
+        self.google_search_engine_id = google_search_engine_id or _primera_var(
+            "GOOGLE_SEARCH_ENGINE_ID", "GOOGLE_CSE_ID", "GOOGLE_CX",
+            "GOOGLE_SEARCH_ID", "SEARCH_ENGINE_ID")
         self.cache_path = Path("busquedas_cache.db")
         self._inicializar_cache()
         self.timeout_session = 30
