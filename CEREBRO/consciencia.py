@@ -200,10 +200,66 @@ def _es_accion_fisica(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _ACCION_FISICA_TRIGGERS)
 
 
+# ── LA RED DE SEGURIDAD, POR SEÑALES PROPIAS ─────────────────────────────────
+# Antes esta función era la UNIÓN DE LOS CANDADOS: si ninguno calzaba, decía que
+# el mensaje "no era operativo" y dejaba que motor_analisis contestara lo que
+# quisiera. Era circular — la red de seguridad tenía exactamente el mismo agujero
+# que aquello que debía cubrir.
+#
+# El barrido del 2026-08-02 lo probó con números: de 40 frases reales de Anuar,
+# TODAS las que cayeron en motor_analisis fallaron o mintieron (tardando 20-70 s),
+# y TODAS las que agarró un candado respondieron bien en menos de 3 s.
+# "hazme un corte de caja de ayer" acabó explicándole cómo cortar una caja de MDF
+# en la láser, teniendo la contabilidad real a un segundo de distancia.
+#
+# Ahora se reconoce la intención por señales PROPIAS, no por los candados. Da
+# igual cómo esté escrita la frase: si pide algo real, motor_analisis no la
+# contesta solo.
+_VERBOS_DE_ACCION = (
+    "haz", "hazme", "hazlo", "abre", "abreme", "cierra", "convierte", "conviertelo",
+    "exporta", "guarda", "manda", "mandale", "envia", "enviale", "publica",
+    "cotiza", "cotizame", "agenda", "agendame", "busca", "buscame", "investiga",
+    "vectoriza", "escala", "imprime", "descarga", "instala", "edita", "modifica",
+    "corrige", "arregla", "borra", "mueve", "copia", "genera", "generame",
+    "crea", "creame", "calcula", "calculame", "dame", "pasame", "muestrame",
+    "ensename", "revisa", "checa", "chekame", "prende", "apaga", "corre", "ejecuta",
+)
+_DATOS_DEL_NEGOCIO = (
+    "precio", "cuanto cuesta", "cuanto sale", "cuanto vale", "cotizacion",
+    "venta", "ventas", "vendido", "factura", "caja", "ingreso", "utilidad",
+    "ganancia", "cobrar", "anticipo", "saldo", "orden", "ordenes", "cliente",
+    "clientes", "cita", "citas", "agenda", "inventario", "existencia", "stock",
+    "lead", "leads", "contabilidad", "corte",
+)
+
+
 def _es_intencion_operativa(mensaje: str) -> bool:
-    """True si el mensaje pide operar algo real (archivo/sistema/web/herramienta)."""
+    """True si el mensaje pide algo REAL: una acción, o un dato del negocio.
+
+    No depende de los candados a propósito. Si dependiera, volvería a fallar
+    exactamente donde ellos fallan.
+    """
     if not mensaje:
         return False
+    m = _norm_txt(mensaje)
+
+    # Una ruta, un archivo o un programa: siempre es operativo.
+    if re.search(r"[A-Za-z]:\\", mensaje or ""):
+        return True
+    if re.search(r"\.\w{2,4}\b", m) and _contiene_trigger(m, ("archivo", "abre", "convierte",
+                                                              "vectoriza", "exporta", "edita")):
+        return True
+    # Un verbo de acción al principio: "hazme...", "cotizame...", "abre..."
+    palabras = m.split()
+    if palabras and palabras[0] in _VERBOS_DE_ACCION:
+        return True
+    if _contiene_trigger(m, _VERBOS_DE_ACCION) and len(palabras) <= 12:
+        return True
+    # Pregunta por un dato del negocio: son datos que están en las bases, no
+    # opiniones que se puedan redactar.
+    if _contiene_trigger(m, _DATOS_DEL_NEGOCIO):
+        return True
+    # Y lo que ya se sabía operativo por los candados, se conserva.
     return (
         _es_busqueda_web(mensaje)
         or _es_comando_corel(mensaje)
@@ -588,8 +644,25 @@ _CONSULTA_CODIGO_TRIGGERS = (
 )
 
 
+# Lo que un diseñador abre no es código. Caso real 2026-08-02: "abre el archivo
+# trailer hit y extrae el dibujo lineal" se lo llevó el IDE de código, porque la
+# frase trae "abre el archivo". Anuar abre CDR, DXF, PDF e imágenes todo el día;
+# los .py son la excepción, no la regla.
+_EXT_DISENO = (".cdr", ".dxf", ".svg", ".ai", ".eps", ".pdf", ".png", ".jpg",
+               ".jpeg", ".bmp", ".webp", ".plt", ".dwg", ".psd")
+_PALABRAS_DISENO = ("dibujo", "vector", "lineal", "trazo", "contorno", "diseno",
+                    "imagen", "foto", "grabado", "corte", "laser", "sublima",
+                    "corel", "logo", "plantilla", "molde")
+
+
 def _es_consulta_codigo(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), _CONSULTA_CODIGO_TRIGGERS)
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _CONSULTA_CODIGO_TRIGGERS):
+        return False
+    # Si habla de un archivo de diseño o usa vocabulario de taller, NO es código.
+    if any(e in m for e in _EXT_DISENO) or _contiene_trigger(m, _PALABRAS_DISENO):
+        return False
+    return True
 
 
 # ── CHAT ↔ TALLER: conversión REAL de archivos a DXF (motor que estaba dormido) ──
@@ -717,11 +790,29 @@ _NEGOCIO_TRIGGERS = (
     "contabilidad", "cuanto vendi", "cuanto llevo", "utilidad", "ganancia del mes",
     "por cobrar", "cobrar", "fuentes de leads", "fuente de leads", "fuentes efectivas",
     "que fuente convierte", "mejor fuente de",
+    # Cómo se dice el dinero en el taller, de verdad. "Corte de caja" es el
+    # cuadre del día — pero AURORA lo entendió como CORTAR UNA CAJA en la láser
+    # y le dio a Anuar 7 pasos de RDWorks (barrido del 2026-08-02). Tenía la
+    # contabilidad a la mano, que responde en menos de 3 s, y se fue al taller.
+    "corte de caja", "cuadre de caja", "cierre de caja", "corte del dia",
+    "cuanto entro hoy", "cuanto entro ayer", "cuanto se hizo hoy",
+    "cuanto cayo hoy", "cuanto facture", "como vamos de ventas",
+    "cuanto llevamos", "numeros del mes", "cuentas del mes",
 )
+
+
+# Estas frases YA son la pregunta completa: nadie escribe "cuánto corte de caja".
+# Sin esto, "hazme un corte de caja de ayer" no calzaba porque no empieza con
+# "cuánto" ni "dime", y se iba al modelo genérico — que lo mandó a la láser.
+_NEGOCIO_DIRECTO = ("corte de caja", "cuadre de caja", "cierre de caja",
+                    "corte del dia", "contabilidad", "numeros del mes",
+                    "cuentas del mes", "como vamos de ventas")
 
 
 def _es_consulta_negocio(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _NEGOCIO_DIRECTO):
+        return True
     # Debe ser una PREGUNTA/consulta, no una orden de acción física
     interroga = _contiene_trigger(m, ("cuanto", "cuantos", "cuantas", "cuales",
                                       "dime", "muestrame", "lista", "resumen")) or "que " in m or "como va" in m
@@ -838,7 +929,13 @@ _MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor
 # genérico al final (_es_accion_fisica es el único catch-all de "acción sobre el
 # sistema" — si algo más específico ya aplicaba, ya se resolvió arriba y nunca
 # llega aquí; no necesita excluir manualmente a los demás).
-_RE_RUTA_SOLA = re.compile(r'^["\'\s]*([A-Za-z]:\\[^\r\n"\']+?\.[A-Za-z0-9]{2,5})["\'\s.]*$')
+# La extensión es OPCIONAL. Caso real 2026-08-02: Anuar mandó
+# "C:\Users\Administrador\Downloads\trailler hot" — un archivo suyo que de verdad
+# no tiene extensión (112 KB). El detector la exigía, así que no lo reconoció como
+# ruta, cayó en motor_analisis y negó en falso: "no tengo la capacidad de abrir
+# archivos en la PC". Sus diseños se llaman como se le ocurre, no como espera un
+# regex.
+_RE_RUTA_SOLA = re.compile(r'^["\'\s]*([A-Za-z]:\\[^\r\n"\']+?)["\'\s.]*$')
 
 
 def _es_ruta_sola(mensaje: str) -> bool:
@@ -1282,11 +1379,30 @@ class Consciencia:
         # para un pedido operativo, no se permite una respuesta "inventada".
         motores_respuesta = set(respuestas.keys())
         if _es_intencion_operativa(mensaje) and (not motores_respuesta or motores_respuesta == {"motor_analisis"}):
-            respuesta_final = (
-                "No ejecuté ninguna acción real para ese pedido. "
-                "No voy a simular resultado. Reescríbelo con el objetivo directo "
-                "(ej. abrir/convertir/buscar en web con ruta o dato concreto) y lo ejecuto de verdad."
-            )
+            # Antes aquí se cortaba con un "no ejecuté nada, reescríbelo" — honesto
+            # pero inútil: dejaba a Anuar adivinando cómo pedirlo. Ahora se
+            # consulta el REGISTRO REAL y se ofrece lo que de verdad aplica. El
+            # dato sale del sistema, no del modelo, así que no se puede inventar.
+            _sugeridas = []
+            try:
+                _reg = _registro()
+                _cands = await asyncio.to_thread(_reg.buscar, _norm_txt(mensaje), 4)
+                for _c in _cands[:3]:
+                    _doc = (_c.get("doc") or "").strip().split("\n")[0].strip().rstrip(".")
+                    if _doc:
+                        _sugeridas.append(f"• {_doc}")
+            except Exception:
+                pass
+            if _sugeridas:
+                respuesta_final = ("No ejecuté nada todavía — no quiero inventarte un "
+                                   "resultado. Esto sí lo puedo hacer de verdad:\n"
+                                   + "\n".join(_sugeridas)
+                                   + "\n\nPídemelo así y lo corro.")
+            else:
+                respuesta_final = (
+                    "Eso no lo sé hacer todavía, y prefiero decírtelo a inventarte algo.\n"
+                    "Si es sobre un archivo, dame la ruta completa. Si es del negocio "
+                    "(ventas, órdenes, citas, precios), dime cuál y lo saco de tus datos reales.")
 
         # 5. APRENDIZAJE
         asyncio.create_task(self._perfil.analizar_interaccion(mensaje, respuesta_final, list(respuestas.keys())))
@@ -1367,9 +1483,29 @@ class Consciencia:
 
         try:
             reg = _registro()
-            candidatos = await asyncio.to_thread(reg.buscar, mensaje, 4)
+            # Se busca con el texto NORMALIZADO. Caso real 2026-08-02: "abreme
+            # coreldrau porfa" — _norm_txt corrige coreldrau→coreldraw, pero aquí
+            # llegaba el texto crudo, el registro no encontraba nada, y la
+            # negación falsa pasaba limpia. Justo la palabra que Anuar escribe
+            # mal era la que desarmaba el candado.
+            candidatos = await asyncio.to_thread(reg.buscar, _norm_txt(mensaje), 4)
         except Exception:
             candidatos = []
+
+        # Umbral de relevancia. El registro casi siempre devuelve ALGO, y con eso
+        # bastaba para disparar la corrección: a "ve por un café" le contestaba
+        # "Corrección: esto sí puedo hacerlo: exportar pdf...". El candado que
+        # existe para que no mienta la estaba haciendo mentir al revés.
+        # Ahora se exige que la herramienta comparta al menos una palabra con lo
+        # que se pidió — y nunca se muestran docstrings internas.
+        _palabras = {p for p in _norm_txt(mensaje).split() if len(p) > 3}
+        if _palabras:
+            candidatos = [
+                c for c in candidatos
+                if _palabras & set(_norm_txt(
+                    f"{c.get('clave','')} {(c.get('doc') or '')[:120]}").replace("/", " ")
+                    .replace(":", " ").replace("_", " ").split())
+            ]
 
         if not candidatos:
             # De verdad no hay herramienta. Aun así no se deja al usuario colgado:
@@ -2050,12 +2186,41 @@ class Consciencia:
         REALMENTE se puede hacer con ese tipo de archivo — nunca un "no puedo".
         """
         ruta = _RE_RUTA_SOLA.match(mensaje.strip()).group(1)
-        existe = Path(ruta).exists()
+
+        # Si no está tal cual, se busca en su carpeta un archivo que empiece
+        # igual. Caso real: Anuar escribió "...\trailler hot" y en disco hay
+        # "trailler hot" (sin extensión), "traylhot.dxf" y "tractor trailer.cdr".
+        # Antes se rendía; ahora ofrece lo que de verdad hay ahí.
+        if not Path(ruta).exists():
+            p = Path(ruta)
+            try:
+                parecidos = sorted(p.parent.glob(p.name + "*")) if p.parent.exists() else []
+            except OSError:
+                parecidos = []
+            if len(parecidos) == 1:
+                ruta = str(parecidos[0])
+            elif len(parecidos) > 1:
+                opciones = "\n".join(f"• {q.name}" for q in parecidos[:6])
+                return {"respuesta": f"Hay varios que empiezan así. ¿Cuál?\n{opciones}"}
+            else:
+                return {"respuesta": f"No encontré ese archivo en el disco:\n`{ruta}`\n"
+                                     "Revisa la ruta y te lo trabajo."}
+
+        existe = True
         ext = Path(ruta).suffix.lower().lstrip(".")
 
-        if not existe:
-            return {"respuesta": f"No encontré ese archivo en el disco:\n`{ruta}`\n"
-                                 "Revisa la ruta y te lo trabajo."}
+        # Sin extensión no se sabe qué es, pero SÍ existe: eso ya es información
+        # útil. Nunca se responde "no puedo" con un archivo real en la mano.
+        if not ext:
+            kb = round(Path(ruta).stat().st_size / 1024, 1)
+            return {"respuesta": (
+                f"Tengo el archivo `{Path(ruta).name}` ({kb} KB), pero **no trae extensión**, "
+                "así que no sé de qué tipo es.\n\n"
+                "Dime qué es y lo trabajo:\n"
+                f"• `corel abre {ruta}` — intenta abrirlo en Corel\n"
+                f"• `vectoriza {ruta}` — si es una imagen\n"
+                f"• `convierte a dxf {ruta}` — si es un vector\n\n"
+                "O renómbralo con su extensión y lo reconozco solo.")}
 
         # Se lee del historial de sesión, que YA persiste entre mensajes y está
         # probado (es el que alimenta el contexto del chat). El primer intento usó
@@ -2259,16 +2424,32 @@ class Consciencia:
         if doc:
             frase = doc.rstrip(".")
             frase = frase[0].lower() + frase[1:] if len(frase) > 1 else frase
-            # El docstring suele venir conjugado en tercera persona ("Genera el
-            # contenido...") y pegarlo tal cual daba "Voy a genera contenido".
-            # Se pasa a infinitivo el primer verbo.
+            # El docstring viene en tercera persona ("Genera el contenido...").
+            # El primer intento de pasarlo a infinitivo cortaba la última letra y
+            # pegaba una terminación, y salían cosas como "Voy a lee", "Voy a
+            # convierter", "Voy a truer" (encontrado en el barrido del 2026-08-02).
+            # Conjugar español bien es más difícil que eso, así que se usa una
+            # tabla de los verbos que de verdad aparecen en los docstrings, y si
+            # no está en la tabla NO se inventa: se deja la frase tal cual, que se
+            # lee raro pero no mal.
             primera, _, resto = frase.partition(" ")
-            for terminacion, inf in (("a", "ar"), ("e", "er"), ("e", "ir")):
-                if primera.endswith(terminacion) and len(primera) > 3:
-                    primera = primera[:-1] + inf
-                    break
-            frase = (primera + " " + resto).strip()
-            base = f"Voy a {frase}."
+            _INFINITIVOS = {
+                "genera": "generar", "crea": "crear", "lee": "leer", "abre": "abrir",
+                "convierte": "convertir", "exporta": "exportar", "guarda": "guardar",
+                "busca": "buscar", "envia": "enviar", "publica": "publicar",
+                "calcula": "calcular", "cotiza": "cotizar", "agenda": "agendar",
+                "muestra": "mostrar", "lista": "listar", "devuelve": "devolver",
+                "escala": "escalar", "extrae": "extraer", "aplica": "aplicar",
+                "prueba": "probar", "revisa": "revisar", "verifica": "verificar",
+                "analiza": "analizar", "arma": "armar", "prepara": "preparar",
+                "registra": "registrar", "actualiza": "actualizar", "borra": "borrar",
+                "mueve": "mover", "copia": "copiar", "cierra": "cerrar",
+                "importa": "importar", "vectoriza": "vectorizar", "traza": "trazar",
+                "descarga": "descargar", "sube": "subir", "manda": "mandar",
+            }
+            inf = _INFINITIVOS.get(primera)
+            frase = f"{inf} {resto}".strip() if inf else frase
+            base = f"Voy a {frase}." if inf else f"{frase[:1].upper()}{frase[1:]}."
         else:
             funcion = clave.split(":")[-1].split(".")[-1].replace("_", " ").strip()
             base = f"Voy a {funcion}." if funcion else "Voy a ejecutarlo."

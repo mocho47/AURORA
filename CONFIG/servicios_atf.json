@@ -2,7 +2,6 @@
   "_nota": "SERVICIOS (mano de obra) de ATF. Creado 2026-07-29 tras un caso real que AURORA contesto MAL: un cliente que ya habia comprado lupas fue chocado, compro un faro nuevo y pidio la RECOLOCACION de su lupa. AURORA respondio 'no puedo recolocarte la lupa, puedo ofrecerte opciones para que lo hagas tu mismo' — le nego un servicio que Anuar SI hace y lo mando a hacerlo solo. Causa: catalogo_atf.json solo tiene PRODUCTOS, ningun servicio de mano de obra, y el modelo improviso.",
   "_regla": "AURORA NUNCA debe negar un servicio que este en esta lista. Si el precio esta en null, debe decir que SI se hace y que confirma el precio — jamas inventarlo ni negar el servicio.",
   "_pendiente_anuar": "Faltan los precios reales. Anuar los dicta y se llenan aqui. Mientras esten en null, AURORA afirma el servicio y ofrece confirmar precio.",
-
   "servicios": [
     {
       "id": "recolocacion_lupa",
@@ -12,9 +11,27 @@
       "unidad": "por faro",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["recoloca", "recolocacion", "recolocar", "reinstalar la lupa",
-                            "pasar la lupa", "cambiar la lupa al faro nuevo", "me chocaron",
-                            "faro nuevo", "trasplante de lupa"]
+      "palabras_cliente": [
+        "recoloca",
+        "recolocacion",
+        "recolocar",
+        "reinstalar la lupa",
+        "pasar la lupa",
+        "cambiar la lupa al faro nuevo",
+        "me chocaron",
+        "faro nuevo",
+        "trasplante de lupa",
+        "instalacion de lupa",
+        "instalacion de lupas",
+        "instalar lupas",
+        "precio de lupas",
+        "cuanto sale la lupa",
+        "cuanto cuestan las lupas",
+        "poner lupa",
+        "montar lupas",
+        "instalacion de proyectores",
+        "cambio a lupas"
+      ]
     },
     {
       "id": "instalacion_lupa",
@@ -24,8 +41,24 @@
       "unidad": "por faro",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["instalar lupa", "poner lupas", "retrofit", "instalacion de proyector",
-                            "quiero lupas", "ponerme lupas"]
+      "palabras_cliente": [
+        "instalar lupa",
+        "poner lupas",
+        "retrofit",
+        "instalacion de proyector",
+        "quiero lupas",
+        "ponerme lupas",
+        "instalacion de lupa",
+        "instalacion de lupas",
+        "instalar lupas",
+        "precio de lupas",
+        "cuanto sale la lupa",
+        "cuanto cuestan las lupas",
+        "poner lupa",
+        "montar lupas",
+        "instalacion de proyectores",
+        "cambio a lupas"
+      ]
     },
     {
       "id": "instalacion_led",
@@ -35,7 +68,12 @@
       "unidad": "por par",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["instalar led", "poner los led", "instalacion de led", "montar el kit"]
+      "palabras_cliente": [
+        "instalar led",
+        "poner los led",
+        "instalacion de led",
+        "montar el kit"
+      ]
     },
     {
       "id": "sellado_faro",
@@ -45,8 +83,14 @@
       "unidad": "por faro",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["se empaña", "empanado", "humedad en el faro", "sellar el faro",
-                            "entra agua", "abrir el faro"]
+      "palabras_cliente": [
+        "se empaña",
+        "empanado",
+        "humedad en el faro",
+        "sellar el faro",
+        "entra agua",
+        "abrir el faro"
+      ]
     },
     {
       "id": "calibracion",
@@ -56,8 +100,14 @@
       "unidad": "por vehiculo",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["calibrar", "alinear las luces", "apuntan mal", "deslumbra",
-                            "alumbra chueco", "ajustar la altura"]
+      "palabras_cliente": [
+        "calibrar",
+        "alinear las luces",
+        "apuntan mal",
+        "deslumbra",
+        "alumbra chueco",
+        "ajustar la altura"
+      ]
     },
     {
       "id": "pulido_faro",
@@ -67,7 +117,13 @@
       "unidad": "por faro",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["pulir", "pulido", "faro opaco", "amarillento", "mica opaca"]
+      "palabras_cliente": [
+        "pulir",
+        "pulido",
+        "faro opaco",
+        "amarillento",
+        "mica opaca"
+      ]
     },
     {
       "id": "diagnostico",
@@ -77,8 +133,15 @@
       "unidad": "por vehiculo",
       "tiempo_aprox": null,
       "requiere_cita": true,
-      "palabras_cliente": ["revisar", "revision", "diagnostico", "no prende", "falla la luz",
-                            "que tiene", "no funciona"]
+      "palabras_cliente": [
+        "revisar",
+        "revision",
+        "diagnostico",
+        "no prende",
+        "falla la luz",
+        "que tiene",
+        "no funciona"
+      ]
     }
   ]
 }

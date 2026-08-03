@@ -74,6 +74,12 @@ _RE_COMANDO = re.compile(r"\b([A-Z][A-Z_]{2,20})/([a-zA-Z_][\w]*)(?::([a-zA-Z_][
 
 # ── 3. Archivos mencionados como si existieran ───────────────────────────
 _RE_RUTA = re.compile(r"[A-Za-z]:\\[^\r\n\"'<>|]+?\.[A-Za-z0-9]{2,5}")
+# Rutas que vienen dentro de un JSON con las barras escapadas se parten a la
+# mitad y quedan como "C:\\AURORA.workt" — un fragmento que obviamente no existe.
+# Encontrado en el barrido del 2026-08-02: le puso "⚠️ este archivo no existe"
+# a una respuesta que era verdadera. Un candado que marca lo bueno como falso
+# es peor que no tenerlo: se vuelve ruido y se ignora.
+_RE_RUTA_PARTIDA = re.compile(r"\\\\|\.\w{1,5}$")
 # Sin espacios a proposito: con [\w\-. ] el regex se comia las palabras de antes
 # y reportaba "Si el sistema se congela ejecuta REINICIAR_NGROK.bat" como si ese
 # fuera el nombre del archivo. Detectaba bien, pero el aviso quedaba ilegible.
@@ -133,6 +139,10 @@ def _archivos_inexistentes(texto: str) -> List[str]:
         if ruta in vistos:
             continue
         vistos.add(ruta)
+        # Si la ruta trae barras dobles, viene de un JSON escapado y está
+        # partida: no se juzga un fragmento como si fuera un archivo real.
+        if "\\\\" in ruta or len(Path(ruta).name) < 5:
+            continue
         try:
             if not Path(ruta).exists():
                 faltantes.append(ruta)
