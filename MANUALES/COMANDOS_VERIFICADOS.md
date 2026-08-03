@@ -1,147 +1,180 @@
-# Comandos VERIFICADOS de AURORA
+# Comandos de AURORA — probados en vivo
 
-**Esta lista es distinta al manual general.** Aquí solo van los comandos que se **probaron en vivo, contra el sistema real**, durante la auditoría de Fase 3 (2026-07-28/29) y que **respondieron correctamente**. Cada uno se ejecutó de verdad y se comprobó el resultado.
+**Aquí solo hay comandos que se ejecutaron de verdad contra el sistema real y
+respondieron bien.** No es una lista de lo que *debería* funcionar: cada línea se
+mandó al chat y se comprobó el resultado — el archivo en el disco, la cifra en la
+base, la página abierta.
 
-Si un comando no está en esta lista, no significa que no funcione — significa que **no se probó**, y ahí sí hay que verificarlo antes de confiar.
+Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
+modismos, porque así es como se van a usar.
 
-Actualizado: 2026-07-30 · 17 candados directos · 517 herramientas en el enrutador
+Actualizado: 2026-08-03 · 19 candados directos · 525 herramientas · 87 pruebas
+
+> **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
+> entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
+> Esta lista es para saber qué se puede hacer, no cómo hay que decirlo.
 
 ---
 
-## 🎨 Corel (probado con Corel abierto de verdad)
+## 🎨 Corel
 
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `corel abre esta imagen C:\ruta\foto.jpg` | Importa la imagen al documento activo (crea uno si no hay) | ✅ con archivo de nombre largo y con espacios |
-| `corel abre C:\ruta\archivo.pdf` | Abre PDF/CDR/AI dentro de Corel | ✅ |
-| `corel extrae el texto del documento` | Lee todo el texto real del diseño abierto y cuenta los adornos | ✅ |
-| `corel cierra el documento` | Cierra sin guardar | ✅ |
-| `corel escala la pagina a 20x30 cm` | Cambia el tamaño de página (crea documento si no hay) | ✅ |
-| `corel exporta a pdf` | Exporta a `Escritorio\PDFs a Impresion` | ✅ 376 KB real |
-| `corel guarda una copia en C:\ruta\copia.cdr` | Copia sin tocar el original | ✅ 12.8 KB real |
-| `arregla la conexión con corel` · `corel no responde` | Repara el caché corrupto y **confirma** reconectando | ✅ verificado contra Corel |
+| Escribe esto | Qué hace |
+|---|---|
+| `corel abre C:\ruta\foto.jpg` | Importa la imagen al documento abierto (crea uno si no hay) |
+| `corel abre C:\ruta\archivo.pdf` | Abre PDF, CDR o AI dentro de Corel |
+| `corel extrae el texto del documento` | Lee todo el texto real del diseño abierto |
+| `corel escala la pagina a 20x30 cm` | Cambia el tamaño de página |
+| `corel exporta a pdf` | Exporta a `Escritorio\PDFs a Impresion` |
+| `corel guarda una copia en C:\ruta\copia.cdr` | Copia sin tocar el original |
+| `corel cierra el documento` | Cierra sin guardar |
+| `corel tiene instalado el plugin laser` | **Lee el disco de verdad** y te dice si lo tienes |
+| `que macros tiene corel` | Lista las macros instaladas (funciona con Corel cerrado) |
+| `arregla la conexion con corel` | Repara el caché corrupto y lo confirma reconectando |
 
-⚠️ **Exportar a PNG/JPG desde Corel no funciona** — limitación real conocida, documentada. Usa PDF, o exporta a mano desde Corel.
+**Escribe `coreldrau` o `corell`** y también funciona.
+
+⚠️ **Exportar a PNG/JPG desde Corel no sirve** — limitación real de la librería,
+no de tu Corel. Usa PDF, que funciona al 100 %.
+
+---
+
+## 🔄 Convertir archivos
+
+| Escribe esto | Qué hace |
+|---|---|
+| `convierte a dxf C:\ruta\archivo.svg` | SVG, PDF, AI o EPS → DXF para la láser |
+| `convierte a png C:\ruta\archivo.pdf` | PDF → PNG **(probado: 2 MB reales en disco)** |
+| `convierte a pdf C:\ruta\archivo.svg` | A PDF |
+| `convierte a svg C:\ruta\imagen.png` | A SVG |
+| `combierte a dxf ...` | Con B también funciona |
+| `vectoriza C:\ruta\imagen.png` | Traza la imagen y genera SVG + DXF |
+
+**Con la calidad que necesitas:**
+
+| Escribe esto | Qué hace |
+|---|---|
+| `convierte a png a 150 dpi C:\ruta\archivo.pdf` | El número que digas manda |
+| `convierte a png para lona C:\ruta\archivo.pdf` | **150 DPI solo** — la lona se ve a metros |
+| `convierte a png para imprenta C:\ruta\archivo.pdf` | 600 DPI |
+| `convierte la pagina 2 a png C:\ruta\archivo.pdf` | Solo esa página |
+| `convierte todas las paginas a png C:\ruta\archivo.pdf` | Una imagen por página |
+
+Sin decir nada: **300 DPI**, que es tu estándar para sublimación y láser.
+
+⚠️ Archivos grandes o PDFs de muchas páginas tardan **1-2 minutos**. No está
+colgado: está rasterizando de verdad.
 
 ---
 
 ## 📅 Agenda
 
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `que tengo agendado hoy` | Citas de HOY (antes daba un resumen general, arreglado) | ✅ |
-| `que tengo agendado manana` | Citas de mañana | ✅ |
-| `proximas citas` | Lo que viene en 24 h | ✅ |
-| `agenda una cita para Juan Perez el 2026-08-01 a las 14:00 tipo cita, tel 3312345678` | Agenda de verdad | ✅ creó la cita real |
-| `agendame una cita` (sin datos) | Pide lo que falta, **no inventa** | ✅ |
+| Escribe esto | Qué hace |
+|---|---|
+| `que tengo agendado hoy` | Las citas de hoy |
+| `que tengo agendado manana` | Las de mañana |
+| `proximas citas` | Lo que viene en 24 h |
+| `agenda una cita para Pedro Lopez el 2026-08-05 10:00 tipo instalacion, tel 3312345678` | La agenda de verdad |
+| `agendame una cita` | Te pide lo que falta, **no inventa** |
 
-Tipos válidos: `instalacion`, `entrega`, `cita`, `cotizacion`.
+Tipos: `instalacion`, `entrega`, `cita`, `cotizacion`.
+
+---
+
+## 💰 Dinero y órdenes
+
+| Escribe esto | Qué hace |
+|---|---|
+| `cuanto llevo vendido este mes` | Cifras reales de tu contabilidad |
+| `hazme un corte de caja` | Lo mismo — es el cuadre, **no** cortar una caja |
+| `como va la contabilidad` | Ingresos, costos, utilidad, cobrado, por cobrar |
+| `que ordenes tengo pendientes` | Órdenes reales del taller |
+| `echale un ojo a las cuentas del changarro` | También lo entiende |
+
+---
+
+## 🏷️ Cotizar
+
+| Escribe esto | Qué hace |
+|---|---|
+| `cuanto sale una taza sublimada` | Precio real del catálogo de Milens |
+| `cotizame 20 playeras cuello redondo` | Con tus precios, no inventados |
+| `cuanto cuesta el faro aozoom x5` | Catálogo de ATF |
+| `precio de instalacion de lupas` | Servicio de mano de obra de ATF |
+| `quiero lupas cuanto sale la instalacion` | Igual |
+
+Detecta solo si es Milens o ATF por lo que pidas.
+
+---
+
+## 🌐 Internet
+
+| Escribe esto | Qué hace |
+|---|---|
+| `buscame proveedores de acrilico en guadalajara` | Búsqueda real con resultados |
+| `investiga el precio de faros led h4 en mexico` | Precios de mercado reales |
+| `que dicen de los proyectores aozoom` | Opiniones reales |
+| `compara precios de termos para sublimar` | Comparativa real |
+| `checa en internet cuanto esta el dolar hoy` | Dato real del día |
+
+**Y abrir páginas de verdad:**
+
+| Escribe esto | Qué hace |
+|---|---|
+| `abre youtube` | La abre en el navegador **(probado)** |
+| `abreme mercadolibre` | Igual |
+| `abre facebook` · `instagram` · `gmail` · `drive` · `canva` | 24 sitios por su nombre |
+| `abre ameede.com` | Cualquier dominio que escribas |
+
+⚠️ **AURORA no navega dentro de las páginas.** Las abre y busca en internet;
+no hace clic ni llena formularios.
 
 ---
 
 ## 🧠 Sobre sí misma
 
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `autodescríbete a detalle` · `qué puedes hacer` · `cuántas herramientas tienes` | Da sus datos **reales** (candados, herramientas, módulos, integraciones y sus límites) | ✅ — antes inventaba capacidades falsas |
-
----
-
-## 🔧 Taller y diseño
-
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `convierte a dxf C:\ruta\archivo.svg` | SVG/AI/EPS → DXF | ✅ ruta con espacios y paréntesis |
-| `vectoriza C:\ruta\imagen.png` | Traza la imagen y genera SVG + DXF | ✅ (avisa si el DXF sale vacío) |
-
-⚠️ **PDF que solo trae una imagen adentro:** AURORA ahora lo detecta y avisa que hay que vectorizarlo, en vez de entregar un DXF vacío diciendo "OK". Si el PDF tiene varias páginas, se puede vectorizar por página.
-
----
-
-## 🌐 Navegación web (verificado 2026-07-30, en vivo con resultados reales)
-
-Antes solo respondía a frases muy rígidas. Ahora entiende como se pide de verdad:
-
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `investiga el precio de faros led h4 en mexico` | Busca en internet de verdad y resume | ✅ resultados reales |
-| `buscame proveedores de acrilico en guadalajara` | Búsqueda real, proveedores locales | ✅ |
-| `que dicen de los proyectores aozoom` | Opiniones y reseñas reales | ✅ |
-| `compara precios de termos para sublimar` | Compara precios de mercado | ✅ |
-
-También reconoce: `busca en internet`, `precio de mercado`, `en mercadolibre`, `qué hay de nuevo en`.
-
----
-
-## 🛡️ Candado anti-invención (2026-07-30)
-
-Desde este día AURORA **no puede afirmar que hizo algo que no hizo**. Toda
-respuesta pasa por `CEREBRO/validador_honestidad.py` antes de salir, y se revisa
-contra la realidad: las acciones afirmadas, los comandos contra el registro real
-y los archivos contra el disco.
-
-Si detecta un invento, **no borra la respuesta** — le agrega la corrección
-visible: *"Arriba dije que ya había hecho algo, pero no ejecuté nada"*.
-
-Ejemplo real de la diferencia:
-
-| Antes (29 jul) | Ahora (30 jul) |
+| Escribe esto | Qué hace |
 |---|---|
-| *"CorelDRAW: Vectorización finalizada → vectorizado_con_coreldraw.pdf"* (ese archivo nunca existió) | *"Dame la ruta completa de salida y lo exporto de verdad."* |
-
-Probado en vivo contra los 4 inventos reales: **4/4 sin mentir.** Protegido por
-12 pruebas de regresión (suite completa: 63/63).
-
----
-
-## 💰 Negocio y cotización
-
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `cuánto llevo vendido este mes` · `cómo va la contabilidad` | Cifras reales del taller | ✅ |
-| `qué órdenes tengo pendientes` | Órdenes reales | ✅ |
-| Cotizar tazas/termos/playeras | Usa el catálogo de **Milens** (73 servicios) | ✅ detecta el negocio solo |
-| Cotizar faros/lupas/LED | Usa el catálogo de **ATF** (98 productos) | ✅ detecta el negocio solo |
+| `que puedes hacer` | Sus datos **reales**: candados, herramientas, límites |
+| `cuantas herramientas tienes` | El número de verdad, del registro |
+| `que has aprendido de mi` | Las formas de hablar que te aprendió |
+| `olvida <la frase>` | Borra lo que aprendió mal |
 
 ---
 
-## 🔩 Servicios de ATF (mano de obra)
+## 📁 Archivos
 
-AURORA **nunca niega** estos servicios. Si el precio no está capturado, dice que lo confirma — no lo inventa:
+| Escribe esto | Qué hace |
+|---|---|
+| `C:\Users\Administrador\Downloads\archivo.jpg` | **Solo la ruta**: te dice qué puede hacer con él |
+| Una ruta sin extensión | La encuentra igual y te dice el tamaño |
+| `abre el archivo trailer hit y extrae el dibujo lineal` | Recorta el fondo y saca el trazo limpio B&N |
+| `edita CEREBRO/validador_honestidad.py` | Edita con respaldo, verifica que compile y revierte si falla |
 
-`recolocación de lupa` · `instalación de lupa / retrofit` · `instalación de kit LED` · `sellado de faro` · `calibración de luces` · `pulido de faro` · `diagnóstico`
-
-Si además preguntas por espacio o cita, consulta la **agenda real**.
-
-⏳ **Faltan los precios** — los dicta Anuar.
-
----
-
-## 📱 WhatsApp
-
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `manda un whatsapp a 33XXXXXXXX diciendo ...` | Envía de verdad | ✅ |
-| `manda el archivo C:\ruta\x.pdf por whatsapp a 33XXXXXXXX` | Envía el archivo real | ✅ |
-| `repara whatsapp` | Limpia caché de WhatsApp Desktop | ✅ liberó 310 MB real |
-
-**Quién escribe importa:** si el mensaje entrante es de familia o suena personal, AURORA **no vende ni registra lead** — responde con respeto y te avisa a ti. Verificado 14/14 casos reales.
+⚠️ Archivos de más de 14,000 caracteres **no los edita** — te avisa antes en vez
+de devolverte medio archivo.
 
 ---
 
-## 💻 Sistema
+## 🚫 Lo que NO hace, y te lo dice
 
-| Escribe esto | Qué hace | Comprobado |
-|---|---|---|
-| `haz un diagnóstico de mi pc` | RAM, CPU, disco, procesos pesados — datos reales | ✅ |
-| `optimiza mi pc` / `limpia temporales` | **Pide confirmación** antes de borrar | ✅ |
-| `busca el archivo <nombre>` | Busca en Descargas, Escritorio, Documentos, Imágenes | ✅ 11 s (antes +2 min) |
+| Si le pides | Contesta |
+|---|---|
+| Crear un motor nuevo | *"Eso es trabajo de AURORITA XP"* — la fábrica vive aparte |
+| Algo que no sabe hacer | Te ofrece lo que **sí** puede, sacado de sus herramientas reales |
+| Algo físico (ir por un café) | Niega limpio, sin inventarte una alternativa falsa |
+
+**Y desde el 30 de julio no puede afirmar que hizo algo que no hizo.** Hay un
+candado en código que revisa cada respuesta antes de salir: las acciones que dice
+haber hecho, los comandos que menciona (contra el registro real) y los archivos
+que nombra (contra el disco). Si algo no cuadra, lo corrige a la vista.
 
 ---
 
-## ⚠️ Lo que NO funciona todavía (honesto)
+## ⏱️ Cuánto tarda
 
-1. **Exportar PNG/JPG desde Corel** — incompatibilidad real de la librería. Usa PDF.
-2. **Tareas automáticas en segundo plano nuevas** — se cuelgan. Por eso el pronóstico de ventas es bajo demanda (`/equipos/ventas/ultimo`), no automático cada 4 h.
-3. **Publicar como Milens** — faltan sus 4 llaves de Meta en el `.env` (están en la PC de Rocío). Avisa honesto en vez de publicar en la página equivocada.
-4. **Buscar en la web** — falta `GOOGLE_API_KEY`. Ahora lo dice en vez de devolver 0 resultados en silencio.
+| | |
+|---|---|
+| Contabilidad, agenda, servicios | **menos de 1 segundo** |
+| Corel, convertir, buscar en web | **2-10 segundos** |
+| Conversiones pesadas | **1-2 minutos** (está trabajando de verdad) |
+| Cuando Groq limita la cuota | puede tardar; eso es del proveedor, no de AURORA |

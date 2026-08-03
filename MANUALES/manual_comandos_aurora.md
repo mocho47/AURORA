@@ -12,7 +12,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **negocio** (negocio_real)
 - Qué hace: CHAT ↔ MOTORES DE NEGOCIO. Lee datos REALES (órdenes, inventario, CRM,
-- Frases que reconoce: «bajo minimo», «clientes nuevos», «cobrar», «como va», «contabilidad», «cuales», «cuantas», «cuanto», «cuanto llevo», «cuanto me queda», «cuanto tengo de», «cuanto vendi»
+- Frases que reconoce: «bajo minimo», «cierre de caja», «clientes nuevos», «cobrar», «como va», «como vamos de ventas», «contabilidad», «corte de caja», «corte del dia», «cuadre de caja», «cuales», «cuantas»
 
 **agenda** (agenda)
 - Qué hace: (sin descripción en el código)
@@ -37,7 +37,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **corel** (motor_corel)
 - Qué hace: CHAT ↔ COREL: comandos directos y fijos sobre motor_corel (COM real).
-- Frases que reconoce: «abre», «abrir», «almacena», «almacenar», «aplica el color», «cdr», «cerrar documento», «cierra», «cierra el documento», «combina», «corel», «corell»
+- Frases que reconoce: «abre», «abrir», «add-on», «addon», «almacena», «almacenar», «aplica el color», «cdr», «cerrar documento», «cierra», «cierra el documento», «combina»
 
 **dxf** (taller_dxf)
 - Qué hace: CHAT ↔ TALLER: convierte de verdad un archivo a DXF con taller_core
@@ -48,14 +48,22 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **busqueda_web** (web_search)
 - Qué hace: Envoltorio delgado para que _buscar_web calce con la firma uniforme
-- Frases que reconoce: «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «busca informacion», «buscame», «buscar en internet», «buscar en la web», «búscame», «checa en internet», «checa en la web»
+- Frases que reconoce: «\b(busca|buscame|investiga|googlea|consulta|checa)\b», «agenda», «agente», «archivo», «busca en google», «busca en internet», «busca en la red», «busca en la web», «busca en linea», «busca informacion», «busca/investiga X», «buscame»
 
 
 ### Cerebro y Sistema
 
+**ver_aprendizaje** (aprendizaje)
+- Qué hace: Muestra o borra lo que AURORA aprendió de cómo habla su dueño.
+- Frases que reconoce: «borra lo aprendido», «lo que has aprendido», «muestrame lo aprendido», «olvida», «olvida todo lo aprendido», «olvidalo todo», «que aprendiste», «que has aprendido», «que sabes de como hablo»
+
+**ruta_sola** (contexto_archivo)
+- Qué hace: Llegó solo una ruta. Es el dato que faltaba para lo que se pidió antes.
+- Frases que reconoce: «abre esta imagen en corel», «return bool(_RE_RUTA_SOLA.match((mensaje or»
+
 **abrir_navegador** (pc_access)
 - Qué hace: CHAT ↔ pc_access: abre un dominio/URL real directo en el navegador
-- Frases que reconoce: «abre la pagina», «abrela», «abrelo», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto», «navegador»
+- Frases que reconoce: «abre», «abre la pagina», «abre youtube», «abrela», «abrelo», «abreme», «abrir», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta»
 
 **acerca_de** (auto_conocimiento)
 - Qué hace: CHAT ↔ AUTO-CONOCIMIENTO: describe la estructura y capacidades REALES de
@@ -83,18 +91,18 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **consulta_codigo** (ide)
 - Qué hace: CHAT ↔ IDE (SOLO LECTURA): lee/busca/explica código real. NUNCA edita el núcleo.
-- Frases que reconoce: «abre el archivo», «busca en el codigo», «busca en los archivos», «donde esta la funcion», «en que archivo esta», «ensename el codigo de», «lee el archivo», «leeme el archivo», «muestrame el archivo», «muestrame el codigo», «muestrame el codigo de», «que dice el archivo»
+- Frases que reconoce: «.ai», «.bmp», «.cdr», «.dwg», «.dxf», «.eps», «.jpeg», «.jpg», «.pdf», «.plt», «.png», «.psd»
 
 **editar_codigo** (ide_editor)
 - Qué hace: CHAT ↔ IDE (EDITAR): modifica cualquier archivo con red anti-ruptura.
-- Frases que reconoce: «agrega en el archivo», «arregla el archivo», «cambia en el archivo», «corrige el archivo», «edita el archivo», «edita el codigo», «modifica el archivo», «modifica el codigo», «reemplaza en el archivo»
+- Frases que reconoce: «\b[A-Z][A-Z_]{2,}/[\w.]+», «\b[\w\-.]+\.(?:py|json|md|html|js|css|txt|bat|ps1|yml)\b», «agrega en», «agrega en el archivo», «agregar en», «arregla», «arregla el archivo», «arreglar», «borra la linea», «cambia en», «cambia en el archivo», «cambiar en»
 
 **accion_fisica** (accion_sistema)
 - Qué hace: Ejecuta DE VERDAD una acción física, o dice honestamente por qué no.
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~517 funciones reales)
+## Herramientas del enrutador universal (~525 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -153,13 +161,19 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (52)
+### CEREBRO (58)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
 - `CEREBRO/acciones_sistema:mover` — Mueve un archivo y VERIFICA (existe en destino y ya no en origen).
 - `CEREBRO/acciones_sistema:reparar_whatsapp` — Cierra WhatsApp y limpia su cache REAL. Devuelve exactamente qué hizo.
 - `CEREBRO/acciones_sistema:reparar_corel` — Repara la conexion de AURORA con CorelDRAW borrando el cache corrupto de
+- `CEREBRO/aprende_del_usuario:registrar_fallo` — Este mensaje no ejecutó nada. Se guarda por si el siguiente sí lo hace.
+- `CEREBRO/aprende_del_usuario:registrar_exito` — Este mensaje SÍ ejecutó. Si el anterior falló, se aprende la equivalencia.
+- `CEREBRO/aprende_del_usuario:buscar` — ¿Ya aprendimos que Anuar dice las cosas así? Devuelve lo aprendido o None.
+- `CEREBRO/aprende_del_usuario:listar` — Todo lo aprendido, de lo más usado a lo menos. Para que Anuar lo revise.
+- `CEREBRO/aprende_del_usuario:olvidar` — Borra lo aprendido que coincida con ese texto. Anuar siempre puede deshacer.
+- `CEREBRO/aprende_del_usuario:olvidar_todo` — olvidar todo (aprende_del_usuario)
 - `CEREBRO/aurora_cerebro_simple:AuroraCerebro.esta_operativo` — esta operativo (AuroraCerebro)
 - `CEREBRO/aurora_cerebro_simple:AuroraCerebro.razonar` — razonar (AuroraCerebro)
 - `CEREBRO/aurora_cerebro_v4:AuroraCerebro.esta_operativo` — esta operativo (AuroraCerebro)
@@ -267,7 +281,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CORE/publicador_atf_profesional:PublicadorATFProfesional.obtener_estadisticas` — Obtiene estadísticas de publicaciones
 - `CORE/publicador_atf_profesional:ejemplo_uso` — Ejemplo de cómo usar el publicador profesional
 
-### EDITOR (57)
+### EDITOR (59)
 
 - `EDITOR/conversiones:aligerar_dxf` — Convierte splines a polilíneas y guarda R2000: RDWorks lo lee y pesa menos.
 - `EDITOR/conversiones:a_bw_puro` — a bw puro (conversiones)
@@ -296,6 +310,8 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/corel_core:aplicar_color_seleccion` — Aplica un color RGB real a la forma actualmente SELECCIONADA en Corel
 - `EDITOR/corel_core:extraer_y_aplicar_color` — Gotero completo: muestra el pixel (x,y) de ruta_imagen y lo aplica de
 - `EDITOR/corel_core:integrar_logo_fondo` — Crea un documento NUEVO, importa la imagen de fondo (ajustada al tamaño
+- `EDITOR/corel_core:listar_plugins` — Lista las macros y plugins (.gms) instalados en CorelDRAW, leyendo el disco.
+- `EDITOR/corel_core:tiene_plugin` — ¿Está instalado un plugin/macro que se llame así? Responde con la verdad.
 - `EDITOR/cotizador_corte:cotizar_corte` — Cotiza corte láser desde un DXF con precios reales de Milens.
 - `EDITOR/escalas_planillas:cm_a_px` — cm a px (escalas_planillas)
 - `EDITOR/escalas_planillas:px_a_cm` — px a cm (escalas_planillas)
