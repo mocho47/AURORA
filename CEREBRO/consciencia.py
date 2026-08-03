@@ -1086,7 +1086,20 @@ class Consciencia:
         # espera (tres reintentos con backoff) antes de responder. Todo lo que NO
         # llama a Groq responde en menos de un segundo. Si Groq dice que no, es
         # mejor caer rápido que esperar tres veces por lo mismo.
-        self._groq = AsyncGroq(api_key=api_key, max_retries=1) if api_key else None
+        _cliente = AsyncGroq(api_key=api_key, max_retries=1) if api_key else None
+
+        # Y si aun así Groq no puede, responde el modelo local en vez de dejar a
+        # Anuar sin nada. El envoltorio se comporta igual que el cliente de Groq,
+        # así que las ~10 llamadas repartidas por este archivo no cambian: tocar
+        # todas en un archivo de 148,000 caracteres sería el riesgo, no el arreglo.
+        # La respuesta local SIEMPRE dice que es local — el modelo chico se
+        # equivoca más y Anuar tiene derecho a saber quién le contestó.
+        try:
+            from CEREBRO.respaldo_local import ClienteConRespaldo
+            self._groq = ClienteConRespaldo(_cliente) if _cliente else None
+        except Exception as e:
+            logger.warning(f"Sin respaldo local ({e}); solo Groq")
+            self._groq = _cliente
 
         # Cargar prompts de cada motor y metadata
         await asyncio.to_thread(self._cargar_prompts_y_metadata)
