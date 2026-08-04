@@ -500,6 +500,12 @@ def _es_busqueda_web(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     if _contiene_trigger(m, _BUSQUEDA_WEB_TRIGGERS):
         return True
+    # Preguntar dónde comprar algo, o pedir el link de una publicación, es
+    # buscar en internet — aunque no se diga "busca en internet". Caso real
+    # 2026-08-04: "encuentra el mejor precio por 100 hojas y dame el link" no
+    # la agarraba NINGÚN candado y se iba a motor_analisis.
+    if _es_compra_afuera(m):
+        return True
     # Forma natural: "busca/investiga X" sin la frase literal "en internet".
     if re.search(r"\b(busca|buscame|investiga|googlea|consulta|checa)\b", m):
         # Evitar colisión con pedidos internos del propio sistema.
@@ -600,6 +606,32 @@ def _es_tema_del_sistema(mensaje: str) -> bool:
     return _contiene_trigger(m, _TECNICO_DEL_SISTEMA)
 
 
+# Tiendas y señales de que se está preguntando por comprar AFUERA, no por
+# cuánto cobrarle a un cliente. Separar las dos cosas es lo que evita que
+# "el mejor precio de 100 hojas" se convierta en una cotización de 100 playeras.
+_TIENDAS_DE_AFUERA = (
+    "mercado libre", "mercadolibre", "meli", "amazon", "ebay", "aliexpress",
+    "alibaba", "shein", "temu", "walmart", "costco", "home depot", "lideart",
+    "office depot", "coppel", "liverpool",
+)
+_SENALES_DE_COMPRA = (
+    "busca en", "buscame en", "buscar en", "encuentra en", "encuentrame",
+    "donde compro", "donde consigo", "donde venden", "donde lo venden",
+    "dame el link", "el link", "la publicacion", "el enlace", "la url",
+    "mas barato", "quien lo vende", "que proveedor", "proveedores de",
+)
+
+
+def _es_compra_afuera(m_norm: str) -> bool:
+    """True si se pregunta por comprar algo afuera, no por cuánto cobrarlo.
+
+    Basta con nombrar una tienda: si el mensaje dice "mercado libre", jamás está
+    pidiendo una cotización del taller.
+    """
+    return (_contiene_trigger(m_norm, _TIENDAS_DE_AFUERA)
+            or _contiene_trigger(m_norm, _SENALES_DE_COMPRA))
+
+
 def _es_cotizar(mensaje: str) -> bool:
     """Pide un precio o una cotización.
 
@@ -609,6 +641,14 @@ def _es_cotizar(mensaje: str) -> bool:
     AURORA mandaba a Anuar a buscarlo a MercadoLibre.
     """
     m = _norm_txt(mensaje)
+    # El cotizador es para VENDER, no para COMPRAR. Si se pregunta cuánto cuesta
+    # algo AFUERA (MercadoLibre, Amazon, un proveedor), no tiene nada que hacer
+    # aquí. Caso real 2026-08-04: "busca en mercado libre el mejor precio de 100
+    # hojas de papel adhesivo" cotizó 100 playeras + 100 boxers + 100 cajas MDF
+    # por $75,000 — el candado vio "precio" y "100" y se lanzó, ignorando que el
+    # mensaje decía dónde buscar.
+    if _es_compra_afuera(m):
+        return False
     if _contiene_trigger(m, ("cotiza", "cotizame", "cotizacion", "cotizar",
                              "presupuesto", "presupuestame")):
         return True

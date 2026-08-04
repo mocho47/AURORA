@@ -881,3 +881,70 @@ class TestCorelNoCantaExitoDeLoQueNoAbrio:
         if not ruta.exists():
             pytest.skip("La carpeta del caso real ya no está en este disco")
         assert ruta.is_dir(), "El caso real era una CARPETA con .pdo adentro"
+
+
+# ===========================================================================
+# BUG 23 — El cotizador cotizó 100 PLAYERAS cuando se pidió papel de MercadoLibre
+# Caso real 2026-08-04. Anuar escribió "busca en mercado libre el mejor precio
+# de 100 hojas de papel adhesivo para impresora laser". El candado de cotizar
+# vio "precio" + "100" y se lanzó: devolvió 100 playeras + 100 boxers + 100
+# cajas MDF por $75,000. El mensaje decía DÓNDE buscar y aun así ganó, porque
+# cotizar va antes que busqueda_web en la lista de candados.
+#
+# La raíz es conceptual: el cotizador es para VENDER, no para COMPRAR. Si se
+# pregunta cuánto cuesta algo AFUERA (MercadoLibre, Amazon, un proveedor), ese
+# candado no tiene nada que hacer ahí.
+#
+# Y la otra mitad: "encuentra el mejor precio por 100 hojas y dame el link" no
+# la agarraba NINGÚN candado — se iba a motor_analisis.
+# ===========================================================================
+class TestCotizadorNoSeMeteEnComprasDeAfuera:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc23", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc23"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _candado(self, mod, frase):
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    return motor
+            except TypeError:
+                pass
+        return ""
+
+    @pytest.mark.parametrize("frase", [
+        "busca en mercado libre el mejor precio de 100 hojas de papel adesivo",
+        "encuentra el mejor precio por 100 hojas y dame el link",
+        "donde compro papel adhesivo mas barato",
+        "donde venden vinil textil",
+    ])
+    def test_comprar_afuera_va_a_la_web(self, frase):
+        """Preguntar dónde comprar NO es pedir una cotización del taller."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "web_search", (
+            f"'{frase}' no llega a la búsqueda web: puede volver a cotizar "
+            "100 playeras por $75,000")
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("cuanto cuestan 100 playeras", "cotizador"),
+        ("cotizame 20 termos", "cotizador"),
+        ("cuanto cuesta el faro aozoom x5", "cotizador"),
+        ("cuanto sale la instalacion de lupas", "servicios_atf"),
+    ])
+    def test_cotizar_de_verdad_sigue_funcionando(self, frase, esperado):
+        """El arreglo no debe romper las cotizaciones reales, que es lo que
+        más dinero trae."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == esperado, f"Se rompió: '{frase}'"
+
+    def test_existe_la_separacion_vender_vs_comprar(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "_es_compra_afuera" in fuente, (
+            "Sin separar comprar de vender, el cotizador vuelve a secuestrar "
+            "cualquier mensaje que traiga la palabra precio y un número")
+        assert "_TIENDAS_DE_AFUERA" in fuente, "Falta la lista de tiendas externas"
