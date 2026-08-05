@@ -1087,3 +1087,87 @@ class TestElConocimientoSeAlcanzaHablandoNormal:
             "Buscando solo por tema, 'mdf' nunca encuentra la receta que vive "
             "bajo el tema 'laser' — el conocimiento cargado queda inalcanzable")
         assert "patron LIKE" in bloque, "Falta buscar también en el patrón"
+
+
+# ===========================================================================
+# BUG 26 — Seis búsquedas seguidas sin un solo enlace útil
+# Caso real 2026-08-04. Anuar pidió SEIS veces, reformulando cada vez, el precio
+# del papel adhesivo en MercadoLibre. Las seis fallaron por tres causas juntas:
+#
+#   1. Se mandaba el mensaje COMPLETO al buscador. Literalmente se buscaba
+#      "aurora busca en mercado libre ... copea el enllace aqui mismo".
+#   2. No se respetaba el sitio pedido: decía "en mercado libre" y buscaba en
+#      todo internet, devolviendo mercadolibre.com.ar entre otros.
+#   3. No se filtraba nada. Devolvió fanx.art —un sitio de contenido para
+#      adultos— en la casa donde su esposa y su hija usan AURORA.
+#
+# Y no se entregaban las URLs, que era LO que se pedía: el buscador sí las trae,
+# se perdían al pasar por contexto_para_llm.
+#
+# Nota aparte, anotada para después: el aprendizaje NO ayudó en las 6 veces
+# porque solo se activa cuando AURORA no ejecuta nada. Aquí sí ejecutaba (hacía
+# la búsqueda), solo que devolvía basura. No distingue "hizo algo" de "sirvió".
+# ===========================================================================
+class TestBusquedaWebLimpiaYAcotada:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc26", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc26"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_quita_las_instrucciones_de_la_consulta(self):
+        """Buscar 'copea el enlace aqui mismo' es lo que traía la basura."""
+        mod = self._mod()
+        frase = ("aurora busca en mercado libre 100 hojas de papel adesivo para "
+                 "imprecion laser al mejor precio y copea el enllace aqui mismo")
+        limpia, dominio = mod.Consciencia._limpiar_consulta(frase)
+        for basura in ("aurora", "copea", "enllace", "aqui mismo", "busca en"):
+            assert basura not in limpia, f"Quedó '{basura}' en la consulta: {limpia}"
+        assert "papel" in limpia and "laser" in limpia, (
+            f"Se perdió lo que de verdad se busca: {limpia}")
+
+    @pytest.mark.parametrize("frase,dominio", [
+        ("busca en mercado libre papel adhesivo", "mercadolibre.com.mx"),
+        ("busca en amazon vinil textil", "amazon.com.mx"),
+        ("busca en lideart papel forever", "lideart.com.mx"),
+    ])
+    def test_respeta_el_sitio_que_se_pidio(self, frase, dominio):
+        """Decir 'en mercado libre' y buscar en todo internet es no escuchar."""
+        mod = self._mod()
+        _limpia, dom = mod.Consciencia._limpiar_consulta(frase)
+        assert dom == dominio, f"No acotó a {dominio}, dio '{dom}'"
+
+    def test_busqueda_general_no_inventa_sitio(self):
+        mod = self._mod()
+        _l, dom = mod.Consciencia._limpiar_consulta("busca en internet precios de vinil")
+        assert dom == "", "Acotó a un sitio que nadie pidió"
+
+    def test_bloquea_dominios_para_adultos(self):
+        """Devolvió fanx.art en la casa donde su hija usa AURORA."""
+        mod = self._mod()
+        bloq = mod.Consciencia._DOMINIOS_BLOQUEADOS
+        for d in ("fanx.art", "undress", "nudify", "porn"):
+            assert d in bloq, f"'{d}' no está bloqueado"
+
+    def test_entrega_las_urls(self):
+        """Se pedía el ENLACE. El buscador lo trae; se perdía en el camino.
+
+        Se ancla en la función EXACTA (con el paréntesis) y se lee hasta el
+        siguiente 'async def', no una ventana de N caracteres: la primera
+        versión de esta prueba agarraba _buscar_web_candado, que va antes, y
+        fallaba por eso — no porque el código estuviera mal.
+        """
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        i = fuente.index("async def _buscar_web(self")
+        resto = fuente[i + 10:]
+        fin = resto.find("\n    async def ")
+        bloque = resto[:fin] if fin > 0 else resto
+        assert "url" in bloque, (
+            "No arma la respuesta con las URLs: vuelve a contestar sin enlaces")
+        assert "_limpiar_consulta" in bloque, (
+            "No limpia la consulta: vuelve a buscar 'copea el enlace aqui mismo'")
+        assert "_DOMINIOS_BLOQUEADOS" in bloque, (
+            "No filtra los dominios de adultos que devolvió el 2026-08-04")

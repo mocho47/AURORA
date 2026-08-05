@@ -2129,11 +2129,85 @@ class Consciencia:
         del pipeline de candados (todos regresan {"respuesta": ...})."""
         return {"respuesta": await self._buscar_web(mensaje)}
 
+    # Instrucciones que Anuar le da a AURORA y que NO son parte de lo que busca.
+    # Caso real 2026-08-04: pidió seis veces el precio del papel adhesivo en
+    # MercadoLibre y las seis veces se mandó el mensaje COMPLETO al buscador
+    # ("aurora busca... copea el enlace aqui mismo"), así que la consulta salía
+    # sucia, no respetaba el sitio pedido y devolvía basura — incluso un sitio
+    # de contenido para adultos, con su esposa e hija usando AURORA.
+    _RUIDO_DE_BUSQUEDA = (
+        "aurora", "busca en internet", "busca en", "buscame en", "buscar en",
+        "encuentra en", "encuentrame", "encuentra el", "encuentra",
+        "copea el enlace", "copia el enlace", "copea el enllace",
+        "aqui mismo", "aquimismo", "aqui", "para revisarlo", "de la publicasion",
+        "de la publicacion", "el enlace de venta", "el enlace", "el enllace",
+        "dame el link", "el link", "y copea", "por favor", "porfa", "porfavor",
+        "al mejor precio real", "al mejor precio", "el mejor precio",
+        "mejor precio de la plataforma", "de la plataforma", "solamente",
+        "y me lo pasas", "pasamelo",
+    )
+    # Sitios que se pueden pedir por nombre → a qué dominio acotar la búsqueda.
+    _SITIOS_CONOCIDOS = {
+        "mercado libre": "mercadolibre.com.mx", "mercadolibre": "mercadolibre.com.mx",
+        "meli": "mercadolibre.com.mx", "amazon": "amazon.com.mx",
+        "lideart": "lideart.com.mx", "home depot": "homedepot.com.mx",
+        "walmart": "walmart.com.mx", "office depot": "officedepot.com.mx",
+        "liverpool": "liverpool.com.mx", "coppel": "coppel.com",
+    }
+    # Basura que nunca debe llegarle a esta familia.
+    _DOMINIOS_BLOQUEADOS = (
+        "fanx.art", "undress", "nudify", "deepnude", "porn", "xxx", "sexo",
+        "onlyfans", "camsoda", "chaturbate",
+    )
+
+    @classmethod
+    def _limpiar_consulta(cls, mensaje: str) -> tuple:
+        """Separa QUÉ se busca de DÓNDE y de las instrucciones.
+
+        Devuelve (consulta_limpia, dominio_o_vacio). Sin esto, el buscador
+        recibía la frase entera y buscaba literalmente "copea el enlace aqui
+        mismo", que es lo que traía los resultados absurdos.
+        """
+        m = _norm_txt(mensaje)
+        dominio = ""
+        for nombre, dom in cls._SITIOS_CONOCIDOS.items():
+            if nombre in m:
+                dominio = dom
+                m = m.replace(nombre, " ")
+                break
+        for ruido in sorted(cls._RUIDO_DE_BUSQUEDA, key=len, reverse=True):
+            m = m.replace(ruido, " ")
+        m = re.sub(r"\b(y|de|el|la|los|las|un|una|en|para|que|me|mi|lo)\b\s*$", "", m)
+        limpia = " ".join(m.split()).strip(" ,.;:")
+        return (limpia or _norm_txt(mensaje)), dominio
+
     async def _buscar_web(self, consulta: str) -> str:
         """Búsqueda web real — ddgs EN VIVO, luego fallbacks, luego Groq."""
-        # 1) Web REAL en vivo (WEB/web_real.py con ddgs)
+        # 1) Web REAL en vivo, con la consulta limpia y acotada al sitio pedido.
+        limpia, dominio = self._limpiar_consulta(consulta)
+        termino = f"{limpia} site:{dominio}" if dominio else limpia
         try:
-            ctx = await asyncio.to_thread(_web_real().contexto_para_llm, consulta, 4)
+            r = await asyncio.to_thread(_web_real().buscar, termino, 6)
+            res = [x for x in (r.get("resultados") or [])
+                   if not any(b in (x.get("url") or "").lower()
+                              for b in self._DOMINIOS_BLOQUEADOS)]
+            if res:
+                donde = f" en {dominio}" if dominio else ""
+                lineas = []
+                for x in res[:5]:
+                    lineas.append(f"**{x.get('titulo','')[:90]}**\n{x.get('url','')}")
+                    ext = (x.get("extracto") or "").strip()
+                    if ext:
+                        lineas.append(f"_{ext[:150]}_")
+                    lineas.append("")
+                return (f"Busqué «{limpia}»{donde} y esto es lo que hay "
+                        f"(los enlaces son reales, ábrelos para ver el precio "
+                        f"de hoy):\n\n" + "\n".join(lineas))
+        except Exception as e:
+            logger.debug(f"[WEB] buscar falló: {e}")
+        # Respaldo: el contexto plano de siempre.
+        try:
+            ctx = await asyncio.to_thread(_web_real().contexto_para_llm, termino, 4)
             if ctx:
                 return ctx
         except Exception:
