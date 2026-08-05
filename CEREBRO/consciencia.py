@@ -717,10 +717,38 @@ def _es_intuicion(mensaje: str) -> bool:
         "prediccion", "que deberia hacer", "sugerencia proactiva", "que sigue"))
 
 
+# Preguntas de CONOCIMIENTO: parámetros, recetas y criterios que ya están en la
+# memoria semántica. Encontrado el 2026-08-04 al verificar la carga: el
+# conocimiento entró bien y "qué recuerdas de láser" lo traía en 1.8 s, pero
+# "a cuánto corto MDF de 2.7" —la forma en que Anuar SÍ pregunta— se iba al
+# enrutador y ofrecía reajustar_grosor. El conocimiento cargado no sirve de
+# nada si solo se alcanza con la pregunta que nadie hace.
+_PREGUNTAS_DE_CONOCIMIENTO = (
+    "a cuanto corto", "a cuanto grabo", "a que potencia", "a que velocidad",
+    "con que parametros", "que parametros", "como corto", "como grabo",
+    "que configuracion", "cual es la receta", "como le hago para",
+    "que ajuste", "cuanto de potencia", "cuanto de velocidad",
+    "que galga", "a que distancia", "cual es el foco",
+    # Preguntas de ESTADO sobre el equipo. Encontrado el 2026-08-04 verificando
+    # la carga de conocimiento: "como va la lente del cañon" cayó en
+    # motor_analisis y se inventó que la lente "fue reemplazada el 2026-06-10" y
+    # que "no hay registros de problemas" — dos datos que no existen en ningún
+    # lado. Van DESPUÉS del candado de negocio en la lista, así que "como va la
+    # contabilidad" sigue yendo a los datos reales del negocio.
+    "como va la lente", "como esta la lente", "como va el tubo",
+    "como esta el tubo", "como va la maquina", "como esta la maquina",
+    "como va el laser", "como esta el laser", "como va la impresora",
+    "como esta la impresora", "que sabemos de la lente", "estado de la lente",
+)
+
+
 def _es_memoria(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), (
-        "que recuerdas de", "que recuerdas sobre", "tu memoria", "recuerdas cuando",
-        "que sabes de", "que tienes guardado sobre", "recuerdas que"))
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, (
+            "que recuerdas de", "que recuerdas sobre", "tu memoria", "recuerdas cuando",
+            "que sabes de", "que tienes guardado sobre", "recuerdas que")):
+        return True
+    return _contiene_trigger(m, _PREGUNTAS_DE_CONOCIMIENTO)
 
 
 def _es_equipos(mensaje: str) -> bool:
@@ -2350,6 +2378,22 @@ class Consciencia:
                            r"que sabes de|que tienes guardado sobre|recuerdas que)\s+(.+)", m)
         tema = mensaje[match.start(1):].strip(" :¿?.") if match else ""
         tema = tema or self._tema_rapido(mensaje)
+        # Preguntas como "a cuánto corto MDF de 2.7" no traen "qué recuerdas de",
+        # así que no dejan tema. Se saca del propio mensaje quitando lo que no
+        # aporta: lo que queda ("mdf") es lo que hay que buscar. Sin esto, la
+        # memoria devolvía lo más reciente en general en vez de lo pedido.
+        if not tema:
+            _vacias = {
+                "a", "de", "del", "la", "el", "los", "las", "un", "una", "en",
+                "con", "por", "para", "que", "cual", "como", "cuanto", "cuanta",
+                "corto", "cortar", "grabo", "grabar", "hago", "hacer", "le",
+                "me", "mi", "es", "esta", "y", "o", "aurora", "dime", "oye",
+                "potencia", "velocidad", "parametros", "configuracion", "ajuste",
+                "receta", "galga", "distancia", "foco",
+            }
+            _palabras = [p for p in _re.findall(r"[a-z0-9.]{2,}", m)
+                         if p not in _vacias]
+            tema = " ".join(_palabras[:3])
         try:
             recuerdos = await self._memoria.recordar(tema=tema, limite=5)
             if not recuerdos:

@@ -165,9 +165,25 @@ def _buscar_semantico(tema: str = "", limite: int = 20) -> List[Dict]:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     if tema:
+        # Se busca en tema, patrón Y conocimiento — no solo en tema. Encontrado el
+        # 2026-08-04 al verificar la carga de conocimiento real: "a cuánto corto
+        # MDF de 2.7" no hallaba nada, porque la receta vive bajo el tema "laser"
+        # y la palabra "mdf" solo aparece en el texto. Buscando solo por tema, el
+        # conocimiento cargado era inalcanzable con las preguntas que de verdad
+        # hace Anuar, y se caía al respaldo de episodios (que traía un precio
+        # viejo del MDF en vez de los parámetros de corte).
+        #
+        # Se busca por CADA palabra, no por la frase entera: "corto mdf 2.7" como
+        # una sola cadena no calza con ningún texto, pero "mdf" sí.
+        palabras = [p for p in tema.split() if len(p) >= 3][:4] or [tema]
+        condiciones = " OR ".join(
+            ["tema LIKE ? OR patron LIKE ? OR conocimiento LIKE ?"] * len(palabras))
+        args = []
+        for p in palabras:
+            args.extend([f"%{p}%"] * 3)
         rows = conn.execute(
-            "SELECT * FROM semantica WHERE tema LIKE ? ORDER BY confianza DESC LIMIT ?",
-            (f"%{tema}%", limite),
+            f"SELECT * FROM semantica WHERE {condiciones} ORDER BY confianza DESC LIMIT ?",
+            (*args, limite),
         ).fetchall()
     else:
         rows = conn.execute(

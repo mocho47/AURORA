@@ -84,6 +84,51 @@
       "veces": 1,
       "precargado": true,
       "por_que": "Confirma con el verbo pegado. Por esto se perdió una publicación real."
+    },
+    {
+      "clave": "quiero estado de usuarios",
+      "como_lo_dijo": "quiero estado de usuarios",
+      "que_si_funciono": "copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo",
+      "herramienta": "accion_sistema",
+      "veces": 1,
+      "aprendido": 1785867759.1584074,
+      "ultima_vez": 1785867759.1584074
+    },
+    {
+      "clave": "quiero crear lead de leads",
+      "como_lo_dijo": "quiero crear lead de leads",
+      "que_si_funciono": "diagnóstico REAL de un dispositivo Cast + recomendación según su estado",
+      "herramienta": "servicios_atf",
+      "veces": 1,
+      "aprendido": 1785867845.7368207,
+      "ultima_vez": 1785867845.7368207
+    },
+    {
+      "clave": "actualizar estado",
+      "como_lo_dijo": "actualizar estado",
+      "que_si_funciono": "paso 3: cotización REAL contra el catálogo de TALLER",
+      "herramienta": "cotizador",
+      "veces": 1,
+      "aprendido": 1785868794.5332026,
+      "ultima_vez": 1785868794.5332026
+    },
+    {
+      "clave": "publica el documento activo a pdf en ruta_salida",
+      "como_lo_dijo": "publica el documento activo a PDF en ruta_salida",
+      "que_si_funciono": "cotiza corte láser desde un DXF con precios reales de Milens",
+      "herramienta": "cotizador",
+      "veces": 1,
+      "aprendido": 1785870178.9682233,
+      "ultima_vez": 1785870178.9682233
+    },
+    {
+      "clave": "como va la lente del canon",
+      "como_lo_dijo": "como va la lente del cañon",
+      "que_si_funciono": "cuanto cuesta el metro de vinil",
+      "herramienta": "cotizador",
+      "veces": 1,
+      "aprendido": 1785889330.1149113,
+      "ultima_vez": 1785889330.1149113
     }
   ]
 }

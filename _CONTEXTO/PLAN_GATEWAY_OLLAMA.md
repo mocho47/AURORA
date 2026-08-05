@@ -1,4 +1,43 @@
 # 🖥️ Mover Ollama a la Gateway
+# ❌ CERRADO EL 2026-08-03 — NO REINTENTAR (razón medida abajo)
+
+## Por qué se cerró
+
+Tres hechos, los tres comprobados el mismo día:
+
+1. **La Gateway tiene 2 GB de RAM. La Chromebook también.** Windows solo consume
+   1.5-1.8 GB de esos 2. Al modelo más chico le quedarían ~300 MB y necesita
+   1 GB mínimo: se iría a paginar a disco y tardaría MÁS que los 111 s que ya
+   tarda en la PC de Anuar. Sería trabajo para empeorar.
+2. **Gemini como respaldo alterno: cuota agotada.** HTTP 429 persistente (se
+   reintentó tras 20 s para descartar límite por minuto — no era eso). La llave
+   ve 42 modelos pero no tiene cuota para ninguno.
+3. **Groq NUNCA ha fallado.** Se buscaron en todos los logs de AURORA las
+   marcas de caída a respaldo, error de Groq, rate limit y cuota: **cero
+   coincidencias**. (Honestidad del dato: los logs son chicos, 8-12 KB, no
+   cubren meses. Pero Anuar tampoco ha reportado nunca una caída.)
+
+**Se estaba por montar un servidor para resolver un problema que no ocurre.**
+
+## Qué queda en su lugar
+
+AURORA se queda SIN respaldo local, y cuando Groq no responda lo dirá honesto
+en vez de tardar dos minutos en dar una respuesta peor. Eso ya está construido
+y funcionando en `CEREBRO/respaldo_local.py`.
+
+## Qué tendría que cambiar para reabrirlo
+
+Cualquiera de estas tres, no menos:
+- Aparece una máquina con **4 GB+ de RAM** libre de verdad.
+- Groq empieza a fallar **de forma medible** (aparece en los logs, no de memoria).
+- Se repone la cuota de Gemini y se quiere respaldo en la nube — ese camino no
+  necesita hardware y es el primero a revisar antes que Ollama.
+
+---
+---
+# (Plan original, conservado como referencia técnica)
+
+# 🖥️ Mover Ollama a la Gateway
 ### Plan corto · pendiente del conector del cargador (Anuar lo genera 2026-08-04)
 
 ---

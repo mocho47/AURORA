@@ -1014,3 +1014,76 @@ class TestAprendeALaPrimeraSinFallarAntes:
         fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
         assert 'real.pop("_clave_usada"' in fuente, (
             "La marca debe quitarse con pop antes de responder, no quedarse en el dict")
+
+
+# ===========================================================================
+# BUG 25 — El conocimiento cargado era inalcanzable hablando normal
+# Al verificar la carga de 40 conocimientos reales (2026-08-04) se descubrió que
+# entraban bien pero NO se alcanzaban con las preguntas que Anuar de verdad hace:
+#
+#   "que recuerdas de laser"      -> OK, 1.8 s
+#   "a cuanto corto mdf de 2.7"   -> se iba al enrutador y ofrecia reajustar_grosor
+#   "como va la lente del cañon"  -> motor_analisis INVENTÓ que la lente "fue
+#                                    reemplazada el 2026-06-10" y que "no hay
+#                                    registros de problemas". Ninguno de los dos
+#                                    datos existe en ningún lado.
+#
+# Dos causas:
+#   1. _buscar_semantico miraba SOLO la columna 'tema'. La receta del MDF vive
+#      bajo el tema "laser", y la palabra "mdf" solo aparece en el texto, así que
+#      no calzaba nunca — y se caía al respaldo de episodios, que devolvía un
+#      precio viejo del MDF en vez de los parámetros de corte.
+#   2. El candado de memoria solo reconocía "qué recuerdas de", que es justo la
+#      forma que nadie usa.
+# ===========================================================================
+class TestElConocimientoSeAlcanzaHablandoNormal:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc25", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc25"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _candado(self, mod, frase):
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    return motor
+            except TypeError:
+                pass
+        return ""
+
+    @pytest.mark.parametrize("frase", [
+        "a cuanto corto mdf de 2.7",
+        "que galga uso para el mdf",
+        "a que potencia grabo",
+        "como va la lente del cañon",
+        "como esta el tubo",
+    ])
+    def test_preguntas_reales_llegan_a_la_memoria(self, frase):
+        """Si no llegan aquí, caen en motor_analisis y ahí es donde inventa."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "memoria", (
+            f"'{frase}' no alcanza el conocimiento cargado: vuelve a inventar")
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("como va la contabilidad", "negocio_real"),
+        ("como vamos de ventas", "negocio_real"),
+        ("cuanto cayo hoy", "negocio_real"),
+        ("cotizame 20 termos", "cotizador"),
+    ])
+    def test_no_secuestra_las_del_negocio(self, frase, esperado):
+        """'Cómo va X' del NEGOCIO debe seguir yendo a los datos reales."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == esperado, f"Se rompió: '{frase}'"
+
+    def test_la_busqueda_mira_el_contenido_no_solo_el_tema(self):
+        fuente = (RAIZ / "MEMORIA" / "sistema_memoria.py").read_text(encoding="utf-8")
+        i = fuente.index("def _buscar_semantico")
+        bloque = fuente[i:i + 2200]
+        assert "conocimiento LIKE" in bloque, (
+            "Buscando solo por tema, 'mdf' nunca encuentra la receta que vive "
+            "bajo el tema 'laser' — el conocimiento cargado queda inalcanzable")
+        assert "patron LIKE" in bloque, "Falta buscar también en el patrón"

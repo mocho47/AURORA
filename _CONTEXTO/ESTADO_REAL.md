@@ -145,3 +145,44 @@ Reinicio   scratchpad/reiniciar.ps1  (evita falsos positivos del sandbox)
 
 **Teléfono oficial de ATF: 3326148674.** Los viejos (3329879109, 3323530146)
 están erradicados de todo el sistema; si aparece alguno, es un error.
+
+---
+
+## 📅 SESIÓN 2026-08-04 — lo que cambió
+
+### Bugs de raíz cerrados (todos los encontró Anuar usando AURORA normal)
+1. **"extrae el mapa de bits"** → faltaba el VERBO. Ahora los verbos se derivan del
+   registro real de 537 herramientas (`_verbos_del_registro`), no de una lista a mano.
+   Y "mapa de bits" llega a Corel sin nombrarlo (`_COREL_SIN_NOMBRARLO`).
+2. **"✅ Abierto real" de una CARPETA** — `Path.exists()` da True para carpetas.
+   `corel_core.abrir_documento` ahora las rechaza y compara el documento abierto
+   contra el pedido: si no coincide, NO cuenta como hecho.
+3. **Alerta falsa de WhatsApp** — `starting` y `sleepMode` son transitorios, no
+   desconexión. Solo alerta por `notAuthorized` y `blocked`.
+4. **El cotizador cotizó $75,000** cuando se pidió papel de MercadoLibre.
+   `_es_compra_afuera` separa VENDER de COMPRAR.
+5. **El conocimiento cargado era inalcanzable** — `_buscar_semantico` miraba solo
+   la columna `tema`. Ahora busca en tema, patrón Y conocimiento, palabra por palabra.
+
+### Mejoras
+- **Aprende A LA PRIMERA** (`aprender_a_la_primera`): si el enrutador resuelve algo
+  que ningún candado agarró, la frase queda registrada sin que Anuar tenga que
+  reformular. Antes cada frase nueva le costaba un fracaso.
+- **40 conocimientos reales** en memoria semántica (`MEMORIA/cargar_conocimiento_real.py`):
+  láser, precios escolares, costeo, insumos, venta, negocio, método de trabajo,
+  arquitectura, decisiones, infraestructura. Se consultan hablando normal.
+- **Motor de red** ahora escanea TODA la red (cruza ping con tabla ARP), no solo Cast.
+- **112 pruebas** de regresión (eran 87 al empezar el día).
+
+### Medido, y por eso NO se hizo
+- **Invertir el orden candados/enrutador**: los candados aciertan **22/23 (95%)** con
+  **CERO** respuestas equivocadas. El cambio arriesgaba lo único que funciona. No se tocó.
+- **Ollama en otra máquina**: cerrado. Gateway y Chromebook tienen 2 GB, Gemini sin
+  cuota, y **Groq NUNCA ha fallado** (cero registros en logs).
+- **Mover AURORA de máquina**: no. Consume **26 MB**; lo que satura son los
+  navegadores (2 GB). Y Corel solo se controla desde donde está instalado.
+
+### Pendiente de la palabra de Anuar
+- **Enviar la campaña escolar** a las 22 clientas (`MARKETING/campana_regreso_clases.py --enviar`)
+- Comprar $610 (100 hojas adhesivas + 2 m de vinil)
+- Probar el cuadro de 10×10 con la maquila (el corte Cameo no cuadra)
