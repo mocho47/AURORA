@@ -81,9 +81,17 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Qué hace: Te dice qué puede hacer de verdad, con los números reales del sistema y sus límites — nunca inventa capacidades (obtener_capacidades + descubrir).
 - Frases que reconoce: «auto describete», «autodescribete», «autodescribirte», «como funcionas», «cuales son tus funciones», «cuantas herramientas», «cuentame de ti», «de que eres capaz», «de que estas hecha», «describete», «descripcion de ti», «descríbete»
 
+**proveedor** (proveedores)
+- Qué hace: quién vende qué, y a cuánto.
+- Frases que reconoce: «a cuanto me lo dan», «a quien le compro», «con quien compro», «donde le compro», «mi proveedor», «mis proveedores», «proveedor de», «proveedores de», «que proveedores tengo», «quien me lo surte», «quien me surte», «quien me vende»
+
 **servicio_atf** (servicios_atf)
 - Qué hace: Atiende a un cliente que pide un servicio de mano de obra de ATF —recolocar una lupa, instalar un retrofit— y **nunca niega uno que sí haces**. Existe porque una vez le negó el servicio a un cliente real.
 - Frases que reconoce: «palabras_cliente»
+
+**alta_lead** (oracle_leads)
+- Qué hace: da de alta un cliente nuevo con lo que se dictó.
+- Frases que reconoce: «anota a», «anota este cliente», «anota un cliente», «apunta a», «apunta este cliente», «apunta un cliente», «crea un lead», «crear lead», «dar de alta al cliente», «guarda el cliente», «guarda este contacto», «me escribio un cliente»
 
 **intuicion** (intuicion)
 - Qué hace: Te propone el siguiente paso a partir de tu perfil real de trabajo: qué sueles hacer, qué está pendiente y qué conviene ahora. No adivina, lee tus datos (obtener_perfil + sugerencia_proactiva).
@@ -114,7 +122,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~542 funciones reales)
+## Herramientas del enrutador universal (~558 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -623,8 +631,16 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `REDES/red_diagnostico:escanear_red` — Encuentra TODOS los equipos de la red local, no solo los Cast.
 - `REDES/red_diagnostico:buscar_equipo` — Busca un equipo por nombre, fabricante o servicio ('impresora', 'ollama').
 
-### SISTEMA (6)
+### SISTEMA (14)
 
+- `SISTEMA/apartar_duplicados:buscar_duplicados` — buscar duplicados (apartar_duplicados)
+- `SISTEMA/apartar_duplicados:main` — main (apartar_duplicados)
+- `SISTEMA/consolidar_por_tipo:consolidar` — consolidar (consolidar_por_tipo)
+- `SISTEMA/consolidar_por_tipo:main` — main (consolidar_por_tipo)
+- `SISTEMA/indexar_programas:instalados` — Lo que Windows tiene registrado como instalado. Es la lista de verdad:
+- `SISTEMA/indexar_programas:instaladores` — Los .exe que SÍ sirven si hay que reinstalar: los autocontenidos.
+- `SISTEMA/indexar_programas:portables` — Carpetas que traen un .exe y corren sin instalarse.
+- `SISTEMA/indexar_programas:main` — main (indexar_programas)
 - `SISTEMA/optimizador:diagnostico` — diagnostico (optimizador)
 - `SISTEMA/optimizador:limpiar_temporales` — Borra temporales más viejos que N horas (seguro: no toca archivos en uso reciente).
 - `SISTEMA/optimizador:optimizar` — optimizar (optimizador)
@@ -638,17 +654,21 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (51)
+### TALLER (59)
 
 - `TALLER/administracion:listar_precios` — Costo por minuto + lista de materiales/artículos con su precio de hoja.
 - `TALLER/administracion:set_costo_minuto` — Actualiza el costo por minuto de máquina.
 - `TALLER/administracion:guardar_material` — Agrega un material/artículo nuevo, o actualiza el existente (por nombre).
 - `TALLER/administracion:borrar_material` — Elimina un material/artículo por nombre.
 - `TALLER/album_catalogo:generar_album` — Genera el álbum de catálogo. Devuelve dict con status y métricas.
+- `TALLER/consolidar_dxf:main` — main (consolidar_dxf)
 - `TALLER/cotizador_servicios:guardar_servicio` — Agrega o actualiza un trabajo/servicio en el catálogo (categoría 'productos').
 - `TALLER/cotizador_servicios:borrar_servicio` — Borra un trabajo/servicio del catálogo por nombre (solo de 'productos').
 - `TALLER/cotizador_servicios:catalogo_plano` — Aplana el catálogo en una lista de artículos cotizables (precio + costo + unidad).
 - `TALLER/cotizador_servicios:cotizar` — carrito = [{"nombre": str, "cantidad": num}]
+- `TALLER/indexar_dxf:medir` — Metros de corte, medidas y precio de un DXF. Nada estimado a ojo.
+- `TALLER/indexar_dxf:indexar` — indexar (indexar_dxf)
+- `TALLER/indexar_dxf:buscar` — Busca por nombre. Para cotizar frente al cliente sin abrir el archivo.
 - `TALLER/inventario:init_db` — init db (inventario)
 - `TALLER/inventario:agregar_item` — Alta de un material. Identidad = nombre + categoría + TALLA/MEDIDA + COLOR,
 - `TALLER/inventario:editar_item` — Edita los datos de un artículo EXISTENTE (color, talla, unidad, mínimo, costo).
@@ -672,6 +692,10 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/ordenes_taller:actualizar_estado` — actualizar estado (ordenes_taller)
 - `TALLER/ordenes_taller:alertas` — Calcula alertas de entrega en vivo:
 - `TALLER/ordenes_taller:contabilidad_mensual` — Balance por mes (por fecha de entrega; si falta, por fecha de creación).
+- `TALLER/proveedores:buscar` — ¿Quién vende esto? Si no está, se DICE — no se inventa un proveedor.
+- `TALLER/proveedores:agregar` — Da de alta un proveedor. Los datos los pone Anuar, no se inventan.
+- `TALLER/proveedores:anotar_precio` — Registra un precio CON su fecha. Un precio sin fecha no sirve para decidir.
+- `TALLER/proveedores:listar` — listar (proveedores)
 - `TALLER/reportes_bi:resumen_general` — resumen general (reportes_bi)
 - `TALLER/reportes_bi:por_mes` — por mes (reportes_bi)
 - `TALLER/reportes_bi:top_productos` — top productos (reportes_bi)

@@ -26,8 +26,14 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-if hasattr(sys.stdout, "buffer"):
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+def _consola_utf8() -> None:
+    """La consola de Windows es cp1252 y truena con acentos y emojis.
+
+    Se llama SOLO al correr el script directo. Hacerlo al importar le rompía la
+    salida a quien lo importara — incluida AURORA (2026-08-05).
+    """
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 ARCHIVO = RAIZ / "CONFIG" / "proveedores.json"
 
@@ -219,6 +225,7 @@ def _texto(r: dict) -> str:
 
 
 if __name__ == "__main__":
+    _consola_utf8()
     if len(sys.argv) > 1:
         print(_texto(buscar(" ".join(sys.argv[1:]))))
     else:

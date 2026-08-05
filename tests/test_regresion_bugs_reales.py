@@ -1171,3 +1171,150 @@ class TestBusquedaWebLimpiaYAcotada:
             "No limpia la consulta: vuelve a buscar 'copea el enlace aqui mismo'")
         assert "_DOMINIOS_BLOQUEADOS" in bloque, (
             "No filtra los dominios de adultos que devolvió el 2026-08-04")
+
+
+# ===========================================================================
+# MEJORA 27 — Directorio de proveedores y captura de clientes por chat
+# El barrido del 2026-08-04 encontró que ORACLE/oracle_core:crear_lead existía
+# y NO tenía ninguna puerta desde el chat: un cliente que llamaba se anotaba en
+# un papel o se perdía. De las 537 herramientas, esa es de las que más dinero
+# mueve y era inalcanzable.
+#
+# Y ese mismo día Anuar no supo a quién cotizarle el papel adhesivo: no había
+# directorio de proveedores en ningún lado, así que terminó pidiéndole a AURORA
+# que buscara en MercadoLibre.
+# ===========================================================================
+class TestProveedoresYCapturaDeClientes:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc27", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc27"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _candado(self, mod, frase):
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    return motor
+            except TypeError:
+                pass
+        return ""
+
+    @pytest.mark.parametrize("frase", [
+        "apunta a Juan Perez 3312345678 interesado en faros",
+        "anota este cliente Maria 3339876543",
+        "nuevo cliente Roberto quiere lupas",
+        "registra un lead",
+    ])
+    def test_capturar_cliente_llega_a_oracle(self, frase):
+        """Si no llega aquí, el cliente que llama se pierde."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "oracle_leads", (
+            f"'{frase}' no da de alta al cliente")
+
+    @pytest.mark.parametrize("frase", [
+        "quien me vende vinil textil",
+        "proveedor de mdf",
+        "que proveedores tengo",
+    ])
+    def test_proveedor_antes_que_internet(self, frase):
+        """Si el dato está en SU directorio, no hay que ir a internet."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "proveedores", (
+            f"'{frase}' se va a buscar afuera teniendo el dato en casa")
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("busca en mercado libre papel adhesivo", "web_search"),
+        ("ficha de aozoom x5", "vendedor"),
+        ("cotizame 20 termos", "cotizador"),
+        ("como va la contabilidad", "negocio_real"),
+    ])
+    def test_no_rompe_lo_que_ya_servia(self, frase, esperado):
+        mod = self._mod()
+        assert self._candado(mod, frase) == esperado, f"Se rompió: '{frase}'"
+
+    def test_no_guarda_un_lead_sin_nombre(self):
+        """Un cliente sin nombre no sirve para llamarle después."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        i = fuente.index("async def _alta_lead_real")
+        bloque = fuente[i:i + 4000]
+        assert "if not nombre" in bloque, (
+            "Guarda leads vacíos, que es peor que no guardarlos")
+
+    def test_el_directorio_no_inventa_proveedores(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_prov27", RAIZ / "TALLER" / "proveedores.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_prov27"] = mod
+        spec.loader.exec_module(mod)
+        r = mod.buscar("algo que no vende nadie xyz")
+        assert r["status"] == "NO_LO_TENGO", "Inventó un proveedor"
+        assert "internet" in r["detalle"].lower(), "No ofrece la salida real"
+
+    def test_los_scripts_no_secuestran_la_salida(self):
+        """Reemplazar sys.stdout al importar le rompe la salida a AURORA.
+        Encontrado el 2026-08-05 al conectar proveedores al chat."""
+        for ruta in ("TALLER/proveedores.py", "TALLER/indexar_dxf.py",
+                     "SISTEMA/indexar_programas.py"):
+            fuente = (RAIZ / ruta).read_text(encoding="utf-8")
+            assert "def _consola_utf8" in fuente, (
+                f"{ruta} toca sys.stdout al importarse")
+
+
+# ===========================================================================
+# BUG 28 — "qué recuerdas de cotizar" devolvió una cotización de faros
+# Encontrado el 2026-08-05 verificando el conocimiento cargado. El candado del
+# cotizador vio la palabra "cotizar" dentro de la pregunta y se lanzó, aunque
+# lo que se pedía era consultar la MEMORIA.
+#
+# Y no era solo el cotizador: "qué recuerdas de video", "de proveedores", "de
+# corel" tenían el mismo problema. Por eso el arreglo NO va dentro de cada
+# candado — va como guard global en el pipeline: si se pregunta qué recuerda,
+# solo la memoria contesta. Un parche por candado habría dejado abiertos los
+# que nadie probó.
+# ===========================================================================
+class TestPreguntarQueRecuerdaNoDisparaLaAccion:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc28", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc28"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase", [
+        "que recuerdas de cotizar",
+        "que recuerdas de proveedores",
+        "que recuerdas de video",
+        "que sabes de corel",
+        "que has aprendido de mi",
+    ])
+    def test_se_reconoce_como_pregunta_a_la_memoria(self, frase):
+        mod = self._mod()
+        assert mod._es_pregunta_de_memoria(mod._norm_txt(frase)), (
+            f"'{frase}' no se reconoce como pregunta a la memoria: el nombre "
+            "del tema va a secuestrar el mensaje")
+
+    @pytest.mark.parametrize("frase", [
+        "cotizame 20 termos",
+        "quien me vende vinil",
+        "voltea los videos a vertical",
+        "como va la contabilidad",
+    ])
+    def test_pedir_la_accion_sigue_funcionando(self, frase):
+        """El guard no debe apagar los candados cuando SÍ se pide la acción."""
+        mod = self._mod()
+        assert not mod._es_pregunta_de_memoria(mod._norm_txt(frase)), (
+            f"'{frase}' se marcó como pregunta de memoria y no lo es")
+
+    def test_el_guard_esta_en_el_pipeline_no_en_cada_candado(self):
+        """Un parche por candado deja abiertos los que nadie probó."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "_solo_memoria" in fuente, "Falta el guard global"
+        assert "if _solo_memoria and _nombre_candado not in" in fuente, (
+            "El guard no está aplicado en el bucle de candados")

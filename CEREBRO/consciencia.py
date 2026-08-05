@@ -496,8 +496,27 @@ _BUSQUEDA_WEB_TRIGGERS = (
 )
 
 
+# Preguntas por un PROVEEDOR. Van ANTES de la búsqueda web a propósito: si el
+# proveedor ya está en el directorio de Anuar, contestar con su dato real y su
+# precio vale más que mandarlo a internet. Solo si no lo tiene se busca afuera.
+_PREGUNTAS_DE_PROVEEDOR = (
+    "quien me vende", "quien vende", "quien me surte", "con quien compro",
+    "a quien le compro", "mi proveedor", "proveedor de", "proveedores de",
+    "donde le compro", "quien me lo surte", "que proveedores tengo",
+    "mis proveedores", "a cuanto me lo dan",
+)
+
+
+def _es_proveedor(mensaje: str) -> bool:
+    """Pregunta por un proveedor suyo, no por comprar en internet."""
+    return _contiene_trigger(_norm_txt(mensaje), _PREGUNTAS_DE_PROVEEDOR)
+
+
 def _es_busqueda_web(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
+    # Si pregunta por SU proveedor, no es búsqueda web: es su directorio.
+    if _es_proveedor(mensaje):
+        return False
     if _contiene_trigger(m, _BUSQUEDA_WEB_TRIGGERS):
         return True
     # Preguntar dónde comprar algo, o pedir el link de una publicación, es
@@ -622,6 +641,21 @@ _SENALES_DE_COMPRA = (
 )
 
 
+# "Qué recuerdas de X" es una pregunta a la MEMORIA, aunque X sea el nombre de
+# una acción. Encontrado el 2026-08-05: "qué recuerdas de cotizar" devolvió una
+# cotización de faros porque el candado del cotizador vio la palabra "cotizar".
+_PREGUNTA_A_LA_MEMORIA = (
+    "que recuerdas de", "que recuerdas sobre", "que sabes de",
+    "que tienes guardado sobre", "recuerdas que", "recuerdas cuando",
+    "que has aprendido de", "que aprendiste de",
+)
+
+
+def _es_pregunta_de_memoria(m_norm: str) -> bool:
+    """True si se le pregunta QUÉ RECUERDA, no si se le pide hacer algo."""
+    return _contiene_trigger(m_norm, _PREGUNTA_A_LA_MEMORIA)
+
+
 def _es_compra_afuera(m_norm: str) -> bool:
     """True si se pregunta por comprar algo afuera, no por cuánto cobrarlo.
 
@@ -641,6 +675,12 @@ def _es_cotizar(mensaje: str) -> bool:
     AURORA mandaba a Anuar a buscarlo a MercadoLibre.
     """
     m = _norm_txt(mensaje)
+    # Preguntar QUÉ RECUERDA de un tema no es pedir esa acción. Caso real
+    # 2026-08-05: "qué recuerdas de cotizar" devolvió una cotización de faros
+    # porque el candado vio la palabra "cotizar". Vale para todos los candados
+    # de acción, no solo este.
+    if _es_pregunta_de_memoria(m):
+        return False
     # El cotizador es para VENDER, no para COMPRAR. Si se pregunta cuánto cuesta
     # algo AFUERA (MercadoLibre, Amazon, un proveedor), no tiene nada que hacer
     # aquí. Caso real 2026-08-04: "busca en mercado libre el mejor precio de 100
@@ -703,6 +743,23 @@ def _es_ver_aprendizaje(mensaje: str) -> bool:
         "que has aprendido", "que aprendiste", "que sabes de como hablo",
         "muestrame lo aprendido", "lo que has aprendido", "olvida ",
         "olvidalo todo", "borra lo aprendido", "olvida todo lo aprendido"))
+
+
+# Capturar un cliente nuevo. Lo detectó el barrido del 2026-08-04:
+# ORACLE/oracle_core:crear_lead existía y NO tenía ninguna puerta desde el chat,
+# así que un cliente que llamaba se anotaba en un papel o se perdía. De las 537
+# herramientas, esta es de las que más dinero mueve.
+_ALTA_DE_LEAD = (
+    "apunta un cliente", "apunta este cliente", "apunta a", "anota un cliente",
+    "anota este cliente", "anota a", "registra un cliente", "registra este cliente",
+    "nuevo cliente", "nuevo lead", "crear lead", "crea un lead", "registra un lead",
+    "me llamo un cliente", "me hablo un cliente", "me escribio un cliente",
+    "guarda este contacto", "guarda el cliente", "dar de alta al cliente",
+)
+
+
+def _es_alta_lead(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _ALTA_DE_LEAD)
 
 
 def _es_ficha_vendedor(mensaje: str) -> bool:
@@ -1176,6 +1233,9 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("ruta_sola",       _es_ruta_sola,         "_ruta_sola_real",         "contexto_archivo"),
     ("abrir_navegador", _es_abrir_navegador,  "_abrir_navegador_real",  "pc_access"),
     ("acerca_de",       _es_acerca_de,         "_acerca_de_real",         "auto_conocimiento"),
+    # proveedor va ANTES de busqueda_web: si el dato está en su directorio, se
+    # contesta con su precio real en vez de mandarlo a buscar a internet.
+    ("proveedor",       _es_proveedor,         "_proveedor_real",         "proveedores"),
     ("busqueda_web",    _es_busqueda_web,      "_buscar_web_candado",     "web_search"),
     ("corel",           _es_comando_corel,     "_ejecutar_corel_real",    "motor_corel"),
     ("dxf",             _es_conversion_dxf,    "_convertir_dxf_real",     "taller_dxf"),
@@ -1187,6 +1247,9 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # no debe caer en el motor de ventas generico, que en un caso real de Anuar
     # le NEGO el servicio y lo mando a hacerlo el mismo (2026-07-29).
     ("servicio_atf",    _es_servicio_atf,      "_servicio_atf_real",      "servicios_atf"),
+    # alta_lead va antes que ficha_vendedor: "apunta a Juan" es capturar un
+    # cliente, no pedir argumentos de venta.
+    ("alta_lead",       _es_alta_lead,         "_alta_lead_real",         "oracle_leads"),
     ("ficha_vendedor",  _es_ficha_vendedor,    "_vendedor_real",          "vendedor"),
     ("intuicion",       _es_intuicion,         "_intuicion_real",         "intuicion"),
     ("memoria",         _es_memoria,           "_memoria_real",           "memoria"),
@@ -1541,7 +1604,16 @@ class Consciencia:
         # porque usa AURORA de las dos formas y los dos chats se estaban pisando.
         _tema_sistema = _es_tema_del_sistema(mensaje)
 
+        # Si se pregunta QUÉ RECUERDA de algo, solo la memoria contesta. Sin este
+        # guard, el nombre del tema secuestra el mensaje: "qué recuerdas de
+        # cotizar" devolvía una cotización de faros (2026-08-05). Se pone aquí y
+        # no dentro de cada candado porque el problema es de TODOS los candados
+        # de acción, no de uno.
+        _solo_memoria = _es_pregunta_de_memoria(_norm_txt(mensaje))
+
         for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
+            if _solo_memoria and _nombre_candado not in ("memoria", "ver_aprendizaje"):
+                continue
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
                 continue
             if _tema_sistema and _nombre_candado in _CANDADOS_DE_VENTA:
@@ -2123,6 +2195,115 @@ class Consciencia:
         return {"respuesta": "\n".join(partes)}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
+
+    async def _alta_lead_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ ORACLE: da de alta un cliente nuevo con lo que se dictó.
+
+        Se saca el nombre y el teléfono del propio mensaje. Si falta el nombre
+        se PIDE — no se guarda un lead vacío, que es peor que no guardarlo.
+        """
+        import re as _re
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location("oracle_core", ROOT / "ORACLE" / "oracle_core.py")
+            oc = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(oc)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el registro de clientes: {e}"}
+
+        texto = mensaje or ""
+        # Teléfono: 10 dígitos seguidos, con o sin espacios y guiones.
+        tel = ""
+        m_tel = _re.search(r"(\d[\d\s\-]{8,}\d)", texto)
+        if m_tel:
+            solo = "".join(c for c in m_tel.group(1) if c.isdigit())
+            if len(solo) >= 10:
+                tel = solo[-10:]
+
+        # Nombre: lo que va después del verbo, hasta el teléfono o una coma.
+        limpio = _norm_txt(texto)
+        for frase in sorted(_ALTA_DE_LEAD, key=len, reverse=True):
+            limpio = limpio.replace(frase, "|")
+        trozo = limpio.split("|")[-1] if "|" in limpio else limpio
+        trozo = _re.split(r"\d{6,}|,|\btel\b|\bcel\b|\bwhats\b", trozo)[0]
+        nombre = " ".join(w for w in trozo.split()
+                          if w not in ("el", "la", "de", "del", "que", "se",
+                                       "llama", "es", "un", "una", "por",
+                                       "para", "con", "y", "mi", "me")).strip()
+        nombre = nombre.title()[:60]
+
+        if not nombre:
+            return {"respuesta": (
+                "¿Cómo se llama? Dímelo así y lo guardo:\n"
+                "`apunta a Juan Pérez 3312345678 interesado en faros`\n\n"
+                "Sin nombre no lo doy de alta — un cliente sin nombre no sirve "
+                "para llamarle después.")}
+
+        # Negocio: si habla de faros o lupas es ATF; si no, Milens.
+        neg = "atf" if _contiene_trigger(_norm_txt(texto),
+                                         ("faro", "faros", "lupa", "lupas",
+                                          "retrofit", "led", "canbus")) else "milens"
+        interes = ""
+        m_int = _re.search(r"(?:interesad[oa] en|quiere|pregunta por|busca)\s+(.{3,60})",
+                           _norm_txt(texto))
+        if m_int:
+            interes = m_int.group(1).strip(" .,")
+
+        try:
+            r = await asyncio.to_thread(
+                oc.crear_lead, nombre, tel, "chat", neg, "", interes, texto[:200], 0)
+        except Exception as e:
+            return {"respuesta": f"No pude guardarlo (no lo simulo): {str(e)[:180]}"}
+
+        detalle = f"✅ Cliente guardado: **{nombre}**"
+        if tel:
+            detalle += f"\n📲 {tel}"
+        else:
+            detalle += "\n_(sin teléfono — pásamelo y lo agrego)_"
+        detalle += f"\n🏷️ {neg.upper()}"
+        if interes:
+            detalle += f"\n💡 Le interesa: {interes}"
+        if isinstance(r, dict) and r.get("id"):
+            detalle += f"\n\nQuedó con folio {r['id']}."
+        return {"respuesta": detalle}
+
+    async def _proveedor_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ DIRECTORIO DE PROVEEDORES: quién vende qué, y a cuánto.
+
+        Si no lo tiene lo DICE y ofrece buscarlo en internet — nunca inventa un
+        proveedor ni un teléfono. Caso real 2026-08-04: Anuar no sabía a quién
+        cotizarle el papel adhesivo y terminó pidiéndole a AURORA que buscara en
+        MercadoLibre, porque no había dónde consultarlo.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location("proveedores", ROOT / "TALLER" / "proveedores.py")
+            mod = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el directorio de proveedores: {e}"}
+
+        # Qué artículo se busca: se quita la parte de la pregunta.
+        m = _norm_txt(mensaje)
+        for frase in sorted(_PREGUNTAS_DE_PROVEEDOR, key=len, reverse=True):
+            m = m.replace(frase, " ")
+        articulo = " ".join(w for w in m.split()
+                            if w not in ("el", "la", "los", "las", "de", "del",
+                                         "un", "una", "me", "mi", "y", "o",
+                                         "aurora", "dime", "que", "cual")).strip()
+
+        if not articulo:
+            r = await asyncio.to_thread(mod.listar)
+            txt = mod._texto({"status": "OK", "proveedores": r["proveedores"]})
+            return {"respuesta": f"Tengo {r['total']} proveedores en tu directorio:\n\n{txt}"}
+
+        r = await asyncio.to_thread(mod.buscar, articulo)
+        if r.get("status") == "NO_LO_TENGO":
+            return {"respuesta": (
+                f"{r['detalle']}\n\n"
+                f"Dime «busca en internet {articulo}» y lo cotizo afuera, o "
+                f"pásame el proveedor y lo guardo para la próxima.")}
+        return {"respuesta": mod._texto(r)}
 
     async def _buscar_web_candado(self, mensaje: str) -> Dict:
         """Envoltorio delgado para que _buscar_web calce con la firma uniforme

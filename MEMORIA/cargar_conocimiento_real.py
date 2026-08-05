@@ -25,8 +25,14 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-if hasattr(sys.stdout, "buffer"):
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+def _consola_utf8() -> None:
+    """La consola de Windows es cp1252 y truena con acentos y emojis.
+
+    Se llama SOLO al correr el script directo. Hacerlo al importar le rompía la
+    salida a quien lo importara — incluida AURORA (2026-08-05).
+    """
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 # (tema, patrón, conocimiento, confianza)
 # La confianza es 1.0 solo cuando se probó en la máquina de Anuar o él lo dictó.
@@ -223,6 +229,52 @@ CONOCIMIENTO = [
      "tarda ~90 segundos en arrancar. La salud se consulta por 127.0.0.1, NUNCA "
      "por localhost (resuelve a IPv6 y falla). La esposa entra por "
      "192.168.1.38:5000.", 1.0),
+    # ── LO QUE ANUAR YA TIENE (inventario real, no estimado) ─────────────
+    ("inventario", "disenos dxf",
+     "Anuar tiene ~665 archivos DXF regados en el disco y las USB. Se están "
+     "consolidando en Descargas\\dxf sin duplicados. Para buscar uno con su "
+     "precio ya calculado: python TALLER/indexar_dxf.py --buscar <lo que sea>. "
+     "El problema nunca fue falta de diseños: era no saber qué tenía.", 1.0),
+    ("inventario", "programas de la pc",
+     "172 programas instalados, 68 instaladores guardados y 8 carpetas "
+     "portables. Ollama YA está instalado (2.8 GB) — el problema con el modelo "
+     "local nunca fue instalarlo, era la RAM. Hay ~6 GB recuperables entre "
+     "OllamaSetup.exe (1.9 GB, ya instalado), un instalador duplicado de 497 MB "
+     "y Docker Desktop (3.4 GB) si no se usa. "
+     "Ver: python SISTEMA/indexar_programas.py --buscar <lo que sea>", 1.0),
+    ("inventario", "clientas de milens",
+     "22 clientas reales de julio 2026 con teléfono, sacadas del respaldo de "
+     "taller.db. Ya compraron y quedaron satisfechas: es la mejor lista para "
+     "recompra. La campaña de regreso a clases está lista y sin enviar en "
+     "MARKETING/campana_regreso_clases.py", 1.0),
+
+    # ── CÓMO COTIZAR (la lección que costó $250) ─────────────────────────
+    ("cotizar", "por metros de corte no por tamano",
+     "No se cotiza por tamaño, se cotiza por METROS DE CORTE. Dos piezas del "
+     "mismo tamaño pueden diferir 5 veces en tiempo: una caja lisa contra una "
+     "fachada con ventanas caladas. Costo por minuto de láser: $8.00.", 1.0),
+    ("cotizar", "regla de bolsillo",
+     "Frente al cliente, sin abrir nada: precio = metros de corte x $50. "
+     "Mínimos por complejidad: caja lisa $180 · caja con divisiones $280 · "
+     "pieza armable con forma (casa, castillo) $450 · con ventanas caladas $600. "
+     "Para armables: piezas x $40 es una buena aproximación rápida.", 1.0),
+    ("cotizar", "la casa de munecas",
+     "Caso real 2026-08-04: se vendió una casa de muñecas a 2 aguas con dos "
+     "pisos en $280. El costo real era ~$200 (18-25 m de corte, 15-25 min), sin "
+     "contar las horas de diseño y armado. Debió venderse en $450-600. El "
+     "problema no fue el precio: fue no tener el DXF a la mano para medir.", 1.0),
+    ("cotizar", "grosor segun el tamano",
+     "Una caja de 40x40 con 15 cm de alto en MDF de 2.7 mm SE PANDEA: la base "
+     "se vence y las paredes flexean. A ese tamaño va 5.5 mm. Si el cliente "
+     "insiste en el delgado, dejarlo por escrito como pieza decorativa.", 1.0),
+
+    # ── PROVEEDORES ──────────────────────────────────────────────────────
+    ("proveedores", "donde consultar",
+     "Hay un directorio de proveedores indexado por artículo: "
+     "python TALLER/proveedores.py <articulo>. También responde en el chat: "
+     "«quién me vende vinil». Si no tiene el proveedor lo DICE y ofrece "
+     "buscarlo en internet — nunca inventa un contacto.", 1.0),
+
     ("infraestructura", "pruebas de regresion",
      "Hay 112 pruebas de regresión en tests/, una por cada bug real que ocurrió. "
      "Se corren con: python -m pytest tests/ -q. Si alguna se pone en rojo, algo "
@@ -256,4 +308,5 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
+    _consola_utf8()
     raise SystemExit(asyncio.run(main()))

@@ -8,7 +8,7 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-04 · 22 candados directos · 542 herramientas · 122 pruebas
+Actualizado: 2026-08-05 · 24 candados directos · 542 herramientas · 143 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -232,3 +232,51 @@ python MARKETING/campana_regreso_clases.py --enviar   # mandarlo de verdad
 
 22 clientas reales de julio. Va con 45 segundos entre mensaje y mensaje para que
 WhatsApp no tumbe el número del negocio.
+
+
+---
+
+## 🏪 Proveedores — a quién le compras *(nuevo 2026-08-05)*
+
+Antes de mandarte a internet, revisa TU directorio.
+
+| Escribe esto | Qué hace |
+|---|---|
+| `quien me vende vinil textil` | Lideart, $180 el metro, con la fecha del dato |
+| `proveedor de mdf` | maderería, MDF 2.7 a $110 y 5.5 a $280 |
+| `que proveedores tengo` | los lista todos |
+
+Si no lo tiene, **lo dice** y te ofrece buscarlo en internet. Nunca inventa un
+teléfono. Los que faltan los agregas conforme cotices.
+
+---
+
+## 👤 Apuntar un cliente *(nuevo 2026-08-05)*
+
+Antes esto no existía: un cliente que llamaba se anotaba en un papel o se perdía.
+
+| Escribe esto | Qué hace |
+|---|---|
+| `apunta a Juan Perez 3312345678 interesado en faros` | lo guarda con folio, saca el teléfono y detecta que es de ATF |
+| `anota este cliente Maria 3339876543` | lo mismo, sin interés |
+| `nuevo cliente Roberto quiere lupas` | lo guarda en ATF por lo de las lupas |
+
+Si no le pasas nombre, **no lo guarda** — un cliente sin nombre no sirve para
+llamarle después.
+
+---
+
+## 📐 Diseños y cotización *(nuevo 2026-08-05)*
+
+```
+python TALLER/indexar_dxf.py --buscar casa
+```
+
+Te da el archivo, sus metros de corte, los minutos y el precio con tus números
+($8/min, 25 mm/s, margen ×3). Eso es lo que faltó el día de la casa de muñecas.
+
+| Escribe esto en el chat | Qué te contesta |
+|---|---|
+| `que recuerdas de cotizar` | la regla de bolsillo: metros × $50, y los mínimos |
+| `que recuerdas de inventario` | cuántos DXF y programas tienes |
+| `que recuerdas de proveedores` | cómo consultarlos |

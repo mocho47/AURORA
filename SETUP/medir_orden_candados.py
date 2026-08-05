@@ -21,8 +21,14 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-if hasattr(sys.stdout, "buffer"):
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+def _consola_utf8() -> None:
+    """La consola de Windows es cp1252 y truena con acentos y emojis.
+
+    Se llama SOLO al correr el script directo. Hacerlo al importar le rompía la
+    salida a quien lo importara — incluida AURORA (2026-08-05).
+    """
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 # Frases REALES de Anuar. Cada una se escribió de verdad en el chat, y varias
 # fallaron alguna vez. No son inventadas para que salga bonito el número.
@@ -134,4 +140,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    _consola_utf8()
     raise SystemExit(main())
