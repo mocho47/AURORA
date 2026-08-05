@@ -37,7 +37,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **corel** (motor_corel)
 - Qué hace: Maneja CorelDRAW de verdad por COM: abre archivos, exporta a PDF, escala la página, extrae el texto del diseño, quita fondos, arma planillas, saca colores con gotero y te dice qué plugins tienes instalados.
-- Frases que reconoce: «add-on», «addon», «almacena», «almacenar», «aplica el color», «cerrar documento», «cierra el documento», «combina», «complemento», «complementos», «coreldrau», «coreldraw»
+- Frases que reconoce: «add-on», «addon», «almacena», «almacenar», «aplica el color», «bitmap», «cerrar documento», «cierra el documento», «combina», «complemento», «complementos», «convertir a mapa»
 
 **dxf** (taller_dxf)
 - Qué hace: Convierte tus archivos entre DXF, PDF, PNG, SVG y EPS, con el DPI y la página que le pidas, y vectoriza imágenes para la láser. Si le das solo el nombre, busca el archivo en tu disco (convertir, convertir_todo).
@@ -55,7 +55,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **cotizar** (cotizador)
 - Qué hace: Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.
-- Frases que reconoce: «cual es el precio», «cuanto cobras», «cuanto cuesta», «cuanto cuesta el faro aozoom x5», «cuanto me sale», «cuanto sale», «cuanto vale», «en cuanto sale», «precio de», «que precio»
+- Frases que reconoce: «cotiza», «cotizacion», «cotizame», «cotizar», «cual es el precio», «cuanto cobras», «cuanto cuesta», «cuanto cuesta el faro aozoom x5», «cuanto me sale», «cuanto sale», «cuanto vale», «cuánto cuesta / sale / vale»
 
 **video** (motor_video)
 - Qué hace: Trabaja con tus 296 videos: te dice cuáles ya sirven para Reels, voltea los horizontales a 9:16 con su portada, y encuentra los repetidos por su contenido (no por el nombre). Solo reporta los duplicados: borrar lo decides tú.
@@ -91,7 +91,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **memoria** (memoria)
 - Qué hace: Busca en lo que ya se habló y se aprendió antes, para no repetir ni perder contexto entre sesiones.
-- Frases que reconoce: «que recuerdas de», «que recuerdas sobre», «que sabes de», «que tienes guardado sobre», «recuerdas cuando», «recuerdas que», «tu memoria»
+- Frases que reconoce: «a cuanto corto», «a cuanto grabo», «a que distancia», «a que potencia», «a que velocidad», «como corto», «como esta el laser», «como esta el tubo», «como esta la impresora», «como esta la lente», «como esta la maquina», «como grabo»
 
 **equipos** (equipos)
 - Qué hace: Coordina varios motores a la vez cuando un trabajo necesita más de uno (por ejemplo cotizar + agendar + avisar al cliente).
@@ -114,7 +114,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~535 funciones reales)
+## Herramientas del enrutador universal (~542 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -173,7 +173,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (62)
+### CEREBRO (63)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -182,6 +182,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/acciones_sistema:reparar_corel` — Repara la conexion de AURORA con CorelDRAW borrando el cache corrupto de
 - `CEREBRO/aprende_del_usuario:registrar_fallo` — Este mensaje no ejecutó nada. Se guarda por si el siguiente sí lo hace.
 - `CEREBRO/aprende_del_usuario:registrar_exito` — Este mensaje SÍ ejecutó. Si el anterior falló, se aprende la equivalencia.
+- `CEREBRO/aprende_del_usuario:aprender_a_la_primera` — Aprende una frase que SÍ funcionó, sin exigir que antes haya fallado.
 - `CEREBRO/aprende_del_usuario:buscar` — ¿Ya aprendimos que Anuar dice las cosas así? Devuelve lo aprendido o None.
 - `CEREBRO/aprende_del_usuario:listar` — Todo lo aprendido, de lo más usado a lo menos. Para que Anuar lo revise.
 - `CEREBRO/aprende_del_usuario:olvidar` — Borra lo aprendido que coincida con ese texto. Anuar siempre puede deshacer.
@@ -425,7 +426,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MANUALES/aprendizaje:aprender` — Busca el manual de 'herramienta', lo descarga (si es PDF) y lo ingiere a la Biblioteca.
 - `MANUALES/aprendizaje:ingerir_url` — Ruta manual: Anuar pega la URL exacta del PDF y AURORA lo descarga+ingiere.
 
-### MARKETING (35)
+### MARKETING (38)
 
 - `MARKETING/analizador_mercado:nichos` — Nichos disponibles para analizar (para poblar el panel).
 - `MARKETING/analizador_mercado:analizar` — Análisis de mercado REAL de un nicho: busca en vivo (varias consultas),
@@ -435,6 +436,9 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MARKETING/asesor_core:mejores_horarios` — Calcula las mejores horas para publicar a partir de datos REALES de actividad
 - `MARKETING/asesor_core:diagnostico` — Diagnostica sobre métricas REALES por red y sugiere acciones concretas.
 - `MARKETING/asesor_core:construir_brief_para_cerebro` — Arma el contexto (conocimiento + datos reales) para que el cerebro genere el plan.
+- `MARKETING/campana_regreso_clases:clientas` — Las que tienen teléfono. Sin teléfono no hay a quién escribirle.
+- `MARKETING/campana_regreso_clases:enviar` — Envío REAL por Green API, el mismo que ya usa AURORA.
+- `MARKETING/campana_regreso_clases:main` — main (campana_regreso_clases)
 - `MARKETING/catalogo_compartible:generar_catalogo_pdf` — Genera el PDF del catálogo y devuelve la ruta + conteos.
 - `MARKETING/motor_video:info_video` — Ancho, alto, duración y peso reales. Nada estimado.
 - `MARKETING/motor_video:a_vertical` — Deja el video en 9:16, listo para TikTok, Reels y Shorts.
@@ -463,7 +467,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MARKETING/publicacion_inteligente:preparar_publicacion` — Arma TODO para el post de hoy SIN publicar: qué video, copy nativo por red con
 - `MARKETING/publicacion_inteligente:publicar_hoy` — DISPARA la publicación REAL del video de hoy en la red indicada.
 
-### MEMORIA (30)
+### MEMORIA (31)
 
 - `MEMORIA/analitica_marketing:AnaliticaMarketing.inicializar` — inicializar (AnaliticaMarketing)
 - `MEMORIA/analitica_marketing:AnaliticaMarketing.registrar_publicacion` — Registra una nueva publicación. Retorna su ID.
@@ -472,6 +476,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MEMORIA/analitica_marketing:AnaliticaMarketing.resumen_plataformas` — resumen plataformas (AnaliticaMarketing)
 - `MEMORIA/analitica_marketing:AnaliticaMarketing.consolidar_en_semantica` — Extrae patrones de las publicaciones no consolidadas
 - `MEMORIA/analitica_marketing:AnaliticaMarketing.estado` — estado (AnaliticaMarketing)
+- `MEMORIA/cargar_conocimiento_real:main` — main (cargar_conocimiento_real)
 - `MEMORIA/contexto_usuario:ContextoUsuario.inicializar` — inicializar (ContextoUsuario)
 - `MEMORIA/contexto_usuario:ContextoUsuario.obtener` — Retorna el perfil del usuario. Lo crea si es nuevo.
 - `MEMORIA/contexto_usuario:ContextoUsuario.actualizar` — Actualiza el perfil del usuario tras cada interacción.
@@ -610,11 +615,13 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `PUBLICADOR/social_manager:eliminar` — Elimina una publicación de la agenda.
 - `PUBLICADOR/social_manager:resumen` — Conteo de agendadas por red/estado + próximas publicaciones pendientes.
 
-### REDES (3)
+### REDES (5)
 
 - `REDES/red_diagnostico:escanear_cast` — Encuentra dispositivos Google Cast/Nest/Home en la red local (puerto 8009).
 - `REDES/red_diagnostico:ping_perdida` — Mide pérdida de paquetes y latencia real hacia un dispositivo.
 - `REDES/red_diagnostico:diagnosticar` — Diagnóstico REAL de un dispositivo Cast + recomendación según su estado.
+- `REDES/red_diagnostico:escanear_red` — Encuentra TODOS los equipos de la red local, no solo los Cast.
+- `REDES/red_diagnostico:buscar_equipo` — Busca un equipo por nombre, fabricante o servicio ('impresora', 'ollama').
 
 ### SISTEMA (6)
 

@@ -8,7 +8,7 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-03 · 19 candados directos · 525 herramientas · 87 pruebas
+Actualizado: 2026-08-04 · 22 candados directos · 542 herramientas · 122 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -178,3 +178,57 @@ que nombra (contra el disco). Si algo no cuadra, lo corrige a la vista.
 | Corel, convertir, buscar en web | **2-10 segundos** |
 | Conversiones pesadas | **1-2 minutos** (está trabajando de verdad) |
 | Cuando Groq limita la cuota | puede tardar; eso es del proveedor, no de AURORA |
+
+
+---
+
+## 🧠 Lo que AURORA sabe de tu taller *(nuevo 2026-08-04)*
+
+Tiene guardados **40 conocimientos reales** — tus parámetros probados, tus
+precios y tus criterios. Se los preguntas hablando normal, no con palabras raras.
+
+| Escribe esto | Qué te contesta |
+|---|---|
+| `a cuanto corto mdf de 2.7` | tu 60% / 25 mm/s y la galga de 2 trozos (5.4 mm) |
+| `que galga uso para el mdf` | los 5.4 mm, y por qué los 8 mm eran el error |
+| `a que potencia grabo` | tus parámetros probados |
+| `como va la lente del cañon` | curva arriba, cómo checarla con el paño |
+| `que recuerdas de costeo` | material ya pagado NO es gratis, y qué cargarle a cada pieza |
+| `que recuerdas de precios escolares` | planilla $50, lápices $7/$5, uniformes $15 |
+| `que recuerdas de insumos` | vinil $180 el metro, papel $2.50 la hoja |
+| `que recuerdas de venta` | cómo escribirle a un cliente, 45 s entre mensajes |
+| `que recuerdas de arquitectura` | cómo está hecha ella misma |
+| `que recuerdas de decisiones` | por qué se cerró Ollama, por qué no se mueve de máquina |
+
+**Temas cargados:** láser · precios escolares · costeo · insumos · venta ·
+negocio · método de trabajo · arquitectura · decisiones · infraestructura
+
+Para recargarlos o agregar más: `python MEMORIA/cargar_conocimiento_real.py`
+
+---
+
+## 🔍 Buscar precios AFUERA *(corregido 2026-08-04)*
+
+Antes, pedir el precio de algo en MercadoLibre te devolvía una cotización de tus
+propios productos. Ya no: el cotizador es para **vender**, no para **comprar**.
+
+| Escribe esto | Qué hace |
+|---|---|
+| `busca en mercado libre papel adhesivo para laser` | busca en internet de verdad |
+| `donde compro vinil textil mas barato` | busca proveedores |
+| `encuentra el mejor precio y dame el link` | busca y trae la publicación |
+| `cuanto cuestan 100 playeras` | **cotiza con TUS precios** (esto no cambió) |
+
+---
+
+## 🎒 Campaña escolar *(lista, sin enviar)*
+
+No es un comando del chat: es un script aparte, para que nada se mande solo.
+
+```
+python MARKETING/campana_regreso_clases.py            # ver el mensaje y a quién
+python MARKETING/campana_regreso_clases.py --enviar   # mandarlo de verdad
+```
+
+22 clientas reales de julio. Va con 45 segundos entre mensaje y mensaje para que
+WhatsApp no tumbe el número del negocio.
