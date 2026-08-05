@@ -186,3 +186,47 @@ están erradicados de todo el sistema; si aparece alguno, es un error.
 - **Enviar la campaña escolar** a las 22 clientas (`MARKETING/campana_regreso_clases.py --enviar`)
 - Comprar $610 (100 hojas adhesivas + 2 m de vinil)
 - Probar el cuadro de 10×10 con la maquila (el corte Cameo no cuadra)
+
+---
+
+## 📅 SESIÓN 2026-08-05 — capacidades que estaban muertas
+
+### Se conectaron al chat capacidades que existían y NADIE podía llamar
+El barrido del 2026-08-04 las encontró: código funcionando, sin puerta.
+
+1. **Capturar clientes** (`oracle_leads`) — la que más dinero mueve y era
+   inalcanzable. Un cliente que llamaba se anotaba en papel o se perdía.
+   `apunta a Juan Perez 3312345678 interesado en faros` → lo guarda con folio,
+   saca el teléfono del texto y detecta que es ATF. Sin nombre NO guarda.
+2. **Cerrar citas** (`agenda`) — `actualizar_estado` no tenía ruta, así que las
+   citas quedaban abiertas para siempre y la agenda dejaba de servir.
+   `marca la cita 3 como hecha` · `cancela la cita 5`. Sin número PREGUNTA cuál.
+3. **Directorio de proveedores** (`proveedores`) — no existía. Va ANTES de la
+   búsqueda web: si el dato está en casa, no se va a internet.
+   `quien me vende vinil` → Lideart, $180 el metro, con la fecha del dato.
+
+### Bugs de raíz
+- **"qué recuerdas de cotizar" devolvía una cotización de faros.** El candado
+  vio la palabra "cotizar" dentro de la pregunta. Pasaba igual con video, corel
+  y proveedores. Arreglado como **guard global** en el pipeline (`_solo_memoria`),
+  no parche por candado — eso habría dejado abiertos los que nadie probó.
+- **Los scripts nuevos secuestraban `sys.stdout` al importarse**, rompiéndole la
+  salida a AURORA. Los 9 corregidos con `_consola_utf8()`.
+
+### Herramientas nuevas (fuera del chat)
+- `TALLER/indexar_dxf.py` — mide METROS DE CORTE reales con ezdxf y calcula
+  precio con $8/min y 25 mm/s. `--buscar casa`
+- `TALLER/consolidar_dxf.py` — junta los 665 DXF del disco y las USB, sin
+  duplicados (hash del contenido, no nombre)
+- `SISTEMA/indexar_programas.py` — 172 instalados, 68 instaladores, 8 portables.
+  Solo lee, no copia
+- `SISTEMA/apartar_duplicados.py` — los aparta para revisar, con `--deshacer`
+- `TALLER/proveedores.py` — el directorio
+
+### La lección que costó $250
+Se vendió una casa de muñecas en $280 costando ~$200, porque no había DXF a la
+mano para medir los metros. **No se cotiza por tamaño, se cotiza por metros de
+corte.** Regla de bolsillo: metros × $50, mínimo $450 para armables.
+
+### Números
+53 conocimientos en 13 temas · 24 candados · 558 herramientas · **163 pruebas**

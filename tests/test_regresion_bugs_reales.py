@@ -1318,3 +1318,70 @@ class TestPreguntarQueRecuerdaNoDisparaLaAccion:
         assert "_solo_memoria" in fuente, "Falta el guard global"
         assert "if _solo_memoria and _nombre_candado not in" in fuente, (
             "El guard no está aplicado en el bucle de candados")
+
+
+# ===========================================================================
+# MEJORA 29 — Cerrar una cita desde el chat
+# El barrido del 2026-08-04 lo encontró: AGENDA/agenda:actualizar_estado existía
+# y no había NINGUNA forma de llamarla desde el chat. Las citas se quedaban
+# abiertas para siempre, así que a los pocos días la agenda dejaba de servir:
+# todo aparecía como pendiente.
+# ===========================================================================
+class TestCerrarCitaDesdeElChat:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc29", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc29"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase", [
+        "marca la cita 3 como hecha",
+        "cancela la cita 5",
+        "confirma la cita 2",
+        "ya vino el cliente",
+        "no vino el cliente",
+    ])
+    def test_llega_al_candado_de_agenda(self, frase):
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == "agenda", f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' no la agarra ningún candado")
+
+    def test_distingue_cerrar_de_crear(self):
+        """'marca la cita' cierra; 'agenda una cita' crea. No se confunden."""
+        mod = self._mod()
+        assert mod._es_cerrar_cita("marca la cita 3 como hecha")
+        assert not mod._es_cerrar_cita("agenda una cita para Juan")
+        assert not mod._es_cerrar_cita("que tengo agendado hoy")
+
+    def test_no_adivina_cual_cita(self):
+        """Sin número debe PREGUNTAR, no cerrar la primera que encuentre."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        i = fuente.index("_es_cerrar_cita(mensaje):")
+        bloque = fuente[i:i + 1800]
+        assert "Cuál cita" in bloque or "cual cita" in bloque.lower(), (
+            "Cierra una cita sin saber cuál: puede marcar la equivocada")
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("apunta a Juan 3312345678", "oracle_leads"),
+        ("quien me vende vinil", "proveedores"),
+        ("cotizame 20 termos", "cotizador"),
+    ])
+    def test_no_rompe_los_demas(self, frase, esperado):
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == esperado, f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' se perdió")

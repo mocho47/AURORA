@@ -556,7 +556,23 @@ def _es_agenda(mensaje: str) -> bool:
         # vivo). Y agendar una cita nueva no tenia NINGUNA ruta por chat.
         "que tengo manana", "agenda de manana", "citas de manana",
         "agenda una cita", "agendar una cita", "agendame", "programa una cita",
-        "nueva cita", "crear cita", "agenda del dia"))
+        "nueva cita", "crear cita", "agenda del dia",
+        # Cerrar una cita. Lo detectó el barrido del 2026-08-04:
+        # AGENDA/agenda:actualizar_estado existía y no había forma de llamarla
+        # desde el chat, así que las citas se quedaban abiertas para siempre.
+        "ya se hizo la cita", "cita hecha", "marca la cita", "cancela la cita",
+        "cancelar la cita", "confirma la cita", "confirmar la cita",
+        "ya vino el cliente", "ya se entrego", "cierra la cita",
+        "la cita ya se hizo", "no vino el cliente"))
+
+
+def _es_cerrar_cita(mensaje: str) -> bool:
+    """Cambia el estado de una cita que ya existe, no crea una nueva."""
+    return _contiene_trigger(_norm_txt(mensaje), (
+        "ya se hizo la cita", "cita hecha", "marca la cita", "cancela la cita",
+        "cancelar la cita", "confirma la cita", "confirmar la cita",
+        "ya vino el cliente", "cierra la cita", "la cita ya se hizo",
+        "no vino el cliente", "ya se entrego"))
 
 
 _SERVICIOS_ATF_CACHE = None
@@ -2503,6 +2519,37 @@ class Consciencia:
             ag = _agenda()
             if hasattr(ag, "init_db"):
                 await asyncio.to_thread(ag.init_db)
+
+            # CERRAR una cita que ya existe. Lo detectó el barrido del
+            # 2026-08-04: actualizar_estado existía y no había forma de llamarla
+            # desde el chat, así que las citas quedaban abiertas para siempre y
+            # la agenda dejaba de servir a los pocos días.
+            if _es_cerrar_cita(mensaje):
+                id_m = re.search(r"\b(?:cita|folio|id)\s*#?\s*(\d{1,6})\b", m) or \
+                       re.search(r"\b(\d{1,4})\b", m)
+                if not id_m:
+                    prox = await asyncio.to_thread(ag.proximas, 168)
+                    citas = prox.get("citas", []) if isinstance(prox, dict) else []
+                    if not citas:
+                        return {"respuesta": "No tienes citas abiertas esta semana."}
+                    lista = "\n".join(
+                        f"• **{c.get('id')}** — {c.get('titulo', '')[:34]} "
+                        f"({c.get('fecha', '')} {c.get('hora', '')})"
+                        for c in citas[:8])
+                    return {"respuesta": ("¿Cuál cita? Dime el número:\n" + lista +
+                                          "\n\nEjemplo: `marca la cita 3 como hecha`")}
+                cid = int(id_m.group(1))
+                if any(k in m for k in ("cancela", "cancelar", "no vino")):
+                    nuevo = "cancelada"
+                elif any(k in m for k in ("confirma", "confirmar")):
+                    nuevo = "confirmada"
+                else:
+                    nuevo = "hecha"
+                r = await asyncio.to_thread(ag.actualizar_estado, cid, nuevo)
+                if isinstance(r, dict) and r.get("status") == "ok":
+                    return {"respuesta": f"✅ Cita {cid} marcada como **{nuevo}**."}
+                det = r.get("error", r) if isinstance(r, dict) else r
+                return {"respuesta": f"No pude cambiarla (no lo simulo): {det}"}
 
             # Fase 3 (2026-07-28): crear cita real — no existia NINGUNA ruta de
             # chat para agendar. No adivina titulo/cliente: si faltan, los pide.
