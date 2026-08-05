@@ -1,0 +1,1629 @@
+{
+  "nota": "Índice de los programas de esta PC. NO es un respaldo: nada se copió. Regenerar con python SISTEMA/indexar_programas.py",
+  "instalados": [
+    {
+      "nombre": "Docker Desktop",
+      "version": "4.67.0",
+      "editor": "Docker Inc.",
+      "carpeta": "C:\\Program Files\\Docker\\Docker",
+      "mb": 3435.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025",
+      "version": "26.1.0.143",
+      "editor": "Corel Corporation",
+      "carpeta": "C:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 2946.9
+    },
+    {
+      "nombre": "Ollama version 0.32.5",
+      "version": "0.32.5",
+      "editor": "Ollama",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Programs\\Ollama\\",
+      "mb": 2803.8
+    },
+    {
+      "nombre": "Microsoft Edge",
+      "version": "150.0.4078.83",
+      "editor": "Microsoft Corporation",
+      "carpeta": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application",
+      "mb": 2711.6
+    },
+    {
+      "nombre": "WebView2 Runtime de Microsoft Edge",
+      "version": "150.0.4078.83",
+      "editor": "Microsoft Corporation",
+      "carpeta": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application",
+      "mb": 2706.8
+    },
+    {
+      "nombre": "Copilot",
+      "version": "150.0.4078.65",
+      "editor": "Microsoft Corporation",
+      "carpeta": "C:\\Program Files (x86)\\Microsoft\\Copilot\\Application",
+      "mb": 2700.4
+    },
+    {
+      "nombre": "Silhouette Studio",
+      "version": "4.5.791",
+      "editor": "Silhouette America",
+      "carpeta": "C:\\Program Files\\Silhouette America\\Silhouette Studio\\",
+      "mb": 1301.2
+    },
+    {
+      "nombre": "Microsoft .NET SDK 10.0.103 (x64)",
+      "version": "10.1.326.7603",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 1202.3
+    },
+    {
+      "nombre": "Trae (User)",
+      "version": "3.5.71",
+      "editor": "SPRING (SG) PTE. LTD",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Programs\\Trae\\",
+      "mb": 1043.0
+    },
+    {
+      "nombre": "Microsoft Visual Studio Code (User)",
+      "version": "1.127.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Programs\\Microsoft VS Code\\",
+      "mb": 881.9
+    },
+    {
+      "nombre": "Windows Subsystem for Linux",
+      "version": "2.6.3.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 842.3
+    },
+    {
+      "nombre": "LibreOffice 26.2.4.2",
+      "version": "26.2.4.2",
+      "editor": "The Document Foundation",
+      "carpeta": "C:\\Program Files\\LibreOffice\\",
+      "mb": 805.3
+    },
+    {
+      "nombre": "WebCatalog 77.2.0",
+      "version": "77.2.0",
+      "editor": "WebCatalog, Inc.",
+      "carpeta": "",
+      "mb": 797.1
+    },
+    {
+      "nombre": "RDWorks 8.01.71.013",
+      "version": "8.01.71.013",
+      "editor": "RUIDA TECHNOLOGY",
+      "carpeta": "C:\\newpr\\",
+      "mb": 682.1
+    },
+    {
+      "nombre": "Inkscape",
+      "version": "1.4.3",
+      "editor": "Inkscape",
+      "carpeta": "C:\\Program Files\\Inkscape\\",
+      "mb": 654.1
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Common (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 580.6
+    },
+    {
+      "nombre": "Google Chrome",
+      "version": "150.0.7871.187",
+      "editor": "Google LLC",
+      "carpeta": "C:\\Program Files\\Google\\Chrome\\Application",
+      "mb": 473.8
+    },
+    {
+      "nombre": "RDWorks 8.01.68",
+      "version": "8.01.68",
+      "editor": "RUIDA TECHNOLOGY",
+      "carpeta": "C:\\newpr\\",
+      "mb": 449.8
+    },
+    {
+      "nombre": "Microsoft .NET Toolset 10.0.103 (x64)",
+      "version": "40.10.52243",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 408.2
+    },
+    {
+      "nombre": "Git",
+      "version": "2.52.0",
+      "editor": "The Git Development Community",
+      "carpeta": "C:\\Program Files\\Git\\",
+      "mb": 346.3
+    },
+    {
+      "nombre": "GitHub Copilot",
+      "version": "1.0.12",
+      "editor": "GitHub Inc.",
+      "carpeta": "\"C:\\Users\\Administrador\\AppData\\Local\\Programs\\GitHub Copilot\"",
+      "mb": 260.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Docs (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 215.3
+    },
+    {
+      "nombre": "Telegram Desktop",
+      "version": "6.9.3",
+      "editor": "Telegram FZ-LLC",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Roaming\\Telegram Desktop\\",
+      "mb": 206.9
+    },
+    {
+      "nombre": "RDWorks 8.01.54",
+      "version": "8.01.54",
+      "editor": "None",
+      "carpeta": "C:\\newpr\\",
+      "mb": 196.7
+    },
+    {
+      "nombre": "GitHub Desktop",
+      "version": "3.5.11",
+      "editor": "GitHub, Inc.",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\GitHubDesktop",
+      "mb": 185.9
+    },
+    {
+      "nombre": "Python 3.12.10 (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 155.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Models (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 144.1
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Draw (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 132.0
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Filters (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 124.4
+    },
+    {
+      "nombre": "Node.js",
+      "version": "24.13.1",
+      "editor": "Node.js Foundation",
+      "carpeta": "",
+      "mb": 101.5
+    },
+    {
+      "nombre": "Discord",
+      "version": "1.0.9059",
+      "editor": "Discord Inc.",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Discord",
+      "mb": 101.4
+    },
+    {
+      "nombre": "Microsoft Windows Desktop Runtime - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 95.0
+    },
+    {
+      "nombre": "Microsoft .NET Runtime - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 76.6
+    },
+    {
+      "nombre": "Corel Update Manager",
+      "version": "2.21.711",
+      "editor": "Corel corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 70.7
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Custom Data (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 66.9
+    },
+    {
+      "nombre": "RdProjector V2.1.32",
+      "version": "V2.1.32",
+      "editor": "SHENZHEN RUIDA TECHNOLOGY LTD.",
+      "carpeta": "c:\\RdProjector\\",
+      "mb": 61.1
+    },
+    {
+      "nombre": "Microsoft Windows Desktop Targeting Pack - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 59.3
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - JP (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 56.5
+    },
+    {
+      "nombre": "Python 3.12.10 Documentation (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 55.5
+    },
+    {
+      "nombre": "Microsoft ASP.NET Core Targeting Pack - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 49.1
+    },
+    {
+      "nombre": "Python 3.11.5 Documentation (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 48.9
+    },
+    {
+      "nombre": "Chrome Remote Desktop Host",
+      "version": "151.0.7922.13",
+      "editor": "Google LLC",
+      "carpeta": "",
+      "mb": 47.9
+    },
+    {
+      "nombre": "Microsoft .NET Targeting Pack - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 42.1
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Setup Files (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 40.2
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - CT (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 39.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - CS (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 39.3
+    },
+    {
+      "nombre": "GitHub CLI",
+      "version": "2.87.3",
+      "editor": "GitHub, Inc.",
+      "carpeta": "",
+      "mb": 37.0
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Writing Tools (x64)",
+      "version": "26.1",
+      "editor": " Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 35.5
+    },
+    {
+      "nombre": "RDWorks 8.0.32",
+      "version": "8.0.32",
+      "editor": "None",
+      "carpeta": "C:\\newpr\\",
+      "mb": 32.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Discovery (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 32.1
+    },
+    {
+      "nombre": "Python 3.12.10 Test Suite (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 31.4
+    },
+    {
+      "nombre": "Microsoft ASP.NET Core Runtime - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 28.7
+    },
+    {
+      "nombre": "Python 3.11.5 Standard Library (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 27.5
+    },
+    {
+      "nombre": "Python 3.11.5 Test Suite (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 25.4
+    },
+    {
+      "nombre": "Python 3.12.10 Standard Library (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 23.7
+    },
+    {
+      "nombre": "Ghostscript GPL 10.03.1 (Msi Setup)",
+      "version": "10.03.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\gs\\gs10.03.1\\",
+      "mb": 22.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - PHOTO-PAINT (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 21.6
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.44.35211",
+      "version": "14.44.35211.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 20.7
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.40664",
+      "version": "12.0.40664.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 20.6
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 Redistributable (x64) - 11.0.61030",
+      "version": "11.0.61030.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 20.5
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2015-2022 Redistributable (x86) - 14.44.35211",
+      "version": "14.44.35211.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 18.2
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 Redistributable (x86) - 11.0.61030",
+      "version": "11.0.61030.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 17.4
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.40664",
+      "version": "12.0.40664.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 17.2
+    },
+    {
+      "nombre": "Python 3.11.5 Tcl/Tk Support (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 15.6
+    },
+    {
+      "nombre": "Python 3.12.10 Tcl/Tk Support (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 15.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - ES (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 15.0
+    },
+    {
+      "nombre": "Microsoft Visual Basic for Applications 7.1 (x64)",
+      "version": "7.1.11.35",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 14.3
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219",
+      "version": "10.0.40219",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 13.9
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - CZ (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 13.2
+    },
+    {
+      "nombre": "Microsoft Visual Studio Tools for Applications 2022",
+      "version": "17.0.35906",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 13.2
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - RU (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.7
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - PL (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - FR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IT (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - BR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - NL (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - DE (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.4
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 -TR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 12.3
+    },
+    {
+      "nombre": "Microsoft .NET AppHost Pack - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 12.1
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 x64 Additional Runtime - 11.0.61030",
+      "version": "11.0.61030",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 12.0
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - SV (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 11.9
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - EN (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 11.8
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2022 X64 Additional Runtime - 14.44.35211",
+      "version": "14.44.35211",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 11.6
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 x64 Additional Runtime - 12.0.40664",
+      "version": "12.0.40664",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 11.5
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2010  x86 Redistributable - 10.0.40219",
+      "version": "10.0.40219",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 11.1
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content RU (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content BR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content SV (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content DE (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content NL (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content TR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content CT (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content CZ (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content JP (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content CS (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content PL (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content EN (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content IT (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content FR (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 10.6
+    },
+    {
+      "nombre": "Microsoft .NET 10.0 Templates 10.0.103 x64",
+      "version": "40.10.52243",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 10.1
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2022 X86 Additional Runtime - 14.44.35211",
+      "version": "14.44.35211",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 10.1
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 x86 Additional Runtime - 11.0.61030",
+      "version": "11.0.61030",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 9.7
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 x86 Additional Runtime - 12.0.40664",
+      "version": "12.0.40664",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 9.2
+    },
+    {
+      "nombre": "WicReset version 5.97.0.0",
+      "version": "5.97.0.0",
+      "editor": "WWW.WIC.SUPPORT",
+      "carpeta": "C:\\Program Files (x86)\\WicReset\\",
+      "mb": 8.2
+    },
+    {
+      "nombre": "Microsoft Visual Basic for Applications 7.1 (x64) Chinese (Traditional)",
+      "version": "7.1.11.35",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 7.0
+    },
+    {
+      "nombre": "Python 3.12.10 Core Interpreter (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 6.7
+    },
+    {
+      "nombre": "7-Zip 25.01 (x64)",
+      "version": "25.01",
+      "editor": "Igor Pavlov",
+      "carpeta": "C:\\Program Files\\7-Zip\\",
+      "mb": 5.6
+    },
+    {
+      "nombre": "Python 3.11.5 Core Interpreter (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 5.6
+    },
+    {
+      "nombre": "Microsoft Visual Basic for Applications 7.1 (x64) Spanish",
+      "version": "7.1.11.35",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 5.1
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM Content ES (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 5.0
+    },
+    {
+      "nombre": "Microsoft Visual Basic for Applications 7.1 (x64) English",
+      "version": "7.1.11.35",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 4.3
+    },
+    {
+      "nombre": "Corel Graphics - Windows Shell Extension 32 Bit Keys",
+      "version": "26.1.143",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Common Files\\Corel\\Shared\\Shell Extension\\",
+      "mb": 3.9
+    },
+    {
+      "nombre": "HP Unified IO",
+      "version": "2.0.0.434",
+      "editor": "HP",
+      "carpeta": "",
+      "mb": 3.7
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Workspaces (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 3.3
+    },
+    {
+      "nombre": "Corel Graphics - Windows Shell Extension",
+      "version": "26.1.0.143",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Common Files\\Corel\\Shared\\Shell Extension\\",
+      "mb": 2.9
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 x64 Minimum Runtime - 12.0.40664",
+      "version": "12.0.40664",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 2.5
+    },
+    {
+      "nombre": "Microsoft Visual Studio Tools for Applications 2022 x86 Hosting Support",
+      "version": "17.0.35906",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 2.5
+    },
+    {
+      "nombre": "Python 3.12.10 Executables (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 2.3
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Font Manager (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 2.2
+    },
+    {
+      "nombre": "Python 3.11.5 Executables (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 2.1
+    },
+    {
+      "nombre": "Python 3.12.10 Development Libraries (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 2.1
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 x64 Minimum Runtime - 11.0.61030",
+      "version": "11.0.61030",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 2.0
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2013 x86 Minimum Runtime - 12.0.40664",
+      "version": "12.0.40664",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 2.0
+    },
+    {
+      "nombre": "Python 3.11.5 Development Libraries (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 1.7
+    },
+    {
+      "nombre": "Microsoft Visual Studio Tools for Applications 2022 x64 Hosting Support",
+      "version": "17.0.35906",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 1.7
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2012 x86 Minimum Runtime - 11.0.61030",
+      "version": "11.0.61030",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 1.7
+    },
+    {
+      "nombre": "Python Launcher",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 1.5
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - IPM (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite\\26\\",
+      "mb": 1.0
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - Capture (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 0.9
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2021 - IPM (x64)",
+      "version": "23.0",
+      "editor": "Corel Corporation",
+      "carpeta": "c:\\Program Files\\Corel\\CorelDRAW Graphics Suite 2021\\",
+      "mb": 0.9
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.tvOS.Manifest-10.0.100 (x64)",
+      "version": "26.0.11017",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.iOS.Manifest-10.0.100 (x64)",
+      "version": "26.0.11017",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Python 3.11.5 Utility Scripts (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.Android.Manifest-10.0.100 (x64)",
+      "version": "36.1.2",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.macOS.Manifest-10.0.100 (x64)",
+      "version": "26.0.11017",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.MacCatalyst.Manifest-10.0.100 (x64)",
+      "version": "26.0.11017",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.7
+    },
+    {
+      "nombre": "Microsoft.NET.Sdk.Maui.Manifest-10.0.100 (x64)",
+      "version": "10.0.0",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Emscripten.net8.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2022 X64 Minimum Runtime - 14.44.35211",
+      "version": "14.44.35211",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Emscripten.net7.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Emscripten.net6.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Emscripten.net9.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.6
+    },
+    {
+      "nombre": "Microsoft .NET Host - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.5
+    },
+    {
+      "nombre": "Microsoft Visual C++ 2022 X86 Minimum Runtime - 14.44.35211",
+      "version": "14.44.35211",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.5
+    },
+    {
+      "nombre": "Python 3.11.5 pip Bootstrap (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 0.3
+    },
+    {
+      "nombre": "Microsoft .NET Host FX Resolver - 10.0.3 (x64)",
+      "version": "80.12.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.3
+    },
+    {
+      "nombre": "Python 3.12.10 pip Bootstrap (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 0.3
+    },
+    {
+      "nombre": "CorelDRAW Graphics Suite 2025 - VBA (x64)",
+      "version": "26.1",
+      "editor": "Corel Corporation",
+      "carpeta": "",
+      "mb": 0.2
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Mono.Toolchain.net8.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Mono.Toolchain.net9.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Mono.Toolchain.net6.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "Python 3.12.10 Add to Path (64-bit)",
+      "version": "3.12.10150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "Microsoft.NET.Workload.Mono.Toolchain.net7.Manifest-10.0.100 (x64)",
+      "version": "81.156.47319",
+      "editor": "Microsoft Corporation",
+      "carpeta": "",
+      "mb": 0.1
+    },
+    {
+      "nombre": "EPSON L1250 Series Printer Uninstall",
+      "version": "",
+      "editor": "Seiko Epson Corporation",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Desinstalar impresora EPSON L3210 Series",
+      "version": "",
+      "editor": "Seiko Epson Corporation",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "WinRAR 5.91 (64-bit)",
+      "version": "5.91.0",
+      "editor": "win.rar GmbH",
+      "carpeta": "C:\\Program Files\\WinRAR\\",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Python 3.11.5 Add to Path (64-bit)",
+      "version": "3.11.5150.0",
+      "editor": "Python Software Foundation",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Epson Connect Printer Setup",
+      "version": "1.4.11",
+      "editor": "Seiko Epson Corporation",
+      "carpeta": "C:\\Program Files (x86)\\Epson Software\\ECPrinterSetup\\",
+      "mb": 0.0
+    },
+    {
+      "nombre": "AURORA — Panel Maestro",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "ATF — Contenido Semanal",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "AURORA · ORACLE",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Milens Studio Pro",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Instagram",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Escritorio remoto de Chrome",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Chatbot WA Admin — Simplex",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "CapCut",
+      "version": "7.8.0.3263",
+      "editor": "Bytedance Pte. Ltd.",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Claude",
+      "version": "1.0",
+      "editor": "Google\\Chrome",
+      "carpeta": "",
+      "mb": 0.0
+    },
+    {
+      "nombre": "FFmpeg",
+      "version": "8.0.1",
+      "editor": "Gyan",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Ngrok",
+      "version": "3.3.1",
+      "editor": "ngrok, Inc.",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe",
+      "mb": 0.0
+    },
+    {
+      "nombre": "Rclone",
+      "version": "1.74.2",
+      "editor": "Rclone",
+      "carpeta": "C:\\Users\\Administrador\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Rclone.Rclone_Microsoft.Winget.Source_8wekyb3d8bbwe",
+      "mb": 0.0
+    }
+  ],
+  "instaladores": [
+    {
+      "nombre": "OllamaSetup.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Mi música\\OllamaSetup.exe",
+      "mb": 1920.5
+    },
+    {
+      "nombre": "Docker Desktop Installer.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Mi música\\Docker Desktop Installer.exe",
+      "mb": 619.0
+    },
+    {
+      "nombre": "AspireTrialEdition_Setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\AspireTrialEdition_Setup.exe",
+      "mb": 545.5
+    },
+    {
+      "nombre": "SS_V5.0.402.001_W6R.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_5.0.402 (1)\\Silhouette_Studio_Business_Edition_5.0.402\\Setup\\SS_V5.0.402.001_W6R.exe",
+      "mb": 496.9
+    },
+    {
+      "nombre": "SS_V5.0.402.001_W6R.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_5.0.402\\Silhouette_Studio_Business_Edition_5.0.402\\Setup\\SS_V5.0.402.001_W6R.exe",
+      "mb": 496.9
+    },
+    {
+      "nombre": "autoclaw-1.3.0-setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Mis vídeos\\autoclaw-1.3.0-setup.exe",
+      "mb": 403.8
+    },
+    {
+      "nombre": "SS_V4.5.791.001_W6R.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\Silhouette_Studio_Business_Edition_4.5.791\\Setup\\SS_V4.5.791.001_W6R.exe",
+      "mb": 402.7
+    },
+    {
+      "nombre": "SS_V4.5.791.001_W6R.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_4.5.791\\Silhouette_Studio_Business_Edition_4.5.791\\Setup\\SS_V4.5.791.001_W6R.exe",
+      "mb": 402.7
+    },
+    {
+      "nombre": "RDWorksV8Setup8.01.71.013.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\RDWorksV8(8.01.71.013)\\RDWorksV8Setup8.01.71.013.exe",
+      "mb": 295.9
+    },
+    {
+      "nombre": "WebCatalog Setup 77.2.0.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\WebCatalog Setup 77.2.0.exe",
+      "mb": 255.8
+    },
+    {
+      "nombre": "Trae-Setup-x64 (1).exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\Trae-Setup-x64 (1).exe",
+      "mb": 214.6
+    },
+    {
+      "nombre": "Trae-Setup-x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\Trae-Setup-x64.exe",
+      "mb": 214.6
+    },
+    {
+      "nombre": "VSCodeUserSetup-x64-1.127.0.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\VSCodeUserSetup-x64-1.127.0.exe",
+      "mb": 203.6
+    },
+    {
+      "nombre": "VSCodeUserSetup-x64-1.126.0.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\VSCodeUserSetup-x64-1.126.0.exe",
+      "mb": 201.3
+    },
+    {
+      "nombre": "GitHub-Copilot-windows-x64-setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\GitHub-Copilot-windows-x64-setup.exe",
+      "mb": 166.1
+    },
+    {
+      "nombre": "Ultimaker_Cura-3.6.0-win64.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\K10 TF Card English files\\manual，video，software\\slicer software, video , manual\\for windows\\CURA slicer, video , manual---prints quality good\\Ultimaker_Cura-3.6.0-win64.exe",
+      "mb": 150.8
+    },
+    {
+      "nombre": "Aspire_patch_to_v12509.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Mi música\\Aspire_patch_to_v12509.exe",
+      "mb": 146.6
+    },
+    {
+      "nombre": "Aspire_patch_to_v11554.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Mi música\\Aspire_patch_to_v11554.exe",
+      "mb": 141.0
+    },
+    {
+      "nombre": "Aspire_patch_to_v10515.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Nueva carpeta\\__ARCHIVO\\RESPALDO_USBs\\USB1_ADATA\\_ORGANIZADO_SOFTWARE\\Aspire_patch_to_v10515.exe",
+      "mb": 124.3
+    },
+    {
+      "nombre": "OrcaSlicer.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\K10 TF Card English files\\manual，video，software\\slicer software, video , manual\\Orca slicer -  speed fast\\For windows software\\OrcaSlicer.exe",
+      "mb": 116.9
+    },
+    {
+      "nombre": "DiscordSetup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\DiscordSetup.exe",
+      "mb": 107.2
+    },
+    {
+      "nombre": "HP_LJ_Pro_M452-PCL_6_v3_Win8plus_Full_Solution-19117.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\HP_LJ_Pro_M452-PCL_6_v3_Win8plus_Full_Solution-19117.exe",
+      "mb": 88.5
+    },
+    {
+      "nombre": "Update.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2025_v26.2.0.170\\CorelDRAW_Graphics_Suite_2025_v26.2.0.170\\Update.exe",
+      "mb": 62.2
+    },
+    {
+      "nombre": "RDWorksV8Setup8.01.54-20210513.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\RDworkV8.01.54\\RDWorksV8Setup8.01.54-20210513.exe",
+      "mb": 62.2
+    },
+    {
+      "nombre": "Aspire Update.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Nueva carpeta\\__ARCHIVO\\RESPALDO_USBs\\USB1_ADATA\\_ORGANIZADO_SOFTWARE\\Aspire Update.exe",
+      "mb": 62.2
+    },
+    {
+      "nombre": "Git-2.43.0-64-bit.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\Git-2.43.0-64-bit.exe",
+      "mb": 60.9
+    },
+    {
+      "nombre": "Aspire.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Nueva carpeta\\__ARCHIVO\\RESPALDO_USBs\\USB1_ADATA\\_ORGANIZADO_SOFTWARE\\Aspire.exe",
+      "mb": 55.2
+    },
+    {
+      "nombre": "Silhouette Studio.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_5.0.402 (1)\\Silhouette_Studio_Business_Edition_5.0.402\\Crack\\Silhouette Studio.exe",
+      "mb": 40.2
+    },
+    {
+      "nombre": "Silhouette Studio.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_5.0.402\\Silhouette_Studio_Business_Edition_5.0.402\\Crack\\Silhouette Studio.exe",
+      "mb": 40.2
+    },
+    {
+      "nombre": "Marketing_Digital_Pro.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Marketing_Digital_Pro.exe",
+      "mb": 37.9
+    },
+    {
+      "nombre": "Milens.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\Milens.exe",
+      "mb": 37.9
+    },
+    {
+      "nombre": "Silhouette Studio.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\Silhouette_Studio_Business_Edition_4.5.791\\Crack\\Silhouette Studio.exe",
+      "mb": 37.6
+    },
+    {
+      "nombre": "Silhouette Studio.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_Silhouette_Studio_Business_Edition_4.5.791\\Silhouette_Studio_Business_Edition_4.5.791\\Crack\\Silhouette Studio.exe",
+      "mb": 37.6
+    },
+    {
+      "nombre": "python-3.11.5-amd64 (1).exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\python-3.11.5-amd64 (1).exe",
+      "mb": 25.9
+    },
+    {
+      "nombre": "vc_redist.x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vc_redist.x64.exe",
+      "mb": 25.6
+    },
+    {
+      "nombre": "SetUp.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_Pepakura_Designer_6.1.0\\Pepakura_Designer_6.1.0\\SetUp.exe",
+      "mb": 21.4
+    },
+    {
+      "nombre": "MediaCreationTool_Win10.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Nueva carpeta\\__ARCHIVO\\_AURORA_VIEJO\\MediaCreationTool_Win10.exe",
+      "mb": 19.5
+    },
+    {
+      "nombre": "RDWorksV8Setup8.0.32.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\63555449903109375031542255_1\\RDWorksV8Setup8.0.32.exe",
+      "mb": 18.4
+    },
+    {
+      "nombre": "vc_redist.x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\Setup\\Redist\\VC\\vc_redist.x64.exe",
+      "mb": 15.1
+    },
+    {
+      "nombre": "vc_redist.x86.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vc_redist.x86.exe",
+      "mb": 14.0
+    },
+    {
+      "nombre": "revosetup (1).exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\revosetup (1).exe",
+      "mb": 11.8
+    },
+    {
+      "nombre": "revosetup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\revosetup.exe",
+      "mb": 11.8
+    },
+    {
+      "nombre": "ATF_Excelencia.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\ATF_Excelencia.exe",
+      "mb": 11.6
+    },
+    {
+      "nombre": "vsta_setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\Setup\\MSIs\\VSTA\\vsta_setup.exe",
+      "mb": 11.2
+    },
+    {
+      "nombre": "gdb.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\inkscape-1.4.3_2025-12-25_0d15f75-x64\\inkscape\\bin\\gdb.exe",
+      "mb": 9.7
+    },
+    {
+      "nombre": "adb.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\AURORA\\TOOLS\\platform-tools\\adb.exe",
+      "mb": 8.5
+    },
+    {
+      "nombre": "vcredist2012_x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vcredist2012_x64.exe",
+      "mb": 7.2
+    },
+    {
+      "nombre": "vcredist2013_x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vcredist2013_x64.exe",
+      "mb": 7.2
+    },
+    {
+      "nombre": "Claude Setup (1).exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\Claude Setup (1).exe",
+      "mb": 7.0
+    },
+    {
+      "nombre": "Claude Setup (2).exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\Claude Setup (2).exe",
+      "mb": 7.0
+    },
+    {
+      "nombre": "vcredist2012_x86.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vcredist2012_x86.exe",
+      "mb": 6.6
+    },
+    {
+      "nombre": "vcredist2013_x86.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\vcredist2013_x86.exe",
+      "mb": 6.5
+    },
+    {
+      "nombre": "Claude Setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\Claude Setup.exe",
+      "mb": 6.4
+    },
+    {
+      "nombre": "git-sdk-installer-1.0.8-32.7z.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\git-sdk-installer-1.0.8-32.7z.exe",
+      "mb": 4.9
+    },
+    {
+      "nombre": "DroidKit.crack.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\DroidKit.crack\\DroidKit.crack.exe",
+      "mb": 4.9
+    },
+    {
+      "nombre": "DroidKit.keygen.exe",
+      "ruta": "C:\\Users\\Administrador\\Documents\\DroidKit.keygen\\DroidKit.keygen.exe",
+      "mb": 4.9
+    },
+    {
+      "nombre": "Setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\Setup.exe",
+      "mb": 4.3
+    },
+    {
+      "nombre": "Setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\Setup\\Setup.exe",
+      "mb": 3.5
+    },
+    {
+      "nombre": "winrar-x64-591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\WinRAR_Installer\\winrar-x64-591.exe",
+      "mb": 3.2
+    },
+    {
+      "nombre": "winrar-x64-591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_WinRAR_5.9.1\\winrar-x64-591.exe",
+      "mb": 3.2
+    },
+    {
+      "nombre": "winrar-x64-591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_WinRAR_5.9.1_1\\winrar-x64-591.exe",
+      "mb": 3.2
+    },
+    {
+      "nombre": "sqlite3.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\AURORA\\TOOLS\\platform-tools\\sqlite3.exe",
+      "mb": 3.0
+    },
+    {
+      "nombre": "wrar591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\WinRAR_Installer\\wrar591.exe",
+      "mb": 3.0
+    },
+    {
+      "nombre": "wrar591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_WinRAR_5.9.1\\wrar591.exe",
+      "mb": 3.0
+    },
+    {
+      "nombre": "wrar591.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_Getintopc.com_WinRAR_5.9.1_1\\wrar591.exe",
+      "mb": 3.0
+    },
+    {
+      "nombre": "SetupARP.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\Setup\\SetupARP.exe",
+      "mb": 2.8
+    },
+    {
+      "nombre": "MicrosoftEdgeWebview2Setup.exe",
+      "ruta": "C:\\Users\\Administrador\\Downloads\\_Getintopc.com_CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\CorelDRAW_Graphics_Suite_2021_v23.0.0.363x64\\Setup\\Redist\\Webview\\MicrosoftEdgeWebview2Setup.exe",
+      "mb": 1.8
+    },
+    {
+      "nombre": "7z2501-x64.exe",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\Downloads\\_INSTALADORES\\7z2501-x64.exe",
+      "mb": 1.6
+    }
+  ],
+  "portables": [
+    {
+      "nombre": "Windows",
+      "ruta": "C:\\Windows",
+      "ejecutables": [
+        "bfsvc.exe",
+        "explorer.exe",
+        "HelpPane.exe"
+      ],
+      "mb": 43922.4
+    },
+    {
+      "nombre": "sources",
+      "ruta": "D:\\sources",
+      "ejecutables": [
+        "diagtrackrunner.exe",
+        "dism.exe",
+        "gatherosstate.exe"
+      ],
+      "mb": 5779.0
+    },
+    {
+      "nombre": "RDWorksV8",
+      "ruta": "C:\\RDWorksV8",
+      "ejecutables": [
+        "RdProjectorSetup.exe",
+        "RDWorksV8.exe",
+        "RDWorksV8Uninstall.exe"
+      ],
+      "mb": 706.4
+    },
+    {
+      "nombre": "RDWorksV8(8.01.71.013)",
+      "ruta": "C:\\Users\\Administrador\\Desktop\\RDWorksV8(8.01.71.013)",
+      "ejecutables": [
+        "RDWorksV8Setup8.01.71.013.exe"
+      ],
+      "mb": 295.9
+    },
+    {
+      "nombre": "INSTALADORES",
+      "ruta": "D:\\INSTALADORES",
+      "ejecutables": [
+        "ChromeSetup.exe",
+        "TelegramSetup.exe"
+      ],
+      "mb": 205.6
+    },
+    {
+      "nombre": "HP_Color_LaserJet_Pro_M452",
+      "ruta": "C:\\HP_Color_LaserJet_Pro_M452",
+      "ejecutables": [
+        "Autorun.exe",
+        "Setup.exe",
+        "Uninstall.exe"
+      ],
+      "mb": 184.4
+    },
+    {
+      "nombre": "RdProjector",
+      "ruta": "C:\\RdProjector",
+      "ejecutables": [
+        "MicroDogInstdrv.exe",
+        "RdProjectorCut.exe",
+        "Uninstall.exe"
+      ],
+      "mb": 64.0
+    },
+    {
+      "nombre": "boot",
+      "ruta": "D:\\boot",
+      "ejecutables": [
+        "bootsect.exe",
+        "memtest.exe"
+      ],
+      "mb": 18.3
+    }
+  ]
+}

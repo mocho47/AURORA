@@ -1,0 +1,120 @@
+{
+  "nota": "Proveedores reales de Anuar, indexados por artículo. Los precios traen la fecha en que se supieron. Sin teléfono = todavía no se ha confirmado; NO se inventan datos de contacto.",
+  "proveedores": [
+    {
+      "nombre": "Lideart",
+      "tipo": "tienda en línea",
+      "web": "lideart.com.mx",
+      "telefono": "",
+      "zona": "envía a todo México",
+      "articulos": [
+        "vinil textil",
+        "vinil",
+        "forever",
+        "laser-dark",
+        "multi-trans",
+        "silhouette",
+        "cameo",
+        "tapete",
+        "papel transfer",
+        "foil textil"
+      ],
+      "precios": [
+        {
+          "articulo": "vinil textil 60 cm",
+          "precio": 180.0,
+          "unidad": "metro",
+          "fecha": "2026-08-04",
+          "nota": "precio real confirmado por Anuar"
+        }
+      ]
+    },
+    {
+      "nombre": "MercadoLibre",
+      "tipo": "marketplace",
+      "web": "mercadolibre.com.mx",
+      "telefono": "",
+      "zona": "envío a domicilio",
+      "articulos": [
+        "papel adhesivo",
+        "adhesivo",
+        "etiquetas",
+        "papel",
+        "micas",
+        "insumos"
+      ],
+      "precios": [
+        {
+          "articulo": "papel adhesivo carta láser/inkjet",
+          "precio": 2.5,
+          "unidad": "hoja (paquete de 100 = $250)",
+          "fecha": "2026-08-04",
+          "nota": "debe decir 'para láser'; el de solo inyección daña el fusor"
+        }
+      ]
+    },
+    {
+      "nombre": "Maderería local",
+      "tipo": "local",
+      "web": "",
+      "telefono": "",
+      "zona": "Guadalajara",
+      "articulos": [
+        "mdf",
+        "madera",
+        "multiplay",
+        "triplay"
+      ],
+      "precios": [
+        {
+          "articulo": "MDF 2.7 mm (hoja 122x244)",
+          "precio": 110.0,
+          "unidad": "hoja",
+          "fecha": "2026-08-04"
+        },
+        {
+          "articulo": "MDF 5.5 mm (hoja 122x244)",
+          "precio": 280.0,
+          "unidad": "hoja",
+          "fecha": "2026-08-04"
+        },
+        {
+          "articulo": "Multiplay 4 mm (hoja 122x244)",
+          "precio": 350.0,
+          "unidad": "hoja",
+          "fecha": "2026-08-04"
+        }
+      ]
+    },
+    {
+      "nombre": "Maquila de impresión",
+      "tipo": "servicio",
+      "web": "",
+      "telefono": "",
+      "zona": "Guadalajara",
+      "articulos": [
+        "impresion",
+        "tabloide",
+        "suaje",
+        "suajado",
+        "impresion tabloide"
+      ],
+      "precios": [
+        {
+          "articulo": "tabloide solo impreso",
+          "precio": 10.0,
+          "unidad": "pieza",
+          "fecha": "2026-08-04",
+          "nota": "Anuar suaja en su Cameo — es la opción que conviene"
+        },
+        {
+          "articulo": "tabloide impreso y suajado",
+          "precio": 45.0,
+          "unidad": "pieza",
+          "fecha": "2026-08-04",
+          "nota": "los $35 de diferencia son mano de obra de corte"
+        }
+      ]
+    }
+  ]
+}
