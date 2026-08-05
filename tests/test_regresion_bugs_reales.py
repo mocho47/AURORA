@@ -1385,3 +1385,76 @@ class TestCerrarCitaDesdeElChat:
             except TypeError:
                 pass
         pytest.fail(f"'{frase}' se perdió")
+
+
+# ===========================================================================
+# BUG 30 — "abre pinterest y busca luna de mdf" no abrió Pinterest
+# Caso real 2026-08-05. Se hizo una búsqueda web genérica que devolvió
+# Wikipedia, MercadoLibre y una página turca sobre qué es el MDF. Ni un solo
+# resultado de Pinterest, y el sitio nunca se abrió.
+#
+# Dos causas:
+#   1. Pinterest ni siquiera estaba en _SITIOS_CONOCIDOS, aunque buscar
+#      referencias de diseño ahí es parte del trabajo diario del taller.
+#   2. El mensaje completo se fue al buscador: se buscó literalmente
+#      "abre pinterest y busca luna de mdf".
+#
+# El arreglo hace lo que de verdad se pedía: abrir el sitio CON la búsqueda ya
+# hecha. Y cada sitio arma su URL distinto — MercadoLibre usa guiones en la
+# ruta, Instagram usa hashtags sin espacios; con "+" abren vacías.
+# ===========================================================================
+class TestAbrirSitioConLaBusquedaHecha:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc30", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc30"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase,trozo", [
+        ("abre pinterest y busca luna de mdf", "pinterest.com.mx/search/pins/?q=luna"),
+        ("abre youtube y busca corte laser mdf", "youtube.com/results?search_query=corte"),
+        ("abre etsy y busca wooden lamp", "etsy.com/search?q=wooden"),
+    ])
+    def test_arma_la_url_con_la_busqueda(self, frase, trozo):
+        mod = self._mod()
+        url = mod._abrir_con_busqueda(frase)
+        assert trozo in url, f"URL mal armada para '{frase}': {url}"
+
+    def test_mercadolibre_usa_guiones_no_mas(self):
+        """Con '+' en la ruta, MercadoLibre abre la página vacía."""
+        mod = self._mod()
+        url = mod._abrir_con_busqueda("abre mercado libre y busca papel adhesivo laser")
+        assert "papel-adhesivo-laser" in url, f"ML con formato equivocado: {url}"
+        assert "+" not in url.split("mercadolibre.com.mx/")[-1]
+
+    def test_instagram_arma_hashtag(self):
+        mod = self._mod()
+        url = mod._abrir_con_busqueda("abre instagram y busca corte laser")
+        assert "/explore/tags/cortelaser" in url, f"Hashtag mal armado: {url}"
+
+    def test_abrir_sin_buscar_sigue_funcionando(self):
+        """'abre pinterest' a secas debe abrir el sitio, no armar búsqueda."""
+        mod = self._mod()
+        assert mod._abrir_con_busqueda("abre pinterest") == ""
+        assert mod._sitio_conocido("abre pinterest"), "Pinterest no se puede abrir"
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("abre pinterest y busca luna de mdf", "pc_access"),
+        ("abre pinterest", "pc_access"),
+        ("busca en internet luna de mdf", "web_search"),
+        ("busca en mercado libre papel adhesivo", "web_search"),
+    ])
+    def test_ruteo(self, frase, esperado):
+        """'abre X y busca Y' es ABRIR; 'busca en X' es que AURORA busque."""
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == esperado, f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' no la agarra ningún candado")

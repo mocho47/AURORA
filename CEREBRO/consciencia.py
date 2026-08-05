@@ -422,9 +422,41 @@ _SITIOS_CONOCIDOS = {
     "canva": "https://www.canva.com", "netflix": "https://www.netflix.com",
     "spotify": "https://open.spotify.com", "linkedin": "https://www.linkedin.com",
     "twitter": "https://x.com", "x": "https://x.com",
+    # Agregados el 2026-08-05: buscar referencias de diseño es parte del trabajo
+    # diario, y Pinterest ni siquiera se podía abrir.
+    "pinterest": "https://www.pinterest.com.mx", "etsy": "https://www.etsy.com",
+    "lideart": "https://lideart.com.mx", "behance": "https://www.behance.net",
+    "freepik": "https://www.freepik.es", "thingiverse": "https://www.thingiverse.com",
+    "dxfdownloads": "https://dxfdownloads.com",
 }
 _ABRIR_VERBOS = ("abre", "abrir", "abreme", "llevame a", "vamos a", "entra a",
                  "metete a", "ponme", "muestrame la pagina", "ve a")
+
+# Sitios que además saben BUSCAR por URL. Caso real 2026-08-05: "abre pinterest
+# y busca luna de mdf" hizo una búsqueda web genérica y devolvió Wikipedia y
+# MercadoLibre — ni un resultado de Pinterest, y nunca abrió el sitio. Pinterest
+# ni siquiera estaba en la lista de sitios conocidos, aunque buscar referencias
+# ahí es parte del trabajo diario de diseño.
+#
+# Ahora se abre el sitio CON la búsqueda ya hecha, que es lo que se pedía.
+_BUSQUEDA_EN_SITIO = {
+    "pinterest": "https://www.pinterest.com.mx/search/pins/?q={q}",
+    "youtube": "https://www.youtube.com/results?search_query={q}",
+    "mercadolibre": "https://listado.mercadolibre.com.mx/{q}",
+    "meli": "https://listado.mercadolibre.com.mx/{q}",
+    "mercado libre": "https://listado.mercadolibre.com.mx/{q}",
+    "amazon": "https://www.amazon.com.mx/s?k={q}",
+    "google": "https://www.google.com/search?q={q}",
+    "aliexpress": "https://es.aliexpress.com/w/wholesale-{q}.html",
+    "etsy": "https://www.etsy.com/search?q={q}",
+    "facebook": "https://www.facebook.com/search/top?q={q}",
+    "instagram": "https://www.instagram.com/explore/tags/{q}/",
+    "lideart": "https://lideart.com.mx/buscar?controller=search&s={q}",
+}
+
+# Verbos que indican que además de abrir, se quiere BUSCAR algo ahí.
+_BUSCAR_EN_SITIO_VERBOS = ("busca", "buscame", "buscar", "encuentra", "encuentrame",
+                           "muestrame", "enseñame", "ensename", "ver", "checa")
 
 
 def _sitio_conocido(mensaje: str) -> str:
@@ -436,6 +468,47 @@ def _sitio_conocido(mensaje: str) -> str:
     return ""
 
 
+def _abrir_con_busqueda(mensaje: str) -> str:
+    """URL del sitio CON la búsqueda ya hecha, si se pidió buscar algo ahí.
+
+    "abre pinterest y busca luna de mdf" →
+        https://www.pinterest.com.mx/search/pins/?q=luna+de+mdf
+    """
+    from urllib.parse import quote_plus
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _BUSCAR_EN_SITIO_VERBOS):
+        return ""
+    # El sitio más largo primero: "mercado libre" antes que "mercadolibre".
+    for nombre in sorted(_BUSQUEDA_EN_SITIO, key=len, reverse=True):
+        if not re.search(rf"\b{re.escape(nombre)}\b", m):
+            continue
+        # Lo que se busca es lo que va DESPUÉS del verbo de buscar.
+        resto = m
+        for v in sorted(_BUSCAR_EN_SITIO_VERBOS, key=len, reverse=True):
+            if v in resto:
+                resto = resto.split(v, 1)[1]
+                break
+        resto = resto.replace(nombre, " ")
+        for basura in ("abre", "abrir", "abreme", "en", "el", "la", "los", "las",
+                       "de la", "aurora", "porfa", "por favor", "y"):
+            resto = re.sub(rf"^\s*{re.escape(basura)}\b", " ", resto)
+        consulta = " ".join(resto.split()).strip(" ,.;:")
+        if not consulta:
+            return ""
+        plantilla = _BUSQUEDA_EN_SITIO[nombre]
+        # MercadoLibre y AliExpress arman la búsqueda con GUIONES en la ruta, no
+        # con "+" de query string: listado.mercadolibre.com.mx/papel-adhesivo.
+        # Con "+" la página abre vacía.
+        if "listado.mercadolibre" in plantilla or "aliexpress" in plantilla:
+            q = "-".join(quote_plus(w) for w in consulta.split())
+        elif "instagram" in plantilla:
+            q = "".join(c for c in consulta if c.isalnum())   # los hashtags no llevan espacios
+        else:
+            q = quote_plus(consulta)
+        return plantilla.format(q=q)
+    return ""
+
+
 def _es_abrir_navegador(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     # 1) Un dominio explícito + intención de abrirlo (como funcionaba antes)
@@ -443,6 +516,11 @@ def _es_abrir_navegador(mensaje: str) -> bool:
         return True
     # 2) Un sitio conocido por su nombre + un verbo de abrir. "abre youtube".
     if _sitio_conocido(mensaje) and _contiene_trigger(m, _ABRIR_VERBOS):
+        return True
+    # 3) "abre pinterest y busca X": abrir el sitio CON la búsqueda hecha.
+    #    Va aquí y no en busqueda_web porque lo que se pide es ABRIR, no que
+    #    AURORA busque y resuma.
+    if _contiene_trigger(m, _ABRIR_VERBOS) and _abrir_con_busqueda(mensaje):
         return True
     return False
 
@@ -2157,6 +2235,17 @@ class Consciencia:
         default, sin pasar por el enrutador de IA ni por búsqueda de palabras
         clave. No inventa la URL: usa el dominio real que escribió Anuar."""
         from CEREBRO.pc_access import pc_access
+        # "abre pinterest y busca luna de mdf" manda primero: se abre el sitio CON
+        # la búsqueda hecha, que es lo que se pidió. Antes esto se iba a búsqueda
+        # web genérica y devolvía Wikipedia (caso real 2026-08-05).
+        con_busqueda = _abrir_con_busqueda(mensaje)
+        if con_busqueda:
+            r = await pc_access.abrir_url(con_busqueda)
+            if r.get("status") == "OK":
+                return {"respuesta": f"✅ Abierto con tu búsqueda ya hecha:\n{con_busqueda}"}
+            return {"respuesta": f"No pude abrirlo (no te miento): "
+                                 f"{r.get('mensaje', r.get('status'))}"}
+
         dominio = _DOMINIO_RE.search(mensaje)
         # El dominio escrito manda; si no lo hay, se resuelve el nombre del sitio.
         # Nadie dice "abre youtube.com" — dice "abre youtube".
