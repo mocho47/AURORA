@@ -161,6 +161,55 @@ def registrar_exito(session_id: str, mensaje: str, herramienta: str, ahora: floa
     return nuevo
 
 
+def aprender_a_la_primera(mensaje: str, herramienta: str, ahora: float) -> Optional[Dict]:
+    """Aprende una frase que SÍ funcionó, sin exigir que antes haya fallado.
+
+    Por qué existe (2026-08-04): registrar_exito solo aprende cuando hay un
+    fallo previo — o sea, cada frase nueva le costaba a Anuar un fracaso antes
+    de servir. Él lo dijo así: "no sé cómo pedirle a AURORA sin que lance algo
+    diferente". La medición le dio la razón: de 22 frases suyas que hoy
+    funcionan, 4 solo funcionan porque YA se había peleado con ellas.
+
+    Esto se llama cuando ningún candado agarró el mensaje pero el enrutador con
+    IA sí lo resolvió: la frase queda registrada en el momento, y la próxima vez
+    entra directo por el candado correcto sin gastar el segundo del enrutador.
+
+    Cero riesgo de ensuciar el perfil: solo entra lo que de verdad ejecutó una
+    herramienta real.
+    """
+    if not mensaje or not herramienta:
+        return None
+    palabras = _palabras_utiles(mensaje)
+    if not palabras:
+        return None
+
+    datos = _leer()
+    lista = datos.setdefault("aprendido", [])
+    clave = _norm(mensaje)
+    for item in lista:
+        if item.get("clave") == clave:
+            item["veces"] = int(item.get("veces", 1)) + 1
+            item["ultima_vez"] = ahora
+            item["herramienta"] = herramienta
+            _guardar(datos)
+            return item
+
+    nuevo = {
+        "clave": clave,
+        "como_lo_dijo": mensaje.strip(),
+        # No hubo reformulación: la frase se resolvió sola por el enrutador.
+        "que_si_funciono": mensaje.strip(),
+        "herramienta": herramienta,
+        "veces": 1,
+        "aprendido": ahora,
+        "ultima_vez": ahora,
+        "a_la_primera": True,
+    }
+    lista.append(nuevo)
+    _guardar(datos)
+    return nuevo
+
+
 def buscar(mensaje: str) -> Optional[Dict]:
     """¿Ya aprendimos que Anuar dice las cosas así? Devuelve lo aprendido o None."""
     if not mensaje:

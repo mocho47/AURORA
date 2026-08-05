@@ -1618,6 +1618,22 @@ class Consciencia:
                         "timestamp": inicio.isoformat()}
 
             if real is not None:
+                # APRENDE A LA PRIMERA. Ningún candado agarró esta frase, pero el
+                # enrutador sí la resolvió: se registra en el momento, para que la
+                # próxima vez entre directo sin gastar el segundo del enrutador.
+                #
+                # Antes solo se aprendía del ciclo fallo → reformulación, o sea que
+                # cada frase nueva le costaba a Anuar un fracaso. Él lo dijo el
+                # 2026-08-04: "no sé cómo pedirle a AURORA sin que lance algo
+                # diferente". La medición le dio la razón: de 22 frases suyas que
+                # funcionan, 4 solo funcionan porque ya se había peleado con ellas.
+                _clave_usada = real.pop("_clave_usada", "") if isinstance(real, dict) else ""
+                if _clave_usada:
+                    try:
+                        from CEREBRO import aprende_del_usuario as _apr
+                        _apr.aprender_a_la_primera(mensaje, _clave_usada, time.time())
+                    except Exception as _e:
+                        logger.debug(f"[APRENDER 1RA] no se pudo registrar: {_e}")
                 self._agregar_sesion(session_id, mensaje, real["respuesta"])
                 ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
                 return {"respuesta": real["respuesta"], "motores_usados": ["router_universal"],
@@ -2952,7 +2968,13 @@ class Consciencia:
             return {"respuesta": f"{self._en_cristiano(clave, args, h)} ¿Le doy?"}
 
         # No peligrosa → ejecutar de verdad.
-        return await self._ejecutar_herramienta_real(reg, clave, args, h)
+        r = await self._ejecutar_herramienta_real(reg, clave, args, h)
+        # Se marca CUÁL herramienta resolvió, para que el pipeline pueda
+        # aprender la frase a la primera. La marca se quita antes de responder:
+        # nunca sale al usuario.
+        if isinstance(r, dict):
+            r["_clave_usada"] = clave
+        return r
 
     def _en_cristiano(self, clave: str, args: Dict, h: Dict) -> str:
         """Describe en lenguaje humano lo que se va a hacer, para preguntarlo.

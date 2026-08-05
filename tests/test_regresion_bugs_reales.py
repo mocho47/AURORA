@@ -948,3 +948,69 @@ class TestCotizadorNoSeMeteEnComprasDeAfuera:
             "Sin separar comprar de vender, el cotizador vuelve a secuestrar "
             "cualquier mensaje que traiga la palabra precio y un número")
         assert "_TIENDAS_DE_AFUERA" in fuente, "Falta la lista de tiendas externas"
+
+
+# ===========================================================================
+# MEJORA 24 — Aprender a la PRIMERA, sin cobrarle un fallo a Anuar
+# El 2026-08-04 Anuar dijo: "no sé cómo pedirle a AURORA sin que lance algo
+# diferente... tú sabes cómo pienso y me expreso, pero no has podido integrar
+# eso en aurora".
+#
+# Se midió con 23 frases reales suyas: 22 aciertan (95%), 0 van al motor
+# equivocado. PERO 4 de esas 22 solo funcionan porque él YA se había peleado
+# con ellas antes — el aprendizaje solo se activaba con el ciclo
+# fallo -> reformulación. O sea: cada frase nueva le costaba un fracaso.
+#
+# Ahora, cuando ningún candado agarra el mensaje pero el enrutador con IA sí lo
+# resuelve, la frase se registra EN EL MOMENTO. Sin reformular, sin pelearse.
+# ===========================================================================
+class TestAprendeALaPrimeraSinFallarAntes:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_apr24", RAIZ / "CEREBRO" / "aprende_del_usuario.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_apr24"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_aprende_sin_fallo_previo(self):
+        """registrar_exito EXIGE un fallo antes. Esto no."""
+        import time
+        a = self._mod()
+        antes = len(a.listar())
+        frase = "prueba regresion aprender a la primera xyz"
+        try:
+            r = a.aprender_a_la_primera(frase, "EDITOR/vectorizador:vectorizar", time.time())
+            assert r is not None, "No aprendió sin fallo previo — vuelve a costarle un fracaso"
+            assert r.get("a_la_primera") is True, "Falta la marca de que se aprendió sola"
+            assert len(a.listar()) == antes + 1
+            hallado = a.buscar(frase)
+            assert hallado, "La registró pero no la vuelve a encontrar"
+        finally:
+            a.olvidar(frase)
+            assert len(a.listar()) == antes, "Dejó basura en el perfil de Anuar"
+
+    def test_no_aprende_basura(self):
+        """Sin herramienta real no se aprende nada."""
+        import time
+        a = self._mod()
+        antes = len(a.listar())
+        assert a.aprender_a_la_primera("hola", "", time.time()) is None
+        assert a.aprender_a_la_primera("", "X/y:z", time.time()) is None
+        assert len(a.listar()) == antes
+
+    def test_esta_cableado_al_enrutador(self):
+        """De nada sirve la función si el pipeline no la llama."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "aprender_a_la_primera" in fuente, (
+            "El pipeline no aprende solo: cada frase nueva vuelve a costar un fallo")
+        assert "_clave_usada" in fuente, (
+            "El enrutador no dice qué herramienta usó, así que no hay qué aprender")
+
+    def test_la_marca_interna_no_sale_al_usuario(self):
+        """_clave_usada es de uso interno; si se filtra, Anuar ve basura técnica."""
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert 'real.pop("_clave_usada"' in fuente, (
+            "La marca debe quitarse con pop antes de responder, no quedarse en el dict")
