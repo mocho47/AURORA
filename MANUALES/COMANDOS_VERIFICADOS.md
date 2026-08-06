@@ -8,11 +8,96 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-05 · 26 candados directos · 558 herramientas · 210 pruebas
+Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 216 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
 > Esta lista es para saber qué se puede hacer, no cómo hay que decirlo.
+
+---
+
+# 📖 CÓMO ENTIENDE AURORA — las reglas
+
+*Esto es lo que pasa entre que escribes y que ella responde. Son 5 pasos, en
+este orden.*
+
+## Regla 1 · Primero limpia lo que escribiste
+
+Antes de nada corrige tu forma de escribir. **Aquí puedes escribir como quieras.**
+
+| Escribes | Lo vuelve |
+|---|---|
+| `imprecion` · `adesivo` · `watsapp` · `coreldrau` · `combiene` | la palabra correcta |
+| `ábreme` · `guárdalo` · `cotízame` · `búscame` | `abre` · `guarda` · `cotiza` · `busca` |
+| `a cuánto me sale` | `cuánto cuesta` |
+| `pásalo a corte` | `convierte a dxf` |
+| `sácale el dibujo lineal` | `vectoriza` |
+| `chékame` | `revisa` |
+| `corte de caja` | `contabilidad` |
+
+Salió de **72 peticiones reales tuyas**. Si escribes algo que no reconoce, dilo
+y se agrega.
+
+## Regla 2 · Busca en una lista, en orden
+
+Hay **26 candados** y se revisan uno por uno. **El primero que reconoce, gana.**
+
+Por eso el orden importa: si `cotizar` fuera antes que `buscar en internet`, la
+palabra "precio" secuestraría el mensaje. Eso pasó de verdad — cotizó 100
+playeras por $75,000 cuando se pedía papel de MercadoLibre.
+
+## Regla 3 · Cada candado pide señales concretas
+
+| Candado | Qué necesita |
+|---|---|
+| **Corel** | decir `corel` **Y** una acción (abre, exporta, guarda) |
+| | *excepción:* palabras que solo existen ahí — `mapa de bits`, `el diseño abierto` — entran solas |
+| **Cajas** | un verbo de crear + la palabra `caja` |
+| **Cotizar** | `cotiza` o `cuánto cuesta` — **pero se apaga** si nombras una tienda (MercadoLibre, Amazon): eso es comprar, no vender |
+| **Proveedores** | va **antes** que internet: si el dato está en tu directorio, no sale a buscar |
+| **Memoria** | `qué recuerdas de X` apaga a todos los demás, para que el tema no secuestre el mensaje |
+
+## Regla 4 · Si ninguno reconoce, entra la IA
+
+El **enrutador universal** conoce las 567 herramientas y decide en ~1 segundo.
+Y ahí **aprende la frase**, para que la próxima vez entre directo sin esperar.
+
+## Regla 5 · Si tampoco puede, lo dice
+
+**Nunca inventa.** Te dice qué sí puede hacer de verdad. Hay un candado de
+honestidad que revisa cada respuesta antes de entregártela.
+
+---
+
+# 📦 La fórmula para pedir cajas
+
+```
+[verbo] una caja [tipo] de [medidas] [tapa]
+```
+
+| Parte | Qué poner |
+|---|---|
+| **verbo** | haz · crea · genera · quiero · necesito |
+| **tipo** | corazón · bisagras · divisiones · tapa deslizante · flex · cajón · redonda · dados · cartas · libro |
+| **medidas** | `15x15x3` o `10 x9x7cm` — en cm, como las escribas |
+| **tapa** | `con tapa de agujero` · `sobrepuesta` · `cerrada` |
+
+**Lo único que importa es que estén las cuatro partes.** El orden y la
+ortografía no. Estas tres funcionaron tal cual se escribieron:
+
+```
+genra una caja corazon de 25 cm x4 cm de fondo con tapa sobrepuesta
+crea una caja con tapa deslizante de 15cmx15cm x3cm
+haz una caja con bisagras de 10 x9x7cm
+```
+
+¿No sabes el tipo? Pregunta: **`que cajas puedes hacer`**
+
+---
+
+> **Y la regla más importante:** cuando algo no lo entienda, dilo. Cada frase
+> que señalas se arregla para siempre — no solo esa, sino el patrón completo.
+> Así salió lo de "tapa deslizante", que daba un cajón en vez de una caja.
 
 ---
 
