@@ -311,6 +311,18 @@ def generar(pedido: str, grosor_mm: float = 2.7,
     return r
 
 
+def _liga(ruta: str) -> str:
+    """El enlace para BAJARLO, para quien no está en esta computadora.
+
+    Rocío trabaja desde su PC (2026-08-06): la ruta de disco no le sirve de
+    nada, necesita poder bajar el archivo. Aquí no se sabe la IP del servidor,
+    así que se deja relativa: el navegador la resuelve contra el mismo lugar
+    de donde cargó el panel, sea 127.0.0.1 o 192.168.1.38.
+    """
+    from urllib.parse import quote
+    return f"  · [⬇️ bajar](/descargar?ruta={quote(str(ruta))})"
+
+
 def _texto(r: dict) -> str:
     if r.get("status") != "OK":
         return r.get("detalle", "No pude generarla.")
@@ -321,12 +333,14 @@ def _texto(r: dict) -> str:
          f"{r['grosor_material']} mm _(compensación del láser)_\n\n")
     # El DXF va primero porque es el que él usa. El SVG queda de respaldo.
     if r.get("dxf"):
-        t += (f"📁 **DXF:** `{r['dxf']}`  ({r['kb_dxf']} KB)\n"
+        t += (f"📁 **DXF:** `{r['dxf']}`  ({r['kb_dxf']} KB)"
+              f"{_liga(r['dxf'])}\n"
               f"   _SVG también: `{r['archivo']}`_\n")
     else:
-        t += f"📁 `{r['archivo']}`  ({r['kb']} KB)\n"
+        t += f"📁 `{r['archivo']}`  ({r['kb']} KB){_liga(r['archivo'])}\n"
     if r.get("vista"):
-        t += f"👁️ **Míralo sin abrir nada:** `{r['vista']}`\n"
+        t += (f"👁️ **Míralo sin abrir nada:** `{r['vista']}`"
+              f"{_liga(r['vista'])}\n")
     if r.get("dxf_fallo"):
         t += f"\n⚠️ No pude pasarlo a DXF: {r['dxf_fallo']}\n"
     return t + "\n_Ábrelo para revisarlo antes de cortar._"

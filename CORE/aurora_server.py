@@ -597,6 +597,54 @@ async def alertas_resumen():
     return {"status": "ok", "total": sum(i["cantidad"] for i in items), "items": items}
 
 
+# ── BAJAR LO QUE AURORA GENERA, DESDE OTRA COMPUTADORA ──────────────────
+# Anuar preguntó el 2026-08-06 si Rocío puede usar todo desde su PC. Podía
+# hablarle a AURORA y AURORA hacía el trabajo... pero el DXF caía en el disco
+# de ÉL, en una ruta que desde la máquina de ella no significa nada. O sea:
+# generaba y no entregaba. Esto lo entrega.
+#
+# Solo se sirve lo que AURORA misma produjo. La lista blanca no es adorno: sin
+# ella este endpoint sería "leer cualquier archivo de la PC por la red".
+_CARPETAS_ENTREGA = ("dxf", "svg", "pdf", "imagenes", "png", "jpg")
+
+
+def _es_entregable(p: Path) -> bool:
+    """¿Es un archivo de salida de AURORA, y no cualquier cosa del disco?"""
+    try:
+        real = p.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return False
+    if not real.is_file():
+        return False
+    descargas = (Path.home() / "Downloads").resolve()
+    # Tiene que estar DENTRO de Descargas y en una de las carpetas de salida.
+    # Se compara la ruta ya resuelta para que un "..\..\" no sirva de nada.
+    try:
+        dentro = real.relative_to(descargas)
+    except ValueError:
+        return False
+    return bool(dentro.parts) and dentro.parts[0].lower() in _CARPETAS_ENTREGA
+
+
+@app.get("/descargar", tags=["Sistema"])
+async def descargar(ruta: str):
+    """Entrega un archivo generado por AURORA a quien lo pida desde la red.
+
+    Es lo que hace que Rocío pueda trabajar de verdad desde su computadora:
+    pide una caja, y se la puede bajar. Sin esto, AURORA le contestaba con la
+    ruta de un archivo que ella nunca iba a poder abrir.
+    """
+    p = Path(ruta)
+    if not _es_entregable(p):
+        return JSONResponse(
+            {"status": "no_entregable",
+             "detalle": ("Solo puedo entregar lo que yo misma generé "
+                         "(Descargas\\dxf, svg, pdf, imagenes).")},
+            status_code=404)
+    return FileResponse(str(p.resolve()), filename=p.name,
+                        media_type="application/octet-stream")
+
+
 @app.get("/manuales/comandos", tags=["Manuales"])
 async def manual_comandos():
     """Manual de comandos reales, generado del código (CEREBRO/generar_manual.py) —
