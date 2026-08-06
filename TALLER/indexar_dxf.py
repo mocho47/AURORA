@@ -90,28 +90,29 @@ def medir(ruta: Path) -> dict:
 
     msp = doc.modelspace()
     mm_total, piezas = 0.0, 0
-    xs, ys = [], []
     for e in msp:
         largo = _largo_entidad(e)
         if largo > 0:
             mm_total += largo
             piezas += 1
-        try:
-            if e.dxftype() == "LINE":
-                xs += [e.dxf.start.x, e.dxf.end.x]
-                ys += [e.dxf.start.y, e.dxf.end.y]
-            elif e.dxftype() in ("CIRCLE", "ARC"):
-                c, r = e.dxf.center, e.dxf.radius
-                xs += [c.x - r, c.x + r]
-                ys += [c.y - r, c.y + r]
-        except Exception:
-            pass
+
+    # El tamaño se saca con ezdxf.bbox, que entiende TODAS las entidades.
+    # La primera versión solo miraba LINE, CIRCLE y ARC, así que los archivos
+    # hechos con polilíneas —que son la mayoría— daban 0 × 0 cm y el material
+    # salía en $0 (encontrado el 2026-08-05 midiendo los DXF reales de Anuar).
+    ancho = alto = 0.0
+    try:
+        from ezdxf import bbox as _bbox
+        caja = _bbox.extents(msp, fast=True)
+        if caja.has_data:
+            ancho = round((caja.extmax.x - caja.extmin.x) / 10.0, 1)   # mm → cm
+            alto = round((caja.extmax.y - caja.extmin.y) / 10.0, 1)
+    except Exception:
+        pass
 
     metros = round(mm_total / 1000.0, 2)
     minutos = round(mm_total / VELOCIDAD_MM_S / 60.0, 1)
     costo_corte = round(minutos * COSTO_MINUTO, 2)
-    ancho = round((max(xs) - min(xs)) / 10.0, 1) if xs else 0.0   # a cm
-    alto = round((max(ys) - min(ys)) / 10.0, 1) if ys else 0.0
 
     return {
         "archivo": ruta.name,

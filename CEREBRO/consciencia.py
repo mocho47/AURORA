@@ -856,6 +856,31 @@ def _es_alta_lead(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _ALTA_DE_LEAD)
 
 
+# Cotizar un DXF midiendo sus METROS DE CORTE reales. Es lo que le faltó a Anuar
+# el 2026-08-04 con la casa de muñecas: sin el archivo no hay metros, y sin
+# metros no hay precio — la vendió en $280 costando ~$200.
+_COTIZAR_DXF = (
+    "cotiza este dxf", "cotiza el dxf", "cuanto cuesta cortar",
+    "cuanto sale cortar", "cuanto cobro por cortar", "cotiza este corte",
+    "cuantos metros de corte", "metros de corte", "mide el corte",
+    "cuanto tarda en cortar", "cotiza este archivo", "cotiza el diseno",
+    "cotiza este diseno", "cotiza el archivo", "cotiza el corte",
+    "cuanto cuesta este diseno", "cuanto por cortar", "cotiza el dibujo",
+)
+
+
+def _es_cotizar_dxf(mensaje: str) -> bool:
+    """Pide el precio de cortar un archivo, no el precio de un producto."""
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _COTIZAR_DXF):
+        return True
+    # "cotiza C:\...\loquesea.dxf" — el archivo solo ya es la petición.
+    if re.search(r"\.dxf\b", m) and _contiene_trigger(
+            m, ("cotiza", "cotizame", "cuanto", "precio", "corte", "cortar")):
+        return True
+    return False
+
+
 def _es_ficha_vendedor(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), (
         "ficha de", "ficha tecnica de", "dame el pitch", "hazme un pitch",
@@ -1320,6 +1345,9 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # (nombre, funcion_trigger, metodo_ejecutor_en_self, motor_id_reportado)
     # ruta_sola va PRIMERO: completa la petición anterior con el dato que faltaba,
     # antes de que cualquier otro candado o el enrutador la malinterpreten.
+    # cotizar_dxf va ANTES que cotizar: "cuánto cuesta cortar este archivo" es
+    # medir metros, no buscar un producto en el catálogo.
+    ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
     ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
     ("video",           _es_comando_video,     "_video_real",             "motor_video"),
     ("voz",             _es_comando_voz,       "_voz_real",               "voz"),
@@ -2300,6 +2328,84 @@ class Consciencia:
         return {"respuesta": "\n".join(partes)}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
+
+    async def _cotizar_dxf_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ LÁSER: mide los METROS DE CORTE reales de un DXF y lo cotiza.
+
+        Esto es lo que le faltó a Anuar el 2026-08-04 frente al cliente: sin el
+        archivo no hay metros, y sin metros no hay precio. Vendió una casa de
+        muñecas en $280 costando ~$200 producirla.
+
+        Usa sus números reales: $8.00 por minuto y 25 mm/s de su receta probada.
+        """
+        import re as _re
+        import importlib.util as _ilu
+        from pathlib import Path as _P
+
+        try:
+            spec = _ilu.spec_from_file_location("indexar_dxf", ROOT / "TALLER" / "indexar_dxf.py")
+            ix = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(ix)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el medidor de corte: {e}"}
+
+        # 1) ¿Viene la ruta del archivo en el mensaje?
+        m_ruta = _re.search(r'([A-Za-z]:\\[^\r\n"\']+?\.dxf)', mensaje or "", _re.I)
+        ruta = _P(m_ruta.group(1)) if m_ruta else None
+
+        # 2) Si no, se busca por nombre en el catálogo ya medido.
+        if not ruta:
+            texto = _norm_txt(mensaje)
+            for frase in sorted(_COTIZAR_DXF, key=len, reverse=True):
+                texto = texto.replace(frase, " ")
+            nombre = " ".join(w for w in texto.split()
+                              if w not in ("el", "la", "de", "del", "un", "una",
+                                           "este", "esta", "mi", "aurora",
+                                           "cotiza", "cuanto", "cuesta")).strip()
+            if nombre and ix.CATALOGO.exists():
+                import json as _json
+                cat = _json.loads(ix.CATALOGO.read_text(encoding="utf-8"))
+                hits = [x for x in cat.get("disenos", [])
+                        if nombre.lower() in x["archivo"].lower()][:5]
+                if hits:
+                    lineas = []
+                    for x in hits:
+                        lineas.append(
+                            f"📐 **{x['archivo']}**\n"
+                            f"   {x['ancho_cm']} × {x['alto_cm']} cm · "
+                            f"**{x['metros_corte']} m** de corte · {x['minutos']} min\n"
+                            f"   costo ${x['costo_corte']:.0f} → **PRECIO ${x['precio_sugerido']:.0f}**")
+                    return {"respuesta": "\n\n".join(lineas)}
+            return {"respuesta": (
+                "Pásame el archivo y lo mido de verdad:\n"
+                "• Arrastra el .dxf aquí, o\n"
+                "• Dime la ruta completa: `cotiza C:\\Users\\...\\diseno.dxf`\n\n"
+                "Te doy los metros de corte, los minutos y el precio con tus "
+                "números ($8/min a 25 mm/s).")}
+
+        if not ruta.exists():
+            return {"respuesta": f"No encontré ese archivo:\n`{ruta}`\nRevisa la ruta."}
+
+        r = await asyncio.to_thread(ix.medir, ruta)
+        if r.get("error"):
+            return {"respuesta": (f"No pude leer el DXF (no lo invento): {r['error']}\n"
+                                  "Puede estar dañado o en un formato viejo. "
+                                  "Vuélvelo a guardar desde Corel como DXF y lo mido.")}
+
+        # El desperdicio de material según la forma: una pieza con curvas
+        # desperdicia más hoja que un rectángulo.
+        material = round((r["ancho_cm"] * r["alto_cm"]) / 29768.0 * 110 * 1.4, 2)
+        costo = r["costo_corte"] + material
+        return {"respuesta": (
+            f"📐 **{r['archivo']}**\n"
+            f"   {r['ancho_cm']} × {r['alto_cm']} cm · {r['entidades']} piezas\n\n"
+            f"✂️ **{r['metros_corte']} m** de corte  ·  **{r['minutos']} min** "
+            f"(a tus 25 mm/s)\n\n"
+            f"   corte  ${r['costo_corte']:.2f}   (${8.0:.0f}/min)\n"
+            f"   MDF 2.7 + merma  ${material:.2f}\n"
+            f"   **COSTO  ${costo:.2f}**\n\n"
+            f"💰 **PRECIO SUGERIDO: ${max(r['precio_sugerido'], costo * 3):.0f}**\n\n"
+            f"_(Si es pieza armable con forma, tu mínimo es $450.)_")}
 
     async def _alta_lead_real(self, mensaje: str) -> Dict:
         """CHAT ↔ ORACLE: da de alta un cliente nuevo con lo que se dictó.

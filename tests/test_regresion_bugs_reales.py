@@ -1458,3 +1458,88 @@ class TestAbrirSitioConLaBusquedaHecha:
             except TypeError:
                 pass
         pytest.fail(f"'{frase}' no la agarra ningún candado")
+
+
+# ===========================================================================
+# MEJORA 31 — Cotizar un DXF desde el chat, con metros de corte reales
+# Es LO que le faltó a Anuar el 2026-08-04 frente al cliente: sin el archivo no
+# hay metros, sin metros no hay precio, y vendió una casa de muñecas en $280
+# costando ~$200 producirla.
+#
+# Bug encontrado al probarlo con sus DXF reales: el ancho y alto salían 0 x 0 cm
+# porque el bbox solo miraba LINE, CIRCLE y ARC. La mayoría de sus archivos usan
+# polilíneas, así que el material se cotizaba en $0. Ahora se usa ezdxf.bbox,
+# que entiende todas las entidades.
+# ===========================================================================
+class TestCotizarDxfDesdeElChat:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc31", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc31"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase", [
+        "cuanto cuesta cortar este dxf",
+        "cuantos metros de corte tiene",
+        "cotiza este diseno",
+        r"cotiza C:\Users\x\caja.dxf",
+    ])
+    def test_llega_al_cotizador_de_laser(self, frase):
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == "cotizador_laser", f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' no la agarra ningún candado")
+
+    @pytest.mark.parametrize("frase", [
+        "cotizame 20 termos",
+        "cuanto cuesta el faro aozoom x5",
+    ])
+    def test_no_secuestra_el_cotizador_de_productos(self, frase):
+        """Cotizar un producto del catálogo NO es medir un archivo."""
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == "cotizador", f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' se perdió")
+
+    def test_mide_el_tamano_con_bbox_no_a_mano(self):
+        """Sin ezdxf.bbox, los archivos con polilíneas dan 0 x 0 cm y el
+        material se cotiza en $0."""
+        fuente = (RAIZ / "TALLER" / "indexar_dxf.py").read_text(encoding="utf-8")
+        assert "from ezdxf import bbox" in fuente, (
+            "Vuelve a medir solo LINE/CIRCLE/ARC: los DXF con polilíneas "
+            "darán 0 x 0 cm y el material saldrá gratis")
+
+    def test_mide_un_dxf_real(self):
+        """Prueba con un archivo de verdad, no inventado."""
+        import importlib.util
+        from pathlib import Path as _P
+        carpeta = _P.home() / "Downloads" / "dxf"
+        if not carpeta.exists():
+            pytest.skip("Todavía no está consolidada la carpeta de DXF")
+        archivos = list(carpeta.glob("*.dxf"))
+        if not archivos:
+            pytest.skip("No hay DXF para probar")
+        spec = importlib.util.spec_from_file_location(
+            "_ix31", RAIZ / "TALLER" / "indexar_dxf.py")
+        ix = importlib.util.module_from_spec(spec)
+        sys.modules["_ix31"] = ix
+        spec.loader.exec_module(ix)
+        medidos = [ix.medir(p) for p in archivos[:15]]
+        buenos = [m for m in medidos if not m.get("error")]
+        assert buenos, "No pudo medir ninguno de los DXF reales"
+        con_tamano = [m for m in buenos if m["ancho_cm"] > 0]
+        assert con_tamano, (
+            "Todos dieron 0 cm de ancho: el material se cotizaría gratis")
