@@ -1,24 +1,62 @@
+# AURORA · lo que de verdad hace falta para que funcione
+#
+# Este archivo estaba incompleto: le faltaban 10 librerías que AURORA usa todos
+# los días (2026-08-06). Quien instalara desde aquí se quedaba con una AURORA
+# a medias —sin cajas, sin quitar fondos, sin DXF, sin Corel, sin PDF— y sin un
+# error claro que dijera por qué. Se descubrió al medir qué tan complejo sería
+# instalarla en la PC de Rocío.
+#
+# Instalar:  pip install -r requirements.txt
+
+# ── El servidor y la base ───────────────────────────────────────────────
 fastapi>=0.104
 uvicorn>=0.24
 pydantic>=2.5
 pydantic-settings>=2.1
-python-jose>=3.3
-PyJWT>=2.8
-requests>=2.31
-aiohttp>=3.9
 sqlalchemy>=2.0
 python-dotenv>=1.0
-groq>=0.4
+python-jose>=3.3
+PyJWT>=2.8
+cryptography>=3.0
+requests>=2.31
+aiohttp>=3.9
 httpx>=0.25
-moviepy>=1.0
+sentry-sdk>=1.0
+
+# ── El cerebro ──────────────────────────────────────────────────────────
+groq>=0.4
+
+# ── TALLER: cajas, corte láser y medición de DXF ────────────────────────
+# Sin estas, "hazme una caja tipo cofre" no hace nada.
+boxes>=1.2                 # los 189 generadores de cajas
+ezdxf>=1.4                 # leer, medir y escribir DXF
+svgpathtools>=1.7          # convertir el SVG de boxes.py a DXF
+
+# ── DISEÑO: quitar fondo, vectorizar, PDF ───────────────────────────────
+Pillow>=9.0
+numpy>=2.0
+opencv-python>=4.8         # medir y limpiar imágenes
+rembg>=2.0                 # quitar fondo (30 s contra 10 min a mano)
+onnxruntime>=1.16          # el motor que corre el modelo de rembg
+torch>=2.0                 # lo pide rembg. CPU basta: pip install torch --index-url https://download.pytorch.org/whl/cpu
+vtracer>=0.6               # vectorizar (reemplazó a Inkscape, que tardaba 180 s)
+PyMuPDF>=1.24              # revisar y ARREGLAR los PDF de gran formato
+scipy>=1.11
+
+# ── COREL (solo Windows) ────────────────────────────────────────────────
+# Es como AURORA le habla a CorelDRAW. En Linux/Mac no instala ni hace falta.
+pywin32>=306; sys_platform == "win32"
+
+# ── WEB y REDES ─────────────────────────────────────────────────────────
+beautifulsoup4>=4.0
+lxml>=4.0
+selenium>=4.0
+ddgs>=9.0                  # buscar en internet sin llave de API
 facebook-sdk>=3.0
 google-api-python-client>=2.0
 google-auth-oauthlib>=0.4
-scenedetect[opencv]>=0.6
-Pillow>=9.0
-beautifulsoup4>=4.0
-selenium>=4.0
-lxml>=4.0
-cryptography>=3.0
-sentry-sdk>=1.0
 supabase
+
+# ── VIDEO (el post de hoy) ──────────────────────────────────────────────
+moviepy>=1.0
+scenedetect[opencv]>=0.6
