@@ -35,6 +35,19 @@ ERRORES_REALES = {
     "whats": "whatsapp", "wasap": "whatsapp",
     "chrimeboock": "chromebook", "chrome boock": "chromebook",
     "asppire": "aspire", "drw": "rdworks", "meracdo": "mercado",
+    # Sitios que escribe rápido. "facebok" con una K le tumbó la búsqueda
+    # entera el 2026-08-05.
+    "facebok": "facebook", "feisbuk": "facebook", "fb": "facebook",
+    "pinterets": "pinterest", "pintrest": "pinterest", "pinteres": "pinterest",
+    "yotube": "youtube", "yutub": "youtube", "youtub": "youtube",
+    "mercadolibre": "mercado libre", "meli": "mercado libre",
+    "instagran": "instagram", "insta": "instagram",
+    "3 axis": "3axis", "tresaxis": "3axis", "3axis co": "3axis",
+    # "dxf download" en DOS palabras se lo llevaba el conversor de DXF, porque
+    # la frase trae "dxf" (2026-08-05). Se junta antes de que nadie la vea.
+    "dxf download": "dxfdownloads", "dxf downloads": "dxfdownloads",
+    "dxfdownload": "dxfdownloads", "dxf-downloads": "dxfdownloads",
+    "dxf for cnc": "dxfforcnc", "dxfforcnc com": "dxfforcnc",
     # Del taller
     "imprecion": "impresion", "impprecion": "impresion",
     "imprecione": "impresion", "impreciones": "impresiones",

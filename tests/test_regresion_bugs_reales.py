@@ -1818,3 +1818,127 @@ class TestSitiosVisualesSeAbrenNoSeResumen:
         mod = self._mod()
         assert "dame" in mod._BUSCAR_EN_SITIO_VERBOS
         assert "revisa" in mod._BUSCAR_EN_SITIO_VERBOS
+
+
+# ===========================================================================
+# MEJORA 35 — Buscar en CUALQUIER sitio, no solo en los 20 de la lista
+# Anuar lo preguntó directo el 2026-08-05: "¿y funciona para cualquier sitio?".
+# No: solo con los que estaban en la lista. Probó con "en ameede busca la torre
+# eiffel en dxf" y se lo llevó el conversor de DXF.
+#
+# No se puede inventar la URL de búsqueda de un sitio desconocido —cada uno la
+# arma distinto y saldría una página de error— pero tampoco hay que rendirse:
+# se busca en Google NOMBRANDO el sitio, que siempre lleva a la página buena.
+#
+# Bugs que salieron probando:
+#   - "facebok" con una K tumbaba la búsqueda entera.
+#   - "dxf download" en DOS palabras se lo llevaba el conversor de DXF, porque
+#     la frase trae "dxf".
+#   - 3axis.co y dxfforcnc, que son los bancos de diseño que usa el taller, no
+#     estaban en ningún lado.
+# ===========================================================================
+class TestBuscarEnCualquierSitio:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc35", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc35"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase,trozo", [
+        ("en 3axis busca casas de muñeca en cdr", "3axis.co/?s=casas"),
+        ("en dxf download encuentra pistas de canicas", "dxfdownloads.com/?s=pistas"),
+        ("abre facebok y busca paginas con disenos dxf", "facebook.com/search"),
+    ])
+    def test_sitios_conocidos_entran_directo(self, frase, trozo):
+        mod = self._mod()
+        url = mod._abrir_con_busqueda(frase)
+        assert trozo in url, f"'{frase}' → {url}"
+
+    @pytest.mark.parametrize("frase,sitio", [
+        # OJO: "ameede" YA NO va aquí. Cuando se escribió esta prueba era
+        # desconocido; el 2026-08-05 se sacó del historial de Anuar (63 visitas)
+        # y se agregó con su buscador verificado, así que ahora entra directo.
+        ("en ikea busca sillas de madera", "ikea"),
+        ("en makercase busca cajas", "makercase"),
+        ("en homedepot busca tornillos", "homedepot"),
+    ])
+    def test_sitio_desconocido_va_a_google_nombrandolo(self, frase, sitio):
+        """No se inventa su URL —saldría error— pero tampoco se rinde."""
+        mod = self._mod()
+        url = mod._abrir_con_busqueda(frase)
+        assert "google.com/search" in url, f"Se rindió con '{sitio}': {url}"
+        assert sitio in url, f"No nombró el sitio: {url}"
+
+    @pytest.mark.parametrize("frase", [
+        "en corel busca el texto del documento",
+        "en la computadora busca el archivo",
+        "en internet busca precios de vinil",
+    ])
+    def test_no_confunde_lo_que_no_es_un_sitio(self, frase):
+        """Sin la lista de exclusión, 'en corel busca...' abriría Google."""
+        mod = self._mod()
+        assert not mod._abrir_con_busqueda(frase), (
+            f"'{frase}' se tomó como un sitio web")
+
+    def test_los_errores_de_dedo_en_sitios(self):
+        """'facebok' con una K tumbaba la búsqueda entera."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_pa35", RAIZ / "CEREBRO" / "perfil_anuar.py")
+        pa = importlib.util.module_from_spec(spec)
+        sys.modules["_pa35"] = pa
+        spec.loader.exec_module(pa)
+        for malo, bueno in (("facebok", "facebook"), ("pintrest", "pinterest"),
+                            ("dxf download", "dxfdownloads")):
+            assert bueno in pa.normaliza(f"abre {malo} y busca algo").lower(), (
+                f"'{malo}' no se corrigió a '{bueno}'")
+
+
+# ===========================================================================
+# MEJORA 36 — Los bancos de diseño que Anuar USA, sacados de su historial
+# El 2026-08-05 pidió revisar su historial de navegación para encontrarlos.
+# Salieron 8 sitios de diseño/láser reales, con sus visitas:
+#   3axis.co (176) · dxfdownloads.com (131) · boxes.hackerspace-bamberg.de (129)
+#   stanser.com (70) · ameede.com (63) · vectorsart.com (50)
+#   bibliotecadecorte.com (16) · megalaser.com.ar (14)
+#
+# Cada URL de búsqueda se VERIFICÓ en vivo (HTTP 200), no se supuso.
+#
+# Hallazgo: boxes.hackerspace-bamberg.de con 129 visitas es boxes.py EN LÍNEA
+# — la misma librería que ese día quedó dentro de AURORA. Llevaba tiempo
+# yendo al navegador a llenar el formulario.
+# ===========================================================================
+class TestBancosDeDisenoDeAnuar:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc36", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc36"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase,dominio", [
+        ("en ameede busca la torre eifel en dxf", "ameede.com/?s="),
+        ("en biblioteca de corte busca cajas", "bibliotecadecorte.com/?s="),
+        ("en vectorsart busca mandalas", "vectorsart.com/?s="),
+        ("en megalaser busca portaretratos", "megalaser.com.ar/?s="),
+        ("en stanser busca troqueles", "stanser.com/?s="),
+        ("en 3axis busca casas de muñeca", "3axis.co/?s="),
+        ("en dxf download encuentra pistas de canicas", "dxfdownloads.com/?s="),
+    ])
+    def test_entran_directo_a_su_buscador(self, frase, dominio):
+        """Sin esto pasan por Google, que es un paso de más."""
+        mod = self._mod()
+        url = mod._abrir_con_busqueda(frase)
+        assert dominio in url, f"'{frase}' → {url}"
+
+    def test_boxes_online_sigue_disponible(self):
+        """Aunque ya esté dentro de AURORA, el sitio sirve para VER los
+        dibujos de los 189 modelos cuando no se sabe cuál se quiere."""
+        mod = self._mod()
+        assert "boxes" in mod._SITIOS_CONOCIDOS
+        assert "hackerspace-bamberg" in mod._SITIOS_CONOCIDOS["boxes"]

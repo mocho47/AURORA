@@ -8,7 +8,7 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 226 pruebas
+Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 238 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -74,6 +74,33 @@ porque ahí lo que necesitas es el precio y el link.
 
 Sitios que se ABREN: pinterest · behance · freepik · thingiverse · etsy · instagram
 Sitios que dan LISTA: mercadolibre · amazon · lideart · búsqueda general
+
+
+## Regla 3-c · Tus bancos de diseño, directos
+
+Salieron de tu historial de navegación. Entran a su buscador, sin pasar por Google:
+
+| Escribe esto | Abre |
+|---|---|
+| `en 3axis busca casas de muñeca` | 3axis.co |
+| `en dxf download encuentra pistas de canicas` | dxfdownloads.com |
+| `en ameede busca la torre eifel en dxf` | ameede.com |
+| `en biblioteca de corte busca cajas` | bibliotecadecorte.com |
+| `en vectorsart busca mandalas` | vectorsart.com |
+| `en megalaser busca portaretratos` | megalaser.com.ar |
+| `en stanser busca troqueles` | stanser.com |
+| `abre boxes` | boxes.hackerspace-bamberg.de |
+
+**¿Y un sitio que no conoce?** No se rinde: busca en Google nombrándolo. Prueba
+`en ikea busca sillas de madera` y te lleva ahí.
+
+**¿Uno que uses y no esté?** Dímelo y lo agrego — con su buscador verificado, no
+supuesto.
+
+> **Nota sobre boxes:** ese sitio es la versión web de la misma librería que
+> AURORA ya trae dentro. Ahora `hazme una caja corazon de 45x7` hace lo mismo
+> sin abrir el navegador. El sitio sigue sirviendo para VER los dibujos de los
+> 189 modelos cuando no sabes cuál quieres.
 
 ## Regla 4 · Si ninguno reconoce, entra la IA
 

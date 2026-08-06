@@ -459,6 +459,12 @@ _SITIOS_CONOCIDOS = {
     "lideart": "https://lideart.com.mx", "behance": "https://www.behance.net",
     "freepik": "https://www.freepik.es", "thingiverse": "https://www.thingiverse.com",
     "dxfdownloads": "https://dxfdownloads.com",
+    "3axis": "https://3axis.co", "dxfforcnc": "https://dxfforcnc.com",
+    "ameede": "https://ameede.com", "vectorsart": "https://vectorsart.com",
+    "bibliotecadecorte": "https://bibliotecadecorte.com",
+    "megalaser": "https://megalaser.com.ar", "stanser": "https://stanser.com",
+    "creativefabrica": "https://www.creativefabrica.com",
+    "boxes": "https://boxes.hackerspace-bamberg.de",
 }
 _ABRIR_VERBOS = ("abre", "abrir", "abreme", "llevame a", "vamos a", "entra a",
                  "metete a", "ponme", "muestrame la pagina", "ve a")
@@ -487,6 +493,26 @@ _BUSQUEDA_EN_SITIO = {
     "freepik": "https://www.freepik.es/search?query={q}",
     "thingiverse": "https://www.thingiverse.com/search?q={q}",
     "dxfdownloads": "https://dxfdownloads.com/?s={q}",
+    # Bancos de diseños para corte láser: los que de verdad usa el taller.
+    # Anuar preguntó por 3axis el 2026-08-05 y no estaba.
+    "3axis": "https://3axis.co/?s={q}",
+    "dxfforcnc": "https://dxfforcnc.com/?s={q}",
+    # Los bancos de diseño que Anuar USA de verdad, sacados de su historial de
+    # navegación el 2026-08-05 y con la URL de búsqueda VERIFICADA en vivo
+    # (HTTP 200, no supuesta).
+    "ameede": "https://ameede.com/?s={q}",
+    "biblioteca de corte": "https://bibliotecadecorte.com/?s={q}",
+    "bibliotecadecorte": "https://bibliotecadecorte.com/?s={q}",
+    "vectorsart": "https://vectorsart.com/?s={q}",
+    "vectors art": "https://vectorsart.com/?s={q}",
+    "megalaser": "https://megalaser.com.ar/?s={q}",
+    "stanser": "https://stanser.com/?s={q}",
+    "creativefabrica": "https://www.creativefabrica.com/search/{q}/",
+    # boxes.py EN LÍNEA: 129 visitas suyas. Ahora también lo tiene dentro de
+    # AURORA con "hazme una caja...", pero el sitio sigue sirviendo para ver
+    # los 189 generadores con dibujo.
+    "boxes": "https://boxes.hackerspace-bamberg.de/",
+    "boxes py": "https://boxes.hackerspace-bamberg.de/",
 }
 
 # Verbos que indican que además de abrir, se quiere BUSCAR algo ahí.
@@ -504,7 +530,22 @@ _BUSCAR_EN_SITIO_VERBOS = ("busca", "buscame", "buscar", "encuentra", "encuentra
 # MercadoLibre y Amazon NO están aquí a propósito: ahí una lista con precios y
 # enlaces sí es útil sin abrir nada.
 _SITIOS_VISUALES = ("pinterest", "instagram", "behance", "freepik",
-                    "thingiverse", "etsy", "dxfdownloads")
+                    "thingiverse", "etsy", "dxfdownloads", "3axis",
+                    "dxfforcnc", "ameede", "biblioteca de corte",
+                    "bibliotecadecorte", "vectorsart", "vectors art",
+                    "megalaser", "stanser", "creativefabrica", "boxes")
+
+# Palabras que van después de "en" pero NO son un sitio web. Sin esta lista,
+# "en corel busca el texto" abriría Google buscando "corel", y "en la
+# computadora busca el archivo" también. Todas salen de cosas que Anuar dice.
+_NO_SON_SITIOS = frozenset((
+    "internet", "la web", "web", "la red", "google", "linea", "la nube",
+    "corel", "aurora", "rdworks", "aspire", "silhouette", "cameo", "illustrator",
+    "la computadora", "la pc", "el disco", "la carpeta", "el archivo",
+    "mis archivos", "descargas", "documentos", "el escritorio", "la usb",
+    "la memoria", "el catalogo", "el inventario", "la agenda", "el taller",
+    "la base", "mis notas", "el sistema", "casa", "el chat",
+))
 
 
 def _sitio_conocido(mensaje: str) -> str:
@@ -559,6 +600,24 @@ def _abrir_con_busqueda(mensaje: str) -> str:
         else:
             q = quote_plus(consulta)
         return plantilla.format(q=q)
+
+    # ── SITIO DESCONOCIDO ────────────────────────────────────────────────
+    # "en ameede busca la torre eiffel en dxf": no está en la lista y no se
+    # puede inventar su URL de búsqueda — cada sitio la arma distinto y saldría
+    # una página de error. Pero tampoco hay que rendirse: se busca en Google
+    # nombrando el sitio, que SIEMPRE lleva a la página correcta.
+    # Anuar lo preguntó el 2026-08-05: "¿y funciona para cualquier sitio?".
+    m2 = re.search(r"\ben\s+([a-z0-9][a-z0-9.\- ]{2,24}?)\s+"
+                   r"(?:busca|buscame|encuentra|encuentrame|dame|muestrame|revisa)\b",
+                   m)
+    if m2:
+        sitio = m2.group(1).strip()
+        if sitio not in _NO_SON_SITIOS:
+            resto = m[m2.end():].strip()
+            resto = re.sub(r"\s+\b(?:en|de|del|para|por|con|a|y|o)\b\s*$", "", resto)
+            if resto:
+                return ("https://www.google.com/search?q="
+                        + quote_plus(f"{resto} {sitio}"))
     return ""
 
 
