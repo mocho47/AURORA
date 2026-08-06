@@ -129,6 +129,16 @@
       "veces": 1,
       "aprendido": 1785889330.1149113,
       "ultima_vez": 1785889330.1149113
+    },
+    {
+      "clave": "quita el fondo y guardalo como dxf c users administrador pictures bunzo jpg",
+      "como_lo_dijo": "quita el fondo y guardalo como dxf\"C:\\Users\\Administrador\\Pictures\\bunzo.jpg\"",
+      "que_si_funciono": "quita el fondo y guardalo como dxf\"C:\\Users\\Administrador\\Pictures\\bunzo.jpg\"",
+      "herramienta": "CEREBRO/cotizar_imagen:cotizar_imagen_laser",
+      "veces": 1,
+      "aprendido": 1786001397.897323,
+      "ultima_vez": 1786001397.897323,
+      "a_la_primera": true
     }
   ]
 }

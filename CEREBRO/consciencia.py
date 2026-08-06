@@ -1004,6 +1004,26 @@ def _es_generar_caja(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _GENERAR_CAJA)
 
 
+# Cadena completa: foto → sin fondo → vectorizada → DXF. Anuar la pidió el
+# 2026-08-05 después de que AURORA lo obligara a hacerlo en tres mensajes y
+# encima olvidara el archivo entre uno y otro.
+_FOTO_A_DXF = (
+    "quita el fondo y", "quitale el fondo y", "sin fondo y",
+    "recorta el sujeto", "recorta la imagen", "quita el fondo",
+    "quitale el fondo", "elimina el fondo", "sin el fondo",
+)
+_QUIERE_DXF = ("dxf", "para corte", "para la laser", "para el laser",
+               "cortarlo", "para cortar")
+
+
+def _es_foto_a_dxf(mensaje: str) -> bool:
+    """Pide quitar fondo Y dejarlo listo para cortar, en un solo paso."""
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _FOTO_A_DXF):
+        return False
+    return _contiene_trigger(m, _QUIERE_DXF)
+
+
 def _es_cotizar_dxf(mensaje: str) -> bool:
     """Pide el precio de cortar un archivo, no el precio de un producto."""
     m = _norm_txt(mensaje)
@@ -1490,6 +1510,9 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # medir metros, no buscar un producto en el catálogo.
     # generar_caja va antes que cotizar: "una caja de 40x30 cuánto cuesta" es
     # pedir que la haga y de paso la cotice, no buscar en el catálogo.
+    # foto_a_dxf va ANTES que corel y dxf: "quita el fondo Y dámelo en dxf" es
+    # UNA cadena completa, no dos peticiones que haya que pedir por separado.
+    ("foto_a_dxf",      _es_foto_a_dxf,        "_foto_a_dxf_real",        "foto_a_dxf"),
     ("generar_caja",    _es_generar_caja,      "_generar_caja_real",      "generador_cajas"),
     ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
     ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
@@ -1914,6 +1937,11 @@ class Consciencia:
                 # buscaba el historial de una sesión vacía: esa fue la causa real
                 # de que no completara la petición previa, no dónde se guardaba.
                 real = await self._ruta_sola_real(mensaje, session_id=session_id, canal=canal)
+            elif _nombre_candado in ("foto_a_dxf", "alta_lead"):
+                # Necesitan la sesión: foto_a_dxf para acordarse de cuál archivo
+                # se está hablando aunque no se repita la ruta (2026-08-05), y
+                # alta_lead para no perder el cliente entre mensajes.
+                real = await getattr(self, _metodo_candado)(mensaje, session_id=session_id)
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
@@ -2499,13 +2527,70 @@ class Consciencia:
         if mg:
             grosor = float(mg.group(1).replace(",", "."))
 
-        r = await asyncio.to_thread(cb.generar, mensaje, grosor)
+        # SIEMPRE en DXF. Anuar lo estableció el 2026-08-06: *"todas las cajas
+        # siempre se entregan en dxf, así queda implícito y ni lo menciono"*.
+        # Antes había que pedirlo; pedirle que lo diga cada vez es hacerle
+        # trabajo a él para ahorrárselo al código.
+        r = await asyncio.to_thread(cb.generar, mensaje, grosor, True)
         txt = cb._texto(r)
 
         # Si salió, se cotiza de una vez: es lo que sigue siempre.
-        if r.get("status") == "OK":
-            txt += ("\n\n_Para el precio: ábrelo en Corel, guárdalo como DXF y "
-                    "dime «cotiza <ruta>» — boxes.py exporta SVG, no DXF._")
+        # Ya no hay que mandarlo a Corel a convertir: el DXF sale de aquí.
+        # Ese aviso se quedó de cuando solo salía SVG y era falso desde que se
+        # encadenó la conversión (2026-08-06).
+        if r.get("status") == "OK" and r.get("dxf"):
+            txt += f"\n\n_¿Cuánto cuesta cortarla? Dime: «cotiza {r['dxf']}»_"
+        return {"respuesta": txt}
+
+    def _ultimo_archivo(self, mensaje: str, session_id: str = "") -> str:
+        """La ruta del archivo del que se está hablando, aunque no se repita.
+
+        Caso real 2026-08-05: Anuar dio la ruta de una foto, AURORA preguntó
+        "¿le doy?", él contestó "no, entrégalo en dxf" — y AURORA respondió
+        "dime qué archivo convierto". YA SE LO HABÍA DADO. Obligarlo a repetir
+        una ruta larga es justo lo tedioso.
+
+        Primero se busca en el mensaje; si no está, en los mensajes anteriores
+        de la misma sesión.
+        """
+        import re as _re
+        _RE = r'([A-Za-z]:\\[^\r\n"\']+?\.\w{2,5})\b'
+        m = _re.search(_RE, mensaje or "")
+        if m and Path(m.group(1)).exists():
+            return m.group(1)
+        for turno in reversed(self._memoria_corto.get(session_id, [])):
+            if turno.get("rol") != "user":
+                continue
+            m = _re.search(_RE, turno.get("contenido") or "")
+            if m and Path(m.group(1)).exists():
+                return m.group(1)
+        return ""
+
+    async def _foto_a_dxf_real(self, mensaje: str, session_id: str = "") -> Dict:
+        """CHAT ↔ la cadena completa: foto → sin fondo → vectorizada → DXF.
+
+        Antes esto eran tres mensajes distintos y AURORA olvidaba el archivo
+        entre uno y otro. Y el camino viejo (Inkscape) se rendía a los 180 s;
+        este usa vtracer y tarda segundos.
+        """
+        import importlib.util as _ilu
+        ruta = self._ultimo_archivo(mensaje, session_id)
+        if not ruta:
+            return {"respuesta": (
+                "¿Cuál imagen? Arrástrala aquí o dame la ruta completa.\n"
+                "Ejemplo: `quita el fondo a C:\\Users\\...\\foto.jpg y dámelo en dxf`")}
+        try:
+            spec = _ilu.spec_from_file_location("imagen_a_dxf",
+                                                ROOT / "EDITOR" / "imagen_a_dxf.py")
+            mod = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        except Exception as e:
+            return {"respuesta": f"No pude cargar el conversor: {e}"}
+
+        r = await asyncio.to_thread(mod.convertir, ruta)
+        txt = mod._texto(r)
+        if Path(ruta).name not in txt:
+            txt = f"_De_ `{Path(ruta).name}`\n\n{txt}"
         return {"respuesta": txt}
 
     async def _cotizar_dxf_real(self, mensaje: str) -> Dict:

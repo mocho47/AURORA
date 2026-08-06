@@ -1942,3 +1942,195 @@ class TestBancosDeDisenoDeAnuar:
         mod = self._mod()
         assert "boxes" in mod._SITIOS_CONOCIDOS
         assert "hackerspace-bamberg" in mod._SITIOS_CONOCIDOS["boxes"]
+
+
+# ===========================================================================
+# BUG 37 — Perdía el archivo entre mensajes, y no encadenaba
+# Caso real 2026-08-05, probando en el chat:
+#   Anuar:  quita el fondo a esta imagen "C:\...\a1e3.jpg"
+#   AURORA: ...¿Le doy?
+#   Anuar:  no entregalo en dxf
+#   AURORA: Dime qué archivo convierto a DXF   <-- YA SE LO HABÍA DADO
+#
+# Dos fallas:
+#   1. Olvidó el archivo entre un mensaje y el siguiente, obligándolo a
+#      repetir una ruta larga — justo lo tedioso.
+#   2. No encadena: "quita el fondo Y dámelo en dxf" son dos pasos y hacía uno
+#      u otro. Ese ES su flujo real (foto → sin fondo → vectorizar → DXF).
+#
+# Y el camino que usaba (Inkscape) se rindió a los 180 s. Ahora usa vtracer +
+# svgpathtools, que tardan segundos.
+# ===========================================================================
+class TestCadenaFotoADxfConMemoria:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_cc37", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc37"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _candado(self, mod, frase):
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    return motor
+            except TypeError:
+                pass
+        return ""
+
+    @pytest.mark.parametrize("frase", [
+        "quita el fondo a la imagen y dame el dxf",
+        "recorta el sujeto y elimina el fondo y regresalo en dxf",
+        "quitale el fondo y dejalo para cortar",
+    ])
+    def test_la_cadena_completa_es_un_solo_paso(self, frase):
+        mod = self._mod()
+        assert self._candado(mod, frase) == "foto_a_dxf", (
+            f"'{frase}' se parte en dos peticiones")
+
+    @pytest.mark.parametrize("frase,esperado", [
+        ("corel quita el fondo de la imagen abierta", "motor_corel"),
+        ("convierte a dxf el archivo", "taller_dxf"),
+        ("hazme una caja corazon de 20x5", "generador_cajas"),
+        ("cotizame 20 termos", "cotizador"),
+    ])
+    def test_no_secuestra_lo_que_ya_servia(self, frase, esperado):
+        mod = self._mod()
+        assert self._candado(mod, frase) == esperado, f"Se rompió: '{frase}'"
+
+    def test_recuerda_el_archivo_entre_mensajes(self):
+        """Lo que más molestaba: tener que repetir la ruta completa."""
+        from pathlib import Path as _P
+        mod = self._mod()
+        a = mod.Consciencia()
+        sid = "t37"
+        # Se usa CUALQUIER archivo real del disco, para no depender de uno solo.
+        carpeta = _P.home() / "Downloads"
+        reales = [p for p in carpeta.glob("*.*") if p.is_file()][:1]
+        if not reales:
+            pytest.skip("No hay archivos en Descargas para probar")
+        foto = str(reales[0])
+        a._agregar_sesion(sid, f"quita el fondo a esta imagen {foto}", "¿Le doy?")
+        hallado = a._ultimo_archivo("no, entregalo en dxf", sid)
+        assert hallado, "Perdió el archivo: vuelve a pedir la ruta completa"
+
+    def test_no_usa_inkscape_para_esto(self):
+        """Inkscape se rindió a los 180 s con la foto real de Anuar.
+
+        Se revisa el CÓDIGO, no los comentarios: el docstring nombra a Inkscape
+        justo para explicar por qué ya no se usa, y la primera versión de esta
+        prueba lo tomaba como si fuera una dependencia.
+        """
+        fuente = (RAIZ / "EDITOR" / "imagen_a_dxf.py").read_text(encoding="utf-8")
+        assert "vtracer" in fuente and "svgpathtools" in fuente, (
+            "Volvió al camino lento que se rinde")
+        codigo = "\n".join(l for l in fuente.splitlines()
+                           if not l.strip().startswith("#"))
+        for uso in ("import inkscape", "inkscape.exe", "subprocess",
+                    '"inkscape"', "'inkscape'"):
+            assert uso not in codigo.lower(), f"Volvió a llamar a Inkscape ({uso})"
+
+    def test_dice_que_paso_en_cada_paso(self):
+        """Un 'no se pudo' genérico no sirve: hay que saber CUÁL paso falló."""
+        fuente = (RAIZ / "EDITOR" / "imagen_a_dxf.py").read_text(encoding="utf-8")
+        assert "pasos" in fuente, "No reporta qué pasos se completaron"
+
+    def test_hay_una_sola_regla_de_carpetas(self):
+        """Anuar lo pidió: los DXF a la carpeta dxf, los PDF a pdf, siempre."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_cpt37", RAIZ / "CONFIG" / "carpetas_por_tipo.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cpt37"] = mod
+        spec.loader.exec_module(mod)
+        assert mod.carpeta_de("dxf").name == "dxf"
+        assert mod.carpeta_de("pdf").name == "pdf"
+        assert mod.carpeta_de("svg").name == "svg"
+        # No debe pisar un archivo existente
+        d1 = mod.donde_guardar("prueba_unica_xyz", "dxf")
+        assert d1.parent.name == "dxf"
+
+
+# ===========================================================================
+# MEJORA 38 — Adaptar un DXF a otro grosor de material
+# Anuar lo planteó el 2026-08-05 y dio él mismo la clave: los diseños gratuitos
+# no traen los ensambles separados por capa ni color, pero "por el tamaño en
+# cada uno los pudieran conocer". Exacto: el grosor se repite decenas de veces.
+#
+# Tres bugs que costó encontrar, todos silenciosos:
+#   1. Solo se leía LWPOLYLINE; casi todos sus archivos usan POLYLINE.
+#   2. Segmentos de 0.13 mm (esquinas redondeadas) rompían el patrón del
+#      diente. Con umbral de limpieza 0.1 sobrevivían.
+#   3. Los DXF viejos (R12) NO soportan LWPOLYLINE: escribirla tira
+#      DXFVersionError, y un `except` genérico lo tragaba. 28 dientes
+#      detectados y 0 escritos, sin un solo mensaje de error.
+# ===========================================================================
+class TestAdaptarGrosorDeMaterial:
+
+    def _ag(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_ag38", RAIZ / "TALLER" / "adaptar_grosor.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_ag38"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _archivo(self):
+        from pathlib import Path as _P
+        d = _P.home() / "Downloads" / "DXF"
+        for nombre in ("15x15.dxf", "10x10x10.dxf"):
+            if (d / nombre).exists():
+                return d / nombre
+        return None
+
+    def test_detecta_el_grosor_por_repeticion(self):
+        ag = self._ag()
+        f = self._archivo()
+        if not f:
+            pytest.skip("No están los DXF del caso real")
+        r = ag.detectar_grosor(f)
+        assert r["status"] == "OK", f"No detectó el grosor: {r}"
+        assert 1.5 <= r["grosor"] <= 12, f"Grosor absurdo: {r['grosor']}"
+        assert r["veces"] >= 6, "Se creyó un grosor que casi no se repite"
+
+    def test_lee_polyline_no_solo_lwpolyline(self):
+        """Casi todos los archivos de Anuar usan POLYLINE."""
+        fuente = (RAIZ / "TALLER" / "adaptar_grosor.py").read_text(encoding="utf-8")
+        assert 'if t == "POLYLINE"' in fuente, (
+            "Solo lee LWPOLYLINE: deja fuera casi todos sus archivos")
+
+    def test_limpia_los_segmentos_basura(self):
+        """Los 0.13 mm de las esquinas rompían el patrón del diente."""
+        ag = self._ag()
+        assert ag._limpiar.__defaults__[0] >= 0.2, (
+            "Con umbral chico los segmentos de 0.13 mm sobreviven y no se "
+            "reconoce ningún diente")
+
+    def test_respeta_la_version_del_dxf(self):
+        """Los DXF R12 no soportan LWPOLYLINE: hay que caer a POLYLINE."""
+        fuente = (RAIZ / "TALLER" / "adaptar_grosor.py").read_text(encoding="utf-8")
+        assert "add_polyline2d" in fuente, (
+            "Sin respaldo a POLYLINE, los DXF viejos fallan en silencio")
+        assert "def _reemplazar" in fuente
+
+    def test_no_guarda_un_archivo_identico(self):
+        """Un archivo que diga '5.5mm' y sea igual al original hace cortar mal."""
+        fuente = (RAIZ / "TALLER" / "adaptar_grosor.py").read_text(encoding="utf-8")
+        assert "NO_HAY_RANURAS_SUELTAS" in fuente, (
+            "Guarda archivos idénticos al original diciendo que se adaptaron")
+
+    def test_adapta_de_verdad(self):
+        ag = self._ag()
+        f = self._archivo()
+        if not f:
+            pytest.skip("No están los DXF del caso real")
+        r = ag.adaptar(f, 5.5)
+        assert r["status"] in ("OK", "NO_HAY_RANURAS_SUELTAS", "IGUAL"), r
+        if r["status"] == "OK":
+            from pathlib import Path as _P
+            assert _P(r["archivo"]).exists(), "Dijo que guardó y no hay archivo"
+            assert (r.get("ranuras_ajustadas", 0) + r.get("dientes", 0)) > 0

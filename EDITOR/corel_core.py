@@ -151,6 +151,75 @@ def exportar_pdf(ruta_salida: str) -> Dict:
 
 
 @_con_com
+def cerrar_a_curvas_y_publicar(ruta_salida: str = "") -> Dict:
+    """Convierte TODO el texto a curvas y publica el PDF listo para maquila.
+
+    Es lo primero que le rechazan a Anuar: *"wey, tu lona no pasa, las letras
+    ciérralas a curvas"*. Si el texto sigue vivo y la maquila no tiene esa
+    tipografía, se la cambia por otra y la lona sale con letras distintas.
+
+    Él fue claro el 2026-08-05: *"no quiero que me diga eso, quiero que lo
+    corrija"*. Decirle "aprieta Ctrl+Q" es devolverle el problema. Esto lo
+    hace: es la ÚNICA forma real, porque desde el PDF ya no se puede — ahí el
+    texto ya dejó de ser texto.
+
+    EL ORIGINAL NO SE TOCA: se trabaja sobre una copia del documento, así que
+    su .cdr sigue con el texto editable por si hay que corregir una palabra.
+    """
+    try:
+        app = _app()
+        doc = app.ActiveDocument
+        if not doc:
+            return {"status": "sin_documento",
+                    "detalle": "No hay documento abierto en Corel."}
+
+        nombre = getattr(doc, "Name", "documento") or "documento"
+        destino = Path(ruta_salida).resolve() if ruta_salida else \
+            Path.home() / "Downloads" / "pdf" / f"{Path(nombre).stem}_CURVAS.pdf"
+        destino.parent.mkdir(parents=True, exist_ok=True)
+
+        # Se trabaja sobre un duplicado para no destruir su texto editable.
+        # Corel no tiene "duplicar documento", así que se guarda una copia
+        # temporal, se abre, y se convierte ahí.
+        temporal = destino.parent / f"~{Path(nombre).stem}_curvas_tmp.cdr"
+        doc.SaveAs(str(temporal))
+        copia = app.OpenDocument(str(temporal))
+
+        antes = 0
+        try:
+            # Se cuenta el texto ANTES para poder decir cuántos se convirtieron
+            # de verdad, en vez de afirmar "listo" sin haber tocado nada.
+            for pagina in copia.Pages:
+                for forma in pagina.Shapes:
+                    if getattr(forma, "Type", 0) == 6:      # 6 = cdrTextShape
+                        antes += 1
+        except Exception:
+            antes = -1
+
+        copia.ClearSelection()
+        for pagina in copia.Pages:
+            pagina.Activate()
+            pagina.Shapes.All().ConvertToCurves()
+
+        copia.PublishToPDF(str(destino))
+        copia.Close()
+        try:
+            temporal.unlink()
+        except OSError:
+            pass
+
+        if not destino.exists():
+            return {"status": "error",
+                    "detalle": "Corel no generó el PDF (verificado en disco)."}
+        return {"status": "ok", "ruta": str(destino),
+                "textos_convertidos": antes,
+                "kb": round(destino.stat().st_size / 1024, 1),
+                "original_intacto": True}
+    except Exception as e:
+        return {"status": "error", "detalle": str(e)[:250]}
+
+
+@_con_com
 def exportar_bitmap(ruta_salida: str, dpi: int = 300, formato: str = "png") -> Dict:
     """
     Exporta el documento activo a PNG/JPG con el DPI exacto indicado.

@@ -73,7 +73,13 @@ _AFIRMA_ACCION = (
 _RE_COMANDO = re.compile(r"\b([A-Z][A-Z_]{2,20})/([a-zA-Z_][\w]*)(?::([a-zA-Z_][\w.]*))?")
 
 # ── 3. Archivos mencionados como si existieran ───────────────────────────
-_RE_RUTA = re.compile(r"[A-Za-z]:\\[^\r\n\"'<>|]+?\.[A-Za-z0-9]{2,5}")
+# El lookahead final NO es cosmético. Sin él, un nombre con punto en medio
+# —como los de las cajas, que llevan el grosor: "ClosedBox_20x15_2.7mm.svg"—
+# cortaba la ruta en el "2.7mm" y juzgaba un archivo que nunca existió, mientras
+# el verdadero estaba ahí con sus 75 KB. Como TODAS las cajas llevan el grosor
+# en el nombre, el aviso falso salía siempre. (Anuar lo pegó el 2026-08-05; el
+# origen apareció al escribirle la prueba de regresión.)
+_RE_RUTA = re.compile(r"[A-Za-z]:\\[^\r\n\"'<>|]+?\.[A-Za-z0-9]{2,5}(?![\w.])")
 # Rutas que vienen dentro de un JSON con las barras escapadas se parten a la
 # mitad y quedan como "C:\\AURORA.workt" — un fragmento que obviamente no existe.
 # Encontrado en el barrido del 2026-08-02: le puso "⚠️ este archivo no existe"
@@ -146,6 +152,15 @@ def _archivos_inexistentes(texto: str) -> List[str]:
         try:
             if not Path(ruta).exists():
                 faltantes.append(ruta)
+            else:
+                # FALSO POSITIVO ENCONTRADO POR ANUAR (2026-08-05): generó una
+                # caja, el SVG quedó bien escrito FUERA del proyecto (Descargas),
+                # y abajo la regla de "archivo suelto" volvía a agarrar el mismo
+                # nombre —ya sin su ruta— y como no estaba dentro de AURORA lo
+                # marcaba "no existe". El archivo sí existía, con 75 KB.
+                # Se apunta el nombre como ya resuelto para que no se juzgue dos
+                # veces la misma cosa con distinta vara.
+                vistos.add(Path(ruta).name)
         except OSError:
             faltantes.append(ruta)
     # Archivos sueltos tipo "REINICIAR_NGROK.bat": se buscan en la raíz del proyecto.
@@ -154,12 +169,31 @@ def _archivos_inexistentes(texto: str) -> List[str]:
         if nombre in vistos or "\\" in nombre or "/" in nombre:
             continue
         vistos.add(nombre)
+        if _es_libreria(nombre):
+            continue
         try:
             if not (RAIZ / nombre).exists() and not list(RAIZ.glob(f"**/{nombre}"))[:1]:
                 faltantes.append(nombre)
         except OSError:
             pass
     return faltantes
+
+
+def _es_libreria(nombre: str) -> bool:
+    """¿Es el nombre de una librería instalada, no un archivo prometido?
+
+    El otro falso positivo del mismo caso: la respuesta decía "boxes.py exporta
+    SVG" —hablando de la LIBRERÍA— y el validador la buscó como archivo. Como
+    boxes es un paquete (boxes/__init__.py) y no un boxes.py suelto, la marcó
+    como inventada. Mencionar una librería no es prometer un archivo.
+    """
+    if not nombre.lower().endswith(".py"):
+        return False
+    try:
+        import importlib.util
+        return importlib.util.find_spec(nombre[:-3]) is not None
+    except (ImportError, ValueError, ModuleNotFoundError, AttributeError):
+        return False
 
 
 # Formas de dar por hecho lo que se estaba PREGUNTANDO. La trampa es que suenan

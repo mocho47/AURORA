@@ -123,20 +123,40 @@ honestidad que revisa cada respuesta antes de entregártela.
 | Parte | Qué poner |
 |---|---|
 | **verbo** | haz · crea · genera · quiero · necesito |
-| **tipo** | corazón · bisagras · divisiones · tapa deslizante · flex · cajón · redonda · dados · cartas · libro |
+| **tipo** | corazón · **cofre / baúl** · bisagras · divisiones · tapa deslizante · flex · cajón · redonda · dados · cartas · libro |
 | **medidas** | `15x15x3` o `10 x9x7cm` — en cm, como las escribas |
 | **tapa** | `con tapa de agujero` · `sobrepuesta` · `cerrada` |
 
 **Lo único que importa es que estén las cuatro partes.** El orden y la
-ortografía no. Estas tres funcionaron tal cual se escribieron:
+ortografía no. Estas funcionaron tal cual se escribieron:
 
 ```
 genra una caja corazon de 25 cm x4 cm de fondo con tapa sobrepuesta
 crea una caja con tapa deslizante de 15cmx15cm x3cm
 haz una caja con bisagras de 10 x9x7cm
+aurora crea una caja tipo cofre de 20x15x7
 ```
 
 ¿No sabes el tipo? Pregunta: **`que cajas puedes hacer`**
+
+## Las 4 reglas de taller que ya no tienes que repetir
+
+Anuar las dictó el **2026-08-06**. Están dentro del código, no en una nota:
+él ya no las escribe y salen así solas.
+
+| Regla | Qué hace AURORA sin que se lo pidas |
+|---|---|
+| **1. El orden es X, Y, H** | `20x15x7` = 20 de ancho, 15 de fondo, 7 de alto. Nunca se reordena "por lógica" |
+| **2. Siempre en DXF** | Ya no hay que decir "entrégala en dxf". Sale el DXF y el SVG de respaldo |
+| **3. Grosor con compensación** | Material de 2.7 → se corta a **2.5**. El láser se come ~0.2 mm y así encaja justo |
+| **4. Dedos grandes** | Al tamaño de dedo que traiga el generador **se le quita el punto** (1.0→10, 2.0→20). Menos dedos = menos tiempo de corte |
+
+Y el nombre del archivo trae todo lo que necesitas para volver a cortarla
+igual: `PirateChest_20x15x7_2.5mm.dxf` — tipo, medidas en tu orden, y el
+grosor **con el que se cortó**.
+
+**Vista previa:** con cada caja sale también un PNG para verla sin abrir Corel
+ni RDWorks. La idea fue de **Rocío**.
 
 ---
 
