@@ -483,11 +483,28 @@ _BUSQUEDA_EN_SITIO = {
     "facebook": "https://www.facebook.com/search/top?q={q}",
     "instagram": "https://www.instagram.com/explore/tags/{q}/",
     "lideart": "https://lideart.com.mx/buscar?controller=search&s={q}",
+    "behance": "https://www.behance.net/search/projects?search={q}",
+    "freepik": "https://www.freepik.es/search?query={q}",
+    "thingiverse": "https://www.thingiverse.com/search?q={q}",
+    "dxfdownloads": "https://dxfdownloads.com/?s={q}",
 }
 
 # Verbos que indican que además de abrir, se quiere BUSCAR algo ahí.
 _BUSCAR_EN_SITIO_VERBOS = ("busca", "buscame", "buscar", "encuentra", "encuentrame",
-                           "muestrame", "enseñame", "ensename", "ver", "checa")
+                           "muestrame", "enseñame", "ensename", "ver", "checa",
+                           # "dame" y "revisa" salen del perfil de Anuar, que
+                           # convierte "muéstrame"→"dame" y "chékame"→"revisa"
+                           # antes de llegar aquí (2026-08-05).
+                           "dame", "revisa", "quiero ver", "necesito")
+
+# Sitios donde lo que importa son las IMÁGENES: hay que abrirlos, no resumirlos.
+# Una lista de cinco URLs de Pinterest no sirve para buscar referencias de
+# diseño — es justo lo que pasó el 2026-08-05 con "busca diseños de armarios
+# para herramienta cortados al láser en pinterest".
+# MercadoLibre y Amazon NO están aquí a propósito: ahí una lista con precios y
+# enlaces sí es útil sin abrir nada.
+_SITIOS_VISUALES = ("pinterest", "instagram", "behance", "freepik",
+                    "thingiverse", "etsy", "dxfdownloads")
 
 
 def _sitio_conocido(mensaje: str) -> str:
@@ -524,6 +541,11 @@ def _abrir_con_busqueda(mensaje: str) -> str:
                        "de la", "aurora", "porfa", "por favor", "y"):
             resto = re.sub(rf"^\s*{re.escape(basura)}\b", " ", resto)
         consulta = " ".join(resto.split()).strip(" ,.;:")
+        # Cuando el sitio va al FINAL ("busca diseños de X en pinterest"), al
+        # quitarlo queda colgando la preposición: "...cortados al laser en".
+        # Buscar eso mete ruido (2026-08-05).
+        consulta = re.sub(r"\s+\b(?:en|de|del|para|por|con|a|y|o)\b\s*$", "",
+                          consulta, flags=re.IGNORECASE).strip(" ,.;:")
         if not consulta:
             return ""
         plantilla = _BUSQUEDA_EN_SITIO[nombre]
@@ -552,6 +574,12 @@ def _es_abrir_navegador(mensaje: str) -> bool:
     #    Va aquí y no en busqueda_web porque lo que se pide es ABRIR, no que
     #    AURORA busque y resuma.
     if _contiene_trigger(m, _ABRIR_VERBOS) and _abrir_con_busqueda(mensaje):
+        return True
+    # 4) "busca diseños de X en pinterest" — sin verbo de abrir, pero nombrando
+    #    un sitio VISUAL. Ahí una lista de enlaces no sirve de nada: hay que ver
+    #    las imágenes. Caso real 2026-08-05: pidió diseños de armarios en
+    #    Pinterest y recibió cinco URLs de texto.
+    if _contiene_trigger(m, _SITIOS_VISUALES) and _abrir_con_busqueda(mensaje):
         return True
     return False
 
@@ -2684,9 +2712,15 @@ class Consciencia:
                     if ext:
                         lineas.append(f"_{ext[:150]}_")
                     lineas.append("")
+                # El cierre depende de lo que se buscó: hablar de "el precio de
+                # hoy" cuando se pidieron DISEÑOS no viene al caso (2026-08-05).
+                _es_compra = _contiene_trigger(
+                    limpia, ("precio", "cuesta", "barato", "comprar", "venta",
+                             "hoja", "hojas", "rollo", "metro", "paquete"))
+                cierre = ("ábrelos para ver el precio de hoy"
+                          if _es_compra else "los enlaces son reales")
                 return (f"Busqué «{limpia}»{donde} y esto es lo que hay "
-                        f"(los enlaces son reales, ábrelos para ver el precio "
-                        f"de hoy):\n\n" + "\n".join(lineas))
+                        f"({cierre}):\n\n" + "\n".join(lineas))
         except Exception as e:
             logger.debug(f"[WEB] buscar falló: {e}")
         # Respaldo: el contexto plano de siempre.

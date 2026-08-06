@@ -8,7 +8,7 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 216 pruebas
+Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 226 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -56,6 +56,24 @@ playeras por $75,000 cuando se pedía papel de MercadoLibre.
 | **Cotizar** | `cotiza` o `cuánto cuesta` — **pero se apaga** si nombras una tienda (MercadoLibre, Amazon): eso es comprar, no vender |
 | **Proveedores** | va **antes** que internet: si el dato está en tu directorio, no sale a buscar |
 | **Memoria** | `qué recuerdas de X` apaga a todos los demás, para que el tema no secuestre el mensaje |
+
+
+## Regla 3-b · Buscar NO es lo mismo en todos los sitios
+
+| Lo que pides | Qué hace |
+|---|---|
+| `busca disenos de X en pinterest` | **abre Pinterest** con la búsqueda hecha |
+| `muestrame disenos en behance` | abre Behance |
+| `busca modelos en thingiverse` | abre Thingiverse |
+| `busca en mercado libre papel adhesivo` | te da **lista con precios y enlaces** |
+| `donde compro X mas barato` | busca proveedores |
+
+**Por qué:** en Pinterest y Behance lo que importa son las **imágenes** — una
+lista de enlaces de texto no sirve para buscar referencias. En MercadoLibre sí,
+porque ahí lo que necesitas es el precio y el link.
+
+Sitios que se ABREN: pinterest · behance · freepik · thingiverse · etsy · instagram
+Sitios que dan LISTA: mercadolibre · amazon · lideart · búsqueda general
 
 ## Regla 4 · Si ninguno reconoce, entra la IA
 

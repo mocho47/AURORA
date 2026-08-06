@@ -1739,3 +1739,82 @@ class TestGenerarCajasEnEspanol:
         fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
         assert '("generar_caja",' in fuente, "El candado no está registrado"
         assert "_generar_caja_real" in fuente, "Falta el ejecutor"
+
+
+# ===========================================================================
+# BUG 34 — "busca diseños en pinterest" devolvió una lista de texto
+# Caso real 2026-08-05. Anuar pidió diseños de armarios para herramienta
+# cortados al láser en Pinterest, y recibió cinco URLs de texto. Para buscar
+# REFERENCIAS DE DISEÑO eso no sirve de nada: hay que ver las imágenes.
+#
+# La causa: solo se abría el sitio si el mensaje traía un verbo de abrir
+# ("abre pinterest y busca X"). Diciendo el sitio al FINAL ("busca X en
+# pinterest") se iba a búsqueda web.
+#
+# Y de paso el cierre decía "ábrelos para ver el precio de hoy" cuando se
+# habían pedido DISEÑOS, no precios: texto pegado del caso de compras.
+#
+# Efecto secundario que salió al probar: el perfil de Anuar convierte
+# "muéstrame" en "dame", y ese verbo no estaba en la lista de buscar-en-sitio.
+# ===========================================================================
+class TestSitiosVisualesSeAbrenNoSeResumen:
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc34", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc34"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _candado(self, mod, frase):
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    return motor
+            except TypeError:
+                pass
+        return ""
+
+    @pytest.mark.parametrize("frase", [
+        "aurora busca disenos de armarios para herramienta cortados al laser en pinterest",
+        "busca ideas de cajas en pinterest",
+        "muestrame disenos en behance",
+        "busca modelos en thingiverse",
+    ])
+    def test_sitio_visual_se_abre(self, frase):
+        """En Pinterest y Behance lo que importa son las imágenes."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "pc_access", (
+            f"'{frase}' devuelve texto en vez de abrir el sitio")
+
+    @pytest.mark.parametrize("frase", [
+        "busca en mercado libre papel adhesivo",
+        "busca en internet precios de vinil",
+        "donde compro papel adhesivo mas barato",
+    ])
+    def test_compras_siguen_dando_lista(self, frase):
+        """En MercadoLibre una lista con precios y enlaces SÍ es útil."""
+        mod = self._mod()
+        assert self._candado(mod, frase) == "web_search", f"Se rompió: '{frase}'"
+
+    def test_no_arrastra_la_preposicion(self):
+        """Con el sitio al final queda colgando el 'en': "...al laser en"."""
+        mod = self._mod()
+        url = mod._abrir_con_busqueda("busca disenos de cajas en pinterest")
+        assert not url.rstrip("/").endswith("+en"), f"Arrastró el 'en': {url}"
+        assert "cajas" in url
+
+    def test_no_habla_de_precios_si_no_se_pidieron(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        i = fuente.index("async def _buscar_web(self")
+        bloque = fuente[i:i + 3000]
+        assert "_es_compra" in bloque, (
+            "Vuelve a decir 'ábrelos para ver el precio de hoy' cuando se "
+            "pidieron diseños")
+
+    def test_los_verbos_del_perfil_estan_contemplados(self):
+        """El perfil convierte 'muéstrame'→'dame' y 'chékame'→'revisa'."""
+        mod = self._mod()
+        assert "dame" in mod._BUSCAR_EN_SITIO_VERBOS
+        assert "revisa" in mod._BUSCAR_EN_SITIO_VERBOS
