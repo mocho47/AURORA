@@ -1,5 +1,39 @@
 # 📊 ESTADO REAL DE AURORA
-### Última actualización: 2026-07-31
+### Última actualización: 2026-08-06
+
+---
+
+## 🆕 2026-08-06 — Cajas con las reglas de taller de Anuar
+
+| Qué | Evidencia |
+|---|---|
+| **271 pruebas** | `python -m pytest tests/ -q` → 271 passed en 196 s (venían 244) |
+| **Cajas en vivo** | 4/4 por `/chat` con sus frases literales, **DXF real verificado en disco** |
+| **Cofre** | "cofre"/"baúl" → `PirateChest`. Él armó uno a mano para comparar: **quedó igual** |
+| **PDF de gran formato** | `gomitas.pdf` 12 MB → arreglado 27 MB (era 247 MB con PNG; ahora JPEG) |
+| **Trailer a DXF** | 58 trazos, capas CORTE (1) y GRABADO (57) separadas |
+
+**Las 4 reglas de taller ya están EN EL CÓDIGO** (él las hacía a mano en la web
+de boxes.py desde hace 2 años): orden **X, Y, H** · **DXF siempre** implícito ·
+material 2.7 se corta a **2.5** (kerf) · dedos **con el punto quitado** (×10 del
+default del generador). Detalle en `MANUALES/COMANDOS_VERIFICADOS.md`.
+
+**3 falsos positivos del validador de honestidad, cerrados de raíz.** El que
+importaba: el nombre de las cajas lleva el grosor (`..._2.5mm.svg`) y el regexp
+cortaba la ruta en ese punto → decía "este archivo no existe" de un archivo de
+75 KB que sí estaba. Como TODAS las cajas llevan el grosor en el nombre,
+fallaba **siempre**. Lo encontró Anuar usando AURORA normal, igual que los 4
+bugs anteriores.
+
+**Cerrar a curvas ya se hace, no se pide.** `corel_core.cerrar_a_curvas_y_
+publicar()` convierte y publica sobre una COPIA (su .cdr queda editable).
+
+**Nota de método:** los "procesos que salían vacíos" toda la sesión eran el
+buffer de stdout de Python al redirigir. Correr con `-u` o escribir a archivo.
+
+---
+
+### Estado anterior: 2026-07-31
 
 > **Regla de este archivo:** aquí solo entra lo **verificado**, con evidencia.
 > Nada de "debería funcionar". Si algo no se probó, va en la sección de
