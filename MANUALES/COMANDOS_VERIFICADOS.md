@@ -8,7 +8,7 @@ base, la página abierta.
 Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
 modismos, porque así es como se van a usar.
 
-Actualizado: 2026-08-05 · 24 candados directos · 542 herramientas · 143 pruebas
+Actualizado: 2026-08-05 · 26 candados directos · 558 herramientas · 210 pruebas
 
 > **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
 > entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -280,3 +280,62 @@ Te da el archivo, sus metros de corte, los minutos y el precio con tus números
 | `que recuerdas de cotizar` | la regla de bolsillo: metros × $50, y los mínimos |
 | `que recuerdas de inventario` | cuántos DXF y programas tienes |
 | `que recuerdas de proveedores` | cómo consultarlos |
+
+
+---
+
+## 📦 Cajas para láser — se las pides hablando *(nuevo 2026-08-05)*
+
+**189 modelos** de boxes.py, y le hablas normal. Las medidas en cm.
+
+| Escribe esto | Qué te da |
+|---|---|
+| `hazme una caja corazon de 45x7 con tapa de agujero` | el SVG listo para cortar |
+| `quiero una caja con divisiones de 40x30x7` | bandeja con separadores |
+| `hazme una caja con bisagras de 20x10` | con bisagras integradas |
+| `una caja flex de 20x10` | pared curva (kerf bending) |
+| `un cajon de 20x10` | cajón deslizante |
+| **`que cajas puedes hacer`** | **la lista completa** |
+
+**Tipos que entiende:** corazón · flex · bisagras · divisiones · divisor ·
+cajón · redonda · hexagonal · dados · cartas · libro · castillo · pajarera ·
+alcancía · bandeja · compartimentos · cerrada
+
+**La tapa:** di *"con tapa de agujero"*, *"con tapa"* o *"cerrada"*.
+**El grosor:** si no lo dices, 2.7 mm. Para otro: *"de 5.5 mm"*.
+
+Sale en **SVG** — lo abre Corel y RDWorks directo. Para el precio, guárdalo como
+DXF desde Corel y dile `cotiza <ruta>`.
+
+---
+
+## ✂️ Cotizar un corte *(nuevo 2026-08-05)*
+
+| Escribe esto | Qué hace |
+|---|---|
+| `cotiza C:\Users\...\diseno.dxf` | mide los metros REALES y da el precio |
+| `cuanto cuesta cortar este dxf` | lo mismo |
+| `cuantos metros de corte tiene` | solo la medición |
+
+Usa tus números: **$8 por minuto a 25 mm/s**, margen ×3. Es lo que faltó el día
+de la casa de muñecas.
+
+---
+
+## 🗣️ AURORA ya entiende cómo escribes *(nuevo 2026-08-05)*
+
+Se le cargó tu forma real de escribir, sacada de **72 peticiones tuyas**. Ya no
+tienes que cuidar la ortografía ni pensar cómo pedirlo:
+
+| Escribes | Entiende |
+|---|---|
+| `abreme coreldrau porfa` | abre Corel |
+| `chekame el diseno abierto` | revisa el documento de Corel |
+| `sacale el dibujo lineal` | vectoriza |
+| `pasalo a corte` | convierte a DXF |
+| `mandale un wats al cliente` | envía WhatsApp |
+| `a cuanto me sale...` | cuánto cuesta |
+| `imprecion`, `adesivo`, `watsapp`, `combiene` | los corrige solos |
+
+Y los verbos con pronombre pegado —`ábreme`, `guárdalo`, `cotízame`— ya no la
+confunden.

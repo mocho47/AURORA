@@ -16,7 +16,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **agenda** (agenda)
 - Qué hace: Tus citas de hoy, de mañana y las próximas 24 h, y agenda nuevas. Si le faltan la fecha, la hora o el cliente, los pide en vez de inventarlos (usa dia, proximas, resumen y crear_cita de la agenda real).
-- Frases que reconoce: «agenda de hoy», «agenda de manana», «agenda del dia», «agenda una cita», «agendame», «agendar una cita», «citas de hoy», «citas de manana», «crear cita», «mi agenda», «nueva cita», «programa una cita»
+- Frases que reconoce: «agenda de hoy», «agenda de manana», «agenda del dia», «agenda una cita», «agendame», «agendar una cita», «cancela la cita», «cancelar la cita», «cierra la cita», «cita hecha», «citas de hoy», «citas de manana»
 
 
 ### Ventas
@@ -53,6 +53,14 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 ### Cerebro y Sistema
 
+**generar_caja** (generador_cajas)
+- Qué hace: boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
+- Frases que reconoce: «arma una caja», «caja con divisiones», «caja corazon», «crea una caja», «creame una caja», «genera una bandeja», «genera una caja», «generame el dxf de una caja», «generame una caja», «haz una caja», «hazme un cajon», «hazme una bandeja»
+
+**cotizar_dxf** (cotizador_laser)
+- Qué hace: mide los METROS DE CORTE reales de un DXF y lo cotiza.
+- Frases que reconoce: «cortar», «corte», «cotiza», «cotiza el archivo», «cotiza el corte», «cotiza el dibujo», «cotiza el diseno», «cotiza el dxf», «cotiza este archivo», «cotiza este corte», «cotiza este diseno», «cotiza este dxf»
+
 **cotizar** (cotizador)
 - Qué hace: Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.
 - Frases que reconoce: «cotiza», «cotizacion», «cotizame», «cotizar», «cual es el precio», «cuanto cobras», «cuanto cuesta», «cuanto cuesta el faro aozoom x5», «cuanto me sale», «cuanto sale», «cuanto vale», «cuánto cuesta / sale / vale»
@@ -75,7 +83,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **abrir_navegador** (pc_access)
 - Qué hace: Abre páginas en tu navegador de verdad. Entiende «abre youtube» sin que tengas que decir el punto-com; reconoce 24 sitios por su nombre (abrir_url).
-- Frases que reconoce: «abre la pagina», «abre youtube», «abrela», «abrelo», «abreme», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto», «entra a»
+- Frases que reconoce: «abre la pagina», «abre pinterest y busca X», «abre youtube», «abrela», «abrelo», «abreme», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto»
 
 **acerca_de** (auto_conocimiento)
 - Qué hace: Te dice qué puede hacer de verdad, con los números reales del sistema y sus límites — nunca inventa capacidades (obtener_capacidades + descubrir).
@@ -122,7 +130,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~558 funciones reales)
+## Herramientas del enrutador universal (~567 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -181,7 +189,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (63)
+### CEREBRO (65)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -239,6 +247,8 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/pc_access:PcAccess.abrir_archivo` — Abre un archivo con su aplicación predeterminada. Resuelve carpetas
 - `CEREBRO/pc_access:PcAccess.abrir_url` — Abre una URL real en el navegador default (Start-Process). NO es un
 - `CEREBRO/pc_access:PcAccess.apps_instaladas` — apps instaladas (PcAccess)
+- `CEREBRO/perfil_anuar:normaliza` — Deja el mensaje como los candados lo esperan, sin cambiar la intención.
+- `CEREBRO/perfil_anuar:explica` — Qué se le cambió y por qué. Para poder revisar que no invente.
 - `CEREBRO/razonador:razonar` — Razona en profundidad: piensa paso a paso, se autocritica y da la respuesta final.
 - `CEREBRO/razonador:ejecutar` — ejecutar (razonador)
 - `CEREBRO/respaldo_local:modelos_disponibles` — modelos disponibles (respaldo_local)
@@ -654,18 +664,25 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (59)
+### TALLER (66)
 
 - `TALLER/administracion:listar_precios` — Costo por minuto + lista de materiales/artículos con su precio de hoja.
 - `TALLER/administracion:set_costo_minuto` — Actualiza el costo por minuto de máquina.
 - `TALLER/administracion:guardar_material` — Agrega un material/artículo nuevo, o actualiza el existente (por nombre).
 - `TALLER/administracion:borrar_material` — Elimina un material/artículo por nombre.
 - `TALLER/album_catalogo:generar_album` — Genera el álbum de catálogo. Devuelve dict con status y métricas.
+- `TALLER/cajas_boxes:que_generador` — Del pedido en español al generador. Devuelve (nombre, descripción).
+- `TALLER/cajas_boxes:que_tapa` — que tapa (cajas_boxes)
+- `TALLER/cajas_boxes:que_medidas` — Saca las medidas del pedido. Anuar las dice en CM, boxes.py pide MM.
+- `TALLER/cajas_boxes:generar` — Genera la caja que se pidió en español. No adivina: si falta algo, lo dice.
+- `TALLER/cajas_boxes:listar` — listar (cajas_boxes)
 - `TALLER/consolidar_dxf:main` — main (consolidar_dxf)
 - `TALLER/cotizador_servicios:guardar_servicio` — Agrega o actualiza un trabajo/servicio en el catálogo (categoría 'productos').
 - `TALLER/cotizador_servicios:borrar_servicio` — Borra un trabajo/servicio del catálogo por nombre (solo de 'productos').
 - `TALLER/cotizador_servicios:catalogo_plano` — Aplana el catálogo en una lista de artículos cotizables (precio + costo + unidad).
 - `TALLER/cotizador_servicios:cotizar` — carrito = [{"nombre": str, "cantidad": num}]
+- `TALLER/generar_caja:generar` — Genera el DXF real de la caja y calcula su precio.
+- `TALLER/generar_caja:main` — main (generar_caja)
 - `TALLER/indexar_dxf:medir` — Metros de corte, medidas y precio de un DXF. Nada estimado a ojo.
 - `TALLER/indexar_dxf:indexar` — indexar (indexar_dxf)
 - `TALLER/indexar_dxf:buscar` — Busca por nombre. Para cotizar frente al cliente sin abrir el archivo.

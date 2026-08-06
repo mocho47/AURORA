@@ -1543,3 +1543,199 @@ class TestCotizarDxfDesdeElChat:
         con_tamano = [m for m in buenos if m["ancho_cm"] > 0]
         assert con_tamano, (
             "Todos dieron 0 cm de ancho: el material se cotizaría gratis")
+
+
+# ===========================================================================
+# MEJORA 32 — El perfil de Anuar, cargado de UNA VEZ
+# Él lo señaló el 2026-08-05: "¿por qué no has enseñado a AURORA a entenderme,
+# si tú puedes mostrarle cómo lo haría yo?". Tenía razón: se venían agregando
+# sus frases de tres en tres cada vez que un bug las delataba, y encima el
+# aprendizaje automático le cobraba UN FALLO por cada frase nueva.
+#
+# Ahora CEREBRO/perfil_anuar.py normaliza su forma real de escribir ANTES de
+# que ningún candado vea el mensaje. Salió de 72 peticiones REALES suyas
+# extraídas del historial, no de suponer cómo escribiría.
+# ===========================================================================
+class TestPerfilDeAnuarCargadoDeUnaVez:
+
+    def _perfil(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_pa32", RAIZ / "CEREBRO" / "perfil_anuar.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_pa32"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _mod(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_cc32", RAIZ / "CEREBRO" / "consciencia.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cc32"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("frase,esperado", [
+        # Sus frases REALES, tal cual las escribió, sin depender del aprendizaje
+        ("abreme coreldrau porfa", "motor_corel"),
+        ("chekame el diseno abierto", "motor_corel"),
+        ("guardalo como pdf en corel", "motor_corel"),
+        ("sacale el dibujo lineal", "taller_dxf"),
+        ("pasalo a corte", "taller_dxf"),
+        ("cotizame 20 termos", "cotizador"),
+        ("buscame en mercado libre papel adhesivo", "web_search"),
+        ("quien me vende vinil", "proveedores"),
+        ("marca la cita 3 como hecha", "agenda"),
+        ("como va la contabilidad", "negocio_real"),
+    ])
+    def test_sus_frases_llegan_por_trigger(self, frase, esperado):
+        """Sin el perfil, varias de estas SOLO funcionaban porque ya habían
+        fallado antes y quedaron en el archivo de aprendizaje."""
+        mod = self._mod()
+        for _n, trig, _m, motor in mod._CANDADOS:
+            try:
+                if trig(frase):
+                    assert motor == esperado, f"'{frase}' fue a {motor}"
+                    return
+            except TypeError:
+                pass
+        pytest.fail(f"'{frase}' no la agarra ningún candado")
+
+    @pytest.mark.parametrize("escrito,limpio", [
+        ("imprecion", "impresion"),
+        ("watsapp", "whatsapp"),
+        ("adesivo", "adhesivo"),
+        ("combiene", "conviene"),
+        ("hechoo", "hecho"),
+    ])
+    def test_corrige_como_escribe_de_verdad(self, escrito, limpio):
+        p = self._perfil()
+        assert limpio in p.normaliza(f"el {escrito} de la caja").lower()
+
+    def test_verbo_con_pronombre_pegado(self):
+        """'ábreme', 'guárdalo', 'cotízame': los candados esperan el verbo solo."""
+        p = self._perfil()
+        for pegado, solo in (("abreme", "abre"), ("guardalo", "guarda"),
+                             ("cotizame", "cotiza"), ("buscame", "busca")):
+            assert solo in p.normaliza(f"{pegado} el archivo").lower(), (
+                f"'{pegado}' no se redujo a '{solo}'")
+
+    def test_no_cambia_el_sentido(self):
+        """El orden de las reglas importa: 'sácale el dibujo lineal' salía como
+        'extrae el vectorizar', que ya no es ni español ni lo que se pidió."""
+        p = self._perfil()
+        assert p.normaliza("sacale el dibujo lineal").strip().lower() == "vectoriza"
+        assert p.normaliza("pasalo a corte").strip().lower() == "convierte a dxf"
+
+    def test_una_frase_normal_no_se_toca(self):
+        p = self._perfil()
+        for f in ("hola como estas", "gracias muy amable"):
+            assert p.normaliza(f).lower() == f.lower(), f"Le movió a '{f}'"
+
+    def test_esta_cableado_en_el_pipeline(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert "perfil_anuar" in fuente, (
+            "El perfil no está conectado: vuelve a costarle un fallo cada "
+            "frase nueva")
+        i = fuente.index("def _norm_txt")
+        assert "_perfil()" in fuente[i:i + 900], (
+            "El perfil debe aplicarse en _norm_txt, que es por donde pasan "
+            "TODOS los mensajes antes de los candados")
+
+
+# ===========================================================================
+# MEJORA 33 — Los 189 generadores de boxes.py, pedidos EN ESPAÑOL
+# Anuar lo recordó el 2026-08-05: boxes.py tiene caja corazón, con flex, con
+# bisagras — no un solo modelo. Y marcó la prioridad: "que TÚ la enseñes a usar
+# boxes.py, no que ella aprenda con el uso".
+#
+# Dos bugs que costó encontrar:
+#   1. Boxes.close() DEVUELVE los datos en un BytesIO, no escribe el archivo.
+#      La primera prueba "generaba" sin dejar nada en el disco, y sin error.
+#   2. El filtro de parámetros quitaba la bandera y dejaba el valor huérfano
+#      ("unrecognized arguments: 400 300"). Cada generador acepta parámetros
+#      distintos: TypeTray usa sx/sy, HeartBox usa x/h.
+# ===========================================================================
+class TestGenerarCajasEnEspanol:
+
+    def _cb(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "_cb33", RAIZ / "TALLER" / "cajas_boxes.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_cb33"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+
+    @pytest.mark.parametrize("pedido,generador", [
+        ("caja corazon de 45x7", "HeartBox"),
+        ("caja con divisiones de 40x30", "TypeTray"),
+        ("caja con bisagras de 20x10", "HingeBox"),
+        ("caja flex de 20x10", "FlexBox"),
+        ("un cajon de 20x10", "SlidingDrawer"),
+        # Frase real de Anuar (2026-08-05): "caja con tapa deslizante" daba un
+        # CAJÓN. Son cosas distintas y el orden de las claves lo decide.
+        ("crea una caja con tapa deslizante de 15cmx15cm x3cm", "SlidingLidBox"),
+        ("caja con tapa corrediza de 20x10", "SlidingLidBox"),
+    ])
+    def test_traduce_el_pedido_al_generador(self, pedido, generador):
+        cb = self._cb()
+        gen, _desc = cb.que_generador(pedido)
+        assert gen == generador, f"'{pedido}' → {gen}, se esperaba {generador}"
+
+    @pytest.mark.parametrize("pedido,tapa", [
+        ("caja corazon con tapa de agujero", "hole"),
+        ("caja corazon con tapa", "lid"),
+        ("caja corazon cerrada", "closed"),
+    ])
+    def test_entiende_como_pide_la_tapa(self, pedido, tapa):
+        cb = self._cb()
+        assert cb.que_tapa(pedido) == tapa
+
+    def test_las_medidas_van_de_cm_a_mm(self):
+        """Anuar las dice en CM; boxes.py las pide en MM."""
+        cb = self._cb()
+        m = cb.que_medidas("caja corazon de 45x7")
+        assert m["x"] == 450, f"45 cm deben ser 450 mm, dio {m['x']}"
+        assert m["h"] == 70
+
+    def test_genera_el_archivo_de_verdad(self):
+        """El bug era que close() devuelve BytesIO y no escribía nada."""
+        from pathlib import Path as _P
+        cb = self._cb()
+        r = cb.generar("caja corazon de 20x5 con tapa de agujero")
+        if r.get("status") == "FALTA_LIBRERIA":
+            pytest.skip("boxes.py no está instalado")
+        assert r["status"] == "OK", f"No generó: {r.get('detalle')}"
+        assert _P(r["archivo"]).exists(), "Dijo que generó pero no hay archivo"
+        assert r["kb"] > 5, "El archivo salió vacío"
+
+    def test_no_mata_el_proceso_con_medidas_raras(self):
+        """argparse llama a sys.exit: sin atraparlo, tumba AURORA entera.
+
+        Con 99999 cm responde FALTAN_MEDIDAS, que es lo correcto: esas no son
+        medidas de una caja y no se aceptan.
+        """
+        cb = self._cb()
+        for absurdo in ("caja corazon de 99999x99999", "caja corazon de 0x0"):
+            r = cb.generar(absurdo)
+            assert r.get("status") in ("OK", "ERROR", "FALTAN_MEDIDAS",
+                                       "FALTA_LIBRERIA"), r
+        fuente = (RAIZ / "TALLER" / "cajas_boxes.py").read_text(encoding="utf-8")
+        assert "except SystemExit" in fuente, (
+            "Sin atrapar SystemExit, un argumento malo mata el proceso entero")
+
+    def test_dice_cuando_no_sabe_cual(self):
+        cb = self._cb()
+        r = cb.generar("hazme algo bonito")
+        assert r["status"] == "NO_SE_CUAL", "Adivinó en vez de preguntar"
+
+    def test_pide_las_medidas_si_faltan(self):
+        cb = self._cb()
+        r = cb.generar("hazme una caja corazon")
+        assert r["status"] == "FALTAN_MEDIDAS", "Inventó las medidas"
+
+    def test_esta_conectado_al_chat(self):
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        assert '("generar_caja",' in fuente, "El candado no está registrado"
+        assert "_generar_caja_real" in fuente, "Falta el ejecutor"

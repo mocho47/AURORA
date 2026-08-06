@@ -330,7 +330,38 @@ def _es_intencion_operativa(mensaje: str) -> bool:
     )
 
 
+_PERFIL_MOD = None
+
+
+def _perfil():
+    """El perfil de cómo escribe Anuar, cargado una sola vez."""
+    global _PERFIL_MOD
+    if _PERFIL_MOD is None:
+        try:
+            import importlib.util as _ilu
+            _spec = _ilu.spec_from_file_location(
+                "perfil_anuar", ROOT / "CEREBRO" / "perfil_anuar.py")
+            _PERFIL_MOD = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_PERFIL_MOD)
+        except Exception as e:
+            logger.debug(f"[PERFIL] no se pudo cargar ({e}); se sigue sin él.")
+            _PERFIL_MOD = False
+    return _PERFIL_MOD
+
+
 def _norm_txt(mensaje: str) -> str:
+    # El perfil de Anuar va PRIMERO: corrige su forma real de escribir antes de
+    # que ningún candado la vea. Se cargó de una vez con 72 peticiones reales
+    # suyas, en vez de agregar tres frases cada vez que un bug las delataba
+    # (2026-08-05, él lo señaló: "¿por qué no has enseñado a AURORA a
+    # entenderme, si tú puedes mostrarle cómo lo haría yo?").
+    p = _perfil()
+    if p:
+        try:
+            mensaje = p.normaliza(mensaje)
+        except Exception:
+            pass
+
     import unicodedata as _ud
     m = "".join(c for c in _ud.normalize("NFD", (mensaje or "").lower()) if _ud.category(c) != "Mn")
     # Variantes reales de escritura rápida/errores frecuentes del chat.
@@ -869,6 +900,23 @@ _COTIZAR_DXF = (
 )
 
 
+# Generar una caja dando las medidas. Anuar lo pidió el 2026-08-05: boxes.py
+# tiene 189 generadores (corazón, flex, bisagras, bandejas) y él quería pedirlas
+# hablando, no con parámetros de línea de comandos.
+_GENERAR_CAJA = (
+    "hazme una caja", "haz una caja", "generame una caja", "genera una caja",
+    "crea una caja", "creame una caja", "quiero una caja", "necesito una caja",
+    "una caja de", "una caja con", "caja corazon", "caja con divisiones",
+    "hazme una bandeja", "genera una bandeja", "quiero una bandeja",
+    "hazme un cajon", "generame el dxf de una caja", "arma una caja",
+    "que cajas puedes hacer", "que cajas sabes hacer", "tipos de caja",
+)
+
+
+def _es_generar_caja(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _GENERAR_CAJA)
+
+
 def _es_cotizar_dxf(mensaje: str) -> bool:
     """Pide el precio de cortar un archivo, no el precio de un producto."""
     m = _norm_txt(mensaje)
@@ -1158,6 +1206,12 @@ _COREL_ACCIONES = (
 _COREL_SIN_NOMBRARLO = (
     "mapa de bits", "mapa de bit", "mapadebits", "bitmap", "rasteriza",
     "rasterizar", "curvas a mapa", "objeto a mapa",
+    # "el diseño abierto" / "el documento abierto" solo puede ser Corel: es el
+    # que está abierto en pantalla. Agregado el 2026-08-05 al cargar el perfil
+    # de Anuar: "chékame el diseño abierto" solo funcionaba porque estaba en el
+    # archivo de aprendizaje, o sea porque ya había fallado una vez.
+    "el diseno abierto", "el diseño abierto", "documento abierto",
+    "lo que tengo abierto", "el archivo abierto", "la hoja abierta",
 )
 
 
@@ -1347,6 +1401,9 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # antes de que cualquier otro candado o el enrutador la malinterpreten.
     # cotizar_dxf va ANTES que cotizar: "cuánto cuesta cortar este archivo" es
     # medir metros, no buscar un producto en el catálogo.
+    # generar_caja va antes que cotizar: "una caja de 40x30 cuánto cuesta" es
+    # pedir que la haga y de paso la cotice, no buscar en el catálogo.
+    ("generar_caja",    _es_generar_caja,      "_generar_caja_real",      "generador_cajas"),
     ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
     ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
     ("video",           _es_comando_video,     "_video_real",             "motor_video"),
@@ -2328,6 +2385,41 @@ class Consciencia:
         return {"respuesta": "\n".join(partes)}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
+
+    async def _generar_caja_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
+
+        189 generadores disponibles (corazón, flex, bisagras, bandejas, cajones).
+        Anuar marcó la prioridad el 2026-08-05: que se le enseñe el mapa de qué
+        generador es cada cosa, no que lo descubra usando.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location("cajas_boxes", ROOT / "TALLER" / "cajas_boxes.py")
+            cb = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(cb)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el generador de cajas: {e}"}
+
+        m = _norm_txt(mensaje)
+        if _contiene_trigger(m, ("que cajas puedes", "que cajas sabes",
+                                 "tipos de caja", "que cajas hay")):
+            return {"respuesta": cb.listar()}
+
+        # El grosor: si no lo dice, 2.7 mm, que es lo que más usa.
+        grosor = 2.7
+        mg = re.search(r"(\d+(?:[.,]\d+)?)\s*mm", m)
+        if mg:
+            grosor = float(mg.group(1).replace(",", "."))
+
+        r = await asyncio.to_thread(cb.generar, mensaje, grosor)
+        txt = cb._texto(r)
+
+        # Si salió, se cotiza de una vez: es lo que sigue siempre.
+        if r.get("status") == "OK":
+            txt += ("\n\n_Para el precio: ábrelo en Corel, guárdalo como DXF y "
+                    "dime «cotiza <ruta>» — boxes.py exporta SVG, no DXF._")
+        return {"respuesta": txt}
 
     async def _cotizar_dxf_real(self, mensaje: str) -> Dict:
         """CHAT ↔ LÁSER: mide los METROS DE CORTE reales de un DXF y lo cotiza.
