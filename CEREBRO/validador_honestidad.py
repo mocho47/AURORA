@@ -140,6 +140,9 @@ def _comandos_inventados(texto: str, registro_claves) -> List[str]:
 def _archivos_inexistentes(texto: str) -> List[str]:
     """Archivos que la respuesta menciona pero que no están en el disco."""
     faltantes, vistos = [], set()
+    # Los nombres de archivo que YA se comprobaron en disco. Sirve para no
+    # juzgar dos veces la misma cosa por caminos distintos.
+    confirmadas = []
     for ruta in _RE_RUTA.findall(texto):
         ruta = ruta.strip().rstrip(".,;:)")
         if ruta in vistos:
@@ -161,6 +164,7 @@ def _archivos_inexistentes(texto: str) -> List[str]:
                 # Se apunta el nombre como ya resuelto para que no se juzgue dos
                 # veces la misma cosa con distinta vara.
                 vistos.add(Path(ruta).name)
+                confirmadas.append(Path(ruta).name.lower())
         except OSError:
             faltantes.append(ruta)
     # Archivos sueltos tipo "REINICIAR_NGROK.bat": se buscan en la raíz del proyecto.
@@ -169,6 +173,15 @@ def _archivos_inexistentes(texto: str) -> List[str]:
         if nombre in vistos or "\\" in nombre or "/" in nombre:
             continue
         vistos.add(nombre)
+        # ¿Es solo un pedazo de un archivo que ya se comprobó que existe?
+        # Los archivos de Anuar traen espacios en el nombre —"crustacio
+        # cascarudo __2.5mm.dxf"— y este regex, que no acepta espacios, agarra
+        # nada más el último trozo: "__2.5mm.dxf". Ese trozo no existe como
+        # archivo, claro, y salía el aviso de "no existe" sobre un archivo que
+        # sí estaba, recién escrito. Encontrado en vivo el 2026-08-06, y es la
+        # tercera variante del mismo falso positivo.
+        if any(c.endswith(nombre.lower()) for c in confirmadas):
+            continue
         if _es_libreria(nombre):
             continue
         try:

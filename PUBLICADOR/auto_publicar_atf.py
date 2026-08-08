@@ -75,6 +75,14 @@ def main():
     hoy = date.today()
     copy = COPYS[hoy.toordinal() % len(COPYS)] + CTA  # rota por dia + telefono oficial
     marca = f"[{hoy.isoformat()}]"
+    # FACEBOOK **E INSTAGRAM**. Anuar preguntó el 2026-08-06 por qué solo salía
+    # en Facebook, y no era permisos ni token: el token de la app «nexus» ya
+    # trae `instagram_content_publish` y no vence nunca. Era esta línea, que
+    # decía "facebook" y ya. Una palabra.
+    #
+    # Instagram va DESPUÉS y por separado a propósito: exige imagen o video en
+    # cada publicación (Facebook acepta solo texto). Si Instagram falla, el
+    # post de Facebook ya salió y no se pierde el día.
     try:
         r = _post("/publicador/publicar-hoy",
                   {"red": "facebook", "descripcion": copy, "aprobar": True})
@@ -82,6 +90,20 @@ def main():
         _log(f"{marca} ERROR de conexion: {e}")
         print("ERROR", e)
         return 1
+
+    try:
+        ri = _post("/publicador/publicar-hoy",
+                   {"red": "instagram", "descripcion": copy, "aprobar": True})
+        if ri.get("status") == "PUBLICADO":
+            _log(f"{marca} INSTAGRAM publicado id={ri.get('post_id')}")
+            print("INSTAGRAM", ri.get("post_id"))
+        else:
+            # Se ANOTA el motivo real. Callarlo dejaría a Instagram muerto sin
+            # que nadie se entere, que es justo lo que pasó hasta hoy.
+            _log(f"{marca} INSTAGRAM no salio: "
+                 f"{json.dumps(ri, ensure_ascii=False)[:250]}")
+    except Exception as e:
+        _log(f"{marca} INSTAGRAM error: {str(e)[:150]}")
 
     estado = r.get("status")
     if estado == "PUBLICADO":

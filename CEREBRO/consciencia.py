@@ -1004,6 +1004,113 @@ def _es_generar_caja(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _GENERAR_CAJA)
 
 
+# ── LA CAMPAÑA ESCOLAR QUE YA SALIÓ A LAS CLIENTAS ──────────────────────
+# Riesgo que Anuar señaló el 2026-08-06 con la campaña ya enviándose: AURORA
+# contesta sola el WhatsApp. Una clienta que acaba de leer «primaria $150» y
+# pregunta el precio NO puede recibir otro número — eso tumba la venta y deja
+# a Milen's como que no se aclara. Por eso los cuatro paquetes viven en un
+# archivo y este candado responde con ellos, no con lo que el chat suponga.
+_CAMPANA_ESCOLAR = (
+    "paquete escolar", "paquetes escolares", "regreso a clases",
+    "etiquetas escolares", "etiquetas para utiles", "etiquetas para útiles",
+    "el de preescolar", "el de primaria", "paquete de preescolar",
+    "paquete de primaria", "etiquetas para la escuela", "etiquetas del niño",
+    "etiquetas del nino", "nombres para la ropa", "tabla de multiplicar",
+)
+
+
+def _es_campana_escolar(mensaje: str) -> bool:
+    """¿Pregunta por los paquetes que se le acaban de mandar?"""
+    return _contiene_trigger(_norm_txt(mensaje), _CAMPANA_ESCOLAR)
+
+
+# ── EL MÉTODO PARA ARMAR CAMPAÑAS ───────────────────────────────────────
+# Anuar lo pidió el 2026-08-06 y es la petición correcta: *"importantísimo es
+# que AURORA entienda cómo realizaste la campaña, pues tú ya no estarás"*.
+# Por eso el método vive en MARKETING/metodo_campanas.py y se pide por aquí:
+# lo que se hereda no es la campaña escolar, es saber armar la siguiente y
+# saber revisar la que alguien escriba.
+_METODO_CAMPANA = (
+    "como se arma una campana", "como se hace una campana",
+    "como armo una campana", "anatomia de una campana",
+    "reglas de las campanas", "como hiciste la campana",
+    "revisa esta campana", "revisa la campana", "revisame esta campana",
+    "checa esta campana", "esta bien esta campana", "arma una campana",
+    "armame una campana", "crea una campana", "creame una campana",
+    "nueva campana",
+)
+
+
+def _es_metodo_campana(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _METODO_CAMPANA)
+
+
+# ── PRINT & CUT: de la impresión al corte ───────────────────────────────
+# Anuar lo aprendió a mano el 2026-08-07, equivocándose paso por paso con las
+# calcomanías de Luisa, y pidió que quedara guardado: *"tuve que hacer todo
+# manual para aprender, valió la pena el tiempo y dolor de cabeza"*. Esto
+# existe para que ese dolor no se pague dos veces.
+_PRINT_AND_CUT = (
+    "print and cut", "print & cut", "imprimir y cortar",
+    "marcas de registro", "como pongo las marcas", "marcas de silhouette",
+    "marcas de silouette", "como corto lo impreso", "cortar lo impreso",
+    "desplazamiento", "contorno extra", "excedente del corte",
+    "area util de la hoja", "cuanto cabe en una hoja",
+)
+
+
+def _es_print_and_cut(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _PRINT_AND_CUT)
+
+
+# ── ADAPTAR UN DISEÑO A OTRO MATERIAL Y OTRO TAMAÑO ─────────────────────
+# Anuar describió el flujo completo el 2026-08-06: *"yo elijo el material y la
+# escala del tamaño; al poner el espesor del material, este genera los ajustes
+# en automático, ranuras y largo de dientes; ese sería el flujo completo"*.
+#
+# Son DOS PERILLAS y nada más: la escala manda sobre el tamaño del diseño
+# armado, el espesor manda sobre todos los ensambles. Él no vuelve a tocar ni
+# el ancho de las ranuras ni el largo de los dientes.
+#
+# Su palabra para los ensambles es ENCASTRES. También dice hembras y machos.
+_ADAPTAR_DISENO = (
+    "ajusta", "ajustame", "adapta", "adaptame", "reduce", "reduceme",
+    "escala", "escalame", "achica", "achicame", "agranda",
+    "pasalo a", "pasala a", "pon ", "ponme", "ponlo", "ponla",
+    "deja ", "dejalo", "dejala", "conviertelo a", "conviertela a",
+)
+# Sin una de estas no es adaptar: es escalar a secas, que no es lo mismo.
+_SENAL_MATERIAL = (
+    "material", "espesor", "grosor", "mdf", "encastre", "encastres",
+    "hembra", "hembras", "macho", "machos", "ranura", "ranuras",
+    "ensamble", "ensambles", "diente", "dientes", "mm",
+)
+
+
+def _es_adaptar_diseno(mensaje: str) -> bool:
+    """¿Pide dejar un DXF listo para otro material (y de otro tamaño)?
+
+    Necesita un verbo de ajustar, algo que hable del material o de los
+    encastres, y una medida. Sin lo del material sería solo escalar, que no
+    es lo mismo.
+
+    NO SE EXIGE QUE NOMBRE EL ARCHIVO, y es a propósito. Él dice *"ajusta la
+    casa de bob al 50% para material de 2.5"* — el archivo lo llama por su
+    nombre, no por su ruta (2026-08-06). Pedirle que escriba la ruta sería
+    hacerle trabajo a él para ahorrárselo al código. Cuál es el archivo lo
+    resuelve `_ultimo_archivo` con lo que ya se venía hablando, y si de plano
+    no hay, se le pregunta con buenos modos en vez de no entenderle.
+    """
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _ADAPTAR_DISENO):
+        return False
+    if not _contiene_trigger(m, _SENAL_MATERIAL):
+        return False
+    # Una medida de por medio: el porcentaje del tamaño o el espesor. Sin
+    # ningún número esto no es una orden de trabajo, es plática.
+    return bool(re.search(r"\d", m))
+
+
 # Cadena completa: foto → sin fondo → vectorizada → DXF. Anuar la pidió el
 # 2026-08-05 después de que AURORA lo obligara a hacerlo en tres mensajes y
 # encima olvidara el archivo entre uno y otro.
@@ -1512,6 +1619,20 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # pedir que la haga y de paso la cotice, no buscar en el catálogo.
     # foto_a_dxf va ANTES que corel y dxf: "quita el fondo Y dámelo en dxf" es
     # UNA cadena completa, no dos peticiones que haya que pedir por separado.
+    # adaptar_diseno va ANTES que generar_caja y que cotizar: "ajusta la casa
+    # de bob al 50% para material de 2.5" trae medidas y la palabra material,
+    # y si no se atrapa aquí lo agarra el generador de cajas y le inventa una
+    # caja de 50 cm. Es un archivo que YA existe, no uno que haya que crear.
+    # campana_escolar va ANTES que cotizar: una clienta preguntando "cuánto el
+    # de primaria" tiene que recibir el precio de la campaña que acaba de leer,
+    # no lo que el cotizador arme del catálogo. Mientras la campaña esté viva,
+    # esos cuatro precios mandan (2026-08-06).
+    # metodo_campana va ANTES que campana_escolar: "revisa esta campaña" es
+    # pedir el método, no preguntar precios de los paquetes.
+    ("print_and_cut",   _es_print_and_cut,     "_print_and_cut_real",     "print_and_cut"),
+    ("metodo_campana",  _es_metodo_campana,    "_metodo_campana_real",    "metodo_campanas"),
+    ("campana_escolar", _es_campana_escolar,   "_campana_escolar_real",   "campana_escolar"),
+    ("adaptar_diseno",  _es_adaptar_diseno,    "_adaptar_diseno_real",    "adaptar_grosor"),
     ("foto_a_dxf",      _es_foto_a_dxf,        "_foto_a_dxf_real",        "foto_a_dxf"),
     ("generar_caja",    _es_generar_caja,      "_generar_caja_real",      "generador_cajas"),
     ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
@@ -2500,6 +2621,155 @@ class Consciencia:
         return {"respuesta": "\n".join(partes)}
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
+
+    async def _print_and_cut_real(self, mensaje: str) -> Dict:
+        """El proceso completo de imprimir y cortar, con sus advertencias.
+
+        Cada aviso del manual es un error que de verdad ocurrió el
+        2026-08-07: las marcas de Corel que no registran, el escalado de la
+        papelería, el trazo de adentro que corta dos veces, el vinil de
+        inyección metido a la láser.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "print_and_cut", ROOT / "TALLER" / "print_and_cut.py")
+            pc = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(pc)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el manual de Print & Cut: {e}"}
+
+        m = _norm_txt(mensaje)
+        # Si pregunta cuánto cabe, se le responde con números, no con el manual.
+        if _contiene_trigger(m, ("cuanto cabe", "cuantas caben", "area util",
+                                 "cuantas salen")):
+            try:
+                spec2 = _ilu.spec_from_file_location(
+                    "marcas_registro", ROOT / "TALLER" / "marcas_registro.py")
+                mr = _ilu.module_from_spec(spec2)
+                spec2.loader.exec_module(mr)
+                return {"respuesta": mr._texto()}
+            except Exception:
+                pass
+        return {"respuesta": pc.manual()}
+
+    async def _metodo_campana_real(self, mensaje: str) -> Dict:
+        """Enseña cómo se arma una campaña, o revisa la que le pasen.
+
+        Las siete reglas salieron de errores reales de una sola tarde, y los
+        cuatro graves los encontró Anuar leyendo el borrador, no la máquina.
+        Por eso el revisor busca EXACTAMENTE esos: prometer lo que no se
+        entrega, abrir con el calendario en vez del dolor, el teléfono
+        cruzado, cerrar sin pedir nada.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "metodo_campanas", ROOT / "MARKETING" / "metodo_campanas.py")
+            mc = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(mc)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el método de campañas: {e}"}
+
+        m = _norm_txt(mensaje)
+        # Si trae un borrador de por medio, se revisa; si no, se explica.
+        if _contiene_trigger(m, ("revisa", "revisame", "checa", "esta bien")):
+            # El borrador es lo que venga después de dos puntos o comillas.
+            cuerpo = mensaje
+            for corte in (":", "«", '"'):
+                if corte in mensaje:
+                    cuerpo = mensaje.split(corte, 1)[1]
+                    break
+            if len(cuerpo.strip()) < 40:
+                return {"respuesta": (
+                    "Pásame el texto de la campaña y te digo qué corregir "
+                    "antes de que salga.\n\n_Dímelo así:_ «revisa esta "
+                    "campaña: Hola, ya viene el regreso a clases...»")}
+            return {"respuesta": mc._texto(mc.revisar(cuerpo))}
+        return {"respuesta": mc.anatomia()}
+
+    async def _campana_escolar_real(self, mensaje: str) -> Dict:
+        """Contesta con los paquetes escolares EXACTOS que se le mandaron.
+
+        Sale de `TALLER/campana_escolar.py`, que es donde viven los precios de
+        verdad. Aquí no se calcula ni se supone nada: si la clienta leyó $150,
+        recibe $150.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "campana_escolar", ROOT / "TALLER" / "campana_escolar.py")
+            ce = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(ce)
+        except Exception as e:
+            return {"respuesta": f"No pude leer los paquetes escolares: {e}"}
+        return {"respuesta": ce.responder(mensaje)}
+
+    async def _adaptar_diseno_real(self, mensaje: str, session_id: str = "") -> Dict:
+        """Deja un DXF listo para OTRO material y, si se pide, de otro tamaño.
+
+        El flujo que Anuar describió el 2026-08-06: él pone dos números —la
+        escala y el espesor del material— y todo lo demás sale solo. Las
+        ranuras al espesor nuevo, los dientes alargados al espesor nuevo, los
+        números a su capa en rojo, y el original sin tocarse.
+
+        Ejemplo de cómo lo pide él:
+            «ajusta la casa de bob al 50% para material de 2.5»
+        """
+        import importlib.util as _ilu
+        from pathlib import Path as _P
+
+        ruta = self._ultimo_archivo(mensaje, session_id)
+        if not ruta or not str(ruta).lower().endswith(".dxf"):
+            return {"respuesta": (
+                "Dime cuál DXF adapto — pásame la ruta o arrástramelo.\n\n"
+                "_Así te lo entiendo:_ «ajusta C:\\ruta\\casa.dxf al 50% "
+                "para material de 2.5»")}
+
+        m = _norm_txt(mensaje)
+
+        # EL ESPESOR: es la perilla que manda sobre todos los ensambles.
+        grosor = 0.0
+        mg = (re.search(r"(?:material|espesor|grosor|mdf)\s*(?:de\s*)?"
+                        r"(\d+(?:[.,]\d+)?)", m)
+              or re.search(r"(\d+(?:[.,]\d+)?)\s*mm", m))
+        if mg:
+            grosor = float(mg.group(1).replace(",", "."))
+        if not grosor:
+            return {"respuesta": (
+                "¿De qué espesor es el material? De ahí salen las ranuras y "
+                "el largo de los dientes.\n\n_Dímelo así:_ «para material de "
+                "2.5»")}
+
+        # LA ESCALA: la otra perilla, la del tamaño. Si no la dice, no se
+        # cambia el tamaño — que es distinto de suponer que quiere la mitad.
+        escala = 1.0
+        me = re.search(r"(?:al|a|en)\s*(\d+(?:[.,]\d+)?)\s*%", m)
+        if me:
+            escala = float(me.group(1).replace(",", ".")) / 100.0
+        elif _contiene_trigger(m, ("a la mitad", "mitad de tamano",
+                                   "mitad del tamano")):
+            escala = 0.5
+
+        try:
+            spec = _ilu.spec_from_file_location(
+                "adaptar_grosor", ROOT / "TALLER" / "adaptar_grosor.py")
+            ag = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(ag)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el adaptador: {e}"}
+
+        r = await asyncio.to_thread(ag.adaptar, _P(ruta), grosor, 0.0, escala)
+        txt = ag._texto(r, _P(ruta))
+
+        # LA REGLA DE ORO DEL TALLER, y no es un adorno: esto ajusta geometría,
+        # no adivina cómo quedó el ensamble en la vida real. Ya pasó que los
+        # conteos decían "OK" con el archivo inservible (2026-08-06).
+        if r.get("status") == "OK":
+            txt += ("\n\n⚠️ **Corta una pieza en retazo antes de la hoja "
+                    "completa.** Yo ajusté las medidas; que entre de verdad "
+                    "solo lo dice el material.")
+        return {"respuesta": txt}
 
     async def _generar_caja_real(self, mensaje: str) -> Dict:
         """CHAT ↔ boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
