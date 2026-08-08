@@ -1,5 +1,59 @@
 # 📊 ESTADO REAL DE AURORA
-### Última actualización: 2026-08-06
+### Última actualización: 2026-08-07
+
+---
+
+## 🎯 DÓNDE QUEDAMOS — 2026-08-07 (leer esto primero)
+
+**293 pruebas pasan.** Último commit `2a5c7e5`, todo en GitHub.
+
+### Probado en material o en vivo — no se re-verifica
+| Qué | Evidencia |
+|---|---|
+| **Adaptar diseños a otro material** | **Anuar cortó y armó la casa de Bob Esponja** (3mm → 50% en 2.5) |
+| Cajas (4 reglas, DXF, vista previa) | 4/4 por `/chat` con sus frases |
+| Descargar archivos por red (Rocío) | HTTP 200 por 192.168.1.38; `.env` rechazado |
+| Print & Cut: marcas de su Cameo 4 | medidas de un archivo que él exportó de SU Silhouette |
+
+### Escrito y con pruebas, PERO SIN PROBAR EN VIVO
+- Candados nuevos en el chat: `adaptar_diseno`, `print_and_cut`,
+  `metodo_campana`, `campana_escolar` — **el servidor no se ha reiniciado**
+- `TALLER/acomodar_hoja.py` (nesting) y `EDITOR/contorno_de_corte.py`
+- Instagram en la tarea de ATF — no ha corrido la de las 19:00
+- `corel_core.cerrar_a_curvas_y_publicar()` — **nunca con Corel abierto**
+
+### Roto o pendiente, con el diagnóstico ya hecho
+1. **El 50% no se aplica.** `_adaptar_diseno_real` entiende la escala (el
+   regex la saca bien) pero el archivo sale sin escalar. Bug real, acotado.
+2. **Casa de Calamardo**: devuelve `NO_HAY_RANURAS_SUELTAS`. Anuar lo
+   desmintió —*"todo es encastres"*, y él ya la armó una vez— así que **es
+   falla de detección**. Sospecha sin confirmar: encastres dentro de BLOCKs
+   que `msp` no ve.
+3. **18 mensajes de campaña sin enviar.** No es un bug: **la cuota mensual de
+   Green API se agotó** (plan gratis, 20 mensajes, y solo deja hablar con 3
+   números). Están listos en `Downloads\PENDIENTES_campana_18.txt`.
+   **Mientras la cuota esté agotada, AURORA tampoco puede contestar WhatsApp
+   a nadie más que a esos 3.**
+4. **Instagram apunta a `rauna_892`**, la cuenta personal de Anuar. Falta que
+   él decida si esa u otra de ATF.
+5. **Nesting mezclado** — sin hacer, y es donde está el dinero: hoy cada
+   tamaño va en su hoja y se tira 30-40% de cada una.
+
+### El hallazgo que cambia precios
+**Con marcas de registro caben la mitad de las piezas.** Se costeó la campaña
+a 30 etiquetas por hoja y caben **14**. La etiqueta pasó de $0.26 a **$0.56**
+y el paquete de primaria de 85% a **49% de margen**. Los precios de Rocío
+($100 / $155 / $150 / $205) siguen sanos salvo **Primaria a $150**, que
+debería subir a ~$180.
+
+### Presupuesto
+Anuar iba en **86% del límite semanal** (repone el 9 de agosto). Prioridad
+acordada: (1) probar en vivo lo ya escrito, (2) el bug del 50%,
+(3) nesting mezclado. Calamardo y el demo agnóstico quedan para después.
+
+---
+
+### Estado anterior: 2026-08-06
 
 ---
 
