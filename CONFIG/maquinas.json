@@ -1,0 +1,64 @@
+{
+  "_nota": "LAS MAQUINAS REALES DEL TALLER. AURORA cotizaba corte laser sin saber en que maquina se corta, y armaba hojas de Print&Cut sin tener registrado el modelo de plotter. Aqui va SOLO lo verificado; lo que no se sepa va como null y se pregunta, nunca se inventa.",
+  "_actualizado": "2026-08-08",
+
+  "laser": {
+    "controlador": "RDC6445G",
+    "_controlador_de": "Su nota en D:\\RDWORKS_LEER.txt, escrita por el mismo",
+    "marca_controlador": "Ruida Technology",
+    "software": "RDWorks V8",
+    "version_instalada": "8.01.71.013",
+    "version_que_el_recomienda": "8.01.60",
+    "_ojo_version": "Su nota dice que para el RDC6445G la version recomendada es la 8.01.60, pero tiene instalada la 8.01.71.013. No se ha verificado si eso le causa problemas.",
+    "carpeta_software": "C:\\newpr\\",
+    "descarga_oficial": [
+      "https://www.rdacs.com/en/download",
+      "https://www.ruidacontroller.com/download/"
+    ],
+    "area_de_corte_mm": null,
+    "potencia_watts": null,
+    "_pendiente": "Falta el area de corte y la potencia. Sin el area, AURORA no puede avisar cuando una pieza NO CABE en la maquina, que es justo el error que se descubre hasta que ya se cargo el material.",
+    "costo_minuto_mxn": 8.0,
+    "_costo_de": "CONFIG/precios_base.json, capturado por el",
+    "kerf_mm": 0.2,
+    "_kerf": "Su regla: el MDF de 2.7 se corta a 2.5 porque el laser se come una decima por lado."
+  },
+
+  "plotter_de_corte": {
+    "modelo": "Silhouette Cameo 4",
+    "software": "Silhouette Studio",
+    "version": "4.5.791",
+    "edicion": "Business Edition",
+    "conexion": "Bluetooth y USB",
+    "marcas_de_registro": {
+      "tipo": 1,
+      "margen_mm": 15.6,
+      "cuadro_relleno_mm": 5.5,
+      "escuadra_en_L_mm": 20.2,
+      "grosor_trazo_mm": 0.47,
+      "_medidas_de": "Medidas sacadas de un archivo que EL exporto de su propio Silhouette el 2026-08-07, no de un manual.",
+      "area_util_a4_mm": [149.1, 236.1]
+    },
+    "_incompatible_con": "Las marcas de registro de CorelDRAW. Corel pone cruces de imprenta y Silhouette busca un cuadro relleno mas dos escuadras en L. No hay tamano de pagina que las haga coincidir; se comprobo en la maquina."
+  },
+
+  "impresora": {
+    "modelo": "Epson L3210",
+    "estado": "DESCOMPUESTA",
+    "falla": "le falta el cable flex del cabezal",
+    "_nota": "Mientras siga asi, la impresion se maquila o se hace en la papeleria."
+  },
+
+  "plancha_textil": {
+    "modelo": null,
+    "temperatura_max_c": null,
+    "area_mm": null,
+    "_pendiente": "Anuar la tiene (plancha de escritorio) pero no esta registrado el modelo ni su area. Hace falta para cotizar planchado de piezas grandes."
+  },
+
+  "materiales_en_hoja": {
+    "mdf_cm": [122, 244],
+    "acrilico_cm": [120, 180],
+    "_de": "CONFIG/precios_base.json"
+  }
+}
