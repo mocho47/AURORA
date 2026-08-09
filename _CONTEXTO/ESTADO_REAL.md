@@ -1,9 +1,67 @@
 # 📊 ESTADO REAL DE AURORA
-### Última actualización: 2026-08-07
+### Última actualización: 2026-08-08
 
 ---
 
-## 🎯 DÓNDE QUEDAMOS — 2026-08-07 (leer esto primero)
+## 🎯 DÓNDE QUEDAMOS — 2026-08-08 (leer esto primero)
+
+**303 pruebas pasan.** Commit `fcba70f`, en GitHub.
+
+### El día que Anuar estuvo cerca de borrarla — qué falló y qué se cerró
+
+Sus palabras textuales: *"aurora no supo cobrar"*, *"no entiende razones"*,
+*"comienza a desesperarme, creeme que estoy muy cerca de borrarla"*. Las
+cuatro fallas las encontró **usando AURORA normal**, no auditando.
+
+| Falla real | Causa | Estado |
+|---|---|---|
+| Inventó un precio de vinil: *"entre $500 y $1,500"* | no existía el motor, y el que contestó adivinó en vez de callarse | **cerrado** — `TALLER/cotizador_vinil.py` + candado `cotizar_vinil`. Probado en vivo por HTTP: **$148**, y él lo cobró en $150 |
+| *"no entiende razones"* con la ruta buena delante | el punto de `..._2.5mm.dxf` cortaba la ruta. **Tercera vez la misma falla**: ya estaba arreglada en el validador y copiada sin arreglar en 2 lugares más | **cerrado de raíz** — una sola `_rutas_del_texto()`. Probado en vivo |
+| Su frase real *"la palabra coca cola y debajo osvaldo en un área de 30x20, qué costo tendría"* | **no caía en NINGÚN candado** → un motor suelto adivinó | **cerrado** — cae en `cotizar_vinil` |
+| *"el tamaño NO cambió"* al escalar al 50% | frase escrita a mano, salía siempre. **La escala sí se aplicaba**; la herramienta mentía sobre su propio trabajo | **cerrado** + prueba de regresión |
+
+### SU REGLA DE COBRO, encontrada en su propio catálogo
+Su escalera real: 5×5 **$35** · 10×10 **$50** · 20×20 **$90** · 30×30 **$160**
+· mínimo **$35** · colocación/planchado **$30**. Entre peldaños se interpola
+por área.
+
+**Y varias piezas de un mismo trabajo suman ÁREAS, no precios.** Salió de su
+ejemplo guardado —*"letras 10×28 + números 15×10, solo recorte = $95"*—:
+pieza por pieza daría $131 (38% de más, y la venta se pierde); sumando áreas
+da $94.20. La escalera ya trae la economía de escala adentro.
+
+### CALAMARDO: resuelto el diagnóstico, resuelto a medias el arreglo
+La sospecha vieja (BLOCKs) **era falsa**. Lo real: el archivo son 314
+`POLYLINE` viejas con las curvas partidas en segmentos de medio milímetro. El
+buscador de dientes mira **tres segmentos seguidos**, y con la pieza así
+partida ese patrón no aparece nunca.
+
+- El detector decía **1.5 mm**; el material es **3.0** → ahora lo detecta bien
+  (479 repeticiones), con `_unir_colineales()`.
+- Encastres ajustados: **0 → 30**. El diagnóstico cuenta ~50 candidatos, así
+  que **quedan ~20 sin reconocer**. No está "listo".
+- Clave para no romperlo: se **busca** sobre el contorno simplificado y se
+  **modifica** sobre el original, o la cabeza de Calamardo queda un polígono.
+
+### Nuevo, con pruebas, SIN probar en vivo todavía
+- **Pestaña "Plotter y vinil"** en Taller·Precios (era su pedido explícito:
+  *"un recuadro con pestañas para que fuera mecánico y después conectar el
+  motor al chat"* — se hizo al revés y él lo notó).
+- `EDITOR/texto_a_corte.py` — palabras a corte, con **soldado automático** de
+  las cursivas (sin él la plotter corta los empalmes y parte la letra) y aviso
+  cuando hay trazos que no se despican.
+- Endpoints `/taller/vinil/precio` y `/taller/vinil/config`.
+
+### Datos suyos capturados hoy
+- Rollo de **vinil textil: 58 cm** de ancho.
+- Cobró **$150** por poner las letras de 30×20 (su lista decía $148).
+- `RDWorksV8` (el software del láser) tiene su biblioteca de parámetros en
+  `E:\Nueva carpeta\System\` — **Table.xml sin revisar**; si trae sus
+  velocidades reales, AURORA podría cotizar con ellas en vez de estimar.
+
+---
+
+## 🎯 DÓNDE QUEDAMOS — 2026-08-07
 
 **293 pruebas pasan.** Último commit `2a5c7e5`, todo en GitHub.
 
@@ -23,12 +81,12 @@
 - `corel_core.cerrar_a_curvas_y_publicar()` — **nunca con Corel abierto**
 
 ### Roto o pendiente, con el diagnóstico ya hecho
-1. **El 50% no se aplica.** `_adaptar_diseno_real` entiende la escala (el
-   regex la saca bien) pero el archivo sale sin escalar. Bug real, acotado.
-2. **Casa de Calamardo**: devuelve `NO_HAY_RANURAS_SUELTAS`. Anuar lo
-   desmintió —*"todo es encastres"*, y él ya la armó una vez— así que **es
-   falla de detección**. Sospecha sin confirmar: encastres dentro de BLOCKs
-   que `msp` no ve.
+1. ~~El 50% no se aplica~~ → **NUNCA FUE UN BUG DE ESCALA** (2026-08-08). El
+   archivo sí salía a la mitad; lo que fallaba era el mensaje, que decía «el
+   tamaño NO cambió» siempre. Ver la sección de 2026-08-08.
+2. ~~Calamardo: sospecha de BLOCKs~~ → **la sospecha era falsa**. Es el
+   contorno partido en segmentitos. Resuelto a medias: 30 de ~50 encastres.
+   Ver la sección de 2026-08-08.
 3. **18 mensajes de campaña sin enviar.** No es un bug: **la cuota mensual de
    Green API se agotó** (plan gratis, 20 mensajes, y solo deja hablar con 3
    números). Están listos en `Downloads\PENDIENTES_campana_18.txt`.
