@@ -52,6 +52,27 @@ partida ese patrón no aparece nunca.
   cuando hay trazos que no se despican.
 - Endpoints `/taller/vinil/precio` y `/taller/vinil/config`.
 
+### 💾 LA REVISIÓN DE LAS MEMORIAS (2026-08-08, tarde)
+
+Se revisaron **F:**, **E:** y **D:** completas. Hallazgos que cambian cosas:
+
+| hallazgo | qué significa |
+|---|---|
+| **`normalizador_comandos.py`** — 138 correcciones de cómo la voz lo oye mal, escritas por él hace meses | Era el pendiente **#55**, ya resuelto sin saberlo. **13 portadas** a `perfil_anuar.py`; las otras 45 rompían el taller (`hojas → sheets`) |
+| **`shortcut.py` + `configure_nexus.py`** | Las piezas de los pendientes **#47** y **#51** (instalador) |
+| **Los 4 publicadores de `ion_master_nexus` son FALSOS** | Duermen 50 ms, inventan la URL con MD5 y devuelven `success=True`. Confirma por qué TikTok/YouTube/IG **nunca** funcionaron |
+| **`AION_MASTER_VOZ`** son 5 líneas que reproducen un .wav | Los 27 MB son solo el empaquetado. **No es la voz.** Confirmado con su `.spec` |
+| **E: está en SOLO LECTURA** (`IsReadOnly=True`) | La memoria se está muriendo. Copia en curso a `C:\RESCATE_USB_E` |
+| **F: formateada** en exFAT, etiqueta ANUAR | Estaba sana; la que había que vaciar era la otra |
+| Las 3 USB reportan el **mismo número de serie** `0000000005` | Por hardware no se pueden distinguir. Dos ADATA idénticas de 29.5 GB |
+
+**Su láser es un 1390 de 100 W** (cama 1300 × 900 mm) → y de ahí sale un hecho
+que nadie había puesto junto: **la hoja de MDF de 1220 × 2440 NO cabe entera**.
+Hay que partirla en 3 tiras. `cotizar_corte()` ya avisa cuando algo no cabe.
+
+**Su controlador es un RDC6445G.** Su nota recomienda RDWorks 8.01.60 y tiene
+instalada la 8.01.71.013 — sin verificar si eso le afecta.
+
 ### Datos suyos capturados hoy
 - Rollo de **vinil textil: 58 cm** de ancho.
 - Cobró **$150** por poner las letras de 30×20 (su lista decía $148).
