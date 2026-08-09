@@ -63,6 +63,45 @@ def _long_entidad(e) -> float:
     return 0.0
 
 
+def _cabe_en_la_maquina(ancho_mm: float, alto_mm: float) -> dict:
+    """¿Este diseño entra en su láser, o se va a enterar con el material puesto?
+
+    Su máquina es una 1390: la cama mide 1300 × 900 mm. La hoja de MDF mide
+    1220 × 2440, así que **la hoja completa no entra** —hay que partirla en
+    tiras— y un diseño largo puede caber en la hoja y aun así no caber en la
+    máquina. Ese error se descubre normalmente cuando ya se cargó el material
+    y se cerró la tapa (2026-08-08).
+
+    Se prueba en las dos orientaciones: girar la pieza es gratis.
+    """
+    try:
+        cfg = json.loads((ROOT / "CONFIG" / "maquinas.json")
+                         .read_text(encoding="utf-8"))
+        cama = cfg.get("laser", {}).get("area_de_corte_mm")
+        if not cama:
+            return {"sabemos": False}
+        cx, cy = float(cama[0]), float(cama[1])
+    except Exception:
+        return {"sabemos": False}
+
+    a, b = float(ancho_mm), float(alto_mm)
+    derecho = a <= cx and b <= cy
+    girado = b <= cx and a <= cy
+    r = {"sabemos": True, "cabe": derecho or girado,
+         "cama_mm": [cx, cy], "girando": (not derecho) and girado}
+    if not r["cabe"]:
+        sobra_x = max(0.0, min(a, b) - cy)
+        sobra_y = max(0.0, max(a, b) - cx)
+        r["detalle"] = (
+            f"NO CABE en tu 1390 ({cx:g}×{cy:g} mm). El diseño mide "
+            f"{a:.0f}×{b:.0f} mm y se pasa por "
+            + (f"{sobra_y:.0f} mm de largo" if sobra_y else "")
+            + (" y " if sobra_x and sobra_y else "")
+            + (f"{sobra_x:.0f} mm de ancho" if sobra_x else "")
+            + ". Hay que partirlo en piezas o cortarlo en otro lado.")
+    return r
+
+
 def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 15.0,
                   margen_pct: float = 30.0, cortar_recuadro: bool = True,
                   merma_pct: float = 0.0) -> dict:
@@ -136,6 +175,7 @@ def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 15.0,
         "status": "ok",
         "archivo": p.name,
         "medida_cm": f"{ancho_cm:.1f} x {alto_cm:.1f}",
+        "cabe_en_la_maquina": _cabe_en_la_maquina(ancho_mm, alto_mm),
         "area_recuadro_cm2": round(area_recuadro_cm2, 1),
         "piezas_aprox": piezas,
         "longitud_corte_m": round(long_m, 2),

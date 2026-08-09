@@ -15,9 +15,16 @@
       "https://www.rdacs.com/en/download",
       "https://www.ruidacontroller.com/download/"
     ],
-    "area_de_corte_mm": null,
-    "potencia_watts": null,
-    "_pendiente": "Falta el area de corte y la potencia. Sin el area, AURORA no puede avisar cuando una pieza NO CABE en la maquina, que es justo el error que se descubre hasta que ya se cargo el material.",
+    "modelo": "1390",
+    "area_de_corte_mm": [1300, 900],
+    "potencia_watts": 100,
+    "_modelo": "El 1390 se llama asi por su cama: 1300 x 900 mm. Tubo CO2 de 100 W. Dato de Anuar, 2026-08-08.",
+
+    "_LA_HOJA_NO_CABE_ENTERA": {
+      "problema": "Su hoja de MDF mide 1220 x 2440 mm y la cama mide 1300 x 900. El ancho entra, el largo NO: sobran 1540 mm.",
+      "como_se_parte": "Una hoja completa se corta en 3 tiras: 1220x900, 1220x900 y 1220x640.",
+      "por_que_importa": "Un diseno de mas de 900 mm en su lado corto NO SE PUEDE CORTAR en esta maquina, por mas que quepa en la hoja. Ese error se descubre normalmente cuando el material ya esta cargado y la tapa cerrada."
+    },
     "costo_minuto_mxn": 8.0,
     "_costo_de": "CONFIG/precios_base.json, capturado por el",
     "kerf_mm": 0.2,
