@@ -52,6 +52,16 @@ partida ese patrón no aparece nunca.
   cuando hay trazos que no se despican.
 - Endpoints `/taller/vinil/precio` y `/taller/vinil/config`.
 
+### ⏳ QUEDÓ CORRIENDO AL CERRAR LA SESIÓN
+**Copia de rescate de la USB E:** `robocopy E:\ C:\RESCATE_USB_E /E /R:1 /W:1`
+Iba en **4.91 GB de 25.6** cuando se cerró. E: está en SOLO LECTURA y lee muy
+lento —se está muriendo—, así que tarda horas. Para saber cómo quedó:
+
+    Get-Content C:\RESCATE_USB_E\_copia.log -Tail 20   ← el resumen y qué falló
+
+_Error de configuración a no repetir: se le puso `/NFL /NDL` y por eso el
+registro no dice en qué archivo va mientras corre, solo el resumen final._
+
 ### 💾 LA REVISIÓN DE LAS MEMORIAS (2026-08-08, tarde)
 
 Se revisaron **F:**, **E:** y **D:** completas. Hallazgos que cambian cosas:
