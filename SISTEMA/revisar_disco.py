@@ -229,6 +229,191 @@ def rescatar_chks(chks: list, destino: Path,
             "copiados": dict(copiados), "total": sum(copiados.values())}
 
 
+VIDEO_EXT = (".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp", ".m4v")
+
+
+def _huella(ruta: Path, tam: int) -> str:
+    """Identifica un archivo grande sin leerlo entero.
+
+    Se toman el tamaño y tres mordidas —principio, medio y final—. Para dos
+    videos, que sean idénticos en esos tres puntos Y en el tamaño exacto es
+    prueba suficiente; leer 5 GB completos desde una memoria dañada tardaría
+    una hora y no diría nada nuevo.
+    """
+    import hashlib
+    h = hashlib.sha1(str(tam).encode())
+    try:
+        with open(ruta, "rb") as f:
+            h.update(f.read(262144))
+            if tam > 786432:
+                f.seek(tam // 2)
+                h.update(f.read(262144))
+                f.seek(max(0, tam - 262144))
+                h.update(f.read(262144))
+    except Exception:
+        return ""
+    return h.hexdigest()
+
+
+def inventario_videos(origen: str) -> dict:
+    """Todos los videos de un disco: los sueltos y los que van dentro de zips.
+
+    De los que están dentro de un zip se usa el CRC que el propio zip ya trae
+    en su índice: no hay que descomprimir nada para saber si es el mismo.
+    """
+    import zipfile
+    base = Path(origen)
+    sueltos, en_zip, zips_rotos = [], [], []
+
+    for dp, _dn, fn in os.walk(base, onerror=lambda e: None):
+        if "FOUND.000" in dp:
+            continue
+        for n in fn:
+            p = Path(dp) / n
+            ext = p.suffix.lower()
+            try:
+                tam = p.stat().st_size
+            except Exception:
+                continue
+            if ext in VIDEO_EXT:
+                sueltos.append({"ruta": p, "nombre": n, "tam": tam})
+            elif ext == ".zip":
+                try:
+                    z = zipfile.ZipFile(p)
+                    for i in z.infolist():
+                        if Path(i.filename).suffix.lower() in VIDEO_EXT:
+                            en_zip.append({"zip": p, "interno": i.filename,
+                                           "nombre": Path(i.filename).name,
+                                           "tam": i.file_size, "crc": i.CRC})
+                except Exception as e:
+                    zips_rotos.append((str(p), type(e).__name__))
+    return {"sueltos": sueltos, "en_zip": en_zip, "zips_rotos": zips_rotos}
+
+
+def consolidar_videos(origen: str, destino: str,
+                      solo_plan: bool = True,
+                      comparar_contra: str = "") -> dict:
+    """Copia a `destino` los videos que de verdad faltan, sin repetir ninguno.
+
+    TRES FILTROS, EN ESTE ORDEN, DEL MÁS BARATO AL MÁS CARO:
+      1. contra lo que ya hay en destino, por nombre y tamaño
+      2. entre los del propio origen, por huella real de contenido
+      3. los de dentro de los zips, por su CRC y tamaño
+
+    Con `solo_plan=True` NO COPIA NADA: dice qué haría. Mover gigas sin haber
+    visto la cuenta primero es como cortar la hoja sin medir.
+    """
+    import zipfile
+    dest = Path(destino)
+    inv = inventario_videos(origen)
+
+    # 1 · lo que YA TIENE, para no traérselo dos veces.
+    # OJO: se compara contra su videoteca completa, no contra la carpeta nueva
+    # a la que se va a copiar —que está vacía y no descartaría nada—. Es el
+    # error que casi le duplica 4.89 GB (2026-08-08).
+    revisar_en = Path(comparar_contra) if comparar_contra else dest
+    ya = {}
+    for dp, _dn, fn in os.walk(revisar_en, onerror=lambda e: None):
+        for n in fn:
+            if Path(n).suffix.lower() not in VIDEO_EXT:
+                continue
+            p = Path(dp) / n
+            try:
+                ya[(n.lower(), p.stat().st_size)] = p
+            except Exception:
+                continue
+
+    # 2 · los sueltos, por huella de contenido
+    vistos, nuevos_sueltos, repetidos = {}, [], 0
+    for v in inv["sueltos"]:
+        if (v["nombre"].lower(), v["tam"]) in ya:
+            repetidos += 1
+            continue
+        hh = _huella(v["ruta"], v["tam"])
+        if not hh or hh in vistos:
+            repetidos += 1
+            continue
+        vistos[hh] = v["ruta"]
+        nuevos_sueltos.append(v)
+
+    # 3 · los de dentro de los zips, por CRC + tamaño
+    crc_vistos, nuevos_zip = set(), []
+    tam_sueltos = {(v["nombre"].lower(), v["tam"]) for v in inv["sueltos"]}
+    for v in inv["en_zip"]:
+        clave = (v["crc"], v["tam"])
+        if clave in crc_vistos:
+            repetidos += 1
+            continue
+        if (v["nombre"].lower(), v["tam"]) in ya or \
+           (v["nombre"].lower(), v["tam"]) in tam_sueltos:
+            repetidos += 1
+            continue
+        crc_vistos.add(clave)
+        nuevos_zip.append(v)
+
+    peso = sum(v["tam"] for v in nuevos_sueltos) + \
+        sum(v["tam"] for v in nuevos_zip)
+    plan = {"status": "PLAN", "nuevos_sueltos": len(nuevos_sueltos),
+            "nuevos_zip": len(nuevos_zip), "repetidos": repetidos,
+            "peso": peso, "zips_rotos": inv["zips_rotos"],
+            "total_origen": len(inv["sueltos"]) + len(inv["en_zip"]),
+            "ya_tenia": len(ya), "destino": str(dest)}
+    if solo_plan:
+        return plan
+
+    # ── copiar de verdad
+    import shutil
+    dest.mkdir(parents=True, exist_ok=True)
+    copiados, fallos = 0, []
+    for v in nuevos_sueltos:
+        d = dest / v["nombre"]
+        n = 2
+        while d.exists():
+            d = dest / f"{Path(v['nombre']).stem}__{n}{Path(v['nombre']).suffix}"
+            n += 1
+        try:
+            shutil.copy2(v["ruta"], d)
+            copiados += 1
+        except Exception as e:
+            fallos.append((str(v["ruta"]), type(e).__name__))
+    for v in nuevos_zip:
+        d = dest / v["nombre"]
+        n = 2
+        while d.exists():
+            d = dest / f"{Path(v['nombre']).stem}__{n}{Path(v['nombre']).suffix}"
+            n += 1
+        try:
+            with zipfile.ZipFile(v["zip"]) as z, z.open(v["interno"]) as f, \
+                    open(d, "wb") as g:
+                shutil.copyfileobj(f, g, 1024 * 1024)
+            copiados += 1
+        except Exception as e:
+            fallos.append((f"{v['zip']}::{v['interno']}", type(e).__name__))
+    plan.update({"status": "OK", "copiados": copiados, "fallos": fallos})
+    return plan
+
+
+def _texto_videos(r: dict) -> str:
+    s = [f"🎬 **Videos** — {r['total_origen']} encontrados en el origen",
+         f"   en el destino ya había **{r['ya_tenia']}**",
+         f"   repetidos que NO se traen: **{r['repetidos']}**",
+         f"   **nuevos: {r['nuevos_sueltos']} sueltos + {r['nuevos_zip']} "
+         f"dentro de zips** = {_mb(r['peso'])}"]
+    if r["zips_rotos"]:
+        s.append("\n   ⚠️ Zips que no abren (su contenido se perdió):")
+        for z, err in r["zips_rotos"]:
+            s.append(f"      {z}  ({err})")
+    if r.get("status") == "OK":
+        s.append(f"\n✅ **{r['copiados']} copiados** a {r['destino']}")
+        if r["fallos"]:
+            s.append(f"   ⚠️ {len(r['fallos'])} no se pudieron leer:")
+            for f, e in r["fallos"][:10]:
+                s.append(f"      {f}  ({e})")
+    else:
+        s.append(f"\n   _Esto es el plan. Nada se ha copiado todavía._")
+    return "\n".join(s)
+
+
 def _texto(r: dict, chk: dict | None = None) -> str:
     if r.get("status") != "OK":
         return f"No se pudo leer {r.get('detalle')}"
