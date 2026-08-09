@@ -53,14 +53,30 @@ partida ese patrón no aparece nunca.
 - Endpoints `/taller/vinil/precio` y `/taller/vinil/config`.
 
 ### ⏳ QUEDÓ CORRIENDO AL CERRAR LA SESIÓN
-**Copia de rescate de la USB E:** `robocopy E:\ C:\RESCATE_USB_E /E /R:1 /W:1`
-Iba en **4.91 GB de 25.6** cuando se cerró. E: está en SOLO LECTURA y lee muy
-lento —se está muriendo—, así que tarda horas. Para saber cómo quedó:
 
-    Get-Content C:\RESCATE_USB_E\_copia.log -Tail 20   ← el resumen y qué falló
+**Copia de rescate de la USB E:** (está en SOLO LECTURA, se está muriendo)
 
-_Error de configuración a no repetir: se le puso `/NFL /NDL` y por eso el
-registro no dice en qué archivo va mientras corre, solo el resumen final._
+    robocopy E:\ C:\RESCATE_USB_E /E /R:0 /W:0 /MAX:52428800
+    Get-Content C:\RESCATE_USB_E\_copia_chicos.log -Tail 30
+
+**LA LECCIÓN, que costó una hora:** el primer intento fue copiar los 25.6 GB
+completos con `/R:1 /W:1`. Se **atoró** en un archivo dañado a los 4.91 GB y
+ahí se quedó. Yo dije "va lento pero avanza" — midiendo dos veces con dos
+minutos de separación resultó **0.00 MB de avance**. Estaba muerto, no lento.
+_Con un disco que se muere hay que medir, no suponer._
+
+La estrategia que SÍ funcionó:
+  · `/MAX:52428800` — solo archivos de hasta 50 MB. Lo irreemplazable de E:
+    (el `Key.xml` del láser, la carpeta System de RDWorks, configuraciones)
+    **todo pesa poco**. Los grandes son `AION_LEGALegacy.zip` de 1.36 GB y el
+    instalador de RDWorks, que su propia nota dice que se baja del sitio
+    oficial.
+  · `/R:0 /W:0` — cero reintentos: si un archivo no se lee, se salta al
+    instante en vez de pelearse con él.
+  · **sin** `/NFL /NDL` — el primer intento los llevaba y por eso no se veía
+    en qué archivo iba. Error a no repetir.
+
+Resultado inmediato del cambio: de **29 archivos a 188** en un minuto.
 
 ### 💾 LA REVISIÓN DE LAS MEMORIAS (2026-08-08, tarde)
 
