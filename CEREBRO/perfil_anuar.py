@@ -29,6 +29,35 @@ import re
 # Cómo escribe Anuar → cómo lo esperan los candados. Cada línea salió de un
 # mensaje REAL suyo, no de suponer cómo escribiría.
 ERRORES_REALES = {
+    # ── DE CÓMO LA MÁQUINA LO OYE, no de cómo teclea ────────────────────
+    # Rescatadas el 2026-08-08 de `normalizador_comandos.py`, un archivo suyo
+    # que llevaba meses perdido en una USB. Son 138 correcciones que él fue
+    # anotando cada vez que el reconocimiento de voz le entendió mal. Eso no
+    # se inventa en un escritorio: se gana hablándole a la máquina.
+    #
+    # SE PORTARON SOLO ESTAS, y el motivo importa: las otras 45 mapeaban al
+    # vocabulario interno de NEXUS y aquí ROMPERÍAN cosas. La peor era
+    # `"hojas" -> "sheets"`: en su taller las hojas son las de MDF, y con esa
+    # regla «¿cuántas hojas de MDF ocupo?» dejaría de entenderse. Igual con
+    # `agenda -> calendar` (AURORA tiene motor de agenda) y `nota -> notepad`.
+    # Otras 8 sobran porque `_norm_txt` ya quita los acentos.
+    #
+    # Las que quedan son fonéticas puras de nombres propios: no hay forma de
+    # que le quiten el sentido a una frase.
+    "fase book": "facebook", "fasebuk": "facebook",
+    "yutuf": "youtube", "yutub": "youtube",
+    "guasap": "whatsapp", "guatsap": "whatsapp", "whatsap": "whatsapp",
+    "tik tok": "tiktok",
+    "has tag": "hashtag", "hash tag": "hashtag",
+    "hash tags": "hashtag", "hashtags": "hashtag",
+    "ali express": "aliexpress",
+    # OJO con estas: AURORA ya escribía "mercado libre" SEPARADO, y el
+    # normalizador de voz lo escribía JUNTO. Al portarlo tal cual quedaron dos
+    # reglas opuestas —"mercado libre"→"mercadolibre" y la inversa— que se
+    # voltean una a la otra y dejan el texto igual, o distinto según el orden
+    # del diccionario. Se respeta la convención de AURORA: separado.
+    "mpago": "mercado pago",
+
     # Programas y herramientas
     "coreldrau": "corel", "coreldraw": "corel", "corell": "corel",
     "watsapp": "whatsapp", "watsap": "whatsapp", "wats": "whatsapp",
