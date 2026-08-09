@@ -94,6 +94,43 @@ def _puntos(e) -> list:
     return []
 
 
+def _unir_colineales(pts: list, grados: float = 6.0) -> tuple:
+    """Une los tramos casi rectos y dice de dónde salió cada punto que queda.
+
+    POR QUÉ HACE FALTA (2026-08-08, casa de Calamardo). En un diseño con
+    curvas, cada lado recto de un encastre viene partido en decenas de
+    segmentitos de medio milímetro —lo que dejó el vectorizado de la figura—.
+    El buscador de dientes mira tres segmentos seguidos, y con la pieza
+    partida así ese patrón no aparece nunca: encontraba **cero** encastres en
+    un archivo que los tiene. Uniendo lo casi recto aparecieron **85**, con la
+    profundidad de 3.0 mm que es justo el grosor del material.
+
+    Devuelve (puntos_unidos, indices_en_el_original). Los índices importan
+    tanto como los puntos: la detección se hace sobre la versión simplificada,
+    pero LA MODIFICACIÓN SE APLICA SOBRE EL ORIGINAL. Guardar el simplificado
+    dejaría la cabeza de Calamardo hecha un polígono.
+    """
+    n = len(pts)
+    if n < 3:
+        return list(pts), list(range(n))
+    lim = math.cos(math.radians(grados))
+    salida, indices = [pts[0]], [0]
+    for i in range(1, n):
+        a = salida[-1]
+        b = pts[i]
+        c = pts[(i + 1) % n]
+        v1 = (b[0] - a[0], b[1] - a[1])
+        v2 = (c[0] - b[0], c[1] - b[1])
+        l1, l2 = math.hypot(*v1), math.hypot(*v2)
+        if l1 < 1e-9 or l2 < 1e-9:
+            continue
+        cos = (v1[0] * v2[0] + v1[1] * v2[1]) / (l1 * l2)
+        if cos < lim:                       # aquí sí hay una esquina de verdad
+            salida.append(b)
+            indices.append(i)
+    return salida, indices
+
+
 def detectar_grosor(ruta: Path) -> dict:
     """Qué grosor de material usa este diseño, por repetición de medidas."""
     import ezdxf
@@ -107,7 +144,11 @@ def detectar_grosor(ruta: Path) -> dict:
     tipos = collections.Counter()
     for e in msp:
         tipos[e.dxftype()] += 1
-        pts = _puntos(e)
+        # Se mide sobre el contorno con los tramos rectos ya unidos: en un
+        # diseño con curvas, medir segmento por segmento cuenta los pedacitos
+        # del vectorizado y no los lados de los encastres. En Calamardo eso
+        # daba 1.5 mm cuando el material es de 3.0 (2026-08-08).
+        pts, _ = _unir_colineales(_puntos(e))
         for i in range(len(pts) - 1):
             L = math.dist(pts[i], pts[i + 1])
             if MIN_GROSOR <= L <= MAX_GROSOR:
@@ -416,16 +457,22 @@ def _adaptar_dientes(pts: list, viejo: float, nuevo: float, tol: float = 0.3) ->
 
     Devuelve (puntos_nuevos, cuántos dientes se ajustaron).
     """
-    q = _limpiar(pts)
+    # Se BUSCA sobre el contorno con los rectos unidos y se MODIFICA sobre el
+    # original: así el encastre se ajusta y la curva de la pieza no se toca.
+    # OJO: se une sobre los puntos CRUDOS, no sobre los limpiados. `_limpiar`
+    # junta lo que está a menos de 0.25 mm y en un contorno vectorizado eso ya
+    # deforma el encastre antes de buscarlo: pasando por ahí se encontraban 9
+    # dientes en Calamardo, y sobre el crudo aparecen los ~50 reales.
+    q, idx = _unir_colineales(pts)
     if len(q) < 5:
         return pts, 0
     delta = nuevo - viejo
-    fuera = list(q)
+    fuera = list(pts)
     ajustados = 0
     i = 1
-    while i < len(fuera) - 2:
+    while i < len(q) - 2:
         # Tres segmentos seguidos: sale, avanza, regresa.
-        a, b, c, d = fuera[i - 1], fuera[i], fuera[i + 1], fuera[i + 2]
+        a, b, c, d = q[i - 1], q[i], q[i + 1], q[i + 2]
         sale = (b[0] - a[0], b[1] - a[1])
         avanza = (c[0] - b[0], c[1] - b[1])
         regresa = (d[0] - c[0], d[1] - c[1])
@@ -438,10 +485,14 @@ def _adaptar_dientes(pts: list, viejo: float, nuevo: float, tol: float = 0.3) ->
                 and l_avanza > 0.5
                 and abs(sale[0] * avanza[0] + sale[1] * avanza[1]) < 0.2 * l_sale * l_avanza
                 and (sale[0] * regresa[0] + sale[1] * regresa[1]) < 0):
-            # La punta del diente son b y c: se mueven en la dirección de salida.
+            # La punta del diente va de b a c. En el contorno original eso no
+            # son dos puntos sino TODO el tramo entre ellos —los pedacitos que
+            # dejó el vectorizado—, y hay que mover el tramo completo o la
+            # punta se rompe.
             ux, uy = sale[0] / l_sale, sale[1] / l_sale
-            fuera[i] = (b[0] + ux * delta, b[1] + uy * delta)
-            fuera[i + 1] = (c[0] + ux * delta, c[1] + uy * delta)
+            for k in range(idx[i], idx[i + 1] + 1):
+                p = fuera[k]
+                fuera[k] = (p[0] + ux * delta, p[1] + uy * delta)
             ajustados += 1
             i += 3
             continue
@@ -624,7 +675,7 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
     return {"status": "OK", "archivo": str(salida),
             "grosor_viejo": viejo, "grosor_nuevo": grosor_nuevo,
             "ranuras_ajustadas": ajustadas, "grabados_marcados": marcados, "dientes": dientes,
-            "contornos": contornos,
+            "contornos": contornos, "escala": escala,
             "sin_tocar": sin_tocar,
             "kb": round(salida.stat().st_size / 1024, 1)}
 
@@ -661,8 +712,15 @@ def _texto(r: dict, ruta: Path = None) -> str:
         detalle.append(f"{r['ranuras_ajustadas']} ranuras")
     if r.get("dientes"):
         detalle.append(f"{r['dientes']} dientes del contorno")
+    # QUÉ PASÓ CON EL TAMAÑO, DE VERDAD. Antes esta línea decía siempre «el
+    # tamaño NO cambió», escrito a mano — aunque se hubiera escalado al 50%.
+    # Es el tipo de frase que hace dudar de todo lo demás: la herramienta hacía
+    # bien su trabajo y luego mentía sobre él (2026-08-08).
+    esc = r.get("escala", 1.0) or 1.0
+    tam = ("el tamaño NO cambió" if abs(esc - 1.0) < 1e-9
+           else f"y el diseño quedó al **{esc * 100:g}%**")
     return (f"✅ Adaptado de **{r['grosor_viejo']} mm** a **{r['grosor_nuevo']} mm**\n"
-            f"   {' y '.join(detalle) or 'nada'} · el tamaño NO cambió\n\n"
+            f"   {' y '.join(detalle) or 'nada'} · {tam}\n\n"
             f"📁 `{r['archivo']}`  ({r['kb']} KB)\n"
             f"_El original quedó intacto._{aviso}\n\n"
             "**Corta la primera en retazo.** Esto ajusta la geometría, no "

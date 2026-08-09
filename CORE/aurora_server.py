@@ -488,6 +488,38 @@ class EstadoReq(BaseModel):
     estado: str
 
 
+# ── PLOTTER Y VINIL ─────────────────────────────────────────────────────
+# El 2026-08-08 AURORA inventó un precio de vinil («entre $500 y $1,500»)
+# teniendo la lista real de Anuar guardada. Esto la conecta al panel para que
+# se cotice a mano igual que se cotiza el láser.
+def _cot_vinil():
+    import importlib.util as _ilu
+    _s = _ilu.spec_from_file_location(
+        "cotizador_vinil", _ROOT / "TALLER" / "cotizador_vinil.py")
+    _m = _ilu.module_from_spec(_s)
+    _s.loader.exec_module(_m)
+    return _m
+
+
+@app.get("/taller/vinil/precio", tags=["Taller"])
+async def taller_vinil_precio(ancho: float, alto: float, colocar: bool = False):
+    """Precio de un trabajo de vinil según SU escalera real de precios."""
+    return await asyncio.to_thread(_cot_vinil().precio_de_lista,
+                                   ancho, alto, colocar)
+
+
+@app.get("/taller/vinil/config", tags=["Taller"])
+async def taller_vinil_config(tipo: str = ""):
+    """Los datos capturados y los que faltan por capturar."""
+    return await asyncio.to_thread(_cot_vinil().config, tipo)
+
+
+@app.post("/taller/vinil/config", tags=["Taller"])
+async def taller_vinil_guardar(datos: dict):
+    """Guarda los precios de vinil que capturó Anuar en el panel."""
+    return await asyncio.to_thread(_cot_vinil().guardar, datos)
+
+
 @app.post("/taller/cotizar", tags=["Taller"])
 async def taller_cotizar(req: CotizarReq):
     """Cotización determinista con precios REALES del catálogo (no inventa)."""

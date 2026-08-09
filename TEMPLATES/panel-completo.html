@@ -553,6 +553,7 @@ section.active{display:block}
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button id="tpq-tab-a" class="btn btn-purple" onclick="tpqTab('a')" style="flex:1">💲 Precios y materiales</button>
         <button id="tpq-tab-b" class="btn" onclick="tpqTab('b')" style="flex:1;background:#1a2431;color:#e5e7eb">🧵 Cotizar prendas</button>
+        <button id="tpq-tab-c" class="btn" onclick="tpqTab('c')" style="flex:1;background:#1a2431;color:#e5e7eb">✂️ Plotter y vinil</button>
       </div>
       <div id="tpq-a">
       <div class="grid-2">
@@ -615,6 +616,38 @@ section.active{display:block}
           <label style="display:block;margin-top:10px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="cs-tarjeta" onchange="csCotizar()"> Pago con tarjeta (+4%)</label>
           <div id="cs-totales" style="margin-top:10px;border-top:1px solid #1f2937;padding-top:10px"></div>
           <button class="btn" onclick="CSCART=[];csCotizar()" style="margin-top:10px;background:#1a2431;color:#e5e7eb;font-size:12px">Vaciar</button>
+        </div>
+      </div>
+      </div>
+
+      <!-- ══ PLOTTER Y VINIL ══
+           El 2026-08-08 AURORA inventó un precio de vinil («entre $500 y
+           $1,500») teniendo esta lista guardada. Aquí se cotiza a mano, con
+           los mismos números que usa el chat: una sola fuente de verdad. -->
+      <div id="tpq-c" style="display:none">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Cotizar trabajo de vinil</h3>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">El precio sale de tu escalera real de precios, no de un modelo. Si son varias piezas del mismo trabajo, agrégalas todas: se suman las <b>áreas</b>, no los precios.</p>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end;flex-wrap:wrap">
+            <label style="font-size:12px;color:#9ca3af">Ancho cm<br><input id="pv-ancho" type="number" step="0.5" value="30" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+            <label style="font-size:12px;color:#9ca3af">Alto cm<br><input id="pv-alto" type="number" step="0.5" value="20" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+            <button class="btn btn-sm" onclick="pvAgregar()" style="background:#059669;color:#fff">➕ Agregar pieza</button>
+          </div>
+          <div id="pv-piezas" style="margin-top:10px;font-size:13px;color:#9ca3af">Sin piezas todavía.</div>
+          <label style="display:block;margin-top:12px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="pv-colocar" onchange="pvCotizar()"> Incluye colocación / planchado</label>
+          <button class="btn btn-purple" onclick="pvCotizar()" style="margin-top:12px;width:100%">Cotizar</button>
+          <div id="pv-resultado" style="margin-top:14px;font-size:13px"></div>
+        </div>
+        <div class="card">
+          <h3>Datos del taller <span class="badge" id="pv-faltan-badge" style="display:none;background:#7f1d1d;color:#fecaca">faltan</span></h3>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Lo que no esté capturado aquí, AURORA <b>no lo inventa</b>: lo pide. Se captura una vez.</p>
+          <div id="pv-config" style="margin-top:12px;font-size:13px">Cargando...</div>
+          <button class="btn btn-purple" onclick="pvGuardarConfig()" style="margin-top:12px;width:100%">Guardar datos</button>
+          <div id="pv-config-msg" style="font-size:12px;margin-top:6px;color:#9ca3af"></div>
+
+          <h3 style="margin-top:22px">Tu escalera de precios</h3>
+          <div id="pv-escalera" style="margin-top:8px;font-size:13px;color:#9ca3af"></div>
         </div>
       </div>
       </div>
@@ -3126,11 +3159,90 @@ async function pcAbrir(){ const a=document.getElementById('pc-abrir').value.trim
 // ── TALLER · PRECIOS Y COTIZAR (módulo unificado) ──
 async function tallerpqCargar(){ tpqTab('a'); await tpCargar(); await csCargar(); }
 function tpqTab(w){
-  const a=document.getElementById('tpq-a'), b=document.getElementById('tpq-b');
-  const ta=document.getElementById('tpq-tab-a'), tb=document.getElementById('tpq-tab-b');
   const on='btn btn-purple', off='btn';
-  if(w==='b'){ a.style.display='none'; b.style.display=''; tb.className=on; tb.style.background=''; ta.className=off; ta.style.background='#1a2431'; }
-  else { b.style.display='none'; a.style.display=''; ta.className=on; ta.style.background=''; tb.className=off; tb.style.background='#1a2431'; }
+  ['a','b','c'].forEach(k=>{
+    const pane=document.getElementById('tpq-'+k), tab=document.getElementById('tpq-tab-'+k);
+    if(!pane||!tab) return;
+    const activa = (k===w);
+    pane.style.display = activa ? '' : 'none';
+    tab.className = activa ? on : off;
+    tab.style.background = activa ? '' : '#1a2431';
+  });
+  if(w==='c') pvCargar();
+}
+
+// ── PLOTTER Y VINIL ──
+// Existe por una falla concreta: el 2026-08-08 AURORA cotizó un vinil «entre
+// $500 y $1,500» teniendo la lista real de Anuar guardada. El precio de aquí
+// y el del chat salen del MISMO motor: si se corrige uno, se corrigen los dos.
+let PVPIEZAS=[];
+async function pvCargar(){
+  const c=await api('/taller/vinil/config');
+  const faltan=c.faltan||{}, v=c.valores||{};
+  const badge=document.getElementById('pv-faltan-badge');
+  const nf=Object.keys(faltan).length;
+  badge.style.display = nf ? '' : 'none';
+  if(nf) badge.textContent = nf+' por capturar';
+  const campos=['ancho_rollo_textil_cm','ancho_rollo_recorte_cm','precio_metro_textil','precio_metro_recorte','precio_hora_mano_obra'];
+  const etiq={ancho_rollo_textil_cm:'Ancho del rollo textil (cm)',ancho_rollo_recorte_cm:'Ancho del rollo de recorte (cm)',
+              precio_metro_textil:'Precio metro vinil textil ($)',precio_metro_recorte:'Precio metro vinil recorte ($)',
+              precio_hora_mano_obra:'Tu hora de trabajo ($)'};
+  document.getElementById('pv-config').innerHTML = campos.map(k=>{
+    const falta = k in faltan;
+    return `<label style="display:block;margin-bottom:8px;font-size:12px;color:${falta?'#fca5a5':'#9ca3af'}">${etiq[k]}${falta?' ⚠️':''}
+      <input id="pvc-${k}" type="number" step="0.5" value="${v[k]==null?'':v[k]}" style="width:100%;padding:8px;margin-top:3px;border-radius:8px;border:1px solid ${falta?'#7f1d1d':'#374151'};background:#0f172a;color:#e5e7eb;box-sizing:border-box"></label>`;
+  }).join('');
+  // la escalera, para que la vea y sepa de dónde sale el número
+  const muestras=[[5,5],[10,10],[20,20],[30,30],[40,40]];
+  const filas=await Promise.all(muestras.map(async m=>{
+    const r=await api(`/taller/vinil/precio?ancho=${m[0]}&alto=${m[1]}`);
+    return `<div>${m[0]}×${m[1]} cm &nbsp; <b style="color:#a78bfa">$${(r.precio||0).toFixed(2)}</b></div>`;
+  }));
+  document.getElementById('pv-escalera').innerHTML=filas.join('')+
+    '<div style="margin-top:8px;font-size:11px">Entre peldaños se interpola por área. Se edita en CONFIG/catalogo_servicios.json.</div>';
+}
+function pvAgregar(){
+  const a=parseFloat(document.getElementById('pv-ancho').value||0);
+  const b=parseFloat(document.getElementById('pv-alto').value||0);
+  if(!a||!b) return;
+  PVPIEZAS.push([a,b]); pvRenderPiezas(); pvCotizar();
+}
+function pvRenderPiezas(){
+  const d=document.getElementById('pv-piezas');
+  if(!PVPIEZAS.length){ d.innerHTML='Sin piezas todavía.'; return; }
+  d.innerHTML=PVPIEZAS.map((p,i)=>`<span style="display:inline-block;margin:2px 6px 2px 0;padding:3px 8px;border-radius:6px;background:#1a2431;color:#e5e7eb">${p[0]}×${p[1]} cm <a href="#" onclick="PVPIEZAS.splice(${i},1);pvRenderPiezas();pvCotizar();return false" style="color:#fca5a5;text-decoration:none">✕</a></span>`).join('');
+}
+async function pvCotizar(){
+  const colocar=document.getElementById('pv-colocar').checked;
+  let piezas=PVPIEZAS.slice();
+  if(!piezas.length){
+    const a=parseFloat(document.getElementById('pv-ancho').value||0);
+    const b=parseFloat(document.getElementById('pv-alto').value||0);
+    if(!a||!b){ document.getElementById('pv-resultado').innerHTML='<span style="color:#9ca3af">Pon las medidas.</span>'; return; }
+    piezas=[[a,b]];
+  }
+  // SE SUMAN LAS ÁREAS, NO LOS PRECIOS. Salió de su ejemplo real guardado:
+  // letras 10×28 + números 15×10 = $95 (pieza por pieza daría $131).
+  const area=piezas.reduce((s,p)=>s+p[0]*p[1],0);
+  const lado=Math.sqrt(area);
+  const r=await api(`/taller/vinil/precio?ancho=${lado.toFixed(2)}&alto=${lado.toFixed(2)}&colocar=${colocar}`);
+  if(r.status!=='OK'){ document.getElementById('pv-resultado').innerHTML='<span style="color:#fca5a5">No se pudo cotizar.</span>'; return; }
+  document.getElementById('pv-resultado').innerHTML=`
+    <div style="border-top:1px solid #1f2937;padding-top:10px">
+      <div style="color:#9ca3af">${piezas.length} pieza(s) · ${area.toFixed(0)} cm² en total</div>
+      <div style="margin-top:6px">corte y material &nbsp; <b>$${r.corte.toFixed(2)}</b></div>
+      ${r.colocacion?`<div>colocación &nbsp; <b>$${r.colocacion.toFixed(2)}</b></div>`:''}
+      <div style="margin-top:8px;font-size:18px;color:#a78bfa"><b>$${r.precio.toFixed(2)}</b></div>
+      <div style="margin-top:8px;font-size:11px;color:#6b7280">Interpolado entre ${(r.apoyado_en||[]).join(' y ')}.</div>
+    </div>`;
+}
+async function pvGuardarConfig(){
+  const campos=['ancho_rollo_textil_cm','ancho_rollo_recorte_cm','precio_metro_textil','precio_metro_recorte','precio_hora_mano_obra'];
+  const datos={};
+  campos.forEach(k=>{ const el=document.getElementById('pvc-'+k); if(el&&el.value!=='') datos[k]=parseFloat(el.value); });
+  const r=await api('/taller/vinil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(datos)});
+  document.getElementById('pv-config-msg').textContent = r.status==='OK' ? 'Guardado.' : 'No se pudo guardar.';
+  pvCargar();
 }
 // ── TALLER · PRECIOS / MATERIALES ──
 async function tpCargar(){

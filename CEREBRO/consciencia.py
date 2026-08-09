@@ -1104,11 +1104,97 @@ def _es_adaptar_diseno(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     if not _contiene_trigger(m, _ADAPTAR_DISENO):
         return False
-    if not _contiene_trigger(m, _SENAL_MATERIAL):
+    # "en 2.5mm" es señal de material aunque no diga la palabra: el "mm"
+    # pegado al número no lo cachaba el buscador de palabras sueltas, y así
+    # es como se dice de verdad (2026-08-08).
+    if not _contiene_trigger(m, _SENAL_MATERIAL) and not re.search(
+            r"\d\s*(?:mm|milimetros?)\b", m):
         return False
     # Una medida de por medio: el porcentaje del tamaño o el espesor. Sin
     # ningún número esto no es una orden de trabajo, es plática.
     return bool(re.search(r"\d", m))
+
+
+# ── VINIL Y PLOTTER ─────────────────────────────────────────────────────
+# El 2026-08-08 Anuar preguntó en el chat cuánto costaba unas letras en vinil
+# textil de recorte. AURORA contestó *«entre $500 y $1,500 MXN»* — un número
+# INVENTADO, teniendo su propia lista de precios de vinil guardada en
+# CONFIG/catalogo_servicios.json. El precio real de ese trabajo era $148, y él
+# lo cobró en $150. Sus palabras: *"aurora no supo cobrar"*.
+#
+# El hueco era doble: no existía el motor, y el que contestó se puso a adivinar
+# en lugar de decir que no sabía.
+_VINIL_TRIGGERS = (
+    "vinil", "vinilo", "vinil textil", "vinil de recorte", "recorte",
+    "plotter", "ploter", "cameo", "silhouette", "termotransferible",
+    "planchado", "planchar", "htv",
+)
+_DINERO_TRIGGERS = (
+    "cuanto", "cuesta", "costo", "coste", "precio", "cotiza", "cotizame",
+    "cotizacion", "cobrar", "cobro", "vale", "sale en", "presupuesto",
+)
+
+
+def _minimo_coloc(cv) -> float:
+    """Lo que cobra por colocar/planchar, de su propio catálogo."""
+    try:
+        return cv._minimo_y_colocacion()[1]
+    except Exception:
+        return 0.0
+
+
+# Lo que delata que el trabajo es de LÁSER y no de vinil. Si aparece alguno,
+# este candado no se mete: para eso está el cotizador de láser.
+_MATERIAL_LASER = ("mdf", "acrilico", "madera", "triplay", "multiplay",
+                   "laser", "lasser", "grabado", "grabar", "caja", "cajas")
+
+
+def _es_cotizar_vinil(mensaje: str) -> bool:
+    """¿Pregunta el precio de un trabajo de vinil o de corte de plotter?
+
+    También entra cuando NO dice «vinil» pero pregunta el costo de unas
+    palabras en un área — que es como lo preguntó de verdad el 2026-08-08:
+    *«la palabra coca cola y debajo osvaldo en un área de 30 cm de largo x 20
+    cm de alto, ¿qué costo tendría?»*. Ahí no cayó en ningún candado y un
+    motor suelto le inventó «entre $500 y $1,500». Un rótulo de letras en un
+    área es trabajo de plotter salvo que nombre un material de láser.
+    """
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _DINERO_TRIGGERS):
+        return False
+    if _contiene_trigger(m, _VINIL_TRIGGERS):
+        return True
+    if _contiene_trigger(m, _MATERIAL_LASER):
+        return False
+    # letras/palabras + un área con dos medidas = rótulo de recorte
+    return (_contiene_trigger(m, _TEXTO_CORTE_TRIGGERS)
+            and bool(re.search(r"\d+(?:[.,]\d+)?\s*(?:cm|mm)?\s*"
+                               r"(?:de\s*(?:largo|ancho|base)\s*)?"
+                               r"[x×por]\s*\d", m)))
+
+
+# Generar el archivo, no cotizarlo: «hazme la palabra X para vinil».
+_TEXTO_CORTE_TRIGGERS = (
+    "la palabra", "las palabras", "el nombre", "los nombres", "el texto",
+    "que diga", "el letrero", "las letras", "el rotulo",
+)
+
+
+def _es_texto_a_corte(mensaje: str) -> bool:
+    """¿Pide convertir una palabra o un nombre en archivo de corte?
+
+    Necesita que se hable de texto Y de vinil o corte. Sin lo segundo,
+    «la palabra clave» o «el nombre del cliente» caerían aquí sin venir a
+    cuento.
+    """
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _VINIL_TRIGGERS + ("corte", "cortar",
+                                                   "cortado", "rotular")):
+        return False
+    if _contiene_trigger(m, _TEXTO_CORTE_TRIGGERS):
+        return True
+    # «hazme "Oswaldo" en vinil de recorte»: lo entrecomillado ES el texto.
+    return bool(re.search(r'"[^"]{1,40}"|«[^»]{1,40}»', mensaje or ""))
 
 
 # Cadena completa: foto → sin fondo → vectorizada → DXF. Anuar la pidió el
@@ -1593,6 +1679,31 @@ _MOTORES_TALLER = {"motor_cotizador", "motor_negocios", "motor_imagenes", "motor
 # regex.
 _RE_RUTA_SOLA = re.compile(r'^["\'\s]*([A-Za-z]:\\[^\r\n"\']+?)["\'\s.]*$')
 
+# LA MISMA FALLA, TERCERA VEZ (2026-08-08). El punto del espesor en el nombre
+# —`..._2.5mm.dxf`— cortaba la ruta en `..._2.5mm`, un archivo que no existe, y
+# AURORA contestaba «dime cuál DXF adapto» con la ruta buena delante. Ya se
+# había arreglado en el validador de honestidad; vivía copiado en dos lugares
+# más. Ahora es UNA sola expresión y todos la usan.
+#
+# El truco es el lookahead: la extensión solo vale si después NO viene otra
+# letra ni otro punto.
+_RE_RUTA_ARCHIVO = re.compile(
+    r'([A-Za-z]:\\[^\r\n"\'<>|]+?\.[A-Za-z0-9]{2,5}(?![\w.]))')
+
+
+def _rutas_del_texto(texto: str) -> list:
+    """Todas las rutas de archivo que trae el texto, las que existan primero.
+
+    Se devuelven ordenadas por longitud descendente entre las que existen: si
+    dos candidatas empiezan igual, la buena es siempre la larga.
+    """
+    if not texto:
+        return []
+    todas = [m.group(1) for m in _RE_RUTA_ARCHIVO.finditer(texto)]
+    existen = sorted({r for r in todas if Path(r).exists()},
+                     key=len, reverse=True)
+    return existen or todas
+
 
 def _es_ruta_sola(mensaje: str) -> bool:
     """El mensaje es SOLO la ruta de un archivo, sin verbo ni contexto.
@@ -1629,6 +1740,14 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # esos cuatro precios mandan (2026-08-06).
     # metodo_campana va ANTES que campana_escolar: "revisa esta campaña" es
     # pedir el método, no preguntar precios de los paquetes.
+    # cotizar_vinil va ANTES que cotizar y que cotizar_dxf: el 2026-08-08
+    # AURORA le INVENTÓ un precio («entre $500 y $1,500») con su lista de
+    # precios de vinil guardada enfrente. El cotizador general no sabe de la
+    # escalera de vinil; este sí, y es el que debe contestar.
+    ("cotizar_vinil",   _es_cotizar_vinil,     "_cotizar_vinil_real",     "cotizador_vinil"),
+    # cotizar_vinil gana solo si pregunta un PRECIO. Sin palabra de dinero,
+    # «hazme la palabra X en vinil» es generar el archivo, y cae aquí.
+    ("texto_a_corte",   _es_texto_a_corte,     "_texto_a_corte_real",     "texto_a_corte"),
     ("print_and_cut",   _es_print_and_cut,     "_print_and_cut_real",     "print_and_cut"),
     ("metodo_campana",  _es_metodo_campana,    "_metodo_campana_real",    "metodo_campanas"),
     ("campana_escolar", _es_campana_escolar,   "_campana_escolar_real",   "campana_escolar"),
@@ -2705,6 +2824,113 @@ class Consciencia:
             return {"respuesta": f"No pude leer los paquetes escolares: {e}"}
         return {"respuesta": ce.responder(mensaje)}
 
+    def _medidas_cm(self, mensaje: str) -> tuple:
+        """Las dos medidas del área, en cm, como él las dice.
+
+        «30x20», «30 x 20 cm», «30cm de largo x 20 cm de alto». Si vienen en
+        milímetros se pasan a cm: la escalera de precios está en cm.
+        """
+        m = _norm_txt(mensaje)
+        g = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:cm|mm)?\s*(?:de\s*(?:largo|"
+                      r"ancho|base)\s*)?[x×por]\s*(\d+(?:[.,]\d+)?)", m)
+        if not g:
+            return (0.0, 0.0)
+        a = float(g.group(1).replace(",", "."))
+        b = float(g.group(2).replace(",", "."))
+        if "mm" in m and "cm" not in m:
+            a, b = a / 10.0, b / 10.0
+        return (a, b)
+
+    async def _cotizar_vinil_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ PLOTTER: el precio sale de SU lista, no de una adivinanza.
+
+        Este candado existe por una falla concreta del 2026-08-08: le pidió el
+        costo de unas letras en vinil textil y recibió *«entre $500 y $1,500»*.
+        Inventado. Su lista real decía $148 y él cobró $150.
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "cotizador_vinil", ROOT / "TALLER" / "cotizador_vinil.py")
+            cv = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(cv)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el cotizador de vinil: {e}"}
+
+        m = _norm_txt(mensaje)
+        ancho, alto = self._medidas_cm(mensaje)
+        if not ancho or not alto:
+            return {"respuesta": (
+                "¿De qué medida es el trabajo? Con el área te doy el precio "
+                "de tu lista.\n\n_Dímelo así:_ «cuánto cuesta un vinil de "
+                "recorte de 30x20 cm»")}
+
+        # ¿lleva colocación? Si es textil casi siempre sí; si no lo dice, se
+        # cotiza sin ella y se avisa, que es lo honesto.
+        colocar = _contiene_trigger(m, (
+            "colocad", "colocacion", "instalad", "instalacion", "puesto",
+            "puesta", "pegado", "planchado", "planchada", "aplicado",
+            "ponerla", "ponerlas", "poner"))
+
+        r = await asyncio.to_thread(cv.precio_de_lista, ancho, alto, colocar)
+        if r.get("status") != "OK":
+            return {"respuesta": (
+                "No tengo tu lista de precios de vinil a la mano. Está en "
+                "CONFIG/catalogo_servicios.json — dime los precios y la dejo.")}
+
+        t = [f"✂️ **Vinil de recorte {ancho:g} × {alto:g} cm** "
+             f"({r['area_cm2']:g} cm²)\n",
+             f"   corte y material   $ {r['corte']:.2f}"]
+        if r["colocacion"]:
+            t.append(f"   colocación         $ {r['colocacion']:.2f}")
+        t.append(f"   **TOTAL            $ {r['precio']:.2f}**\n")
+        t.append("   _Sale de tu propia lista, interpolando entre "
+                 + " y ".join(f"«{n}»" for n in r["apoyado_en"]) + "._")
+        if not colocar:
+            t.append(f"\n   Si además la pones, son "
+                     f"+${_minimo_coloc(cv):.2f} de colocación.")
+        if r["precio"] <= r["minimo"]:
+            t.append(f"\n   ⚠️ Quedó en tu mínimo de ${r['minimo']:.2f}.")
+        t.append("\n   Si son varias piezas del mismo trabajo, dímelas todas: "
+                 "se suman las **áreas**, no los precios (así lo cobras tú).")
+        return {"respuesta": "\n".join(t)}
+
+    async def _texto_a_corte_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ PLOTTER: convierte las palabras en archivo de corte real."""
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "texto_a_corte", ROOT / "EDITOR" / "texto_a_corte.py")
+            tc = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(tc)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el generador de texto: {e}"}
+
+        # Las palabras van entre comillas, o después de «la palabra / el
+        # nombre / que diga». Se respeta el ORDEN en que las dijo.
+        palabras = re.findall(r'"([^"]{1,40})"|«([^»]{1,40})»', mensaje or "")
+        textos = [a or b for a, b in palabras]
+        if not textos:
+            for g in re.finditer(
+                    r"(?:la palabra|el nombre|que diga|el texto|el rotulo)\s+"
+                    r"([a-zA-ZÁÉÍÓÚÑáéíóúñ0-9][\wÁÉÍÓÚÑáéíóúñ' -]{0,30}?)"
+                    r"(?=\s+(?:y|debajo|arriba|en|de|para|con|al)\b|[,.]|$)",
+                    mensaje or "", re.I):
+                t = g.group(1).strip()
+                if t:
+                    textos.append(t)
+        if not textos:
+            return {"respuesta": (
+                "¿Qué debe decir? Ponlo entre comillas y te lo dejo listo "
+                "para cortar.\n\n_Así:_ «hazme \"Oswaldo\" en vinil de "
+                "recorte, área de 30x20»")}
+
+        ancho, alto = self._medidas_cm(mensaje)
+        if not ancho or not alto:
+            ancho, alto = 30.0, 20.0
+        r = await asyncio.to_thread(tc.generar, textos, ancho * 10, alto * 10)
+        return {"respuesta": tc._texto(r)}
+
     async def _adaptar_diseno_real(self, mensaje: str, session_id: str = "") -> Dict:
         """Deja un DXF listo para OTRO material y, si se pide, de otro tamaño.
 
@@ -2823,17 +3049,15 @@ class Consciencia:
         Primero se busca en el mensaje; si no está, en los mensajes anteriores
         de la misma sesión.
         """
-        import re as _re
-        _RE = r'([A-Za-z]:\\[^\r\n"\']+?\.\w{2,5})\b'
-        m = _re.search(_RE, mensaje or "")
-        if m and Path(m.group(1)).exists():
-            return m.group(1)
+        for r in _rutas_del_texto(mensaje or ""):
+            if Path(r).exists():
+                return r
         for turno in reversed(self._memoria_corto.get(session_id, [])):
             if turno.get("rol") != "user":
                 continue
-            m = _re.search(_RE, turno.get("contenido") or "")
-            if m and Path(m.group(1)).exists():
-                return m.group(1)
+            for r in _rutas_del_texto(turno.get("contenido") or ""):
+                if Path(r).exists():
+                    return r
         return ""
 
     async def _foto_a_dxf_real(self, mensaje: str, session_id: str = "") -> Dict:
@@ -4372,8 +4596,8 @@ class Consciencia:
         # de las tres, con lo que de verdad se puede hacer en cada una.
         if _contiene_trigger(m, ("mapa de bits", "mapa de bit", "mapadebits",
                                  "bitmap", "rasteriza", "rasterizar")):
-            ruta_bmp = re.search(r'([A-Za-z]:\\[^\r\n"\']+?\.\w{2,4})\b', mensaje or "")
-            arch = f" (para `{_P(ruta_bmp.group(1)).name}`)" if ruta_bmp else ""
+            _rb = _rutas_del_texto(mensaje or "")
+            arch = f" (para `{_P(_rb[0]).name}`)" if _rb else ""
             return {"respuesta": (
                 f"«Mapa de bits» en Corel puede ser tres cosas distintas{arch}, y no quiero "
                 "adivinar cuál. Dime cuál y lo hago:\n\n"

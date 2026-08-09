@@ -33,6 +33,9 @@ SI_ENTIENDE = (
     "pon las hembras del dxf para mdf de 6",
     "deja los encastres de calamardo para 2.5",
     "ajusta el dxf al 120% para material de 9",              # también agranda
+    "ponlo al 70% en 2.5mm",          # sin decir "material": el mm pegado basta
+    "escalalo al 70% a 3mm",
+    "dejala al 50% en 6 milimetros",
 )
 
 NO_ES_ESTO = (
@@ -69,3 +72,34 @@ def test_va_antes_que_el_generador_de_cajas():
     el generador de cajas, que le inventaría una caja de 50 cm."""
     orden = [c[0] for c in cc._CANDADOS]
     assert orden.index("adaptar_diseno") < orden.index("generar_caja")
+
+
+# ── EL PUNTO DEL ESPESOR EN EL NOMBRE DEL ARCHIVO ───────────────────────
+# La MISMA falla, por tercera vez (2026-08-08). Sus archivos se llaman
+# `casa__50pct__2.5mm.dxf`, y el buscador de rutas cortaba en `..._2.5mm`
+# —un archivo que no existe— porque la extensión se validaba con \b. AURORA
+# contestaba «dime cuál DXF adapto» con la ruta buena delante, y él escribió:
+# *"no entiende razones"*.
+#
+# Ya se había arreglado en el validador de honestidad y vivía copiado en dos
+# lugares más. Ahora es UNA sola expresión; esta prueba existe para que no
+# vuelva por una cuarta puerta.
+NOMBRES_CON_PUNTO = (
+    r"C:\Users\Anuar\Downloads\casa de calamardo__50pct__2.5mm.dxf",
+    r"C:\dxf\Casa de bob esponja de piña __2.5mm.dxf",
+    r"C:\x\pieza_v1.2_final.svg",
+)
+
+
+def test_la_ruta_no_se_corta_en_el_punto_del_espesor():
+    for ruta in NOMBRES_CON_PUNTO:
+        halladas = cc._rutas_del_texto(f'"{ruta}"ajusta los encastres a 2.5')
+        assert ruta in halladas, f"cortó la ruta: {ruta} -> {halladas}"
+
+
+def test_la_ruta_se_lee_aunque_venga_pegada_al_texto():
+    """Él pega la ruta entrecomillada y escribe pegado, sin espacio."""
+    ruta = NOMBRES_CON_PUNTO[0]
+    m = f'"{ruta}"ajusta los encastres de este archivo para material 2.5'
+    assert ruta in cc._rutas_del_texto(m)
+    assert cc._es_adaptar_diseno(m)

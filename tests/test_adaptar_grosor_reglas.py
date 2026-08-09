@@ -107,3 +107,21 @@ def test_el_contorno_de_una_pieza_no_es_grabado():
 
 def test_una_ranura_no_es_grabado():
     assert ag._es_grabado(_rect(0, 0, 1.5, 20, 0), 1.5) is False
+
+
+def test_no_dice_que_el_tamano_no_cambio_cuando_si_cambio():
+    """La frase «el tamaño NO cambió» estaba escrita a mano y salía SIEMPRE,
+    incluso al escalar al 50% (2026-08-08). Anuar la leyó y creyó que la
+    escala estaba rota; no lo estaba —el archivo sí salía a la mitad—, la
+    herramienta mentía sobre su propio trabajo. Eso hace dudar de todo lo
+    demás, y por eso vale una prueba."""
+    base = {"status": "OK", "archivo": "x.dxf", "grosor_viejo": 1.5,
+            "grosor_nuevo": 2.5, "ranuras_ajustadas": 3, "dientes": 0,
+            "grabados_marcados": 0, "contornos": 0, "sin_tocar": 0, "kb": 1}
+
+    con_escala = ag._texto({**base, "escala": 0.5})
+    assert "NO cambió" not in con_escala
+    assert "50%" in con_escala
+
+    sin_escala = ag._texto({**base, "escala": 1.0})
+    assert "NO cambió" in sin_escala
