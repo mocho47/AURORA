@@ -109,3 +109,6 @@ AGENTES/
 
 # Pruebas sueltas de sesiones de trabajo: no son del proyecto
 scratchpad/
+
+# Modelos de voz y demas binarios pesados: no van en un repo de codigo
+MODELOS/
