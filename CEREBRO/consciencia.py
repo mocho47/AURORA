@@ -2140,8 +2140,34 @@ class Consciencia:
         # de acción, no de uno.
         _solo_memoria = _es_pregunta_de_memoria(_norm_txt(mensaje))
 
+        # LA LENGUA DE ANUAR — cómo PIDE, no cómo escribe (2026-08-10).
+        # Se le hablaron 90 frases suyas reales: 33 fallaron. Se midieron las
+        # dos hipótesis obvias antes de escribir nada: agregarle su ortografía
+        # ganó +1 de 90, y reordenar la fila habría arreglado 1 de 9 colisiones
+        # —en 8 de 9 el candado correcto NI SIQUIERA reconoció la frase—. Lo
+        # que falla es que los candados comparan contra frases memorizadas:
+        # `intuicion` tiene "que deberia hacer" pero no "en que deberia
+        # enfocarme", y falla por dos palabras.
+        # Se pregunta UNA vez y aquí, no en los 33 candados, por la misma razón
+        # de siempre: una regla en 33 lugares se despega en cuanto se toca uno.
+        # Si `intencion` no reconoce la familia devuelve None y todo sigue
+        # exactamente como antes — por eso esto no puede restar nada.
+        _intencion_anuar = None
+        try:
+            from CEREBRO import lengua_anuar as _lengua
+            _intencion_anuar = _lengua.intencion(mensaje)
+        except Exception as _e:                      # nunca tumbar el chat por esto
+            logger.debug(f"[LENGUA] no disponible ({_e})")
+
         for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
             if _solo_memoria and _nombre_candado not in ("memoria", "ver_aprendizaje"):
+                continue
+            # La intención reconocida manda sobre el orden de la fila: el que
+            # ella nombra dispara aunque su lista no calce, y los demás se
+            # hacen a un lado. Eso es lo que mata las colisiones —"traigo una
+            # jetta quiero ponerle aozoom" se lo llevaba el cotizador de
+            # catálogo en vez de servicios ATF—.
+            if _intencion_anuar and _nombre_candado != _intencion_anuar:
                 continue
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
                 continue
@@ -2150,6 +2176,10 @@ class Consciencia:
             # El disparador normal manda; lo aprendido es la segunda oportunidad.
             _por_aprendizaje = (_aprendido is not None
                                 and _aprendido.get("herramienta") == _motor_id_candado)
+            # ...y la lengua de Anuar es la tercera, que es la que atrapa
+            # "como voy" o "que sigue": frases suyas de dos palabras que
+            # ninguna de las 16 listas tiene.
+            _por_intencion = (_intencion_anuar == _nombre_candado)
             if _nombre_candado == "crear_capacidad" and not FABRICA_HABILITADA:
                 if _trigger(mensaje):
                     self._agregar_sesion(session_id, mensaje, _MSG_FABRICA_FUERA)
@@ -2158,8 +2188,11 @@ class Consciencia:
                             "temperatura_lead": "frio", "duracion_ms": ms,
                             "timestamp": inicio.isoformat()}
                 continue
-            if not _trigger(mensaje) and not _por_aprendizaje:
+            if not _trigger(mensaje) and not _por_aprendizaje and not _por_intencion:
                 continue
+            if _por_intencion and not _trigger(mensaje):
+                logger.info(f"[LENGUA] '{mensaje[:40]}' → {_nombre_candado} "
+                            f"(su lista no la reconoció; la familia sí)")
             if _por_aprendizaje and not _trigger(mensaje):
                 logger.info(f"[APRENDIDO] '{mensaje[:40]}' → {_nombre_candado} "
                             f"(parecido {_aprendido.get('parecido')})")
@@ -2195,9 +2228,29 @@ class Consciencia:
                     logger.info(f"[APRENDIÓ] '{_ap['como_lo_dijo'][:50]}' → {_motor_id_candado}")
             except Exception:
                 pass
+            # AURORA SOLO SE ACORDABA DE LO QUE NO SUPO HACER (2026-08-10).
+            # `_ctx.actualizar` —lo único que escribe interacciones_detalle—
+            # vivía nada más al final del camino genérico, y los 33 candados
+            # hacen `return` mucho antes. Resultado medido: de 441 interacciones
+            # guardadas, 394 (89%) decían "motor_analisis", que es el genérico;
+            # sus aciertos jamás se anotaron. Por eso no hay UNA sola cadena de
+            # tres pasos repetida en todo su historial: no es que no trabaje
+            # así, es que nadie lo escribió.
+            # Importa más allá del registro: sin esto, el observador que pidió
+            # Anuar no puede existir —no hay procedimientos que descubrir— y su
+            # perfil de habilidades se construye solo con sus fracasos.
+            _temp = "frio"
+            try:
+                _temp = await self._ctx.actualizar(
+                    user_id, mensaje, real["respuesta"], [_motor_id_candado],
+                    canal) or "frio"
+            except Exception as _e:
+                logger.warning(f"No se pudo anotar la interacción "
+                               f"(la respuesta SÍ se manda igual): {_e}")
             ms = round((datetime.utcnow() - inicio).total_seconds() * 1000)
             return {"respuesta": real["respuesta"], "motores_usados": [_motor_id_candado],
-                    "temperatura_lead": "frio", "duracion_ms": ms, "timestamp": inicio.isoformat()}
+                    "temperatura_lead": _temp, "duracion_ms": ms,
+                    "timestamp": inicio.isoformat()}
 
         # ENRUTADOR UNIVERSAL — última red antes del LLM genérico. Si el mensaje pide
         # OPERAR (no charla) y ningún candado directo aplicó, deja que el registro de
