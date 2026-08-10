@@ -583,9 +583,10 @@ section.active{display:block}
             <input id="cl-ruta" placeholder="Ruta del archivo (ej. C:\Users\...\diseno.dxf)" style="width:100%;padding:9px;margin-top:10px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box">
             <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:flex-end">
               <label style="font-size:12px;color:#9ca3af;flex:1;min-width:150px">Material<br><select id="cl-material" style="width:100%;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></select></label>
-              <label style="font-size:12px;color:#9ca3af">Merma %<br><input id="cl-merma" type="number" value="20" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Velocidad mm/s<br><input id="cl-vel" type="number" value="15" style="width:110px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
               <label style="font-size:12px;color:#9ca3af">Margen %<br><input id="cl-margen" type="number" value="60" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
             </div>
+            <p style="color:#6b7280;font-size:11px;margin-top:6px">Tus velocidades: <b>3&nbsp;mm → 15</b> · <b>6&nbsp;mm → 5</b> (el de 6 tarda 3× y cuesta 3×). El material se cobra por el <b>recuadro</b> que ocupa: ahí ya va el desperdicio.</p>
             <button class="btn btn-purple" onclick="clCotizar()" style="margin-top:12px;width:100%">Cotizar archivo</button>
           </div>
           <div class="card">
@@ -3265,26 +3266,37 @@ async function clMateriales(){
     || '<option value="">(sin materiales capturados)</option>';
 }
 async function clCotizar(){
+  // OJO: /taller/cotizar-dxf recibe JSON con archivo/material/velocidad_mm_s/
+  // margen_pct. La primera versión de esta función mandaba FormData con otros
+  // nombres (ruta, merma) y el servidor contestaba 422. Se cachó probándola
+  // de verdad, no leyéndola: por eso no se entrega nada sin correrlo.
   const out=document.getElementById('cl-resultado');
   const ruta=(document.getElementById('cl-ruta').value||'').trim();
   if(!ruta){ out.innerHTML='<span style="color:#fca5a5">Pon la ruta del archivo.</span>'; return; }
-  out.innerHTML='Midiendo el archivo...';
-  const fd=new FormData();
-  fd.append('ruta',ruta);
-  fd.append('material',document.getElementById('cl-material').value||'');
-  fd.append('merma',document.getElementById('cl-merma').value||'20');
-  fd.append('margen',document.getElementById('cl-margen').value||'60');
-  const r=await api('/taller/cotizar-dxf',{method:'POST',body:fd});
-  if(r.error||r.status==='ERROR'){ out.innerHTML=`<span style="color:#fca5a5">${r.detalle||r.error||'No se pudo.'}</span>`; return; }
-  const fila=(k,v)=>v==null?'':`<div>${k} &nbsp; <b>${v}</b></div>`;
-  out.innerHTML=fila('metros de corte', r.metros_corte!=null?r.metros_corte+' m':null)
-    + fila('minutos de máquina', r.minutos!=null?r.minutos:null)
-    + fila('material', r.costo_material!=null?'$'+Number(r.costo_material).toFixed(2):null)
-    + fila('máquina', r.costo_maquina!=null?'$'+Number(r.costo_maquina).toFixed(2):null)
-    + (r.cabe_en_la_maquina && r.cabe_en_la_maquina.cabe===false
-        ? `<div style="margin-top:8px;color:#fca5a5">⚠️ ${r.cabe_en_la_maquina.detalle||'No cabe en tu láser.'}</div>` : '')
-    + (r.precio!=null?`<div style="margin-top:10px;font-size:20px;color:#a78bfa"><b>$${Number(r.precio).toFixed(2)}</b></div>`:'')
-    + (r.precio==null?`<pre style="white-space:pre-wrap;color:#cbd5e1">${JSON.stringify(r,null,1)}</pre>`:'');
+  out.innerHTML='Midiendo el archivo de verdad...';
+  const r=await api('/taller/cotizar-dxf',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({archivo:ruta,
+                         material:document.getElementById('cl-material').value||'',
+                         velocidad_mm_s:parseFloat(document.getElementById('cl-vel').value)||15,
+                         margen_pct:parseFloat(document.getElementById('cl-margen').value)||60})});
+  if(r.error||r.status!=='ok'){
+    out.innerHTML=`<span style="color:#fca5a5">${r.detalle||r.error||'No se pudo medir el archivo.'}</span>`; return; }
+  const $=n=>'$'+Number(n||0).toFixed(2);
+  const cabe=r.cabe_en_la_maquina||{};
+  out.innerHTML=`
+    <div style="color:#9ca3af">${r.archivo}</div>
+    <div style="margin-top:6px">mide <b>${r.medida_cm} cm</b> · ${r.piezas_aprox} pieza(s)</div>
+    ${cabe.sabemos===false?'<div style="color:#9ca3af;margin-top:4px">No sé la cama de tu láser.</div>'
+      : cabe.cabe? `<div style="color:#22c55e;margin-top:4px">✔ Cabe en tu láser${cabe.girando?' (girándolo)':''}</div>`
+      : `<div style="color:#fca5a5;margin-top:4px">⚠️ NO cabe en tu láser (cama ${(cabe.cama_mm||[]).join('×')} mm)</div>`}
+    <div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px">
+      <div>corte &nbsp; <b>${r.longitud_corte_m} m</b> en <b>${r.tiempo_min} min</b> a ${r.velocidad_mm_s} mm/s</div>
+      <div>máquina &nbsp; <b>${$(r.costo_corte)}</b> <span style="color:#6b7280">(${$(r.costo_minuto)}/min)</span></div>
+      <div>material &nbsp; <b>${$(r.costo_material)}</b> <span style="color:#6b7280">${r.material.fraccion_hoja_pct}% de una hoja de ${r.material.nombre}</span></div>
+      ${r.costo_desperdicio?`<div>desperdicio extra &nbsp; <b>${$(r.costo_desperdicio)}</b></div>`:''}
+      <div style="margin-top:8px;font-size:20px;color:#a78bfa"><b>${$(r.total)}</b> <span style="font-size:12px;color:#6b7280">con ${r.margen_pct}% de margen</span></div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:#6b7280">El material se cobra por el recuadro que ocupa la pieza: ahí ya va el desperdicio.</div>`;
 }
 
 // ── GENERAR CAJA (hasta hoy solo salía por el chat) ──
