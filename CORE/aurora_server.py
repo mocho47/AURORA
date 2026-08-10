@@ -508,6 +508,20 @@ async def taller_vinil_precio(ancho: float, alto: float, colocar: bool = False):
                                    ancho, alto, colocar)
 
 
+@app.post("/taller/vinil/trabajo", tags=["Taller"])
+async def taller_vinil_trabajo(datos: dict):
+    """Varias piezas en UN trabajo: se suman las ÁREAS, no los precios.
+
+    Existe para que la regla viva en UN solo lugar. Antes el panel sumaba las
+    áreas por su cuenta en JavaScript: dos copias de la misma regla que se
+    despegan en cuanto se toca una.
+    """
+    piezas = [(float(p[0]), float(p[1]))
+              for p in (datos.get("piezas") or []) if len(p) >= 2]
+    return await asyncio.to_thread(_cot_vinil().precio_de_trabajo,
+                                   piezas, bool(datos.get("colocar")))
+
+
 @app.get("/taller/vinil/config", tags=["Taller"])
 async def taller_vinil_config(tipo: str = ""):
     """Los datos capturados y los que faltan por capturar."""

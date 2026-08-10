@@ -2841,6 +2841,29 @@ class Consciencia:
             a, b = a / 10.0, b / 10.0
         return (a, b)
 
+    def _todas_las_medidas_cm(self, mensaje: str) -> list:
+        """TODAS las piezas que menciona en un mismo mensaje, no solo la 1ª.
+
+        Falla real del 2026-08-09: escribió *«unas letras de 10x28 y unos
+        números de 15x10»* y AURORA cotizó $74 —solo las letras— cuando el
+        trabajo entero son $95. Peor: remató con «si son varias piezas dímelas
+        todas» justo después de ignorar la segunda. Leer una y pedir el resto
+        que ya te dieron es la misma falla de siempre: contestar sin mirar.
+        """
+        m = _norm_txt(mensaje)
+        milimetros = "mm" in m and "cm" not in m
+        piezas = []
+        for g in re.finditer(r"(\d+(?:[.,]\d+)?)\s*(?:cm|mm)?\s*(?:de\s*(?:"
+                             r"largo|ancho|base)\s*)?[x×por]\s*"
+                             r"(\d+(?:[.,]\d+)?)", m):
+            a = float(g.group(1).replace(",", "."))
+            b = float(g.group(2).replace(",", "."))
+            if milimetros:
+                a, b = a / 10.0, b / 10.0
+            if a > 0 and b > 0:
+                piezas.append((a, b))
+        return piezas
+
     async def _cotizar_vinil_real(self, mensaje: str) -> Dict:
         """CHAT ↔ PLOTTER: el precio sale de SU lista, no de una adivinanza.
 
@@ -2858,12 +2881,13 @@ class Consciencia:
             return {"respuesta": f"No pude abrir el cotizador de vinil: {e}"}
 
         m = _norm_txt(mensaje)
-        ancho, alto = self._medidas_cm(mensaje)
-        if not ancho or not alto:
+        piezas = self._todas_las_medidas_cm(mensaje)
+        if not piezas:
             return {"respuesta": (
                 "¿De qué medida es el trabajo? Con el área te doy el precio "
                 "de tu lista.\n\n_Dímelo así:_ «cuánto cuesta un vinil de "
                 "recorte de 30x20 cm»")}
+        ancho, alto = piezas[0]
 
         # ¿lleva colocación? Si es textil casi siempre sí; si no lo dice, se
         # cotiza sin ella y se avisa, que es lo honesto.
@@ -2872,15 +2896,23 @@ class Consciencia:
             "puesta", "pegado", "planchado", "planchada", "aplicado",
             "ponerla", "ponerlas", "poner"))
 
-        r = await asyncio.to_thread(cv.precio_de_lista, ancho, alto, colocar)
+        # una pieza o varias: la regla de sumar áreas vive en el cotizador
+        if len(piezas) > 1:
+            r = await asyncio.to_thread(cv.precio_de_trabajo, piezas, colocar)
+            titulo = (f"✂️ **Vinil de recorte · {len(piezas)} piezas** ("
+                      + " + ".join(f"{a:g}×{b:g}" for a, b in piezas)
+                      + f" = {r.get('area_cm2', 0):g} cm²)\n")
+        else:
+            r = await asyncio.to_thread(cv.precio_de_lista, ancho, alto,
+                                        colocar)
+            titulo = (f"✂️ **Vinil de recorte {ancho:g} × {alto:g} cm** "
+                      f"({r.get('area_cm2', 0):g} cm²)\n")
         if r.get("status") != "OK":
             return {"respuesta": (
                 "No tengo tu lista de precios de vinil a la mano. Está en "
                 "CONFIG/catalogo_servicios.json — dime los precios y la dejo.")}
 
-        t = [f"✂️ **Vinil de recorte {ancho:g} × {alto:g} cm** "
-             f"({r['area_cm2']:g} cm²)\n",
-             f"   corte y material   $ {r['corte']:.2f}"]
+        t = [titulo, f"   corte y material   $ {r['corte']:.2f}"]
         if r["colocacion"]:
             t.append(f"   colocación         $ {r['colocacion']:.2f}")
         t.append(f"   **TOTAL            $ {r['precio']:.2f}**\n")
@@ -2891,8 +2923,14 @@ class Consciencia:
                      f"+${_minimo_coloc(cv):.2f} de colocación.")
         if r["precio"] <= r["minimo"]:
             t.append(f"\n   ⚠️ Quedó en tu mínimo de ${r['minimo']:.2f}.")
-        t.append("\n   Si son varias piezas del mismo trabajo, dímelas todas: "
-                 "se suman las **áreas**, no los precios (así lo cobras tú).")
+        if len(piezas) > 1:
+            t.append("\n   Se sumaron las **áreas**, no los precios: así lo "
+                     "cobras tú. Pieza por pieza saldría más caro y tumba la "
+                     "venta.")
+        else:
+            t.append("\n   Si son varias piezas del mismo trabajo, dímelas "
+                     "todas: se suman las **áreas**, no los precios (así lo "
+                     "cobras tú).")
         return {"respuesta": "\n".join(t)}
 
     async def _texto_a_corte_real(self, mensaje: str) -> Dict:

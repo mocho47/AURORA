@@ -21,20 +21,26 @@
         "alto": 244
       },
       {
+        "nombre": "Acrílico 2mm (Hoja)",
+        "precio_hoja": 1000.0,
+        "ancho": 120,
+        "alto": 180
+      },
+      {
         "nombre": "Acrílico 3mm Color (Hoja)",
-        "precio_hoja": 900.0,
+        "precio_hoja": 1300.0,
         "ancho": 120,
         "alto": 180
       },
       {
         "nombre": "Acrílico 3mm Transparente (Hoja)",
-        "precio_hoja": 800.0,
+        "precio_hoja": 1300.0,
         "ancho": 120,
         "alto": 180
       },
       {
         "nombre": "Acrílico 6mm (Hoja)",
-        "precio_hoja": 1800.0,
+        "precio_hoja": 1600.0,
         "ancho": 120,
         "alto": 180
       },

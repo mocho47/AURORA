@@ -111,3 +111,56 @@ def test_sin_precios_capturados_no_inventa():
     c = cv.config("textil")
     for pedido in c["faltan"].values():
         assert "?" in pedido, "un dato faltante se pide preguntando"
+
+
+def test_la_regla_vive_en_un_solo_lugar():
+    """El panel NO debe volver a calcular la regla por su cuenta.
+
+    Se descubrió el 2026-08-09: la suma de áreas estaba escrita dos veces —en
+    `precio_de_trabajo` y otra vez en el JavaScript del panel—. Dos copias de
+    la misma regla se despegan en cuanto se toca una sola, y el panel se
+    quedaría cobrando con la regla vieja sin avisar.
+    """
+    from pathlib import Path
+    raiz = Path(__file__).resolve().parent.parent
+    panel = (raiz / "TEMPLATES" / "panel-completo.html").read_text(
+        encoding="utf-8", errors="ignore")
+    ini = panel.index("async function pvCotizar()")
+    cuerpo = panel[ini:panel.index("async function pvGuardarConfig()")]
+    assert "/taller/vinil/trabajo" in cuerpo, "debe pedirle el precio al motor"
+    assert "Math.sqrt" not in cuerpo, (
+        "el panel volvió a calcular la regla en JavaScript")
+
+
+def _consciencia():
+    import importlib.util as ilu
+    from pathlib import Path
+    raiz = Path(__file__).resolve().parent.parent
+    s = ilu.spec_from_file_location("consc", raiz / "CEREBRO" / "consciencia.py")
+    m = ilu.module_from_spec(s)
+    s.loader.exec_module(m)
+    return m
+
+
+def test_el_chat_lee_TODAS_las_piezas_del_mensaje():
+    """Falla real del 2026-08-09 en el chat en vivo.
+
+    «unas letras de 10x28 y unos números de 15x10» → cotizó $74 (solo las
+    letras) en vez de $95, y encima pidió «dímelas todas» después de
+    ignorarlas. Leer la primera medida y pedir el resto que ya te dieron.
+    """
+    c = _consciencia()
+    obj = c.Consciencia.__new__(c.Consciencia)
+    piezas = obj._todas_las_medidas_cm(
+        "cuanto cobro por unas letras de vinil de 10x28 y unos numeros de 15x10")
+    assert piezas == [(10.0, 28.0), (15.0, 10.0)], piezas
+    assert 85 <= cv.precio_de_trabajo(piezas)["precio"] <= 105
+
+
+def test_una_sola_pieza_sigue_leyendose_igual():
+    """No se rompe el caso normal por arreglar el de varias piezas."""
+    c = _consciencia()
+    obj = c.Consciencia.__new__(c.Consciencia)
+    assert obj._todas_las_medidas_cm("un vinil de recorte de 30x20 cm") == [
+        (30.0, 20.0)]
+    assert obj._todas_las_medidas_cm("no dije medidas") == []

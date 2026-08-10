@@ -139,6 +139,16 @@
       "aprendido": 1786001397.897323,
       "ultima_vez": 1786001397.897323,
       "a_la_primera": true
+    },
+    {
+      "clave": "esta conectado el whatsapp",
+      "como_lo_dijo": "esta conectado el whatsapp",
+      "que_si_funciono": "esta conectado el whatsapp",
+      "herramienta": "PUBLICADOR/publicador_core:estado_whatsapp",
+      "veces": 1,
+      "aprendido": 1786307952.59158,
+      "ultima_vez": 1786307952.59158,
+      "a_la_primera": true
     }
   ]
 }

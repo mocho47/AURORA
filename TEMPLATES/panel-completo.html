@@ -3221,11 +3221,11 @@ async function pvCotizar(){
     if(!a||!b){ document.getElementById('pv-resultado').innerHTML='<span style="color:#9ca3af">Pon las medidas.</span>'; return; }
     piezas=[[a,b]];
   }
-  // SE SUMAN LAS ÁREAS, NO LOS PRECIOS. Salió de su ejemplo real guardado:
-  // letras 10×28 + números 15×10 = $95 (pieza por pieza daría $131).
+  // La regla (sumar ÁREAS, no precios) vive en el motor, NO aquí. Tenerla en
+  // los dos lados hacía que el panel se quedara con la regla vieja si se
+  // cambiaba el cotizador.
   const area=piezas.reduce((s,p)=>s+p[0]*p[1],0);
-  const lado=Math.sqrt(area);
-  const r=await api(`/taller/vinil/precio?ancho=${lado.toFixed(2)}&alto=${lado.toFixed(2)}&colocar=${colocar}`);
+  const r=await api('/taller/vinil/trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({piezas:piezas,colocar:colocar})});
   if(r.status!=='OK'){ document.getElementById('pv-resultado').innerHTML='<span style="color:#fca5a5">No se pudo cotizar.</span>'; return; }
   document.getElementById('pv-resultado').innerHTML=`
     <div style="border-top:1px solid #1f2937;padding-top:10px">
