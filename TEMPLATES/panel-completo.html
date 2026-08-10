@@ -17,12 +17,24 @@ nav a{display:flex;align-items:center;gap:10px;padding:11px 18px;color:#9ca3af;f
 nav a:hover,nav a.active{color:#e2e8f0;background:#1f2937;border-left-color:#7c3aed}
 nav a span.icon{font-size:16px;width:20px;text-align:center}
 .nav-group{padding:14px 18px 5px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#6b7280;text-transform:uppercase;user-select:none}
+/* la ayuda, fija abajo: nav lleva flex:1 y overflow propio, asi que este
+   renglon nunca se desplaza con la lista ni se sale de la pantalla */
+.nav-pie{display:flex;align-items:center;gap:10px;padding:12px 18px;color:#9ca3af;font-size:13px;cursor:pointer;border-top:1px solid #1e2a3a;border-left:3px solid transparent;transition:all .2s;flex-shrink:0}
+.nav-pie:hover,.nav-pie.active{color:#e2e8f0;background:#1f2937;border-left-color:#7c3aed}
+.nav-pie span.icon{font-size:16px;width:20px;text-align:center}
 .status-dot{width:8px;height:8px;border-radius:50%;margin-left:auto}
 .dot-green{background:#22c55e;box-shadow:0 0 6px #22c55e}
 .dot-red{background:#ef4444}
 .dot-yellow{background:#f59e0b}
 /* MAIN */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* min-width:0 y min-height:0 NO son adorno. Un elemento flex trae min-*:auto
+   de fabrica y eso le prohibe encogerse por debajo de su contenido: .content
+   crecia hasta el tamano de lo que tuviera dentro en vez de hacer scroll, y
+   .main{overflow:hidden} lo recortaba. Anuar lo reporto el 2026-08-10: «no
+   tenemos scroll lateral y solo con la tecla tab se puede deslizar hacia
+   abajo» -el tab movia el foco y el navegador arrastraba la vista a la
+   fuerza-. Pasaba en TODAS las pestanas, no solo en la Consola de Motores. */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:#111827;border-bottom:1px solid #1e2a3a;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .topbar h2{font-size:16px;font-weight:600;color:#f1f5f9}
 .topbar-right{display:flex;gap:12px;align-items:center}
@@ -31,7 +43,7 @@ nav a span.icon{font-size:16px;width:20px;text-align:center}
 .badge-purple{background:#2e1065;color:#a78bfa;border:1px solid #4c1d95}
 @keyframes titilar{0%,100%{opacity:1}50%{opacity:.35}}
 .badge-titilar{animation:titilar 1.2s ease-in-out infinite}
-.content{flex:1;overflow-y:auto;padding:20px}
+.content{flex:1;min-height:0;overflow:auto;padding:20px}
 /* CARDS */
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
@@ -144,7 +156,6 @@ section.active{display:block}
     <a onclick="go('biblioteca',this)"><span class="icon">▤</span> Biblioteca</a>
     <a onclick="go('web',this)"><span class="icon">◍</span> Web en vivo</a>
     <a onclick="go('razonar',this)"><span class="icon">💭</span> Razonar a fondo</a>
-    <a onclick="go('guia',this)"><span class="icon">📖</span> Guía y Manual</a>
 
     <div class="nav-group">🧠 AURORA POR DENTRO</div>
     <a onclick="go('cerebro',this)"><span class="icon">🧠</span> Cerebro y Equipos</a>
@@ -157,6 +168,12 @@ section.active{display:block}
     <a onclick="go('red',this)"><span class="icon">⛁</span> Red y Dispositivos</a>
     <a onclick="go('pc',this)"><span class="icon">▣</span> Control de la PC</a>
   </nav>
+  <!-- La ayuda va FIJA abajo, fuera de <nav>. Al reagrupar el menú quedó
+       enterrada en «MI NEGOCIO» y Anuar no la encontró («¿dónde me entero del
+       funcionamiento?»). Un manual no es un área del negocio: es la salida
+       cuando uno está perdido, y ahí es donde tiene que estar visible sin
+       buscarlo ni desplazar la lista. -->
+  <a class="nav-pie" onclick="go('guia',this)"><span class="icon">📖</span> Guía y Manual</a>
 </div>
 
 <div class="main">
@@ -1382,7 +1399,9 @@ const API = '';
 // ── Navegación ─────────────────────────────────────────────────────
 function go(id, el) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  // '.nav-pie' va aparte porque vive FUERA de <nav> (la ayuda, fija abajo):
+  // sin incluirlo aqui se quedaria marcado en azul para siempre.
+  document.querySelectorAll('nav a, .nav-pie').forEach(a => a.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   el.classList.add('active');
   document.getElementById('page-title').textContent = el.textContent.trim();
@@ -1603,12 +1622,71 @@ async function cbrEquipos(){
     <button class="refresh-btn" onclick="cbrActivar('${e.id}','${e.nombre.replace(/'/g,'')}')" style="font-size:11px;padding:4px 10px;border-color:#7c3aed;color:#a78bfa;flex-shrink:0">▶ Activar</button>
   </div>`).join(''):'<div style="color:#6b7280">Sin equipos.</div>';
 }
+// El botón «Activar» SÍ trabajaba —Marketing devuelve ~13 KB de estrategia
+// real: algoritmo de cada red, estudio de mercado con fuentes y el plan de
+// posts de hoy— y el panel tiraba todo para pintar una línea gris de 12px que
+// decía «trabajó». Anuar lo reportó como «no hace nada» el 2026-08-10, y tenía
+// razón: si el trabajo no se ve, no sirve de nada que haya ocurrido.
+// El pintor es genérico a propósito: los 5 equipos devuelven formas distintas
+// y los que se creen en la Fábrica devolverán otras. Uno por equipo se
+// desincroniza el día que alguien toque la función del equipo.
+const _EQ_OCULTAR = new Set(['status']);           // ruido, no información
+function _eqTitulo(k){ return k.replace(/_/g,' ').replace(/^./,c=>c.toUpperCase()); }
+function _eqEsc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function _eqPinta(v, nivel){
+  nivel = nivel || 0;
+  if(v===null||v===undefined||v==='') return '<span style="color:#6b7280">—</span>';
+  if(typeof v==='boolean') return v?'sí':'no';
+  if(typeof v==='number') return String(v);
+  if(typeof v==='string'){
+    const t=v.trim();
+    // varias funciones devuelven bloques largos (el análisis de mercado llega
+    // como ```json …```): en <pre> se lee, en un <span> es un muro.
+    if(t.length>220||t.includes('\n'))
+      return '<pre style="white-space:pre-wrap;word-break:break-word;background:#0b0d1a;border:1px solid #1f2937;border-radius:6px;padding:8px;margin:4px 0;font-size:11px;color:#cbd5e1;max-height:260px;overflow:auto">'+_eqEsc(t)+'</pre>';
+    return _eqEsc(t);
+  }
+  if(Array.isArray(v)){
+    if(!v.length) return '<span style="color:#6b7280">(vacío)</span>';
+    if(v.every(x=>x===null||typeof x!=='object'))
+      return '<ul style="margin:2px 0 2px 16px;color:#cbd5e1">'+v.map(x=>'<li>'+_eqPinta(x,nivel+1)+'</li>').join('')+'</ul>';
+    return v.map((x,i)=>'<div style="border-left:2px solid #1f2937;padding-left:8px;margin:6px 0"><span style="color:#6b7280;font-size:11px">#'+(i+1)+'</span>'+_eqPinta(x,nivel+1)+'</div>').join('');
+  }
+  const filas=Object.entries(v).filter(([k])=>!_EQ_OCULTAR.has(k));
+  if(!filas.length) return '<span style="color:#6b7280">—</span>';
+  return filas.map(([k,val])=>{
+    const hijo=(val&&typeof val==='object');
+    // a partir del 2º nivel se pliega: si no, activar Marketing escupe una
+    // pantalla de 13 KB y no se distingue lo importante de lo accesorio.
+    if(hijo && nivel>=1){
+      const n=Array.isArray(val)?val.length:Object.keys(val).length;
+      return '<details style="margin:4px 0"><summary style="cursor:pointer;color:#a78bfa;font-size:12px">'+_eqTitulo(k)+' <span style="color:#6b7280">('+n+')</span></summary><div style="padding-left:10px">'+_eqPinta(val,nivel+1)+'</div></details>';
+    }
+    return '<div style="margin:'+(hijo?'8px':'3px')+' 0"><span style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.5px">'+_eqTitulo(k)+'</span>'+(hijo?'':': ')+'<span style="color:#e2e8f0;font-size:12px">'+_eqPinta(val,nivel+1)+'</span></div>';
+  }).join('');
+}
+
 async function cbrActivar(id, nombre){
-  const el=document.getElementById('cbr-equipo-res'); el.innerHTML='⏳ Poniendo a trabajar a '+nombre+'...';
-  const r=await postJSON('/equipos/activar',{equipo_id:id});
-  if(r.status==='ok'){ el.innerHTML='✅ <b>'+r.equipo+'</b> trabajó. Meta: '+r.meta; }
-  else if(r.status==='sin_accion_central'){ el.innerHTML='ℹ️ <b>'+r.equipo+'</b>: '+r.detalle; }
-  else { el.innerHTML='⚠️ '+(r.detalle||r.status); }
+  const el=document.getElementById('cbr-equipo-res');
+  el.innerHTML='⏳ Poniendo a trabajar a '+nombre+'... (puede tardar, sale a buscar datos reales)';
+  let r;
+  try{ r=await postJSON('/equipos/activar',{equipo_id:id}); }
+  catch(e){ el.innerHTML='⚠️ No pude hablar con el servidor: '+_eqEsc(String(e)); return; }
+  if(!r){ el.innerHTML='⚠️ El servidor no contestó nada.'; return; }
+  if(r.status==='ok'){
+    el.innerHTML='<div style="border:1px solid #7c3aed;border-radius:8px;padding:12px;background:#0f172a">'
+      +'<div style="color:#f1f5f9;font-size:14px;font-weight:600">✅ '+_eqEsc(r.equipo)+' terminó</div>'
+      +'<div style="color:#9ca3af;font-size:12px;margin:2px 0 10px">'+_eqEsc(r.meta||'')+'</div>'
+      +_eqPinta(r.resultado,0)+'</div>';
+  } else if(r.status==='sin_accion_central'){
+    el.innerHTML='<div style="border:1px solid #1f2937;border-radius:8px;padding:12px;background:#0f172a">'
+      +'<div style="color:#f1f5f9;font-size:14px;font-weight:600">ℹ️ '+_eqEsc(r.equipo)+'</div>'
+      +'<div style="color:#cbd5e1;font-size:12px;margin:6px 0">'+_eqEsc(r.detalle||'')+'</div>'
+      +'<div style="color:#6b7280;font-size:11px">Motores del equipo: '+_eqEsc((r.motores||[]).join(', '))+'</div></div>';
+  } else {
+    el.innerHTML='⚠️ '+_eqEsc(r.detalle||r.status||'error desconocido');
+  }
 }
 // ── AGENDA ──
 async function agInit(){ agResumen(); agLista(); }

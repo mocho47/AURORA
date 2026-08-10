@@ -32,11 +32,16 @@ def html():
 
 
 def _menu(html):
-    """[(id, texto)] de cada renglón, en orden."""
-    nav = html[html.index("<nav>"):html.index("</nav>")]
+    """[(id, texto)] de cada renglón, en orden.
+
+    Se lee la barra COMPLETA, no solo <nav>: la Guía vive fija al pie, fuera de
+    la lista que se desplaza. Si esto mirara únicamente <nav>, mover un renglón
+    al pie lo daría por perdido y la prueba mentiría al revés.
+    """
+    barra = html[html.index('<div class="sidebar">'):html.index('<div class="main">')]
     out = []
-    for a in re.finditer(r"<a[^>]*?onclick=\"go\('([a-z]+)'[^>]*>", nav):
-        crudo = nav[a.end():nav.find("</a>", a.end())]
+    for a in re.finditer(r"<a[^>]*?onclick=\"go\('([a-z]+)'[^>]*>", barra):
+        crudo = barra[a.end():barra.find("</a>", a.end())]
         texto = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", crudo)).strip()
         out.append((a.group(1), texto))
     return out
@@ -70,10 +75,26 @@ def test_no_hay_renglones_repetidos(html):
 def test_todo_renglon_vive_en_un_grupo(html):
     """Anuar lo pidió literal: «el resto sin sueltos».
 
-    El Dashboard es la única excepción: es la portada, va antes del primer
-    grupo a propósito.
+    Dos excepciones, ninguna por descuido: el Dashboard es la portada y va
+    antes del primer grupo, y la Guía va fija al pie. Un manual no es un área
+    del negocio —es la salida cuando uno se pierde— y metido en un grupo Anuar
+    no lo encontró (2026-08-10: «¿dónde me entero del funcionamiento?»).
     """
     nav = html[html.index("<nav>"):html.index("</nav>")]
     primer_grupo = nav.index('<div class="nav-group">')
     antes = re.findall(r"onclick=\"go\('([a-z]+)'", nav[:primer_grupo])
     assert antes == ["dash"], f"renglones sueltos antes del primer grupo: {antes}"
+
+    pie = html[html.index("</nav>"):html.index('<div class="main">')]
+    assert re.findall(r"onclick=\"go\('([a-z]+)'", pie) == ["guia"], (
+        "el pie de la barra es solo para la ayuda; lo demás va en un grupo")
+
+
+def test_la_ayuda_se_ve_sin_desplazar_el_menu(html):
+    """De nada sirve moverla al pie si se va con el scroll de la lista."""
+    assert ".nav-pie" in html, "la Guía perdió su renglón fijo"
+    for regla in ("flex-shrink:0",):
+        assert regla in html[html.index(".nav-pie{"):html.index("}", html.index(".nav-pie{"))], (
+            f".nav-pie necesita {regla} o el menú largo lo empuja fuera")
+    assert "nav a, .nav-pie" in html, (
+        "go() debe limpiar también el pie, si no se queda marcado para siempre")

@@ -81,23 +81,35 @@ class StatusResponse(BaseModel):
     timestamp: str
 
 
+def _panel_html():
+    """El panel, siempre la versión que está en disco.
+
+    Sin `no-cache` el navegador aplica caché heurística —no hay Cache-Control,
+    así que Chrome decide solo— y sigue mostrando el panel viejo aunque uno
+    recargue. Anuar lo vivió el 2026-08-10: el arreglo del scroll ya estaba en
+    el archivo Y el servidor ya lo servía, y en su pantalla seguía roto.
+    `no-cache` no apaga la caché: obliga a preguntar antes de usarla, así que
+    el ETag sigue ahorrando la descarga cuando el archivo no cambió.
+    """
+    from fastapi.responses import FileResponse
+    import os
+    p = os.path.join(os.path.dirname(__file__), "..", "TEMPLATES",
+                     "panel-completo.html")
+    return FileResponse(os.path.abspath(p), media_type="text/html",
+                        headers={"Cache-Control": "no-cache"})
+
+
 # Routes
 @app.get("/", tags=["Panel"])
 async def root():
     """Panel Maestro AURORA"""
-    from fastapi.responses import FileResponse
-    import os
-    p = os.path.join(os.path.dirname(__file__), "..", "TEMPLATES", "panel-completo.html")
-    return FileResponse(os.path.abspath(p), media_type="text/html")
+    return _panel_html()
 
 
 @app.get("/panel", tags=["Panel"])
 async def panel():
     """Panel Maestro AURORA (alias)"""
-    from fastapi.responses import FileResponse
-    import os
-    p = os.path.join(os.path.dirname(__file__), "..", "TEMPLATES", "panel-completo.html")
-    return FileResponse(os.path.abspath(p), media_type="text/html")
+    return _panel_html()
 
 
 # ── ENDPOINTS CRM / ORACLE ────────────────────────────────────────────

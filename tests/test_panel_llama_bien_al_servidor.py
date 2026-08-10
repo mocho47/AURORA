@@ -78,6 +78,26 @@ def test_no_se_pinta_un_campo_que_nadie_lee(panel):
             f"«{ident}» se pinta en pantalla pero clCotizar() nunca lo lee")
 
 
+def test_activar_equipo_no_tira_el_trabajo_a_la_basura(panel, servidor):
+    """Un botón que trabaja y no enseña nada se reporta como «no hace nada».
+
+    `activar_equipo` devuelve `resultado` con el trabajo real —Marketing manda
+    ~13 KB: algoritmo por red, estudio de mercado y el plan de posts de hoy— y
+    el panel pintaba solo «trabajó». Anuar lo reportó el 2026-08-10 creyendo
+    que el botón estaba muerto.
+    """
+    cuerpo = _cuerpo(panel, "cbrActivar")
+    assert "r.resultado" in cuerpo, (
+        "cbrActivar ignora `resultado`: el equipo trabaja y no se ve nada")
+    assert "sin_accion_central" in cuerpo, (
+        "taller y diseño no tienen acción central; sin esta rama parecen rotos")
+    # y que el nombre del campo siga siendo el que manda equipos.py
+    eq = (RAIZ / "CEREBRO" / "equipos.py").read_text(encoding="utf-8",
+                                                     errors="ignore")
+    assert '"resultado": resultado' in eq, (
+        "cambió el nombre del campo en equipos.py; el panel dejaría de pintarlo")
+
+
 def test_el_resultado_usa_los_campos_que_el_servidor_devuelve(panel):
     """Lo que se pinta tiene que existir en la respuesta real, medida en vivo."""
     reales = {"archivo", "medida_cm", "cabe_en_la_maquina", "piezas_aprox",
