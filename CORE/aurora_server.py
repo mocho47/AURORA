@@ -283,6 +283,25 @@ async def taller_texto_dxf(req: TextoDxfReq):
     return await asyncio.to_thread(_taller_core().texto_a_dxf, req.texto, req.alto_cm, req.fuente)
 
 
+@app.post("/taller/caja", tags=["Taller"])
+async def taller_caja(datos: dict):
+    """Genera una caja desde el panel. Hasta hoy solo salía por el chat.
+
+    Se le pasa el pedido en español igual que en el chat («caja de 20x15x10
+    con divisiones»), porque el generador ya sabe leerlo y no vale la pena
+    tener dos formas distintas de pedir lo mismo.
+    """
+    import importlib.util as _ilu
+    _s = _ilu.spec_from_file_location("cajas_boxes",
+                                      _ROOT / "TALLER" / "cajas_boxes.py")
+    _m = _ilu.module_from_spec(_s)
+    _s.loader.exec_module(_m)
+    return await asyncio.to_thread(
+        _m.generar, str(datos.get("pedido") or ""),
+        float(datos.get("grosor_mm") or 2.7),
+        bool(datos.get("dxf", True)))
+
+
 @app.post("/taller/reajustar-grosor", tags=["Taller"])
 async def taller_reajustar_grosor(req: GrosorReq):
     """Regenera una caja al NUEVO grosor de material manteniendo el tamaño del artículo

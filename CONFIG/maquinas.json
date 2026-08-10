@@ -1,7 +1,6 @@
 {
   "_nota": "LAS MAQUINAS REALES DEL TALLER. AURORA cotizaba corte laser sin saber en que maquina se corta, y armaba hojas de Print&Cut sin tener registrado el modelo de plotter. Aqui va SOLO lo verificado; lo que no se sepa va como null y se pregunta, nunca se inventa.",
   "_actualizado": "2026-08-08",
-
   "laser": {
     "controlador": "RDC6445G",
     "_controlador_de": "Su nota en D:\\RDWORKS_LEER.txt, escrita por el mismo",
@@ -16,10 +15,12 @@
       "https://www.ruidacontroller.com/download/"
     ],
     "modelo": "1390",
-    "area_de_corte_mm": [1300, 900],
+    "area_de_corte_mm": [
+      1300,
+      900
+    ],
     "potencia_watts": 100,
     "_modelo": "El 1390 se llama asi por su cama: 1300 x 900 mm. Tubo CO2 de 100 W. Dato de Anuar, 2026-08-08.",
-
     "_LA_HOJA_NO_CABE_ENTERA": {
       "problema": "Su hoja de MDF mide 1220 x 2440 mm y la cama mide 1300 x 900. El ancho entra, el largo NO: sobran 1540 mm.",
       "como_se_parte": "Una hoja completa se corta en 3 tiras: 1220x900, 1220x900 y 1220x640.",
@@ -30,7 +31,6 @@
     "kerf_mm": 0.2,
     "_kerf": "Su regla: el MDF de 2.7 se corta a 2.5 porque el laser se come una decima por lado."
   },
-
   "plotter_de_corte": {
     "modelo": "Silhouette Cameo 4",
     "software": "Silhouette Studio",
@@ -44,28 +44,39 @@
       "escuadra_en_L_mm": 20.2,
       "grosor_trazo_mm": 0.47,
       "_medidas_de": "Medidas sacadas de un archivo que EL exporto de su propio Silhouette el 2026-08-07, no de un manual.",
-      "area_util_a4_mm": [149.1, 236.1]
+      "area_util_a4_mm": [
+        149.1,
+        236.1
+      ]
     },
     "_incompatible_con": "Las marcas de registro de CorelDRAW. Corel pone cruces de imprenta y Silhouette busca un cuadro relleno mas dos escuadras en L. No hay tamano de pagina que las haga coincidir; se comprobo en la maquina."
   },
-
   "impresora": {
     "modelo": "Epson L3210",
     "estado": "DESCOMPUESTA",
     "falla": "le falta el cable flex del cabezal",
     "_nota": "Mientras siga asi, la impresion se maquila o se hace en la papeleria."
   },
-
   "plancha_textil": {
     "modelo": null,
     "temperatura_max_c": null,
-    "area_mm": null,
-    "_pendiente": "Anuar la tiene (plancha de escritorio) pero no esta registrado el modelo ni su area. Hace falta para cotizar planchado de piezas grandes."
+    "area_mm": [
+      300,
+      300
+    ],
+    "_dato_de": "Anuar, 2026-08-09",
+    "_por_que_importa": "Un diseno mas grande que la plancha necesita mas de una planchada. Hasta hoy se cobraba una sola sin importar el tamano.",
+    "_ojo": "Las planchadas tambien se cuentan por POSICION, no solo por area: pecho, espalda y manga son tres aunque quepan en la plancha. Por eso el numero se puede teclear a mano (lo pidio Anuar)."
   },
-
   "materiales_en_hoja": {
-    "mdf_cm": [122, 244],
-    "acrilico_cm": [120, 180],
+    "mdf_cm": [
+      122,
+      244
+    ],
+    "acrilico_cm": [
+      120,
+      180
+    ],
     "_de": "CONFIG/precios_base.json"
   }
 }

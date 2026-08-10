@@ -1,3 +1,7 @@
 {
- "precio_hora_mano_obra": 62.5
+ "precio_hora_mano_obra": 62.5,
+ "ancho_rollo_textil_cm": 50.0,
+ "ancho_rollo_recorte_cm": 60.0,
+ "precio_metro_textil": 180.0,
+ "precio_metro_recorte": 90.0
 }

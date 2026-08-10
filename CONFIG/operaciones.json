@@ -1,0 +1,84 @@
+{
+  "_nota": "LOS PASOS DE UN TRABAJO. Anuar lo dictó el 2026-08-09: «material +20% más pasos = costo real + precio de venta justo». Un trabajo NO es un material: es una cadena de operaciones. Un marco lleva grabado + corte + armado + pintura + diseño. Un sticker lleva diseño + corte + rasurado + instalación. Las mismas casillas para todo; se prende lo que lleva.",
+  "_autoridad": "Los que dicen dato_de: Anuar son suyos. Los que dicen _PENDIENTE son suposiciones del código y NO deben presentarse como precio real.",
+  "_regla_de_oro": "El precio nunca baja de lo que ya cobra y le pagan. El costo es el PISO que avisa cuándo un trabajo va a perder dinero, no una sugerencia para bajar precios.",
+
+  "operaciones": {
+    "diseno": {
+      "nombre": "Diseño / edición de archivo",
+      "como_se_cobra": "fijo",
+      "precio": 50.0,
+      "dato_de": "Anuar (catalogo_servicios.laser_reglas)"
+    },
+    "corte_laser": {
+      "nombre": "Corte láser",
+      "como_se_cobra": "minutos_de_maquina",
+      "costo_minuto": 8.0,
+      "velocidad_mm_s": {"3mm": 15, "6mm": 5},
+      "_nota_6mm": "corte 6mm = 3x tiempo = 3x costo vs 3mm",
+      "dato_de": "Anuar (precios_base + catalogo_servicios)"
+    },
+    "grabado_laser": {
+      "nombre": "Grabado láser",
+      "como_se_cobra": "minutos_de_maquina",
+      "costo_minuto": 8.0,
+      "velocidad_mm_s": 200,
+      "cobro_minimo": 60.0,
+      "dato_de": "Anuar (catalogo_servicios.laser_reglas)"
+    },
+    "armado": {
+      "nombre": "Armado / ensamble",
+      "como_se_cobra": "minutos_de_mano",
+      "minutos_minimo": 10.0,
+      "_ejemplo_de_anuar": "una caja: 10 min mínimo. Si lleva más, se cobran los que lleve.",
+      "dato_de": "Anuar, 2026-08-09"
+    },
+    "corte_plotter": {
+      "nombre": "Corte de plotter",
+      "como_se_cobra": "minutos_de_maquina",
+      "_PENDIENTE": "La plotter corta en nada; el dinero está en el rasurado. ¿Le cobras algo aparte al corte, o va incluido?"
+    },
+    "rasurado": {
+      "nombre": "Rasurado / despicado",
+      "como_se_cobra": "minutos_de_mano",
+      "_PENDIENTE": "El código supone 8 seg por contorno y 20 seg por dm². NO son datos de Anuar. Se cobra por contornos, no por tamaño: una palabra en letra gorda se despica en 2 min; la misma en cursiva delgada con 60 huecos se lleva media hora."
+    },
+    "pintura": {
+      "nombre": "Pintura",
+      "como_se_cobra": "minimo_mas_area",
+      "minimo": 50.0,
+      "_nota": "Arranca en $50 y sube según el área. Anuar, 2026-08-09.",
+      "_PENDIENTE": "Falta cuánto sube por área: ¿cuánto cobrarías por pintar 30x40 cm, para sacar la pendiente?",
+      "dato_de": "Anuar, 2026-08-09 (el mínimo)"
+    },
+    "planchado": {
+      "nombre": "Planchado",
+      "como_se_cobra": "por_planchada",
+      "precio_por_planchada": 30.0,
+      "area_plancha_cm": [30, 30],
+      "se_cuenta_por": "posición, no solo por área",
+      "_ojo": "Pecho, espalda y manga son TRES planchadas aunque cada una quepa en la plancha. Por eso el número se puede teclear a mano (lo pidió Anuar el 2026-08-09).",
+      "dato_de": "Anuar (plancha) + catalogo_servicios.dtf (los $30)"
+    },
+    "instalacion": {
+      "nombre": "Instalación / colocación",
+      "como_se_cobra": "minutos_de_mano",
+      "_PENDIENTE": "El código supone 5 min de base + 1 min por dm². NO son datos de Anuar."
+    }
+  },
+
+  "mano_de_obra": {
+    "precio_hora": 62.5,
+    "dato_de": "Anuar, 2026-08-09 (confirmado; venía del Inklaser_Milens_Lite del escritorio)"
+  },
+
+  "compraventa": {
+    "material_markup_pct": 20,
+    "_que_es": "Lo que se le gana al material por comprarlo y revenderlo. NO es el margen del trabajo: el trabajo de $95 costó $34 y dejó 178%. Anuar lo dictó el 2026-08-09."
+  },
+
+  "desperdicio_por_material": {
+    "_por_que": "Anuar: «todo tiene desperdicio». Y no es el mismo: de una hoja de MDF el retazo a veces se reusa; de un rollo de 50 cm, una pieza de 30 de ancho pierde 20 cm en todo el largo; en una prenda la merma es la que se echa a perder. Hoy había UN SOLO porcentaje global para todo.",
+    "_PENDIENTE": "Anuar dicta el porcentaje real de cada uno. Mientras tanto NO se inventa: se usa el global y se avisa."
+  }
+}

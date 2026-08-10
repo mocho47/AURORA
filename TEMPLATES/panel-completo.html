@@ -108,49 +108,54 @@ section.active{display:block}
     <div style="margin-top:6px"><span id="user-chip" style="font-size:12px;color:#22c55e"></span> <a id="user-logout" onclick="usuLogout()" style="font-size:11px;color:#6b7280;cursor:pointer;display:none">· salir</a></div>
   </div>
   <nav>
+    <!-- ══ MENÚ REAGRUPADO · 2026-08-09 ══
+         Anuar: *«son demasiadas pestañas revueltas, que quede profesional y
+         amigable»*. El problema no era el número (31): era que estaban al
+         mismo nivel lo que abre 20 veces al día (Órdenes) y lo que abre una
+         vez al mes (Bus Neuronal). Ahora se ordena por CUÁNDO se usa, con los
+         grupos que él dictó. Los 31 renglones siguen aquí: ninguna función se
+         quitó, se reacomodaron. Las tripas de AURORA quedan hasta abajo. -->
     <a class="active" onclick="go('dash',this)"><span class="icon">◈</span> Dashboard<span class="status-dot dot-green" id="sys-dot"></span></a>
+
+    <div class="nav-group">🔨 TRABAJO</div>
     <a onclick="go('chat',this)" id="chat-nav-link"><span class="icon">◉</span> Chat AURORA <span class="badge badge-red" id="chat-alert-badge" style="display:none;margin-left:6px">0</span></a>
-    <a onclick="go('guia',this)"><span class="icon">📖</span> Guía / Manual</a>
+    <a onclick="go('taller',this)"><span class="icon">◧</span> Órdenes de Taller <span class="badge badge-red" id="taller-alert-badge" style="display:none;margin-left:6px">0</span></a>
+    <a onclick="go('tprecios',this)"><span class="icon">🧮</span> Cotizar</a>
+    <a onclick="go('reportes',this)"><span class="icon">📈</span> Reportes</a>
 
-    <div class="nav-group">◧ TALLER</div>
-    <a onclick="go('taller',this)"><span class="icon">◧</span> Órdenes Taller <span class="badge badge-red" id="taller-alert-badge" style="display:none;margin-left:6px">0</span></a>
-    <a onclick="go('tprecios',this)"><span class="icon">$</span> Precios y Cotizar</a>
-    <a onclick="go('inventario',this)"><span class="icon">📦</span> Inventario</a>
-    <a onclick="go('agenda',this)"><span class="icon">📅</span> Agenda / Citas</a>
-    <a onclick="go('contabilidad',this)"><span class="icon">▦</span> Contabilidad</a>
-
-    <div class="nav-group">◎ VENTAS</div>
-    <a onclick="go('crm',this)"><span class="icon">◎</span> CRM · Leads y Ventas</a>
-    <a onclick="go('vendedor',this)"><span class="icon">◆</span> Vendedor · Fichas</a>
+    <div class="nav-group">💰 DINERO</div>
+    <a onclick="go('crm',this)"><span class="icon">◎</span> Clientes y Ventas</a>
     <a onclick="go('seguimiento',this)"><span class="icon">🎯</span> Seguimiento</a>
-    <a onclick="go('reportes',this)"><span class="icon">📈</span> Reportes / BI</a>
+    <a onclick="go('vendedor',this)"><span class="icon">◆</span> Fichas de Venta</a>
+    <a onclick="go('contabilidad',this)"><span class="icon">▦</span> Contabilidad</a>
+    <a onclick="go('agenda',this)"><span class="icon">📅</span> Agenda y Citas</a>
 
-    <div class="nav-group">📣 MARKETING</div>
-    <a onclick="go('redes',this)"><span class="icon">🚀</span> Publicar (hoy)</a>
+    <div class="nav-group">✎ CREAR</div>
+    <a onclick="go('redes',this)"><span class="icon">🚀</span> Publicar hoy</a>
+    <a onclick="go('social',this)"><span class="icon">📆</span> Redes Sociales</a>
     <a onclick="go('monetiza',this)"><span class="icon">◉</span> Monetización</a>
     <a onclick="go('marketing',this)"><span class="icon">◔</span> Marketing IA</a>
-    <a onclick="go('mercado',this)"><span class="icon">📊</span> Analizador Mercado</a>
-    <a onclick="go('social',this)"><span class="icon">📅</span> Redes Sociales</a>
-
-    <div class="nav-group">✎ DISEÑO</div>
-    <a onclick="go('editor',this)"><span class="icon">✎</span> Editor · Herramientas</a>
+    <a onclick="go('editor',this)"><span class="icon">✎</span> Editor y Diseño</a>
     <a onclick="go('taza',this)"><span class="icon">🎨</span> Plantillas de Taza</a>
 
-    <div class="nav-group">📚 CONOCIMIENTO</div>
+    <div class="nav-group">🏢 MI NEGOCIO</div>
+    <a onclick="go('inventario',this)"><span class="icon">📦</span> Inventario</a>
+    <a onclick="go('mercado',this)"><span class="icon">📊</span> Analizador de Mercado</a>
     <a onclick="go('biblioteca',this)"><span class="icon">▤</span> Biblioteca</a>
     <a onclick="go('web',this)"><span class="icon">◍</span> Web en vivo</a>
-    <a onclick="go('razonar',this)"><span class="icon">🧠</span> Razonar (profundo)</a>
+    <a onclick="go('razonar',this)"><span class="icon">💭</span> Razonar a fondo</a>
+    <a onclick="go('guia',this)"><span class="icon">📖</span> Guía y Manual</a>
 
-    <div class="nav-group">🧠 CEREBRO Y SISTEMA</div>
+    <div class="nav-group">🧠 AURORA POR DENTRO</div>
     <a onclick="go('cerebro',this)"><span class="icon">🧠</span> Cerebro y Equipos</a>
     <a onclick="go('consola',this)"><span class="icon">🎛️</span> Consola de Motores</a>
+    <a onclick="go('fabrica',this)"><span class="icon">🏭</span> Fábrica de Motores</a>
     <a onclick="go('bus',this)"><span class="icon">◈</span> Bus Neuronal</a>
     <a onclick="go('memoria',this)"><span class="icon">◉</span> Memoria</a>
-    <a onclick="go('fabrica',this)"><span class="icon">🏭</span> Fábrica de Motores</a>
     <a onclick="go('codigo',this)"><span class="icon">🧩</span> Código · IDE</a>
     <a onclick="go('sistema',this)"><span class="icon">⚙</span> Sistema · PC</a>
-    <a onclick="go('red',this)"><span class="icon">⛁</span> Red · Dispositivos</a>
-    <a onclick="go('pc',this)"><span class="icon">▣</span> PC · Control</a>
+    <a onclick="go('red',this)"><span class="icon">⛁</span> Red y Dispositivos</a>
+    <a onclick="go('pc',this)"><span class="icon">▣</span> Control de la PC</a>
   </nav>
 </div>
 
@@ -549,13 +554,112 @@ section.active{display:block}
     </section>
 
     <!-- ══ TALLER · PRECIOS / MATERIALES ══ -->
+    <!-- ══ PRECIOS Y COTIZAR ══
+         Reestructurado el 2026-08-09 a pedido de Anuar: *«siento que está
+         medio revuelto»*. Tenía razón — se cotizaba desde tres lugares que no
+         se hablaban y las cajas ni pantalla tenían. Ahora son DOS pestañas:
+         COTIZAR (con selector de tipo de trabajo) y MIS NÚMEROS (todos los
+         precios juntos). No se quitó nada: se reacomodó. -->
     <section id="tprecios">
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button id="tpq-tab-a" class="btn btn-purple" onclick="tpqTab('a')" style="flex:1">💲 Precios y materiales</button>
-        <button id="tpq-tab-b" class="btn" onclick="tpqTab('b')" style="flex:1;background:#1a2431;color:#e5e7eb">🧵 Cotizar prendas</button>
-        <button id="tpq-tab-c" class="btn" onclick="tpqTab('c')" style="flex:1;background:#1a2431;color:#e5e7eb">✂️ Plotter y vinil</button>
+        <button id="tpq-tab-cot" class="btn btn-purple" onclick="tpqTab('cot')" style="flex:1">🧮 Cotizar</button>
+        <button id="tpq-tab-a" class="btn" onclick="tpqTab('a')" style="flex:1;background:#1a2431;color:#e5e7eb">💲 Mis números</button>
       </div>
-      <div id="tpq-a">
+
+      <!-- ══════════ COTIZAR · una pantalla, un selector ══════════ -->
+      <div id="tpq-cot">
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+          <button id="cot-b-laser"  class="btn btn-purple" onclick="cotTipo('laser')"  style="flex:1;min-width:140px">⚡ Láser (archivo)</button>
+          <button id="cot-b-caja"   class="btn" onclick="cotTipo('caja')"   style="flex:1;min-width:140px;background:#1a2431;color:#e5e7eb">📦 Caja</button>
+          <button id="cot-b-vinil"  class="btn" onclick="cotTipo('vinil')"  style="flex:1;min-width:140px;background:#1a2431;color:#e5e7eb">✂️ Vinil / plotter</button>
+          <button id="cot-b-catal"  class="btn" onclick="cotTipo('catal')"  style="flex:1;min-width:140px;background:#1a2431;color:#e5e7eb">🧵 Prendas y catálogo</button>
+        </div>
+
+        <!-- ── LÁSER ── -->
+        <div id="cot-laser" class="grid-2">
+          <div class="card">
+            <h3>Cotizar corte láser</h3>
+            <p style="color:#9ca3af;font-size:12px;margin-top:4px">Mide el archivo de verdad: metros de corte, minutos y precio con tus números. Nada de estimar a ojo.</p>
+            <input id="cl-ruta" placeholder="Ruta del archivo (ej. C:\Users\...\diseno.dxf)" style="width:100%;padding:9px;margin-top:10px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box">
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:flex-end">
+              <label style="font-size:12px;color:#9ca3af;flex:1;min-width:150px">Material<br><select id="cl-material" style="width:100%;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></select></label>
+              <label style="font-size:12px;color:#9ca3af">Merma %<br><input id="cl-merma" type="number" value="20" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Margen %<br><input id="cl-margen" type="number" value="60" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+            </div>
+            <button class="btn btn-purple" onclick="clCotizar()" style="margin-top:12px;width:100%">Cotizar archivo</button>
+          </div>
+          <div class="card">
+            <h3>Resultado</h3>
+            <div id="cl-resultado" style="margin-top:10px;font-size:13px;color:#9ca3af">Pon la ruta de un .dxf y dale cotizar.</div>
+          </div>
+        </div>
+
+        <!-- ── CAJA ── -->
+        <div id="cot-caja" class="grid-2" style="display:none">
+          <div class="card">
+            <h3>Generar caja</h3>
+            <p style="color:#9ca3af;font-size:12px;margin-top:4px">Tus 4 reglas de taller ya están adentro: medidas en <b>X, Y, H</b>, DXF siempre, el material se corta al espesor menos el kerf, y los dedos van a tu tamaño.</p>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:flex-end">
+              <label style="font-size:12px;color:#9ca3af">X (cm)<br><input id="ck-x" type="number" step="0.5" value="20" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Y (cm)<br><input id="ck-y" type="number" step="0.5" value="15" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">H (cm)<br><input id="ck-h" type="number" step="0.5" value="10" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Material mm<br><input id="ck-grosor" type="number" step="0.1" value="2.7" style="width:100px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+            </div>
+            <label style="display:block;margin-top:10px;font-size:12px;color:#9ca3af">Tipo (opcional — como se lo dirías al chat)
+              <input id="ck-tipo" placeholder="con divisiones, corazón, tipo libro, cofre, para dados..." style="width:100%;padding:9px;margin-top:3px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box"></label>
+            <button class="btn btn-purple" onclick="ckGenerar()" style="margin-top:12px;width:100%">Generar caja</button>
+          </div>
+          <div class="card">
+            <h3>Resultado</h3>
+            <div id="ck-resultado" style="margin-top:10px;font-size:13px;color:#9ca3af">Pon las medidas y dale generar.</div>
+          </div>
+        </div>
+
+        <!-- ── VINIL (pane movido aquí, mismos ids: el JS no cambia) ── -->
+        <div id="cot-vinil" class="grid-2" style="display:none">
+          <div class="card">
+            <h3>Cotizar trabajo de vinil</h3>
+            <p style="color:#9ca3af;font-size:12px;margin-top:4px">El precio sale de tu escalera real, no de un modelo. Si son varias piezas del mismo trabajo, agrégalas todas: se suman las <b>áreas</b>, no los precios.</p>
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end;flex-wrap:wrap">
+              <label style="font-size:12px;color:#9ca3af">Ancho cm<br><input id="pv-ancho" type="number" step="0.5" value="30" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Alto cm<br><input id="pv-alto" type="number" step="0.5" value="20" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <button class="btn btn-sm" onclick="pvAgregar()" style="background:#059669;color:#fff">➕ Agregar pieza</button>
+            </div>
+            <div id="pv-piezas" style="margin-top:10px;font-size:13px;color:#9ca3af">Sin piezas todavía.</div>
+            <label style="display:block;margin-top:12px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="pv-colocar" onchange="pvCotizar()"> Incluye colocación / planchado</label>
+            <button class="btn btn-purple" onclick="pvCotizar()" style="margin-top:12px;width:100%">Cotizar</button>
+            <div id="pv-resultado" style="margin-top:14px;font-size:13px"></div>
+          </div>
+          <div class="card">
+            <h3>Tu escalera de precios</h3>
+            <p style="color:#9ca3af;font-size:12px;margin-top:4px">De aquí sale el número. Entre peldaños se interpola por área.</p>
+            <div id="pv-escalera" style="margin-top:10px;font-size:13px;color:#9ca3af"></div>
+          </div>
+        </div>
+
+        <!-- ── PRENDAS Y CATÁLOGO (pane movido, mismos ids) ── -->
+        <div id="cot-catal" class="grid-2" style="display:none">
+          <div class="card">
+            <h3>Catálogo — clic para agregar</h3>
+            <p style="color:#9ca3af;font-size:12px;margin-top:4px">Prendas, extras y productos. La imagen de referencia va en la orden (solo guía).</p>
+            <div style="margin-top:8px">
+              <button class="btn btn-purple btn-sm" onclick="csAlbum()">🖼️ Generar álbum de catálogo</button>
+              <span id="cs-album-msg" style="font-size:12px;margin-left:8px"></span>
+            </div>
+            <input id="cs-buscar" placeholder="Filtrar..." oninput="csRender()" style="width:100%;padding:9px;margin-top:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box">
+            <div id="cs-catalogo" style="margin-top:10px;max-height:58vh;overflow:auto;font-size:13px">Cargando...</div>
+          </div>
+          <div class="card">
+            <h3>Cotización</h3>
+            <div id="cs-carrito" style="margin-top:10px;font-size:13px">Agrega artículos del catálogo.</div>
+            <label style="display:block;margin-top:10px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="cs-tarjeta" onchange="csCotizar()"> Pago con tarjeta (+4%)</label>
+            <div id="cs-totales" style="margin-top:10px;border-top:1px solid #1f2937;padding-top:10px"></div>
+            <button class="btn" onclick="CSCART=[];csCotizar()" style="margin-top:10px;background:#1a2431;color:#e5e7eb;font-size:12px">Vaciar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tpq-a" style="display:none">
       <div class="grid-2">
         <div class="card">
           <h3>Costo de máquina</h3>
@@ -576,78 +680,31 @@ section.active{display:block}
           <button class="btn btn-purple" onclick="tpGuardarMaterial()" style="margin-top:10px;width:100%">Guardar material</button>
           <div id="tp-mat-msg" style="font-size:12px;margin-top:6px"></div>
         </div>
-        <div class="card">
-          <h3>Materiales / artículos <span class="badge badge-green" id="tp-count">--</span></h3>
-          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Los cambios aplican al cotizador al instante.</p>
-          <div id="tp-lista" style="margin-top:10px;font-size:13px;max-height:62vh;overflow:auto">Cargando...</div>
-        </div>
-      </div>
-      </div>
-      <div id="tpq-b" style="display:none">
-      <div class="grid-2">
-        <div class="card">
-          <h3>Catálogo — clic para agregar</h3>
-          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Prendas, extras y productos. La imagen de referencia va en la orden (solo guía).</p>
-          <div style="margin-top:8px">
-            <button class="btn btn-purple btn-sm" onclick="csAlbum()">🖼️ Generar álbum de catálogo</button>
-            <span id="cs-album-msg" style="font-size:12px;margin-left:8px"></span>
-          </div>
-          <div style="margin-top:10px;padding:10px;border:1px dashed #374151;border-radius:8px;background:#0b1220">
-            <div style="font-size:13px;color:#cbd5e1;margin-bottom:6px">➕ Agregar trabajo / servicio (pintura, vinil, etc.)</div>
-            <input id="csn-nombre" placeholder="Nombre del trabajo (ej. Vinil de corte, Pintura)" style="width:100%;padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
-            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-              <select id="csn-unidad" style="padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
-                <option value="pieza">por pieza</option>
-                <option value="m2">por m²</option>
-                <option value="metro">por metro</option>
-              </select>
-              <input id="csn-precio" type="number" step="0.01" placeholder="Precio $" style="width:100px;padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
-              <input id="csn-costo" type="number" step="0.01" placeholder="Costo $ (opc.)" style="width:120px;padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
-              <button class="btn btn-sm" onclick="csGuardarServicio()" style="background:#059669;color:#fff">Guardar</button>
-            </div>
-            <span id="csn-msg" style="font-size:12px;color:#9ca3af"></span>
-          </div>
-          <input id="cs-buscar" placeholder="Filtrar..." oninput="csRender()" style="width:100%;padding:9px;margin-top:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
-          <div id="cs-catalogo" style="margin-top:10px;max-height:60vh;overflow:auto;font-size:13px">Cargando...</div>
-        </div>
-        <div class="card">
-          <h3>Cotización</h3>
-          <div id="cs-carrito" style="margin-top:10px;font-size:13px">Agrega artículos del catálogo.</div>
-          <label style="display:block;margin-top:10px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="cs-tarjeta" onchange="csCotizar()"> Pago con tarjeta (+4%)</label>
-          <div id="cs-totales" style="margin-top:10px;border-top:1px solid #1f2937;padding-top:10px"></div>
-          <button class="btn" onclick="CSCART=[];csCotizar()" style="margin-top:10px;background:#1a2431;color:#e5e7eb;font-size:12px">Vaciar</button>
-        </div>
-      </div>
-      </div>
-
-      <!-- ══ PLOTTER Y VINIL ══
-           El 2026-08-08 AURORA inventó un precio de vinil («entre $500 y
-           $1,500») teniendo esta lista guardada. Aquí se cotiza a mano, con
-           los mismos números que usa el chat: una sola fuente de verdad. -->
-      <div id="tpq-c" style="display:none">
-      <div class="grid-2">
-        <div class="card">
-          <h3>Cotizar trabajo de vinil</h3>
-          <p style="color:#9ca3af;font-size:12px;margin-top:4px">El precio sale de tu escalera real de precios, no de un modelo. Si son varias piezas del mismo trabajo, agrégalas todas: se suman las <b>áreas</b>, no los precios.</p>
-          <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end;flex-wrap:wrap">
-            <label style="font-size:12px;color:#9ca3af">Ancho cm<br><input id="pv-ancho" type="number" step="0.5" value="30" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
-            <label style="font-size:12px;color:#9ca3af">Alto cm<br><input id="pv-alto" type="number" step="0.5" value="20" style="width:90px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
-            <button class="btn btn-sm" onclick="pvAgregar()" style="background:#059669;color:#fff">➕ Agregar pieza</button>
-          </div>
-          <div id="pv-piezas" style="margin-top:10px;font-size:13px;color:#9ca3af">Sin piezas todavía.</div>
-          <label style="display:block;margin-top:12px;font-size:13px;color:#cbd5e1"><input type="checkbox" id="pv-colocar" onchange="pvCotizar()"> Incluye colocación / planchado</label>
-          <button class="btn btn-purple" onclick="pvCotizar()" style="margin-top:12px;width:100%">Cotizar</button>
-          <div id="pv-resultado" style="margin-top:14px;font-size:13px"></div>
-        </div>
-        <div class="card">
-          <h3>Datos del taller <span class="badge" id="pv-faltan-badge" style="display:none;background:#7f1d1d;color:#fecaca">faltan</span></h3>
-          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Lo que no esté capturado aquí, AURORA <b>no lo inventa</b>: lo pide. Se captura una vez.</p>
+          <h3 style="margin-top:22px">Manos y planchado <span class="badge" id="pv-faltan-badge" style="display:none;background:#7f1d1d;color:#fecaca">faltan</span></h3>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Tu hora de trabajo, el rollo, el despicado y el planchado. Lo que no esté aquí, AURORA <b>no lo inventa</b>: lo pide. Se captura una vez.</p>
           <div id="pv-config" style="margin-top:12px;font-size:13px">Cargando...</div>
           <button class="btn btn-purple" onclick="pvGuardarConfig()" style="margin-top:12px;width:100%">Guardar datos</button>
           <div id="pv-config-msg" style="font-size:12px;margin-top:6px;color:#9ca3af"></div>
 
-          <h3 style="margin-top:22px">Tu escalera de precios</h3>
-          <div id="pv-escalera" style="margin-top:8px;font-size:13px;color:#9ca3af"></div>
+          <h3 style="margin-top:22px">➕ Agregar trabajo / servicio</h3>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Pintura, vinil, lo que cobres aparte. Sale en el catálogo de cotizar.</p>
+          <input id="csn-nombre" placeholder="Nombre del trabajo (ej. Vinil de corte, Pintura)" style="width:100%;padding:8px;margin-top:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <select id="csn-unidad" style="padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
+              <option value="pieza">por pieza</option>
+              <option value="m2">por m²</option>
+              <option value="metro">por metro</option>
+            </select>
+            <input id="csn-precio" type="number" step="0.01" placeholder="Precio $" style="width:100px;padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
+            <input id="csn-costo" type="number" step="0.01" placeholder="Costo $ (opc.)" style="width:120px;padding:8px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
+            <button class="btn btn-sm" onclick="csGuardarServicio()" style="background:#059669;color:#fff">Guardar</button>
+          </div>
+          <span id="csn-msg" style="font-size:12px;color:#9ca3af"></span>
+        </div>
+        <div class="card">
+          <h3>Materiales / artículos <span class="badge badge-green" id="tp-count">--</span></h3>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">Los cambios aplican al cotizador al instante.</p>
+          <div id="tp-lista" style="margin-top:10px;font-size:13px;max-height:62vh;overflow:auto">Cargando...</div>
         </div>
       </div>
       </div>
@@ -3157,10 +3214,19 @@ async function pcPortapapeles(){ document.getElementById('pc-out').textContent='
 async function pcAbrir(){ const a=document.getElementById('pc-abrir').value.trim(); if(!a)return; document.getElementById('pc-out').textContent='⏳ Abriendo...'; const r=await pcCall('/pc/abrir',{arg:a}); if(r) pcShow(r); }
 
 // ── TALLER · PRECIOS Y COTIZAR (módulo unificado) ──
-async function tallerpqCargar(){ tpqTab('a'); await tpCargar(); await csCargar(); }
+async function tallerpqCargar(){
+  tpqTab('cot');            // abre en COTIZAR: es a lo que entra a diario
+  cotTipo('laser');
+  await tpCargar();
+  await csCargar();
+}
+// ── PRECIOS Y COTIZAR · dos pestañas ──────────────────────────────────
+// Reestructurado el 2026-08-09: Anuar dijo *«siento que está medio revuelto»*
+// y tenía razón. Se cotizaba desde tres lugares distintos y las cajas ni
+// siquiera tenían pantalla. Ahora: COTIZAR (con selector) y MIS NÚMEROS.
 function tpqTab(w){
   const on='btn btn-purple', off='btn';
-  ['a','b','c'].forEach(k=>{
+  ['cot','a'].forEach(k=>{
     const pane=document.getElementById('tpq-'+k), tab=document.getElementById('tpq-tab-'+k);
     if(!pane||!tab) return;
     const activa = (k===w);
@@ -3168,7 +3234,77 @@ function tpqTab(w){
     tab.className = activa ? on : off;
     tab.style.background = activa ? '' : '#1a2431';
   });
-  if(w==='c') pvCargar();
+  if(w==='a') pvCargar();          // los datos del taller viven en Mis números
+}
+
+// El selector: un solo lugar para cotizar, cambia la forma según el trabajo.
+let COTACTUAL='laser';
+function cotTipo(t){
+  COTACTUAL=t;
+  ['laser','caja','vinil','catal'].forEach(k=>{
+    const pane=document.getElementById('cot-'+k), b=document.getElementById('cot-b-'+k);
+    if(!pane||!b) return;
+    const activa=(k===t);
+    pane.style.display = activa ? '' : 'none';
+    b.className = activa ? 'btn btn-purple' : 'btn';
+    b.style.background = activa ? '' : '#1a2431';
+    b.style.color = activa ? '' : '#e5e7eb';
+  });
+  if(t==='laser') clMateriales();
+  if(t==='vinil') pvCargar();
+  if(t==='catal' && typeof csCargar==='function' && !(window.CSCAT||[]).length) csCargar();
+}
+
+// ── COTIZAR LÁSER (archivo real, no estimación) ──
+async function clMateriales(){
+  const sel=document.getElementById('cl-material');
+  if(!sel || sel.options.length) return;
+  const r=await api('/taller/precios');
+  const mats=((r.laser||{}).materiales)||r.materiales||[];
+  sel.innerHTML=mats.map(m=>`<option value="${m.nombre}">${m.nombre} — $${m.precio_hoja}</option>`).join('')
+    || '<option value="">(sin materiales capturados)</option>';
+}
+async function clCotizar(){
+  const out=document.getElementById('cl-resultado');
+  const ruta=(document.getElementById('cl-ruta').value||'').trim();
+  if(!ruta){ out.innerHTML='<span style="color:#fca5a5">Pon la ruta del archivo.</span>'; return; }
+  out.innerHTML='Midiendo el archivo...';
+  const fd=new FormData();
+  fd.append('ruta',ruta);
+  fd.append('material',document.getElementById('cl-material').value||'');
+  fd.append('merma',document.getElementById('cl-merma').value||'20');
+  fd.append('margen',document.getElementById('cl-margen').value||'60');
+  const r=await api('/taller/cotizar-dxf',{method:'POST',body:fd});
+  if(r.error||r.status==='ERROR'){ out.innerHTML=`<span style="color:#fca5a5">${r.detalle||r.error||'No se pudo.'}</span>`; return; }
+  const fila=(k,v)=>v==null?'':`<div>${k} &nbsp; <b>${v}</b></div>`;
+  out.innerHTML=fila('metros de corte', r.metros_corte!=null?r.metros_corte+' m':null)
+    + fila('minutos de máquina', r.minutos!=null?r.minutos:null)
+    + fila('material', r.costo_material!=null?'$'+Number(r.costo_material).toFixed(2):null)
+    + fila('máquina', r.costo_maquina!=null?'$'+Number(r.costo_maquina).toFixed(2):null)
+    + (r.cabe_en_la_maquina && r.cabe_en_la_maquina.cabe===false
+        ? `<div style="margin-top:8px;color:#fca5a5">⚠️ ${r.cabe_en_la_maquina.detalle||'No cabe en tu láser.'}</div>` : '')
+    + (r.precio!=null?`<div style="margin-top:10px;font-size:20px;color:#a78bfa"><b>$${Number(r.precio).toFixed(2)}</b></div>`:'')
+    + (r.precio==null?`<pre style="white-space:pre-wrap;color:#cbd5e1">${JSON.stringify(r,null,1)}</pre>`:'');
+}
+
+// ── GENERAR CAJA (hasta hoy solo salía por el chat) ──
+async function ckGenerar(){
+  const out=document.getElementById('ck-resultado');
+  const x=document.getElementById('ck-x').value, y=document.getElementById('ck-y').value,
+        h=document.getElementById('ck-h').value, g=document.getElementById('ck-grosor').value;
+  if(!x||!y||!h){ out.innerHTML='<span style="color:#fca5a5">Faltan medidas (X, Y, H).</span>'; return; }
+  // se le habla igual que al chat: el generador ya sabe leer español y no
+  // conviene tener dos formas distintas de pedir lo mismo.
+  const pedido=`caja de ${x}x${y}x${h} ${(document.getElementById('ck-tipo').value||'').trim()}`.trim();
+  out.innerHTML='Generando... (tarda unos segundos)';
+  const r=await api('/taller/caja',{method:'POST',headers:{'Content-Type':'application/json'},
+                                    body:JSON.stringify({pedido:pedido,grosor_mm:parseFloat(g)||2.7,dxf:true})});
+  if(r.status!=='OK'){ out.innerHTML=`<span style="color:#fca5a5">${r.detalle||'No se pudo generar.'}</span>`; return; }
+  out.innerHTML=`<div><b>${r.que_es||'Caja'}</b> — ${r.medidas_cm} cm</div>`
+    + `<div style="color:#9ca3af;margin-top:4px">generador <code>${r.generador}</code> · tapa ${r.tapa||'—'}</div>`
+    + `<div style="margin-top:8px">cortada a <b>${r.grosor_corte} mm</b> para tu material de ${r.grosor_material} mm <span style="color:#6b7280">(compensación del láser)</span></div>`
+    + (r.dxf?`<div style="margin-top:10px">📁 <b>DXF:</b><br><code style="color:#a78bfa;word-break:break-all">${r.dxf}</code></div>`:'')
+    + (r.archivo?`<div style="margin-top:6px;color:#6b7280;font-size:12px">SVG: ${r.archivo}</div>`:'');
 }
 
 // ── PLOTTER Y VINIL ──
@@ -3344,7 +3480,12 @@ function csCrearOrden(){
   document.getElementById('ot-valor').value=r.total_precio;
   document.getElementById('ot-costo').value=r.total_costo;
   document.getElementById('ot-piezas').value=Math.max(1,Math.round(r.lineas.reduce((s,l)=>s+l.cantidad,0)));
-  document.querySelectorAll('nav a').forEach(a=>{ if(a.textContent.includes('Órdenes Taller')) a.click(); });
+  // se busca por el onclick, NO por el texto: si mañana se renombra el
+  // renglón del menú, esto seguiría funcionando (el 2026-08-09 se reagrupó
+  // todo el menú y este era el único punto que se habría roto en silencio).
+  const _lnkOt=[...document.querySelectorAll('nav a')].find(
+    a=>(a.getAttribute('onclick')||'').includes("'taller'"));
+  if(_lnkOt) _lnkOt.click();
   setTimeout(otSaldo,100);
 }
 
