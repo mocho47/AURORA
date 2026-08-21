@@ -600,10 +600,20 @@ section.active{display:block}
             <input id="cl-ruta" placeholder="Ruta del archivo (ej. C:\Users\...\diseno.dxf)" style="width:100%;padding:9px;margin-top:10px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;box-sizing:border-box">
             <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:flex-end">
               <label style="font-size:12px;color:#9ca3af;flex:1;min-width:150px">Material<br><select id="cl-material" style="width:100%;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></select></label>
-              <label style="font-size:12px;color:#9ca3af">Velocidad mm/s<br><input id="cl-vel" type="number" value="15" style="width:110px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
-              <label style="font-size:12px;color:#9ca3af">Margen %<br><input id="cl-margen" type="number" value="60" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af;flex:1;min-width:150px">Vinil encima (opcional)<br><select id="cl-vinil" style="width:100%;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"><option value="">— sin vinil —</option></select></label>
+              <label style="font-size:12px;color:#9ca3af">Velocidad mm/s<br><input id="cl-vel" type="number" value="20" style="width:110px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
+              <label style="font-size:12px;color:#9ca3af">Piezas<br><input id="cl-cant" type="number" value="1" min="1" style="width:80px;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb"></label>
             </div>
-            <p style="color:#6b7280;font-size:11px;margin-top:6px">Tus velocidades: <b>3&nbsp;mm → 15</b> · <b>6&nbsp;mm → 5</b> (el de 6 tarda 3× y cuesta 3×). El material se cobra por el <b>recuadro</b> que ocupa: ahí ya va el desperdicio.</p>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:flex-end">
+              <label style="font-size:12px;color:#9ca3af;flex:1;min-width:190px">Diseño — ¿qué trajo el cliente?<br><select id="cl-diseno" style="width:100%;padding:9px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:#e5e7eb">
+                <option value="imagen">Una imagen, hay que vectorizar — $15</option>
+                <option value="vector">Archivo listo, PDF o DXF — $10</option>
+                <option value="cero">Nada, se diseña desde cero — $20</option>
+                <option value="ninguno">No se cobra diseño</option>
+              </select></label>
+              <label style="font-size:12px;color:#9ca3af;padding-bottom:9px"><input id="cl-inst" type="checkbox" style="vertical-align:middle"> Lleva instalación <span style="color:#6b7280">($20 · doble si pasa de 1 m)</span></label>
+            </div>
+            <p style="color:#6b7280;font-size:11px;margin-top:6px">Tu fórmula: <b>(materiales × 1.20) + corte $8/min + diseño + instalación</b>. Corte a <b>20 mm/s</b> (el de 6&nbsp;mm tarda 3× y cuesta 3×). El material se cobra por el <b>recuadro</b> que ocupa: ahí ya va el desperdicio. <b>El vinil no se cobra aparte de corte</b> — va pegado al MDF y sale en la misma pasada.</p>
             <button class="btn btn-purple" onclick="clCotizar()" style="margin-top:12px;width:100%">Cotizar archivo</button>
           </div>
           <div class="card">
@@ -3342,6 +3352,17 @@ async function clMateriales(){
   const mats=((r.laser||{}).materiales)||r.materiales||[];
   sel.innerHTML=mats.map(m=>`<option value="${m.nombre}">${m.nombre} — $${m.precio_hoja}</option>`).join('')
     || '<option value="">(sin materiales capturados)</option>';
+  // Los vinilos van aparte: se venden por metro lineal de rollo, no por hoja.
+  const sv=document.getElementById('cl-vinil');
+  if(sv && sv.options.length<2){
+    const v=await api('/taller/vinilos');
+    (v.vinilos||[]).forEach(x=>{
+      const o=document.createElement('option');
+      o.value=x.nombre;
+      o.textContent=`${x.nombre} — $${x.precio_metro}/m (rollo ${x.ancho_rollo_cm} cm)`;
+      sv.appendChild(o);
+    });
+  }
 }
 async function clCotizar(){
   // OJO: /taller/cotizar-dxf recibe JSON con archivo/material/velocidad_mm_s/
@@ -3352,15 +3373,23 @@ async function clCotizar(){
   const ruta=(document.getElementById('cl-ruta').value||'').trim();
   if(!ruta){ out.innerHTML='<span style="color:#fca5a5">Pon la ruta del archivo.</span>'; return; }
   out.innerHTML='Midiendo el archivo de verdad...';
+  // El diseño se manda como lo que TRAJO el cliente, no como un precio: quien
+  // pone el número es la fórmula, para que el panel y el chat no se separen.
+  const dis=document.getElementById('cl-diseno').value;
   const r=await api('/taller/cotizar-dxf',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({archivo:ruta,
                          material:document.getElementById('cl-material').value||'',
-                         velocidad_mm_s:parseFloat(document.getElementById('cl-vel').value)||15,
-                         margen_pct:parseFloat(document.getElementById('cl-margen').value)||60})});
+                         vinil:(document.getElementById('cl-vinil')||{}).value||'',
+                         velocidad_mm_s:parseFloat(document.getElementById('cl-vel').value)||20,
+                         cantidad:parseInt(document.getElementById('cl-cant').value)||1,
+                         diseno:dis==='vector'?'x.dxf':dis==='imagen'?'x.jpg':'',
+                         sin_diseno:dis==='ninguno',
+                         instalacion:document.getElementById('cl-inst').checked})});
   if(r.error||r.status!=='ok'){
     out.innerHTML=`<span style="color:#fca5a5">${r.detalle||r.error||'No se pudo medir el archivo.'}</span>`; return; }
   const $=n=>'$'+Number(n||0).toFixed(2);
   const cabe=r.cabe_en_la_maquina||{};
+  const p=r.precio||{};   // el desglose que arma TALLER/formula_precios.py
   out.innerHTML=`
     <div style="color:#9ca3af">${r.archivo}</div>
     <div style="margin-top:6px">mide <b>${r.medida_cm} cm</b> · ${r.piezas_aprox} pieza(s)</div>
@@ -3369,12 +3398,15 @@ async function clCotizar(){
       : `<div style="color:#fca5a5;margin-top:4px">⚠️ NO cabe en tu láser (cama ${(cabe.cama_mm||[]).join('×')} mm)</div>`}
     <div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px">
       <div>corte &nbsp; <b>${r.longitud_corte_m} m</b> en <b>${r.tiempo_min} min</b> a ${r.velocidad_mm_s} mm/s</div>
-      <div>máquina &nbsp; <b>${$(r.costo_corte)}</b> <span style="color:#6b7280">(${$(r.costo_minuto)}/min)</span></div>
-      <div>material &nbsp; <b>${$(r.costo_material)}</b> <span style="color:#6b7280">${r.material.fraccion_hoja_pct}% de una hoja de ${r.material.nombre}</span></div>
-      ${r.costo_desperdicio?`<div>desperdicio extra &nbsp; <b>${$(r.costo_desperdicio)}</b></div>`:''}
-      <div style="margin-top:8px;font-size:20px;color:#a78bfa"><b>${$(r.total)}</b> <span style="font-size:12px;color:#6b7280">con ${r.margen_pct}% de margen</span></div>
+      ${(p.materiales?.detalle||[]).map(m=>`<div>${m.nombre} &nbsp; <b>${$(m.costo)}</b></div>`).join('')}
+      <div>materiales ×1.20 &nbsp; <b>${$(p.materiales?.con_compraventa)}</b> <span style="color:#6b7280">(te ganas ${$(p.materiales?.ganancia)})</span></div>
+      <div>corte ${(p.corte?.minutos||0).toFixed(2)} min × ${$(p.corte?.por_minuto)} &nbsp; <b>${$(p.corte?.importe)}</b></div>
+      ${p.diseno?.importe?`<div>diseño &nbsp; <b>${$(p.diseno.importe)}</b> <span style="color:#6b7280">${p.diseno.por_que}</span></div>`:''}
+      ${p.instalacion?.importe?`<div>instalación &nbsp; <b>${$(p.instalacion.importe)}</b> <span style="color:#6b7280">${p.instalacion.por_que}</span></div>`:''}
+      <div style="margin-top:8px;font-size:20px;color:#a78bfa"><b>${$(r.total)}</b></div>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:#6b7280">El material se cobra por el recuadro que ocupa la pieza: ahí ya va el desperdicio.</div>`;
+    ${(r.avisos||[]).map(a=>`<div style="color:#fbbf24;margin-top:6px;font-size:12px">⚠️ ${a}</div>`).join('')}
+    <div style="margin-top:8px;font-size:11px;color:#6b7280">(materiales × 1.20) + corte + diseño + instalación. El material se cobra por el recuadro que ocupa la pieza: ahí ya va el desperdicio.</div>`;
 }
 
 // ── GENERAR CAJA (hasta hoy solo salía por el chat) ──

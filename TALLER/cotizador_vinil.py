@@ -34,6 +34,18 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+
+
+def _formula():
+    """La fórmula de precios de Anuar, la misma que usa el cotizador de láser
+    y el chat. Aquí no se decide cuánto se gana: solo se miden los minutos y
+    el material (2026-08-14)."""
+    import importlib.util as _ilu
+    _sp = _ilu.spec_from_file_location("formula_precios",
+                                       RAIZ / "TALLER" / "formula_precios.py")
+    _m = _ilu.module_from_spec(_sp)
+    _sp.loader.exec_module(_m)
+    return _m
 sys.path.insert(0, str(RAIZ))
 
 CONFIG = RAIZ / "CONFIG" / "precios_vinil.json"
@@ -336,11 +348,31 @@ def cotizar(ancho_cm: float, alto_cm: float, contornos: int = 1,
                     + dm2 * d["minutos_instalar_por_dm2"]) * piezas
     inst = min_inst * minuto
 
-    costo = material + corte + despique + plancha + inst
-    precio = costo * (1 + d["margen_pct"] / 100.0)
+    # ── EL PRECIO, con la regla de Anuar (2026-08-14) ────────────────────
+    # Antes: `precio = costo × 1.60`, o sea 60% encima de TODO — material y
+    # mano de obra por igual. Eso es cobrar ganancia sobre la ganancia y es lo
+    # que daba $538 por un trabajo cuyo material cuesta $28.80.
+    #
+    # Su regla, dicha por él: "todos mis precios son más el 20% de compraventa
+    # Y + el corte o grabado o colocación". El 20% es COMPRAVENTA DE MATERIAL.
+    # La mano de obra (corte, despicado, planchado) ya se cobra a su tarifa por
+    # minuto: esa tarifa YA es precio de venta, igual que los $8 del láser.
+    _f = _formula()
+    mano_de_obra = corte + despique + plancha
+    _p = _f.cotizar(materiales=[{"nombre": f"vinil {tipo}", "costo": material}],
+                    minutos_corte=0, diseno=None,
+                    instalacion=bool(inst), lado_mayor_cm=max(ancho_cm, alto_cm))
+    # La instalación la pone la fórmula ($20, doble si pasa de 1 m) y sustituye
+    # a la cuenta por minutos de este módulo, que Anuar nunca dictó.
+    inst = _p["instalacion"]["importe"]
+    costo = material + mano_de_obra
+    precio = round(_p["materiales"]["con_compraventa"] + mano_de_obra + inst, 2)
 
     return {
         "status": "OK", "tipo": tipo, "piezas": piezas, "colores": colores,
+        "formula": "(material × 1.20) + mano de obra + instalación",
+        "material_con_compraventa": _p["materiales"]["con_compraventa"],
+        "mano_de_obra": round(mano_de_obra, 2),
         "area": f"{ancho_cm:g} × {alto_cm:g} cm", "contornos": contornos,
         "rollo_cm": round(largo_rollo_cm, 1), "ancho_rollo": ancho_rollo,
         "desglose": {
@@ -358,7 +390,7 @@ def cotizar(ancho_cm: float, alto_cm: float, contornos: int = 1,
                                + min_inst, 1),
         "costo": round(costo, 2), "precio": round(precio, 2),
         "precio_pieza": round(precio / max(1, piezas), 2),
-        "margen_pct": d["margen_pct"],
+        "margen_pct_ignorado": d["margen_pct"],
         "estimado_el_corte": largo_corte_cm and True,
         "planchado_receta": PLANCHADO.get(tela) if textil else None,
     }

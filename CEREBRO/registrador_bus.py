@@ -748,14 +748,24 @@ async def registrar_todos_los_motores() -> dict:
         async def _cb_auto_conocimiento(msg: Mensaje) -> Optional[dict]:
             try:
                 accion = msg.contenido.get("accion", "mapa")
+                # OJO (2026-08-20): esta acción llamaba a _ac.capacidades()/
+                # .mapa_sistema()/.estado_integraciones(), que NO EXISTEN en la
+                # clase — cualquier pedido por el bus fallaba en silencio
+                # (AttributeError atrapado abajo, perdido en un log que nadie
+                # ve). Los nombres reales de la clase son obtener_capacidades()
+                # y escanear_estructura(); "estado_integraciones" no tenía
+                # equivalente, así que se arma del mismo diccionario real.
                 if accion == "capacidades":
-                    return await _ac.capacidades()
+                    return await _ac.obtener_capacidades()
                 elif accion == "estado_integraciones":
-                    return await _ac.estado_integraciones()
+                    cap = await _ac.obtener_capacidades()
+                    return {"integraciones": cap.get("integraciones", {})}
                 elif accion == "leer_archivo":
-                    return await _ac.leer_archivo(msg.contenido.get("ruta_relativa", ""))
+                    return {"contenido": await _ac.leer_archivo(msg.contenido.get("ruta_relativa", ""))}
+                elif accion == "manual":
+                    return await _ac.manual_de_comandos(msg.contenido.get("grupo", ""))
                 else:
-                    return await _ac.mapa_sistema()
+                    return await _ac.escanear_estructura()
             except Exception as e:
                 logger.error(f"auto_conocimiento: {e}")
             return None
@@ -787,6 +797,249 @@ async def registrar_todos_los_motores() -> dict:
     except Exception as e:
         resultado["auto_reparacion"] = f"error: {e}"
         logger.warning(f"[BUS] auto_reparacion: {e}")
+
+    # ── ETIQUETAS — QR, lote, suaje (2026-08-20: existía y funcionaba, pero
+    #    `registrador_bus.py` no la conocía, así que el chat no la podía usar) ──
+    try:
+        spec = importlib.util.spec_from_file_location("etiquetas", ROOT / "TALLER" / "etiquetas.py")
+        mod_etq = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_etq)
+
+        async def _cb_etiquetas(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "cuanto_cobrar")
+                c = msg.contenido
+                if accion == "etiqueta":
+                    return await loop.run_in_executor(None, lambda: mod_etq.etiqueta(
+                        nombre=c.get("nombre", "Producto"), lote=c.get("lote", ""),
+                        qr=c.get("qr", ""), cliente=c.get("cliente", "")))
+                elif accion == "pliego":
+                    return await loop.run_in_executor(None, lambda: mod_etq.pliego(
+                        nombre=c.get("nombre", "Producto"), lote=c.get("lote", ""),
+                        qr=c.get("qr", ""), cuantas=c.get("cuantas", 0),
+                        cliente=c.get("cliente", "")))
+                elif accion == "sticker":
+                    return await loop.run_in_executor(None, lambda: mod_etq.sticker(
+                        nombre=c.get("nombre", ""), qr=c.get("qr", ""),
+                        diametro_mm=c.get("diametro_mm", 40.0)))
+                elif accion == "lotes":
+                    return await loop.run_in_executor(None, mod_etq.lotes,
+                                                       c.get("cliente", ""), c.get("limite", 40))
+                elif accion == "variantes":
+                    return await loop.run_in_executor(None, mod_etq.variantes)
+                else:
+                    return await loop.run_in_executor(None, lambda: mod_etq.cuanto_cobrar(
+                        piezas=c.get("piezas", 100), ancho_mm=c.get("ancho_mm", 35.0),
+                        alto_mm=c.get("alto_mm", 70.0)))
+            except Exception as e:
+                logger.error(f"etiquetas: {e}")
+            return None
+
+        bus.registrar("etiquetas", _cb_etiquetas)
+        resultado["etiquetas"] = "registrado"
+        logger.info("[BUS] Registrado: etiquetas")
+    except Exception as e:
+        resultado["etiquetas"] = f"error: {e}"
+        logger.warning(f"[BUS] etiquetas: {e}")
+
+    # ── ESTRATEGA SHORTS — si un canal de YouTube deja dinero o no ─────
+    try:
+        spec = importlib.util.spec_from_file_location("estratega_shorts", ROOT / "MARKETING" / "estratega_shorts.py")
+        mod_sh = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_sh)
+
+        async def _cb_shorts(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "analizar")
+                c = msg.contenido
+                if accion == "cuanto_paga":
+                    return await loop.run_in_executor(None, lambda: mod_sh.cuanto_paga(
+                        c.get("vistas", 0), c.get("nicho", "")))
+                elif accion == "cuanto_falta":
+                    return await loop.run_in_executor(None, mod_sh.cuanto_falta,
+                                                       c.get("subs", 0), c.get("vistas_90", 0))
+                elif accion == "plan_30_dias":
+                    return await loop.run_in_executor(None, lambda: mod_sh.plan_30_dias(
+                        nicho=c.get("nicho", ""), horas_semana=c.get("horas_semana", 5)))
+                elif accion == "como_negocio":
+                    return await loop.run_in_executor(None, lambda: mod_sh.como_negocio(
+                        c.get("vistas_mes", 0), c.get("nicho", "")))
+                elif accion == "nichos":
+                    return await loop.run_in_executor(None, mod_sh.nichos)
+                else:
+                    return await loop.run_in_executor(None, lambda: mod_sh.analizar(
+                        edad=c.get("edad"), temas=c.get("temas", ""),
+                        horas_semana=c.get("horas_semana", 0)))
+            except Exception as e:
+                logger.error(f"estratega_shorts: {e}")
+            return None
+
+        bus.registrar("estratega_shorts", _cb_shorts)
+        resultado["estratega_shorts"] = "registrado"
+        logger.info("[BUS] Registrado: estratega_shorts")
+    except Exception as e:
+        resultado["estratega_shorts"] = f"error: {e}"
+        logger.warning(f"[BUS] estratega_shorts: {e}")
+
+    # ── ANALIZADOR DE MERCADO — rentabilidad real por canal de venta ───
+    try:
+        spec = importlib.util.spec_from_file_location("analizador_mercado", ROOT / "MERCADO" / "analizador_mercado.py")
+        mod_am = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_am)
+
+        async def _cb_analizador(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "cuenta")
+                c = msg.contenido
+                if accion == "piso":
+                    return await loop.run_in_executor(None, lambda: mod_am.piso(
+                        c.get("costo", 0.0), c.get("canal", "ml_clasica"),
+                        c.get("margen_pct", 30.0)))
+                elif accion == "competencia":
+                    return await loop.run_in_executor(None, lambda: mod_am.competencia(
+                        c.get("precios", []), c.get("mi_precio", 0.0), c.get("costo", 0.0)))
+                elif accion == "canales":
+                    return await loop.run_in_executor(None, mod_am.canales)
+                else:
+                    return await loop.run_in_executor(None, lambda: mod_am.cuenta(
+                        c.get("precio_venta", 0.0), c.get("costo", 0.0),
+                        c.get("canal", "ml_clasica")))
+            except Exception as e:
+                logger.error(f"analizador_mercado: {e}")
+            return None
+
+        bus.registrar("analizador_mercado", _cb_analizador)
+        resultado["analizador_mercado"] = "registrado"
+        logger.info("[BUS] Registrado: analizador_mercado")
+    except Exception as e:
+        resultado["analizador_mercado"] = f"error: {e}"
+        logger.warning(f"[BUS] analizador_mercado: {e}")
+
+    # ── BUSCADOR DE CLIENTES — 401,813 negocios del INEGI, sin internet ─
+    #    OJO: `preparar()` procesa el censo completo (pesado) — nunca es el
+    #    default de esta acción, para que una frase suelta no lo dispare solo.
+    try:
+        spec = importlib.util.spec_from_file_location("buscador_clientes", ROOT / "MERCADO" / "buscador_clientes.py")
+        mod_bc = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_bc)
+
+        async def _cb_buscador(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "nichos")
+                c = msg.contenido
+                if accion == "buscar":
+                    return await loop.run_in_executor(None, lambda: mod_bc.buscar(
+                        giro=c.get("giro", ""), zona=c.get("zona", ""),
+                        limite=c.get("limite", 60)))
+                elif accion == "oportunidad":
+                    return await loop.run_in_executor(None, mod_bc.oportunidad, c.get("giro", ""))
+                elif accion == "preparar":
+                    return await loop.run_in_executor(None, lambda: mod_bc.preparar(
+                        c.get("estado", "14"), c.get("forzar", False)))
+                else:
+                    return await loop.run_in_executor(None, lambda: mod_bc.nichos(
+                        zona=c.get("zona", ""), limite=c.get("limite", 40)))
+            except Exception as e:
+                logger.error(f"buscador_clientes: {e}")
+            return None
+
+        bus.registrar("buscador_clientes", _cb_buscador)
+        resultado["buscador_clientes"] = "registrado"
+        logger.info("[BUS] Registrado: buscador_clientes")
+    except Exception as e:
+        resultado["buscador_clientes"] = f"error: {e}"
+        logger.warning(f"[BUS] buscador_clientes: {e}")
+
+    # ── LICENCIAS — de 3 meses, para vender AURORA como producto ───────
+    #    OJO: `generar()` fabrica una clave real y queda en el registro — el
+    #    default de esta acción es "lista" (solo lee), nunca "generar", para
+    #    que una frase ambigua del chat no emita una licencia sola.
+    try:
+        spec = importlib.util.spec_from_file_location("licencias", ROOT / "LICENCIA" / "licencias.py")
+        mod_lic = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_lic)
+
+        async def _cb_licencias(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "lista")
+                c = msg.contenido
+                if accion == "generar":
+                    return await loop.run_in_executor(None, lambda: mod_lic.generar(
+                        c.get("cliente", ""), c.get("app", "buscador_clientes"),
+                        c.get("meses", 3)))
+                elif accion == "revisar":
+                    return await loop.run_in_executor(None, mod_lic.revisar,
+                                                       c.get("clave", ""), c.get("app", ""))
+                else:
+                    return await loop.run_in_executor(None, mod_lic.lista, c.get("app", ""))
+            except Exception as e:
+                logger.error(f"licencias: {e}")
+            return None
+
+        bus.registrar("licencias", _cb_licencias)
+        resultado["licencias"] = "registrado"
+        logger.info("[BUS] Registrado: licencias")
+    except Exception as e:
+        resultado["licencias"] = f"error: {e}"
+        logger.warning(f"[BUS] licencias: {e}")
+
+    # ── PLUGINS — el catálogo de apps que AURORA puede abrir ───────────
+    try:
+        spec = importlib.util.spec_from_file_location("plugins_catalogo", ROOT / "CEREBRO" / "plugins.py")
+        mod_pl = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_pl)
+
+        async def _cb_plugins(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "catalogo")
+                c = msg.contenido
+                if accion == "buscar":
+                    return await loop.run_in_executor(None, mod_pl.buscar, c.get("frase", ""))
+                elif accion == "manual":
+                    return await loop.run_in_executor(None, mod_pl.manual, c.get("app", ""))
+                elif accion == "ejecutar":
+                    kw = {k: v for k, v in c.items() if k not in ("accion", "app", "accion_app")}
+                    return await loop.run_in_executor(
+                        None, lambda: mod_pl.ejecutar(c.get("app", ""), c.get("accion_app", ""), **kw))
+                else:
+                    return {"catalogo": await loop.run_in_executor(None, mod_pl.catalogo)}
+            except Exception as e:
+                logger.error(f"plugins_catalogo: {e}")
+            return None
+
+        bus.registrar("plugins_catalogo", _cb_plugins)
+        resultado["plugins_catalogo"] = "registrado"
+        logger.info("[BUS] Registrado: plugins_catalogo")
+    except Exception as e:
+        resultado["plugins_catalogo"] = f"error: {e}"
+        logger.warning(f"[BUS] plugins_catalogo: {e}")
+
+    # ── TEXTO A CORTE — palabras convertidas a curvas soldadas para láser ─
+    try:
+        spec = importlib.util.spec_from_file_location("texto_a_corte", ROOT / "EDITOR" / "texto_a_corte.py")
+        mod_tac = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod_tac)
+
+        async def _cb_texto_corte(msg: Mensaje) -> Optional[dict]:
+            try:
+                loop = asyncio.get_event_loop()
+                accion = msg.contenido.get("accion", "generar")
+                c = msg.contenido
+                if accion == "fuentes":
+                    return {"fuentes": await loop.run_in_executor(None, mod_tac.fuentes)}
+                else:
+                    return await loop.run_in_executor(None, lambda: mod_tac.generar(
+                        c.get("textos", []), c.get("ancho_mm", 100.0),
+                        c.get("alto_mm", 50.0), fuente=c.get("fuente", "")))
+            except Exception as e:
+                logger.error(f"texto_a_corte: {e}")
+            return None
+
+        bus.registrar("texto_a_corte", _cb_texto_corte)
+        resultado["texto_a_corte"] = "registrado"
+        logger.info("[BUS] Registrado: texto_a_corte")
+    except Exception as e:
+        resultado["texto_a_corte"] = f"error: {e}"
+        logger.warning(f"[BUS] texto_a_corte: {e}")
 
     # (Las suscripciones cruzadas de ventas/marketing/reasoning YA se hicieron arriba.
     #  Aquí estaba un bloque DUPLICADO que las registraba 2 veces y re-importaba los

@@ -10,14 +10,17 @@ Bug que costó encontrarlo (2026-08-05): `Boxes.close()` DEVUELVE los datos en u
 BytesIO, no escribe el archivo. Por eso la primera prueba no generaba nada y
 tampoco tiraba error.
 
-Salidas de boxes.py: svg, ps, lbrn2 — **no exporta DXF**. El SVG lo abre Corel
-y RDWorks, así que sirve directo; si se necesita DXF se convierte después.
+Salidas nativas de boxes.py: svg, ps, lbrn2 — no trae DXF de fábrica. Pero
+`generar()` SÍ entrega DXF real: convierte el SVG con `EDITOR/imagen_a_dxf.py`
+(Inkscape por dentro), con unidades en mm declaradas y capas CORTE/GRABADO
+separadas. El SVG se conserva de respaldo, no como salida final.
 
 Correr:  python TALLER/cajas_boxes.py "caja corazon con tapa de agujero de 45x7"
          python TALLER/cajas_boxes.py --lista
 """
 from __future__ import annotations
 import io
+import math
 import re
 import sys
 from pathlib import Path
@@ -93,6 +96,65 @@ CATALOGO = (
     (("libro", "book"), "FlexBook", "caja tipo libro"),
     (("castillo", "castle"), "Castle", "castillo armable"),
     (("casa de pajaros", "pajarera", "birdhouse"), "BirdHouse", "casa de pájaros"),
+    # Añadido el 2026-08-20: de los 189 generadores de boxes.py solo 20 tenían
+    # palabra en español. Estos son los que de verdad sirven para vender
+    # (exhibidores, marcos, organizadores) — verificados uno por uno contra
+    # boxes.generators para confirmar que aceptan x/y/h antes de agregarlos.
+    (("marco de fotos", "portarretrato", "porta retrato"), "PhotoFrame",
+     "marco para fotos"),
+    (("vitrina", "caja vitrina"), "DisplayCase",
+     "vitrina cerrada para exhibir"),
+    (("marco con fondo", "shadowbox", "cuadro para figuras", "cuadro sombra"),
+     "Shadowbox", "marco tipo shadowbox, con fondo para pegar figuras"),
+    (("exhibidor de monedas", "presumidero de monedas"), "CoinDisplay",
+     "exhibidor de monedas"),
+    (("repisa exhibidora", "anaquel exhibidor"), "DisplayShelf",
+     "repisa exhibidora"),
+    (("revistero", "organizador de revistas"), "MagazineFile", "revistero"),
+    (("cubertero", "organizador de cubiertos"), "Silverware",
+     "organizador de cubiertos"),
+    (("lampara triangular", "lámpara triangular"), "TriangleLamp",
+     "lámpara triangular"),
+    (("contenedor apilable", "bin apilable"), "StackableBin",
+     "contenedor apilable para organizar"),
+    (("carpeta organizadora", "sobre organizador"), "Folder",
+     "carpeta/sobre organizador"),
+    (("caja para hojas", "caja de papel"), "PaperBox",
+     "caja para papel u hojas"),
+    (("charola de piezas pequeñas", "organizador de tornillos"),
+     "SmallPartsTray", "charola para piezas pequeñas (tornillos, tuercas)"),
+    (("insert organizador", "charola insert"), "TrayInsert",
+     "insert organizador para meter dentro de otra caja"),
+    # Segunda tanda, mismo día 2026-08-20 — mismo criterio: solo lo que acepta
+    # x/y/h directo (nada de generadores que solo aceptan radius/diameter o que
+    # no traen ningún parámetro de tamaño; esos quedan pendientes de raíz).
+    (("caja de dos piezas", "tapa que cubre la base", "caja tapa y base"),
+     "TwoPiece", "caja de regalo de dos piezas (la tapa cubre la base)"),
+    (("atril para volantes", "exhibidor de folletos", "porta volantes"),
+     "Display", "exhibidor de pie para volantes o folletos"),
+    (("huacal", "cajon con asas", "cajón con asas", "caja tipo huacal"),
+     "Crate", "huacal con asas, se puede hacer apilable"),
+    (("dispensador", "dispensador de servilletas"), "Dispenser",
+     "dispensador para cosas planas apiladas (servilletas, posavasos)"),
+    # "caja abierta" tiene que ir ANTES del catch-all genérico de "caja" de más
+    # abajo — si no, cualquier "caja abierta..." caería en ClosedBox primero.
+    (("caja abierta", "charola abierta"), "OpenBox",
+     "caja con la tapa y el frente abiertos"),
+    (("consola de pared", "repisa con panel inclinado"), "Console",
+     "consola de pared con panel inclinado"),
+    (("caja con cortina enrollable", "caja persiana", "caja rolltop"),
+     "ShutterBox", "caja con cortina enrollable tipo persiana"),
+    (("porta notas", "organizador de papel apilado", "porta posavasos"),
+     "NotesHolder", "organizador para una pila de papel o posavasos"),
+    (("contenedor de pared apilable", "bin de pared"), "WallStackableBin",
+     "contenedor de pared, apilable o colgante"),
+    (("vinatera", "botellero", "portabotellas de vino"), "WineRack",
+     "vinatera / portabotellas"),
+    # BreadBox ("panera") NO se agregó: probado en vivo el 2026-08-20, su SVG
+    # cuelga a Inkscape de verdad al convertirlo a DXF (reproducido aislado,
+    # >40s sin terminar, no es lentitud normal). Bug real de la geometría
+    # curva de ese generador contra el exportador DXF de Inkscape, sin
+    # resolver — no agregar hasta encontrar la causa o un conversor distinto.
     (("moneda", "alcancia", "alcancía"), "CoinBankSafe", "alcancía con caja fuerte"),
     (("bandeja", "charola", "tray"), "BinTray", "bandeja simple"),
     (("compartimento", "compartimentos"), "CompartmentBox",
@@ -152,9 +214,180 @@ def que_medidas(pedido: str) -> dict:
             "y": nums[1] * 10 if len(nums) >= 3 else 0}
 
 
+# ── LÁMPARA DE MEDIA LUNA — no es un generador de boxes.py, es una pieza
+# custom (pedido real de una clienta, 2026-08-21: "1m de diámetro x 50 de
+# altura, 4 tiras LED (2 cálidas, 2 frías), doble apagador, puerto USB,
+# soporte de celular integrado"). Se resuelve aparte, con ezdxf directo,
+# porque boxes.py no trae ningún generador de arco/media luna (confirmado
+# contra boxes.generators, ninguno de los 189 sirve).
+_MEDIA_LUNA_TRIGGERS = ("media luna", "medialuna", "lampara de arco",
+                        "lampara arco", "half moon")
+
+
+def _medida_mm(texto: str, i: int, default: float = 0.0) -> float:
+    """i-ésimo número del texto, en mm. Entiende m/metro y cm (cm es el default)."""
+    nums = re.findall(r"(\d+(?:[.,]\d+)?)\s*(mm|cm|m\b|metro[s]?)?", texto)
+    nums = [(float(n.replace(",", ".")), u) for n, u in nums if n]
+    if i >= len(nums):
+        return default
+    val, unidad = nums[i]
+    if unidad in ("m", "metro", "metros"):
+        return val * 1000
+    if unidad == "mm":
+        return val
+    return val * 10  # cm, o sin unidad (default de Anuar)
+
+
+def _generar_lampara_media_luna(pedido: str, grosor_mm: float = 9.0) -> dict:
+    """Cuerpo de madera en forma de media luna: 2 costados + costillas + base.
+
+    El difusor (acrílico delgado que cubre las tiras LED) NO se corta en
+    madera — se entrega la medida real para que Anuar lo consiga y lo doble
+    en caliente sobre el arco, que es como se hace este tipo de lámpara.
+    """
+    diametro = _medida_mm(pedido, 0, default=1000.0)
+    altura = _medida_mm(pedido, 1, default=diametro / 2)
+    # El cuerpo de una lámpara así carga su propio peso de pie: 2.7mm (el
+    # grosor genérico de las cajas) se vencería. Si nadie pidió un grosor
+    # real (>4mm) en la frase, se usa 9mm de madera y se le aplica el MISMO
+    # kerf que a las cajas (el láser se come ~0.2mm por lado).
+    grosor_material = grosor_mm if grosor_mm > 4.0 else 9.0
+    T = round(max(0.5, grosor_material - KERF_MM), 2)
+    R_OUT = diametro / 2
+    R_IN = R_OUT - diametro * 0.07          # banda ~7% del diámetro
+    DEPTH = diametro * 0.07                 # profundidad del cuerpo
+    RIB_W = 25.0
+    N_RIBS = 7
+    ANG_INI, ANG_FIN = 20, 160
+
+    try:
+        import ezdxf
+    except ImportError as e:
+        return {"status": "FALTA_LIBRERIA", "detalle": str(e)}
+
+    out = ezdxf.new("R2010")
+    out.units = ezdxf.units.MM
+    out.header["$INSUNITS"] = 4
+    for name, color in (("COSTADO", 1), ("BASE", 3), ("COSTILLAS", 5)):
+        out.layers.add(name, color=color)
+    msp = out.modelspace()
+
+    def arco_pts(r, a0, a1, n=80):
+        return [(r * math.cos(math.radians(a)), r * math.sin(math.radians(a)))
+                for a in [a0 + (a1 - a0) * i / n for i in range(n + 1)]]
+
+    def costado(offset_x):
+        pts = [(R_OUT, 0)] + arco_pts(R_OUT, 0, 180) + [(-R_IN, 0)] \
+            + arco_pts(R_IN, 180, 0) + [(R_OUT, 0)]
+        msp.add_lwpolyline([(x + offset_x, y) for x, y in pts], close=True,
+                            dxfattribs={"layer": "COSTADO"})
+        r_mid = (R_OUT + R_IN) / 2
+        for i in range(N_RIBS):
+            ang = math.radians(ANG_INI + (ANG_FIN - ANG_INI) * i / (N_RIBS - 1))
+            cx, cy = r_mid * math.cos(ang), r_mid * math.sin(ang)
+            tx, ty = -math.sin(ang), math.cos(ang)
+            rx, ry = math.cos(ang), math.sin(ang)
+            hw = RIB_W / 2
+            esq = [(cx - hw * tx - T / 2 * rx, cy - hw * ty - T / 2 * ry),
+                   (cx + hw * tx - T / 2 * rx, cy + hw * ty - T / 2 * ry),
+                   (cx + hw * tx + T / 2 * rx, cy + hw * ty + T / 2 * ry),
+                   (cx - hw * tx + T / 2 * rx, cy - hw * ty + T / 2 * ry)]
+            msp.add_lwpolyline([(x + offset_x, y) for x, y in esq], close=True,
+                                dxfattribs={"layer": "COSTADO"})
+
+    costado(0)
+    costado(diametro + 300)   # el 2do costado (idéntico) aparte, para cortar 2 piezas
+
+    rib_len = DEPTH + 2 * T
+    for i in range(N_RIBS):
+        x0 = 2 * (diametro + 300) + i * (RIB_W + 15)
+        msp.add_lwpolyline([(x0, 0), (x0 + RIB_W, 0), (x0 + RIB_W, rib_len),
+                            (x0, rib_len)], close=True, dxfattribs={"layer": "COSTILLAS"})
+
+    base_w = diametro + 80
+    base_d = DEPTH + 90
+    bx0, by0 = 0, -(R_OUT + 150)
+    msp.add_lwpolyline([(bx0, by0), (bx0 + base_w, by0), (bx0 + base_w, by0 + base_d),
+                        (bx0, by0 + base_d)], close=True, dxfattribs={"layer": "BASE"})
+    cx_base = bx0 + base_w / 2
+    for side_off in (-DEPTH / 2, DEPTH / 2):
+        for foot_cx in (cx_base - (R_OUT - 35), cx_base + (R_OUT - 35)):
+            y_c = by0 + base_d / 2 + side_off
+            msp.add_lwpolyline([(foot_cx - 35, y_c - T / 2), (foot_cx + 35, y_c - T / 2),
+                                (foot_cx + 35, y_c + T / 2), (foot_cx - 35, y_c + T / 2)],
+                                close=True, dxfattribs={"layer": "BASE"})
+    # soporte de celular: ranura angulada al frente de la base
+    ang_ph = math.radians(75)
+    dx, dy = math.cos(ang_ph) * 60, math.sin(ang_ph) * 60
+    px, py = cx_base, by0 + 15
+    msp.add_lwpolyline([(px - 9, py), (px + 9, py), (px + 9 + dx, py + dy),
+                        (px - 9 + dx, py + dy)], close=True, dxfattribs={"layer": "BASE"})
+    # 2 apagadores (mini rocker 19.2x13mm) + 1 puerto USB (13x7mm) — AJUSTAR a la pieza real que compre
+    sw_y = by0 + base_d - 20
+    for swx in (cx_base - 120, cx_base - 60):
+        msp.add_lwpolyline([(swx - 9.6, sw_y - 6.5), (swx + 9.6, sw_y - 6.5),
+                            (swx + 9.6, sw_y + 6.5), (swx - 9.6, sw_y + 6.5)],
+                            close=True, dxfattribs={"layer": "BASE"})
+    msp.add_lwpolyline([(cx_base + 53.5, sw_y - 3.5), (cx_base + 66.5, sw_y - 3.5),
+                        (cx_base + 66.5, sw_y + 3.5), (cx_base + 53.5, sw_y + 3.5)],
+                        close=True, dxfattribs={"layer": "BASE"})
+
+    DESTINO_DXF = _destino_dxf()
+    DESTINO_DXF.mkdir(parents=True, exist_ok=True)
+    salida = DESTINO_DXF / f"lampara_media_luna_{int(diametro/10)}x{int(altura/10)}cm.dxf"
+    n = 2
+    while salida.exists():
+        salida = salida.parent / f"lampara_media_luna_{int(diametro/10)}x{int(altura/10)}cm__{n}.dxf"
+        n += 1
+    out.saveas(str(salida))
+
+    difusor_mm = math.pi * ((R_OUT + R_IN) / 2)
+
+    r = {"status": "OK", "generador": "lampara_media_luna",
+         "que_es": "lámpara de media luna con canal para difusor LED",
+         "tapa": "-", "archivo": str(salida), "dxf": str(salida),
+         "kb": round(salida.stat().st_size / 1024, 1),
+         "kb_dxf": round(salida.stat().st_size / 1024, 1),
+         "medidas_cm": f"{diametro/10:g} diámetro × {altura/10:g} alto",
+         "grosor_material": grosor_material, "grosor_corte": T, "dedos": None,
+         "difusor_mm": round(difusor_mm, 1),
+         "n_costillas": N_RIBS, "profundidad_mm": round(DEPTH, 1)}
+
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location("imagen_a_dxf", RAIZ / "EDITOR" / "imagen_a_dxf.py")
+        iad = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(iad)
+        v = iad.vista_previa(salida)
+        if v.get("status") == "OK":
+            r["vista"] = v["archivo"]
+    except Exception as e:
+        r["dxf_fallo"] = f"vista previa: {type(e).__name__}: {str(e)[:90]}"
+
+    return r
+
+
+def _destino_dxf() -> Path:
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location("carpetas_por_tipo",
+                                            RAIZ / "CONFIG" / "carpetas_por_tipo.py")
+        cpt = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(cpt)
+        return cpt.carpeta_de("dxf")
+    except Exception:
+        d = Path.home() / "Downloads" / "dxf"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+
 def generar(pedido: str, grosor_mm: float = 2.7,
             quiere_dxf: bool = True) -> dict:
     """Genera la caja que se pidió en español. No adivina: si falta algo, lo dice."""
+    p_bajo = (pedido or "").lower()
+    if any(k in p_bajo for k in _MEDIA_LUNA_TRIGGERS) and "lampara" in p_bajo.replace("á", "a"):
+        return _generar_lampara_media_luna(pedido, grosor_mm)
+
     gen, desc = que_generador(pedido)
     if not gen:
         return {"status": "NO_SE_CUAL",

@@ -2134,3 +2134,149 @@ class TestAdaptarGrosorDeMaterial:
             from pathlib import Path as _P
             assert _P(r["archivo"]).exists(), "Dijo que guardó y no hay archivo"
             assert (r.get("ranuras_ajustadas", 0) + r.get("dientes", 0)) > 0
+
+
+# ===========================================================================
+# BUG 19 — "vectoriza"/"traza" en _COREL_ACCIONES sin rama en el ejecutor
+# "corel vectoriza <ruta>" SÍ disparaba el candado de Corel (_es_comando_corel
+# reconoce "vectoriza" en _COREL_ACCIONES), pero _ejecutar_corel_real no tenía
+# ninguna rama para ese verbo: caía al fallback final ("info del documento"),
+# que ignora la ruta pedida y contesta datos del documento que esté abierto en
+# Corel — nunca vectoriza nada. Encontrado real 2026-08-21.
+# ===========================================================================
+class TestCorelVectorizaEjecutaDirecto:
+
+    def test_ejecutor_corel_tiene_rama_para_vectoriza(self):
+        import ast
+        fuente = (RAIZ / "CEREBRO" / "consciencia.py").read_text(encoding="utf-8")
+        cuerpo = ""
+        for nodo in ast.walk(ast.parse(fuente)):
+            if isinstance(nodo, ast.AsyncFunctionDef) and nodo.name == "_ejecutar_corel_real":
+                cuerpo = ast.get_source_segment(fuente, nodo) or ""
+                break
+        assert cuerpo, "No encontré _ejecutar_corel_real"
+        assert "vectoriza" in cuerpo and "tc.vectorizar" in cuerpo, (
+            "vectoriza sigue sin rama real: cae al fallback de info_documento")
+        # La rama debe estar ANTES del fallback de info_documento, si no nunca
+        # se alcanza.
+        i_vect = cuerpo.index("tc.vectorizar")
+        i_fallback = cuerpo.index('"info del documento"')
+        assert i_vect < i_fallback, "La rama de vectoriza quedó después del fallback"
+
+
+# ===========================================================================
+# BUG 20 — lengua_anuar secuestraba "vectoriza <ruta con .jpg/.png>" hacia
+# foto_a_dxf por pura coincidencia de la EXTENSIÓN del archivo con la palabra
+# suelta "jpg"/"png" del patrón (el \b se satisface igual con un punto que con
+# un espacio). Eso ganaba SIEMPRE sobre el candado de Corel real —incluso
+# diciendo "corel vectoriza <ruta>" explícito— porque la intención reconocida
+# por lengua_anuar fuerza qué candado corre, sin importar si su propio
+# trigger calzó. Encontrado real 2026-08-21 end-to-end contra el servidor.
+# ===========================================================================
+class TestLenguaAnuarNoSecuestraVectorizaPorExtension:
+
+    def _lengua(self):
+        return _cargar("lengua_anuar", "CEREBRO/lengua_anuar.py")
+
+    def test_ruta_con_extension_no_activa_foto_a_dxf(self):
+        lengua = self._lengua()
+        casos = [
+            r"corel vectoriza C:\Users\Administrador\Desktop\pieza.png",
+            r"vectoriza C:\Users\Administrador\Desktop\pieza.jpg",
+        ]
+        for m in casos:
+            assert lengua.intencion(m) != "foto_a_dxf", (
+                f"'{m}' sigue secuestrado hacia foto_a_dxf solo por la extensión")
+
+    def test_frases_naturales_siguen_siendo_foto_a_dxf(self):
+        """El arreglo no debe romper la calibración original de 90 frases."""
+        lengua = self._lengua()
+        casos = [
+            "vectoriza esta foto",
+            "vectoriza la imagen",
+            "quita el fondo y vectorizalo",
+            "vectoriza este jpg",
+            "vectoriza el png que te mande",
+        ]
+        for m in casos:
+            assert lengua.intencion(m) == "foto_a_dxf", (
+                f"'{m}' dejó de reconocerse como foto_a_dxf")
+
+
+# ===========================================================================
+# BUG 21 — lengua_anuar secuestraba CUALQUIER mensaje que empezara con "abre"
+# hacia abrir_navegador, sin importar de qué se tratara. Esto rompía en vivo
+# la otra mitad de "ruta sola" (pendiente #4 de ESTADO_REAL.md): al completar
+# "abre esta imagen en corel" + la ruta, el mensaje combinado volvía a entrar
+# al pipeline y "abre..." lo secuestraba hacia pc_access ("dime qué página
+# abro") en vez de dejar correr el candado de Corel que sí reconoce "abre ...
+# corel". Encontrado real 2026-08-21 end-to-end contra el servidor.
+# ===========================================================================
+class TestLenguaAnuarNoSecuestraAbreParaCorel:
+
+    def _lengua(self):
+        return _cargar("lengua_anuar", "CEREBRO/lengua_anuar.py")
+
+    def test_abre_con_corel_o_ruta_no_es_navegador(self):
+        lengua = self._lengua()
+        casos = [
+            "abre esta imagen en corel",
+            r"abre esta imagen en corel C:\Users\Administrador\Desktop\pieza.png",
+            r"abre C:\Users\Administrador\Desktop\pieza.dxf",
+        ]
+        for m in casos:
+            assert lengua.intencion(m) != "abrir_navegador", (
+                f"'{m}' sigue secuestrado hacia abrir_navegador")
+
+    def test_sitios_reales_siguen_abriendo_navegador(self):
+        """El arreglo no debe romper la calibración original de 90 frases."""
+        lengua = self._lengua()
+        casos = [
+            "abre pinterest",
+            "abreme facebook",
+            "metete a mercadolibre y buscame faros aozoom",
+            "entra a youtube",
+        ]
+        for m in casos:
+            assert lengua.intencion(m) == "abrir_navegador", (
+                f"'{m}' dejó de reconocerse como abrir_navegador")
+
+
+# ===========================================================================
+# BUG 22 — "abrir_archivo" perdía contra "leer_archivo" (o ninguna aparecía)
+# cuando Anuar decía "ábrelo"/"ábreme" con una ruta. El bono del registro de
+# herramientas solo reconocía el infinitivo EXACTO "abrir" — nadie habla así—
+# y sin él, "abrir_archivo" ni siquiera entraba a la lista de candidatas
+# (buscar() descarta score=0), o perdía por una palabra suelta de su
+# docstring frente a "leer_archivo". Encontrado real 2026-08-21.
+# ===========================================================================
+class TestRegistroPrefiereAbrirArchivoParaAbre:
+
+    def _reg(self):
+        return _cargar("registro_herramientas", "CEREBRO/registro_herramientas.py")
+
+    def test_abrelo_prefiere_abrir_archivo(self):
+        reg = self._reg()
+        casos = [
+            r"abrelo C:\Users\Administrador\Desktop\pieza.dxf",
+            r"abrelo del escritorio C:\Users\Administrador\Desktop\pieza.dxf",
+            r"abreme la pieza C:\Users\Administrador\Desktop\pieza.dxf",
+        ]
+        for m in casos:
+            cands = reg.buscar(m, 10)
+            claves = [c["clave"].split(".")[-1] for c in cands]
+            assert "abrir_archivo" in claves, f"'{m}': abrir_archivo ni siquiera aparece — {claves}"
+            assert "leer_archivo" not in claves or claves.index("abrir_archivo") < claves.index("leer_archivo"), (
+                f"'{m}': leer_archivo le sigue ganando a abrir_archivo — {claves}")
+
+    def test_pedir_leer_sigue_prefiriendo_leer_archivo(self):
+        """El arreglo no debe voltear la preferencia contraria: pedir LEER debe
+        seguir prefiriendo leer_archivo, no abrir_archivo."""
+        reg = self._reg()
+        m = r"que dice el archivo C:\Users\Administrador\Desktop\notas.txt"
+        cands = reg.buscar(m, 10)
+        claves = [c["clave"].split(".")[-1] for c in cands]
+        assert "leer_archivo" in claves
+        if "abrir_archivo" in claves:
+            assert claves.index("leer_archivo") < claves.index("abrir_archivo"), (
+                f"'{m}': ahora abrir_archivo le gana a leer_archivo — {claves}")

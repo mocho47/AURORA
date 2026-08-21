@@ -22,8 +22,10 @@ sys.path.insert(0, str(ROOT))
 
 from CEREBRO import consciencia as _c  # noqa: E402
 from CEREBRO import registro_herramientas as _rh  # noqa: E402
+from CEREBRO import plugins as _pl  # noqa: E402
 
 SALIDA = ROOT / "MANUALES" / "manual_comandos_aurora.md"
+SALIDA_POR_MOTOR = ROOT / "MANUALES" / "por_motor"
 
 # Candado -> grupo de trabajo real del panel (mismos 6 .nav-group de
 # TEMPLATES/panel-completo.html). Se mantiene a mano (solo 14 líneas, no 690)
@@ -237,9 +239,62 @@ def _seccion_herramientas_router() -> dict:
     return dict(sorted(por_carpeta.items()))
 
 
+def _seccion_plugins() -> list:
+    """Apps de PLUGINS/*.json — cada una trae sus frases reales escritas a
+    mano por Anuar (o por mí, revisadas por él), no adivinadas del código.
+    Se agregó el 2026-08-20: el manual tenía dos sistemas de frases (candados
+    directos + router universal) y le faltaba este tercero, el más nuevo."""
+    apps = []
+    for p in _pl.cargar():
+        if p.get("error"):
+            continue
+        acciones = []
+        for nombre_accion, a in _pl._pares_acciones(p):
+            acciones.append({
+                "nombre": nombre_accion,
+                "para_que": a.get("para_que", ""),
+                "frases": a.get("frases", []),
+            })
+        apps.append({
+            "app": p.get("app", ""), "nombre": p.get("nombre", ""),
+            "que_hace": p.get("que_hace", ""),
+            "frases": p.get("frases", []),
+            "acciones": acciones,
+        })
+    return apps
+
+
+def _seccion_cajas_boxes() -> list:
+    """Las cajas de Boxes.py que ya tienen palabra en español, leídas del
+    CATALOGO real de TALLER/cajas_boxes.py — no de una lista aparte que se
+    podría desactualizar en cuanto alguien agregue una caja nueva."""
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location("cajas_boxes", ROOT / "TALLER" / "cajas_boxes.py")
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception:
+        return []
+    vistas, filas = set(), []
+    for claves, gen, desc in mod.CATALOGO:
+        if gen in vistas:
+            continue
+        vistas.add(gen)
+        filas.append({"generador": gen, "descripcion": desc, "frases": list(claves)})
+    # La lámpara de media luna no vive en CATALOGO (no es de boxes.py, es
+    # custom) — se lee de su propia constante para que el manual no la pierda.
+    if hasattr(mod, "_MEDIA_LUNA_TRIGGERS"):
+        filas.append({"generador": "lampara_media_luna",
+                       "descripcion": "lámpara de media luna con canal para difusor LED (custom, no es de boxes.py)",
+                       "frases": list(mod._MEDIA_LUNA_TRIGGERS)})
+    return filas
+
+
 def generar() -> Path:
     candados = _seccion_candados_directos()
     herramientas = _seccion_herramientas_router()
+    apps_plugins = _seccion_plugins()
+    cajas = _seccion_cajas_boxes()
 
     partes = [
         "# Manual de comandos reales de AURORA",
@@ -282,6 +337,40 @@ def generar() -> Path:
             partes.append("")
         partes.append("")
 
+    partes.append(f"## Apps conectadas ({len(apps_plugins)}) — frases reales, escritas y revisadas")
+    partes.append("")
+    partes.append(
+        "Estas no salen de leer el código a ciegas: cada frase está escrita en su "
+        "ficha de `PLUGINS/*.json` y probada en vivo. Si una frase de aquí no "
+        "funciona, es un bug real que reportar, no un ejemplo inventado."
+    )
+    partes.append("")
+    for app in apps_plugins:
+        partes.append(f"**{app['nombre']}** (`{app['app']}`)")
+        if app["que_hace"]:
+            partes.append(f"- Qué hace: {app['que_hace']}")
+        if app["frases"]:
+            ejemplos = ", ".join(f"«{f}»" for f in app["frases"][:10])
+            partes.append(f"- Frases que reconoce: {ejemplos}")
+        for acc in app["acciones"]:
+            if acc["frases"]:
+                ejemplos = ", ".join(f"«{f}»" for f in acc["frases"][:6])
+                partes.append(f"  - **{acc['nombre']}** ({acc['para_que']}): {ejemplos}")
+        partes.append("")
+
+    partes.append(f"## Cajas de Boxes.py con palabra en español ({len(cajas)})")
+    partes.append("")
+    partes.append(
+        "De los 189 generadores de la librería Boxes.py, estos son los que ya "
+        "tienen vocabulario real (`TALLER/cajas_boxes.py`). Pídela con `python "
+        "TALLER/cajas_boxes.py \"<frase> de <medidas en cm>\"` o desde el chat."
+    )
+    partes.append("")
+    for c in cajas:
+        ejemplos = ", ".join(f"«{f}»" for f in c["frases"])
+        partes.append(f"- **{c['descripcion']}** ({c['generador']}) — di {ejemplos}")
+    partes.append("")
+
     partes.append("## Herramientas del enrutador universal (~%d funciones reales)" % sum(len(v) for v in herramientas.values()))
     partes.append("")
     partes.append(
@@ -299,9 +388,73 @@ def generar() -> Path:
 
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
     SALIDA.write_text("\n".join(partes), encoding="utf-8")
+
+    # ── Manuales por motor — Anuar pidió "bajar los de usuario por motor"
+    #    (2026-08-20): un archivo chico por área de trabajo, para poder
+    #    dárselo a AURORA sin que tenga que leer el manual completo entero.
+    n_archivos = _generar_por_motor(candados, apps_plugins, cajas)
+
     print(f"Manual generado: {SALIDA} ({total_candados} candados directos, "
-          f"{sum(len(v) for v in herramientas.values())} herramientas del router)")
+          f"{sum(len(v) for v in herramientas.values())} herramientas del router, "
+          f"{len(apps_plugins)} apps, {len(cajas)} cajas) + {n_archivos} manuales por motor")
     return SALIDA
+
+
+def _generar_por_motor(candados: dict, apps_plugins: list, cajas: list) -> int:
+    """Un .md chico por área de trabajo — el mismo contenido del manual
+    grande, pero partido, para que AURORA (o cualquiera) lea solo lo suyo."""
+    SALIDA_POR_MOTOR.mkdir(parents=True, exist_ok=True)
+    n = 0
+
+    for grupo in _ORDEN_GRUPOS:
+        items = candados.get(grupo, [])
+        if not items:
+            continue
+        partes = [f"# {grupo} — comandos reales de AURORA", ""]
+        for it in items:
+            partes.append(f"**{it['nombre']}** ({it['motor_id']})")
+            partes.append(f"- Qué hace: {it['descripcion']}")
+            if it["triggers"]:
+                ejemplos = ", ".join(f"«{t}»" for t in it["triggers"][:12])
+                partes.append(f"- Frases que reconoce: {ejemplos}")
+            partes.append("")
+        nombre_archivo = _limpio_archivo(grupo)
+        (SALIDA_POR_MOTOR / f"{nombre_archivo}.md").write_text("\n".join(partes), encoding="utf-8")
+        n += 1
+
+    if apps_plugins:
+        partes = ["# Apps conectadas — frases reales", ""]
+        for app in apps_plugins:
+            partes.append(f"**{app['nombre']}** (`{app['app']}`)")
+            if app["que_hace"]:
+                partes.append(f"- Qué hace: {app['que_hace']}")
+            if app["frases"]:
+                ejemplos = ", ".join(f"«{f}»" for f in app["frases"][:10])
+                partes.append(f"- Frases que reconoce: {ejemplos}")
+            for acc in app["acciones"]:
+                if acc["frases"]:
+                    ejemplos = ", ".join(f"«{f}»" for f in acc["frases"][:6])
+                    partes.append(f"  - **{acc['nombre']}** ({acc['para_que']}): {ejemplos}")
+            partes.append("")
+        (SALIDA_POR_MOTOR / "apps_conectadas.md").write_text("\n".join(partes), encoding="utf-8")
+        n += 1
+
+    if cajas:
+        partes = ["# Cajas de Boxes.py con palabra en español", ""]
+        for c in cajas:
+            ejemplos = ", ".join(f"«{f}»" for f in c["frases"])
+            partes.append(f"- **{c['descripcion']}** ({c['generador']}) — di {ejemplos}")
+        (SALIDA_POR_MOTOR / "cajas_boxes.md").write_text("\n".join(partes), encoding="utf-8")
+        n += 1
+
+    return n
+
+
+def _limpio_archivo(nombre: str) -> str:
+    t = nombre.lower().replace(" y ", "_y_").replace(" ", "_")
+    for a, b in (("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u")):
+        t = t.replace(a, b)
+    return t
 
 
 if __name__ == "__main__":

@@ -53,6 +53,38 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 ### Cerebro y Sistema
 
+**cotizar_vinil** (cotizador_vinil)
+- Qué hace: el precio sale de SU lista, no de una adivinanza.
+- Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «coste», «costo», «cotiza», «cotizacion», «cotizame», «cuesta»
+
+**texto_a_corte** (texto_a_corte)
+- Qué hace: convierte las palabras en archivo de corte real.
+- Frases que reconoce: «Oswaldo», «cameo», «cortado», «cortar», «corte», «el letrero», «el nombre», «el rotulo», «el texto», «la palabra», «las letras», «las palabras»
+
+**delineado** (contorno_de_corte)
+- Qué hace: El delineado de un dibujo: la silueta de afuera o las líneas de adentro.
+- Frases que reconoce: «contorno de corte», «contorno para cortar», «delineado», «delineala», «delinealo», «delineame», «delinear», «dibujo lineal», «estarcido», «estencil», «line art», «linea de corte»
+
+**print_and_cut** (print_and_cut)
+- Qué hace: El proceso completo de imprimir y cortar, con sus advertencias.
+- Frases que reconoce: «area util de la hoja», «como corto lo impreso», «como pongo las marcas», «contorno extra», «cortar lo impreso», «cuanto cabe en una hoja», «desplazamiento», «excedente del corte», «imprimir y cortar», «marcas de registro», «marcas de silhouette», «marcas de silouette»
+
+**metodo_campana** (metodo_campanas)
+- Qué hace: Enseña cómo se arma una campaña, o revisa la que le pasen.
+- Frases que reconoce: «anatomia de una campana», «arma una campana», «armame una campana», «checa esta campana», «como armo una campana», «como hiciste la campana», «como se arma una campana», «como se hace una campana», «crea una campana», «creame una campana», «esta bien esta campana», «nueva campana»
+
+**campana_escolar** (campana_escolar)
+- Qué hace: Contesta con los paquetes escolares EXACTOS que se le mandaron.
+- Frases que reconoce: «el de preescolar», «el de primaria», «etiquetas del nino», «etiquetas del niño», «etiquetas escolares», «etiquetas para la escuela», «etiquetas para utiles», «etiquetas para útiles», «nombres para la ropa», «paquete de preescolar», «paquete de primaria», «paquete escolar»
+
+**adaptar_diseno** (adaptar_grosor)
+- Qué hace: Deja un DXF listo para OTRO material y, si se pide, de otro tamaño.
+- Frases que reconoce: «achica», «achicame», «achicar», «achicarla», «achicarlo», «adapta», «adaptame», «adaptar», «adaptarla», «adaptarlo», «agranda», «agrandar»
+
+**foto_a_dxf** (foto_a_dxf)
+- Qué hace: la cadena completa: foto → sin fondo → vectorizada → DXF.
+- Frases que reconoce: «cortarlo», «elimina el fondo», «para cortar», «para corte», «para el laser», «para la laser», «quita el fondo», «quita el fondo y», «quitale el fondo», «quitale el fondo y», «recorta el sujeto», «recorta la imagen»
+
 **generar_caja** (generador_cajas)
 - Qué hace: boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
 - Frases que reconoce: «arma una caja», «caja con divisiones», «caja corazon», «crea una caja», «creame una caja», «genera una bandeja», «genera una caja», «generame el dxf de una caja», «generame una caja», «haz una caja», «hazme un cajon», «hazme una bandeja»
@@ -83,7 +115,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **abrir_navegador** (pc_access)
 - Qué hace: Abre páginas en tu navegador de verdad. Entiende «abre youtube» sin que tengas que decir el punto-com; reconoce 24 sitios por su nombre (abrir_url).
-- Frases que reconoce: «abre la pagina», «abre pinterest y busca X», «abre youtube», «abrela», «abrelo», «abreme», «abrir la pagina», «chrome», «dejala abierta», «dejalo abierto», «dejarla abierta», «dejarlo abierto»
+- Frases que reconoce: «3axis», «abre la pagina», «abre pinterest y busca X», «abre youtube», «abrela», «abrelo», «abreme», «abrir la pagina», «ameede», «behance», «biblioteca de corte», «bibliotecadecorte»
 
 **acerca_de** (auto_conocimiento)
 - Qué hace: Te dice qué puede hacer de verdad, con los números reales del sistema y sus límites — nunca inventa capacidades (obtener_capacidades + descubrir).
@@ -130,7 +162,79 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Frases que reconoce: «arregla corel», «arregla corell», «arregla la conexion con corel», «borra», «borra cache», «borrar», «contactalo por whatsapp», «copia», «copialo», «copiar», «corel no conecta», «corel no responde»
 
 
-## Herramientas del enrutador universal (~567 funciones reales)
+## Apps conectadas (3) — frases reales, escritas y revisadas
+
+Estas no salen de leer el código a ciegas: cada frase está escrita en su ficha de `PLUGINS/*.json` y probada en vivo. Si una frase de aquí no funciona, es un bug real que reportar, no un ejemplo inventado.
+
+**Estratega de YouTube Shorts** (`estratega_shorts`)
+- Qué hace: Dice con números si un canal de Shorts deja dinero o no. Saca los 5 nichos que le tocan a tu perfil, cuánto paga de verdad AdSense, cuánto falta para monetizar, el plan de 30 días y las 3 razones técnicas por las que mueren los canales nuevos.
+- Frases que reconoce: «vale la pena hacer shorts», «cuanto paga youtube shorts», «que nicho me conviene en youtube», «cuanto gano con un millon de vistas», «plan para empezar un canal», «por que mueren los canales de youtube», «cuanto falta para monetizar», «me conviene youtube o no», «estrategia de shorts»
+
+**Etiquetas y Trazabilidad** (`etiquetas`)
+- Qué hace: Hace etiquetas de producto con logo, código QR, lote y fecha. Saca el PDF vectorial para imprimir, el pliego ya acomodado en la hoja y el DXF de suaje para cortar en el láser. Guarda bitácora de qué lote se imprimió para quién.
+- Frases que reconoce: «haz una etiqueta», «necesito etiquetas para un producto», «etiqueta con qr y lote», «etiqueta de 35 por 70», «etiquetas con codigo qr», «haz stickers con mi logo», «stickers redondos», «cuanto cobro por etiquetas», «que lotes he impreso», «arma el pliego de etiquetas»
+  - **precio** (Cuánto cobrar con la fórmula de Anuar: materiales +20%, corte a $8/min a 20 mm/s, más diseño.): «cuanto cobro», «cuanto le cobro», «cuanto cuesta», «que precio», «cuanto vale», «cotiza las etiquetas»
+  - **bitacora** (Qué lotes se han impreso y para quién. Sirve cuando el cliente pregunta por un lote viejo.): «que lotes», «lotes he impreso», «que le he impreso», «historial de lotes», «bitacora de lotes»
+
+**Plantillas de prenda** (`plantillas_prenda`)
+- Qué hace: Deja listo el archivo de un estampado a la medida real de la prenda, para la impresora (sublimación, DTF, plancha) o para el plóter de vinil. 11 prendas, tallas reales, área de estampado o panel completo, y medida con cinta cuando la talla del proveedor no cuadra.
+- Frases que reconoce: «plantilla de prenda», «plantilla de playera», «area de estampado», «área de estampado», «diseño para playera», «diseno para playera», «estampado de playera», «medida de la playera», «panel de la playera», «abre plantillas de prenda»
+  - **medidas** (): «cuánto mide», «cuanto mide», «qué medida tiene», «medidas de»
+  - **area_trabajo** (): «área de trabajo», «area de trabajo», «área de estampado», «qué tan grande puedo estampar»
+  - **guardar** (): «guarda el panel», «sácame el archivo», «sacame el archivo», «prepara el diseño», «a 300 dpi»
+  - **juego_completo** (): «frente y espalda», «el juego completo», «todos los paneles»
+  - **para_ploter** (): «para el plóter», «para el ploter», «separa por color», «en vinil», «corte de vinil»
+  - **catalogo** (): «qué prendas tienes», «que prendas tienes», «catálogo de prendas»
+
+## Cajas de Boxes.py con palabra en español (43)
+
+De los 189 generadores de la librería Boxes.py, estos son los que ya tienen vocabulario real (`TALLER/cajas_boxes.py`). Pídela con `python TALLER/cajas_boxes.py "<frase> de <medidas en cm>"` o desde el chat.
+
+- **caja con forma de corazón** (HeartBox) — di «corazon», «corazón», «heart»
+- **cofre con tapa curva** (PirateChest) — di «cofre», «cofrecito», «baul», «baúl», «tesoro», «pirata», «chest»
+- **caja con pared flexible (kerf bending)** (FlexBox) — di «flex», «flexible», «curva», «doblada», «redondeada»
+- **caja con bisagras integradas** (HingeBox) — di «bisagra», «bisagras», «hinge», «con tapa abatible»
+- **bandeja con divisiones** (TypeTray) — di «divisiones», «division», «compartimentos», «separadores», «para chocolates», «organizador»
+- **bandeja con divisiones movibles** (DividerTray) — di «divisor», «divisoria», «divider»
+- **caja con tapa corrediza** (SlidingLidBox) — di «tapa deslizante», «tapa corrediza», «tapa que desliza», «tapa deslizable», «sliding lid»
+- **cajón que se desliza** (SlidingDrawer) — di «cajon», «cajón», «gaveta», «que se desliza», «corredizo»
+- **caja de esquinas redondeadas** (RoundedBox) — di «redonda», «redondeada», «esquinas redondas»
+- **caja de lados regulares** (RoundedRegularBox) — di «hexagonal», «hexagono», «hexágono»
+- **caja para dados** (DiceBox) — di «dados», «dado», «dice»
+- **caja para cartas** (CardBox) — di «cartas», «naipes», «card»
+- **caja tipo libro** (FlexBook) — di «libro», «book»
+- **castillo armable** (Castle) — di «castillo», «castle»
+- **casa de pájaros** (BirdHouse) — di «casa de pajaros», «pajarera», «birdhouse»
+- **marco para fotos** (PhotoFrame) — di «marco de fotos», «portarretrato», «porta retrato»
+- **vitrina cerrada para exhibir** (DisplayCase) — di «vitrina», «caja vitrina»
+- **marco tipo shadowbox, con fondo para pegar figuras** (Shadowbox) — di «marco con fondo», «shadowbox», «cuadro para figuras», «cuadro sombra»
+- **exhibidor de monedas** (CoinDisplay) — di «exhibidor de monedas», «presumidero de monedas»
+- **repisa exhibidora** (DisplayShelf) — di «repisa exhibidora», «anaquel exhibidor»
+- **revistero** (MagazineFile) — di «revistero», «organizador de revistas»
+- **organizador de cubiertos** (Silverware) — di «cubertero», «organizador de cubiertos»
+- **lámpara triangular** (TriangleLamp) — di «lampara triangular», «lámpara triangular»
+- **contenedor apilable para organizar** (StackableBin) — di «contenedor apilable», «bin apilable»
+- **carpeta/sobre organizador** (Folder) — di «carpeta organizadora», «sobre organizador»
+- **caja para papel u hojas** (PaperBox) — di «caja para hojas», «caja de papel»
+- **charola para piezas pequeñas (tornillos, tuercas)** (SmallPartsTray) — di «charola de piezas pequeñas», «organizador de tornillos»
+- **insert organizador para meter dentro de otra caja** (TrayInsert) — di «insert organizador», «charola insert»
+- **caja de regalo de dos piezas (la tapa cubre la base)** (TwoPiece) — di «caja de dos piezas», «tapa que cubre la base», «caja tapa y base»
+- **exhibidor de pie para volantes o folletos** (Display) — di «atril para volantes», «exhibidor de folletos», «porta volantes»
+- **huacal con asas, se puede hacer apilable** (Crate) — di «huacal», «cajon con asas», «cajón con asas», «caja tipo huacal»
+- **dispensador para cosas planas apiladas (servilletas, posavasos)** (Dispenser) — di «dispensador», «dispensador de servilletas»
+- **caja con la tapa y el frente abiertos** (OpenBox) — di «caja abierta», «charola abierta»
+- **consola de pared con panel inclinado** (Console) — di «consola de pared», «repisa con panel inclinado»
+- **caja con cortina enrollable tipo persiana** (ShutterBox) — di «caja con cortina enrollable», «caja persiana», «caja rolltop»
+- **organizador para una pila de papel o posavasos** (NotesHolder) — di «porta notas», «organizador de papel apilado», «porta posavasos»
+- **contenedor de pared, apilable o colgante** (WallStackableBin) — di «contenedor de pared apilable», «bin de pared»
+- **vinatera / portabotellas** (WineRack) — di «vinatera», «botellero», «portabotellas de vino»
+- **alcancía con caja fuerte** (CoinBankSafe) — di «moneda», «alcancia», «alcancía»
+- **bandeja simple** (BinTray) — di «bandeja», «charola», «tray»
+- **caja con compartimentos** (CompartmentBox) — di «compartimento», «compartimentos»
+- **caja cerrada por todos lados** (ClosedBox) — di «cerrada», «cerrado», «closed»
+- **lámpara de media luna con canal para difusor LED (custom, no es de boxes.py)** (lampara_media_luna) — di «media luna», «medialuna», «lampara de arco», «lampara arco», «half moon»
+
+## Herramientas del enrutador universal (~692 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -189,7 +293,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (65)
+### CEREBRO (89)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -211,6 +315,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/auto_conocimiento:AutoConocimiento.leer_archivo` — Lee el contenido de un archivo propio de AURORA.
 - `CEREBRO/auto_conocimiento:AutoConocimiento.diagnosticar_modulos` — Intenta importar cada módulo de MOTORES y CEREBRO.
 - `CEREBRO/auto_conocimiento:AutoConocimiento.obtener_capacidades` — Retorna un mapa de todas las capacidades activas de AURORA.
+- `CEREBRO/auto_conocimiento:AutoConocimiento.manual_de_comandos` — El manual real. Sin `grupo` trae el completo; con uno de los 8
 - `CEREBRO/auto_conocimiento:AutoConocimiento.estado_sistema_completo` — Fotografía completa del sistema en este momento.
 - `CEREBRO/auto_conocimiento:AutoConocimiento.buscar_en_codigo` — Busca un patrón de texto en todos los archivos Python de AURORA.
 - `CEREBRO/auto_reparacion:AutoReparacion.reparar` — Repara un archivo. Backup → LLM fix → validar → aplicar o rollback.
@@ -229,6 +334,21 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/fabrica_motores:listar_motores_custom` — Lista los .py de MOTORES_CUSTOM con su META (carga aislada, tolerante).
 - `CEREBRO/fabrica_motores:probar_motor` — Carga el motor <slug> con importlib y ejecuta ejecutar(accion, datos).
 - `CEREBRO/generar_manual:generar` — generar (generar_manual)
+- `CEREBRO/lengua_anuar:intencion` — Qué está pidiendo Anuar, o None si esto no lo sabe.
+- `CEREBRO/lengua_anuar:explica` — Qué familia calzó y con qué patrón. Para poder auditarlo.
+- `CEREBRO/nucleo:registrar` — Da de alta un motor. Es el ÚNICO camino para que AURORA lo ofrezca.
+- `CEREBRO/nucleo:catalogo` — Lo que AURORA puede decir que hace. La única fuente para esa respuesta.
+- `CEREBRO/nucleo:atender` — Ejecuta un motor y COMPRUEBA el resultado antes de devolverlo.
+- `CEREBRO/nucleo:como_esta_todo` — Cuántos motores hay, y cuántos probados en un trabajo real.
+- `CEREBRO/observador_procesos:descubrir` — Qué cadenas de pasos repite Anuar. NO propone ni ejecuta: cuenta.
+- `CEREBRO/observador_procesos:proponer` — Los atajos que YA merecen proponerse. Nunca los ejecuta.
+- `CEREBRO/observador_procesos:autorizar` — Anuar dijo que sí (o que no) a un atajo. Queda escrito para siempre.
+- `CEREBRO/observador_procesos:autorizados` — Los atajos vigentes. Esto es lo que otros módulos deben consultar.
+- `CEREBRO/observador_procesos:atajo_para` — ¿Hay un atajo autorizado que empiece con este paso?
+- `CEREBRO/ojo_panel:vale_la_pena` — ¿Esto lo decidió Anuar, o se lo preguntó el panel a sí mismo?
+- `CEREBRO/ojo_panel:anotar` — Nunca revienta: si el ojo falla, el panel tiene que seguir sirviendo.
+- `CEREBRO/ojo_panel:acciones` — Lo que hizo en el panel, en orden. Lo lee el observador de procesos.
+- `CEREBRO/ojo_panel:resumen` — Cuánto lleva visto. Sirve para saber si ya hay material que observar.
 - `CEREBRO/paneles_cerebro:autoconocimiento` — Inventario/estado REAL del sistema, leído por AURORA sobre sí misma.
 - `CEREBRO/paneles_cerebro:sueno_reparacion` — Estado combinado del motor de sueño + memoria + auto-reparación.
 - `CEREBRO/paneles_cerebro:voz` — Estado REAL del subsistema de voz (VOZ/voz_google.py).
@@ -249,12 +369,20 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/pc_access:PcAccess.apps_instaladas` — apps instaladas (PcAccess)
 - `CEREBRO/perfil_anuar:normaliza` — Deja el mensaje como los candados lo esperan, sin cambiar la intención.
 - `CEREBRO/perfil_anuar:explica` — Qué se le cambió y por qué. Para poder revisar que no invente.
+- `CEREBRO/plugins:cargar` — Todas las fichas. Una ficha rota no tumba a las demás.
+- `CEREBRO/plugins:buscar` — A qué app le toca esa frase, y con qué acción.
+- `CEREBRO/plugins:manual` — El manual de una app, para que AURORA lo pueda leer y explicar.
+- `CEREBRO/plugins:ejecutar` — Corre una acción de una app. El motor se carga solo cuando se ocupa.
+- `CEREBRO/plugins:catalogo` — Lo registrado, en texto — es lo que AURORA contesta si le preguntan.
+- `CEREBRO/plugins:main` — main (plugins)
 - `CEREBRO/razonador:razonar` — Razona en profundidad: piensa paso a paso, se autocritica y da la respuesta final.
 - `CEREBRO/razonador:ejecutar` — ejecutar (razonador)
 - `CEREBRO/respaldo_local:modelos_disponibles` — modelos disponibles (respaldo_local)
 - `CEREBRO/respaldo_local:elegir_modelo` — El primero de la lista de preferidos que esté instalado.
 - `CEREBRO/respaldo_local:_Completions.create` — create (_Completions)
 - `CEREBRO/respaldo_local:ClienteConRespaldo.modelo_local` — modelo local (ClienteConRespaldo)
+- `CEREBRO/respaldo_nube:hay_llave` — hay llave (respaldo_nube)
+- `CEREBRO/respaldo_nube:responder` — Le pregunta a Gemini. Devuelve el texto, o None si no se pudo.
 - `CEREBRO/validador_honestidad:revisar` — Revisa una respuesta ANTES de que salga y le agrega la corrección honesta.
 
 ### CORE (56)
@@ -316,8 +444,12 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CORE/publicador_atf_profesional:PublicadorATFProfesional.obtener_estadisticas` — Obtiene estadísticas de publicaciones
 - `CORE/publicador_atf_profesional:ejemplo_uso` — Ejemplo de cómo usar el publicador profesional
 
-### EDITOR (59)
+### EDITOR (92)
 
+- `EDITOR/arreglar_pdf:arreglar` — Agranda las imágenes que no dan el DPI y guarda un PDF nuevo.
+- `EDITOR/arreglar_pdf:main` — main (arreglar_pdf)
+- `EDITOR/contorno_de_corte:generar` — Saca el contorno de corte de cada pieza impresa, crecido `extra_mm`.
+- `EDITOR/contorno_de_corte:main` — main (contorno_de_corte)
 - `EDITOR/conversiones:aligerar_dxf` — Convierte splines a polilíneas y guarda R2000: RDWorks lo lee y pesa menos.
 - `EDITOR/conversiones:a_bw_puro` — a bw puro (conversiones)
 - `EDITOR/conversiones:a_linea` — a linea (conversiones)
@@ -332,6 +464,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/corel_core:info_documento` — Estado real del documento activo en Corel (solo lectura).
 - `EDITOR/corel_core:extraer_texto_documento` — Lee TODO el texto real de las formas de texto del documento activo,
 - `EDITOR/corel_core:exportar_pdf` — Publica el documento activo a PDF en ruta_salida.
+- `EDITOR/corel_core:cerrar_a_curvas_y_publicar` — Convierte TODO el texto a curvas y publica el PDF listo para maquila.
 - `EDITOR/corel_core:exportar_bitmap` — Exporta el documento activo a PNG/JPG con el DPI exacto indicado.
 - `EDITOR/corel_core:escalar_pagina` — Cambia el tamaño de página (cm) del documento activo.
 - `EDITOR/corel_core:preparar_para_lona` — Prepara el mismo diseño del documento activo para impresión de lona/banner:
@@ -348,6 +481,10 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/corel_core:listar_plugins` — Lista las macros y plugins (.gms) instalados en CorelDRAW, leyendo el disco.
 - `EDITOR/corel_core:tiene_plugin` — ¿Está instalado un plugin/macro que se llame así? Responde con la verdad.
 - `EDITOR/cotizador_corte:cotizar_corte` — Cotiza corte láser desde un DXF con precios reales de Milens.
+- `EDITOR/dibujo_lineal:generar` — Saca el dibujo lineal.
+- `EDITOR/dibujo_lineal:main` — main (dibujo_lineal)
+- `EDITOR/diseno_bandera_mx:generar` — Arma el diseño completo sobre el panel de la talla que se pida.
+- `EDITOR/diseno_bandera_mx:main` — main (diseno_bandera_mx)
 - `EDITOR/escalas_planillas:cm_a_px` — cm a px (escalas_planillas)
 - `EDITOR/escalas_planillas:px_a_cm` — px a cm (escalas_planillas)
 - `EDITOR/escalas_planillas:formatos_papel` — Lista de formatos disponibles (para el panel).
@@ -355,6 +492,13 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/escalas_planillas:fijar_dpi` — Cambia SOLO el DPI embebido (no remuestrea): ajusta el tamaño de impresión sin tocar píxeles.
 - `EDITOR/escalas_planillas:escalar_a_medida` — Lleva una imagen a una medida FÍSICA real (cm) a un DPI dado.
 - `EDITOR/escalas_planillas:generar_planilla` — Imposición: llena una hoja con copias de un ítem a medida física exacta.
+- `EDITOR/flat_prenda:dibujar` — La prenda dibujada. Devuelve (imagen RGBA, caja del área en píxeles).
+- `EDITOR/imagen_a_dxf:svg_a_dxf` — SVG → DXF sin Inkscape.
+- `EDITOR/imagen_a_dxf:convertir` — Foto → DXF listo para la láser. Cada paso reporta si sirvió.
+- `EDITOR/imagen_a_dxf:vista_previa` — Dibuja el DXF como PNG para verlo sin abrir nada.
+- `EDITOR/imagen_a_pdf:calcular` — A qué DPI queda la imagen si se imprime a ese tamaño, y si va a servir.
+- `EDITOR/imagen_a_pdf:convertir` — Imagen → PDF. Cada opción hace UNA cosa y se dice cuál.
+- `EDITOR/imagen_a_pdf:main` — main (imagen_a_pdf)
 - `EDITOR/plantillas_taza:r_grad` — r grad (plantillas_taza)
 - `EDITOR/plantillas_taza:r_confeti` — r confeti (plantillas_taza)
 - `EDITOR/plantillas_taza:r_corazones` — r corazones (plantillas_taza)
@@ -373,10 +517,27 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/plantillas_taza:componer_taza` — Compone la taza: fondo elegido + (según modo) foto y/o frase.
 - `EDITOR/plantillas_taza:generar_hoja_a4` — Imposición: hasta 3 tazas (21x9 cm) apiladas en una hoja A4 lista para imprimir.
 - `EDITOR/plantillas_taza:catalogo_fondos` — Hoja de contactos con los 50 fondos agrupados por tema (miniaturas).
+- `EDITOR/plantilla_prenda:area_trabajo` — (ancho, alto, desde_el_cuello) del área estampable, en cm. None si no hay.
+- `EDITOR/plantilla_prenda:silueta` — Dibuja la prenda y dice dónde cae el área de trabajo dentro del dibujo.
+- `EDITOR/plantilla_prenda:sobre_la_prenda` — La prenda dibujada con el diseño ya puesto en su lugar. Para VER.
+- `EDITOR/plantilla_prenda:a_la_medida` — Los paneles sacados de la prenda REAL, medida con cinta.
+- `EDITOR/plantilla_prenda:medidas` — (ancho_cm, alto_cm) de un panel, o None si no existe esa combinación.
+- `EDITOR/plantilla_prenda:catalogo` — Todo lo que sabe hacer, con sus tallas y paneles.
+- `EDITOR/plantilla_prenda:generar` — Arma el lienzo del panel a 300 DPI, con el diseño encima si lo hay.
+- `EDITOR/plantilla_prenda:componer` — Arma el panel con su fondo y sus capas encima. Devuelve (imagen, datos).
+- `EDITOR/plantilla_prenda:guardar_compuesto` — Compone y guarda a 300 DPI. Con PDF, para que la impresora no reescale.
+- `EDITOR/plantilla_prenda:para_ploter` — El diseño separado por color y vectorizado, para cortar en vinil.
+- `EDITOR/plantilla_prenda:generar_juego` — Todos los paneles de la prenda de un jalón, desde una sola imagen.
+- `EDITOR/plantilla_prenda:main` — main (plantilla_prenda)
 - `EDITOR/reeditar_diseno:analizar_pdf` — Inventario real de un PDF: qué trae dentro para decidir cómo reeditarlo.
 - `EDITOR/reeditar_diseno:extraer_elementos` — Separa una página en piezas reales dentro de una carpeta:
 - `EDITOR/reeditar_diseno:realzar_foto` — Mejora una foto para ampliarla: LANCZOS (factor×) + máscara de nitidez + realce suave.
 - `EDITOR/reeditar_diseno:reescalar_a_medida` — Lleva una página del PDF a una medida física NUEVA (cm@DPI) re-rasterizando el PDF original
+- `EDITOR/revisar_pdf:revisar` — Qué hay dentro del PDF y a qué DPI real queda cada imagen.
+- `EDITOR/revisar_pdf:main` — main (revisar_pdf)
+- `EDITOR/texto_a_corte:fuentes` — Las tipografías instaladas de verdad, no las que debería haber.
+- `EDITOR/texto_a_corte:generar` — Deja los renglones convertidos a curvas y encajados en el área.
+- `EDITOR/texto_a_corte:main` — main (texto_a_corte)
 
 ### FORJA (39)
 
@@ -444,7 +605,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MANUALES/aprendizaje:aprender` — Busca el manual de 'herramienta', lo descarga (si es PDF) y lo ingiere a la Biblioteca.
 - `MANUALES/aprendizaje:ingerir_url` — Ruta manual: Anuar pega la URL exacta del PDF y AURORA lo descarga+ingiere.
 
-### MARKETING (38)
+### MARKETING (51)
 
 - `MARKETING/analizador_mercado:nichos` — Nichos disponibles para analizar (para poblar el panel).
 - `MARKETING/analizador_mercado:analizar` — Análisis de mercado REAL de un nicho: busca en vivo (varias consultas),
@@ -454,10 +615,23 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MARKETING/asesor_core:mejores_horarios` — Calcula las mejores horas para publicar a partir de datos REALES de actividad
 - `MARKETING/asesor_core:diagnostico` — Diagnostica sobre métricas REALES por red y sugiere acciones concretas.
 - `MARKETING/asesor_core:construir_brief_para_cerebro` — Arma el contexto (conocimiento + datos reales) para que el cerebro genere el plan.
+- `MARKETING/campana_por_whatsapp_web:generar` — Arma la página con un botón por clienta.
+- `MARKETING/campana_por_whatsapp_web:main` — main (campana_por_whatsapp_web)
 - `MARKETING/campana_regreso_clases:clientas` — Las que tienen teléfono. Sin teléfono no hay a quién escribirle.
 - `MARKETING/campana_regreso_clases:enviar` — Envío REAL por Green API, el mismo que ya usa AURORA.
 - `MARKETING/campana_regreso_clases:main` — main (campana_regreso_clases)
 - `MARKETING/catalogo_compartible:generar_catalogo_pdf` — Genera el PDF del catálogo y devuelve la ruta + conteos.
+- `MARKETING/estratega_shorts:nichos` — Los nichos con sus números. El JSON gana; si no hay, la tabla base.
+- `MARKETING/estratega_shorts:guardar_nichos` — Deja la tabla en disco para que se pueda corregir sin tocar código.
+- `MARKETING/estratega_shorts:cuanto_paga` — Lo que deja AdSense por esas vistas. Es la cifra que despierta a la gente.
+- `MARKETING/estratega_shorts:cuanto_falta` — Qué tan lejos estás de que YouTube te pague. Sin adornos.
+- `MARKETING/estratega_shorts:analizar` — El análisis completo: qué nicho te toca y qué esperar de verdad.
+- `MARKETING/estratega_shorts:plan_30_dias` — El plan mínimo viable del primer mes. Concreto, no motivacional.
+- `MARKETING/estratega_shorts:como_negocio` — Los dos ingresos, lado a lado. Es la comparación que cambia decisiones.
+- `MARKETING/estratega_shorts:main` — main (estratega_shorts)
+- `MARKETING/metodo_campanas:revisar` — Revisa un borrador de campaña contra las reglas y dice qué está mal.
+- `MARKETING/metodo_campanas:anatomia` — anatomia (metodo_campanas)
+- `MARKETING/metodo_campanas:main` — main (metodo_campanas)
 - `MARKETING/motor_video:info_video` — Ancho, alto, duración y peso reales. Nada estimado.
 - `MARKETING/motor_video:a_vertical` — Deja el video en 9:16, listo para TikTok, Reels y Shorts.
 - `MARKETING/motor_video:miniatura` — Saca un fotograma para usar de portada del post.
@@ -641,22 +815,37 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `REDES/red_diagnostico:escanear_red` — Encuentra TODOS los equipos de la red local, no solo los Cast.
 - `REDES/red_diagnostico:buscar_equipo` — Busca un equipo por nombre, fabricante o servicio ('impresora', 'ollama').
 
-### SISTEMA (14)
+### SISTEMA (29)
 
 - `SISTEMA/apartar_duplicados:buscar_duplicados` — buscar duplicados (apartar_duplicados)
 - `SISTEMA/apartar_duplicados:main` — main (apartar_duplicados)
+- `SISTEMA/aviso_pantalla:mostrar` — Saca el aviso sobre todo lo demás. Devuelve qué pasó, sin reventar.
+- `SISTEMA/aviso_pantalla:avisar` — Lanza el aviso SIN esperar a que se cierre.
+- `SISTEMA/aviso_pantalla:main` — main (aviso_pantalla)
 - `SISTEMA/consolidar_por_tipo:consolidar` — consolidar (consolidar_por_tipo)
 - `SISTEMA/consolidar_por_tipo:main` — main (consolidar_por_tipo)
 - `SISTEMA/indexar_programas:instalados` — Lo que Windows tiene registrado como instalado. Es la lista de verdad:
 - `SISTEMA/indexar_programas:instaladores` — Los .exe que SÍ sirven si hay que reinstalar: los autocontenidos.
 - `SISTEMA/indexar_programas:portables` — Carpetas que traen un .exe y corren sin instalarse.
 - `SISTEMA/indexar_programas:main` — main (indexar_programas)
+- `SISTEMA/ojo_pantalla:prender` — Solo Anuar. Nada dentro de AURORA llama a esto por su cuenta.
+- `SISTEMA/ojo_pantalla:apagar` — apagar (ojo_pantalla)
+- `SISTEMA/ojo_pantalla:esta_mirando` — La verdad del hilo, no lo que diga el archivo de configuración.
+- `SISTEMA/ojo_pantalla:uso` — uso (ojo_pantalla)
+- `SISTEMA/ojo_pantalla:resumen` — resumen (ojo_pantalla)
+- `SISTEMA/ojo_pantalla:olvidar_todo` — Borra TODO lo que vio. Sin preguntar dos veces: es su información.
 - `SISTEMA/optimizador:diagnostico` — diagnostico (optimizador)
 - `SISTEMA/optimizador:limpiar_temporales` — Borra temporales más viejos que N horas (seguro: no toca archivos en uso reciente).
 - `SISTEMA/optimizador:optimizar` — optimizar (optimizador)
 - `SISTEMA/organizador_archivos:escanear` — SOLO LECTURA. Cataloga archivos por tipo bajo 'raiz' (por defecto el perfil del usuario),
 - `SISTEMA/organizador_archivos:agrupar` — Agrupa archivos SUELTOS de UNA carpeta segura en subcarpetas por tipo (_PDF, _DXF, …).
 - `SISTEMA/organizador_archivos:carpetas_seguras` — Carpetas donde SÍ se permite agrupar (para el panel).
+- `SISTEMA/revisar_disco:revisar` — Camina el disco completo y devuelve qué hay, sin tocar nada.
+- `SISTEMA/revisar_disco:identificar_chks` — Qué eran de verdad los FILE####.CHK que dejó chkdsk.
+- `SISTEMA/revisar_disco:rescatar_chks` — Copia los .CHK que SÍ son algo, ya con su extensión correcta.
+- `SISTEMA/revisar_disco:inventario_videos` — Todos los videos de un disco: los sueltos y los que van dentro de zips.
+- `SISTEMA/revisar_disco:consolidar_videos` — Copia a `destino` los videos que de verdad faltan, sin repetir ninguno.
+- `SISTEMA/revisar_disco:main` — main (revisar_disco)
 
 ### SUBLIMACION (3)
 
@@ -664,8 +853,16 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (66)
+### TALLER (106)
 
+- `TALLER/acomodar_hoja:acomodar` — Acomoda `cuantas` piezas en las hojas que hagan falta.
+- `TALLER/acomodar_hoja:main` — main (acomodar_hoja)
+- `TALLER/adaptar_grosor:detectar_grosor` — Qué grosor de material usa este diseño, por repetición de medidas.
+- `TALLER/adaptar_grosor:contar_medidas` — Cuántos segmentos miden como cada objetivo. Contabilidad, no criterio.
+- `TALLER/adaptar_grosor:verificar_cambio` — ¿El archivo guardado cambió como el motor DICE que lo cambió?
+- `TALLER/adaptar_grosor:verificar_salida` — CONTROL DE CALIDAD del archivo YA ESCRITO — y NO lo hace quien lo escribió.
+- `TALLER/adaptar_grosor:adaptar` — Deja el diseño listo para OTRO material, y opcionalmente a otro tamaño.
+- `TALLER/adaptar_grosor:main` — main (adaptar_grosor)
 - `TALLER/administracion:listar_precios` — Costo por minuto + lista de materiales/artículos con su precio de hoja.
 - `TALLER/administracion:set_costo_minuto` — Actualiza el costo por minuto de máquina.
 - `TALLER/administracion:guardar_material` — Agrega un material/artículo nuevo, o actualiza el existente (por nombre).
@@ -676,11 +873,37 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/cajas_boxes:que_medidas` — Saca las medidas del pedido. Anuar las dice en CM, boxes.py pide MM.
 - `TALLER/cajas_boxes:generar` — Genera la caja que se pidió en español. No adivina: si falta algo, lo dice.
 - `TALLER/cajas_boxes:listar` — listar (cajas_boxes)
+- `TALLER/campana_escolar:responder` — Lo que AURORA le contesta a una clienta que pregunta por los paquetes.
+- `TALLER/campana_escolar:main` — main (campana_escolar)
+- `TALLER/catalogo_imprimir:generar` — generar (catalogo_imprimir)
+- `TALLER/catalogo_maestro:construir` — Arma la lista completa. Si ya existe, respeta lo capturado.
+- `TALLER/catalogo_maestro:resumen` — Separa lo que DE VERDAD falta de lo que está vacío con razón.
 - `TALLER/consolidar_dxf:main` — main (consolidar_dxf)
 - `TALLER/cotizador_servicios:guardar_servicio` — Agrega o actualiza un trabajo/servicio en el catálogo (categoría 'productos').
 - `TALLER/cotizador_servicios:borrar_servicio` — Borra un trabajo/servicio del catálogo por nombre (solo de 'productos').
 - `TALLER/cotizador_servicios:catalogo_plano` — Aplana el catálogo en una lista de artículos cotizables (precio + costo + unidad).
 - `TALLER/cotizador_servicios:cotizar` — carrito = [{"nombre": str, "cantidad": num}]
+- `TALLER/cotizador_vinil:guardar` — Guarda los precios que capturó Anuar desde el panel.
+- `TALLER/cotizador_vinil:config` — Los precios de hoy y cuáles siguen sin capturar.
+- `TALLER/cotizador_vinil:precio_de_lista` — Lo que ESE trabajo cuesta según su propia lista, no según un modelo.
+- `TALLER/cotizador_vinil:precio_de_trabajo` — Varias piezas en UN trabajo: se suman las ÁREAS, no los precios.
+- `TALLER/cotizador_vinil:cotizar` — Qué cuesta cortar (y planchar, y pegar) ese trabajo.
+- `TALLER/cotizador_vinil:tarifa_implicita` — De un trabajo YA COBRADO saca a cuánto le salió la hora.
+- `TALLER/cotizador_vinil:main` — main (cotizador_vinil)
+- `TALLER/dividir_en_hojas:dividir` — Parte el DXF en n_partes tiras del mismo ancho (o alto), con traslape.
+- `TALLER/etiquetas:variantes` — Los colores de lote. El archivo manda; si no existe, la tabla de aquí.
+- `TALLER/etiquetas:guardar_config` — guardar config (etiquetas)
+- `TALLER/etiquetas:registrar_lote` — Deja constancia de lo impreso. Es la mitad del valor del servicio:
+- `TALLER/etiquetas:lotes` — lotes (etiquetas)
+- `TALLER/etiquetas:etiqueta` — Una etiqueta suelta: PDF vectorial + PNG de 300 DPI + DXF de suaje.
+- `TALLER/etiquetas:pliego` — Acomoda las etiquetas en la hoja, aprovechada, con marcas de registro.
+- `TALLER/etiquetas:suaje_dxf` — El contorno de corte para el láser o el plotter, en milímetros reales.
+- `TALLER/etiquetas:sticker` — Sticker redondo. Mismo motor, contorno circular en el suaje.
+- `TALLER/etiquetas:cuanto_cobrar` — El precio con la fórmula de Anuar, sin adivinar.
+- `TALLER/etiquetas:main` — main (etiquetas)
+- `TALLER/formula_precios:clasificar_diseno` — ¿Qué tipo de diseño trae el cliente? Se decide por la extensión.
+- `TALLER/formula_precios:cotizar` — El precio de un trabajo, con la fórmula de Anuar y su desglose completo.
+- `TALLER/formula_precios:texto` — El desglose como se lo quiere ver Anuar: en renglones, sin adornos.
 - `TALLER/generar_caja:generar` — Genera el DXF real de la caja y calcula su precio.
 - `TALLER/generar_caja:main` — main (generar_caja)
 - `TALLER/indexar_dxf:medir` — Metros de corte, medidas y precio de un DXF. Nada estimado a ojo.
@@ -697,6 +920,10 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/inventario:bajo_minimo` — bajo minimo (inventario)
 - `TALLER/inventario:historial` — historial (inventario)
 - `TALLER/inventario:resumen` — resumen (inventario)
+- `TALLER/marcas_registro:marcas` — Dónde van las tres marcas en una hoja de este tamaño.
+- `TALLER/marcas_registro:area_util` — El rectángulo donde SÍ se puede poner dibujo, esquivando las marcas.
+- `TALLER/marcas_registro:cabe` — Cuántas piezas de ese tamaño caben en una hoja, con sus marcas.
+- `TALLER/marcas_registro:main` — main (marcas_registro)
 - `TALLER/ordenes_taller:init_db` — init db (ordenes_taller)
 - `TALLER/ordenes_taller:guardar_imagen_bytes` — Guarda bytes de imagen subida. Devuelve la ruta relativa servible.
 - `TALLER/ordenes_taller:guardar_imagen_url` — Descarga una imagen desde URL (Pinterest, etc.) y la guarda local.
@@ -709,6 +936,8 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/ordenes_taller:actualizar_estado` — actualizar estado (ordenes_taller)
 - `TALLER/ordenes_taller:alertas` — Calcula alertas de entrega en vivo:
 - `TALLER/ordenes_taller:contabilidad_mensual` — Balance por mes (por fecha de entrega; si falta, por fecha de creación).
+- `TALLER/print_and_cut:manual` — manual (print_and_cut)
+- `TALLER/print_and_cut:main` — main (print_and_cut)
 - `TALLER/proveedores:buscar` — ¿Quién vende esto? Si no está, se DICE — no se inventa un proveedor.
 - `TALLER/proveedores:agregar` — Da de alta un proveedor. Los datos los pone Anuar, no se inventan.
 - `TALLER/proveedores:anotar_precio` — Registra un precio CON su fecha. Un precio sin fecha no sirve para decidir.

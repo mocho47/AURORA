@@ -158,10 +158,28 @@ def total() -> int:
     return len(descubrir())
 
 
+
+# "abrir_archivo" perdía contra "leer_archivo" (pendiente #2 de ESTADO_REAL.md).
+# Causa real, encontrada 2026-08-21: el bono de abajo exige el INFINITIVO exacto
+# ("abrir") tal cual dentro de la consulta — pero Anuar nunca lo dice así, dice
+# "ábrelo"/"ábreme"/"abre". Con esas formas el bono nunca aplicaba a NINGUNA
+# herramienta "abrir_*", y sin la palabra "archivo" en el mensaje ninguna de las
+# dos ("abrir_archivo"/"leer_archivo") sumaba nada y quedaban FUERA de la lista
+# (buscar() descarta score=0) — el enrutador nunca las veía. Cuando por
+# casualidad SÍ sumaban algo, ganaba quien tuviera una palabra suelta de más en
+# su docstring (ej. "del" aparece en la de leer_archivo y no en la de
+# abrir_archivo), no quien de verdad correspondía a "abrir".
+# Medido en vivo: "ábrelo <ruta>" → antes 0 candidatas para ambas; "ábrelo del
+# escritorio <ruta>" → antes leer_archivo=1, abrir_archivo=0.
+_RE_VERBO_ABRIR = re.compile(r"\babr[ei]\w*\b")
+
+
 def buscar(query: str, k: int = 8) -> list:
     """Devuelve las herramientas más relevantes al mensaje (match por nombre+doc)."""
     reg = descubrir()
-    q = set(_norm(query).split())
+    q_norm = _norm(query)
+    q = set(q_norm.split())
+    pide_abrir = bool(_RE_VERBO_ABRIR.search(q_norm))
     puntuadas = []
     for clave, h in reg.items():
         texto = _norm(h["funcion"].replace("_", " ") + " " + h["doc"] + " " + h["modulo"])
@@ -170,10 +188,22 @@ def buscar(query: str, k: int = 8) -> list:
         for parte in h["funcion"].split("_"):
             if len(parte) > 3 and _norm(parte) in q:
                 score += 2
+            # Cualquier conjugación real de "abrir" ("abre"/"abrelo"/"abreme"...)
+            # cuenta como si hubiera dicho el infinitivo — antes solo "abrir"
+            # calzaba, y nadie habla así.
+            elif parte == "abrir" and pide_abrir:
+                score += 2
         if score > 0:
             puntuadas.append((score, clave, h))
     puntuadas.sort(key=lambda x: -x[0])
     return [{"clave": c, **h} for _, c, h in puntuadas[:k]]
+
+
+# Un motor declaró fracaso solo si lo dice con estas palabras. La lista es corta
+# a propósito: estados como "NO_CORTAR" o "pendiente" son resultados válidos de
+# una ejecución que SÍ salió bien, no fallas. Marcarlos como error rompería
+# herramientas que hoy funcionan.
+_ESTADOS_FALLO = {"error", "fallo", "failed", "fail", "no_existe", "excepcion"}
 
 
 def ejecutar(clave: str, kwargs: dict) -> dict:
@@ -214,6 +244,22 @@ def ejecutar(clave: str, kwargs: dict) -> dict:
                 res = loop.run_until_complete(res)
             finally:
                 loop.close()
+        # Encontrado en vivo 2026-08-13: AURORA contestó "Hecho. 🔧 escalar_pagina:
+        # • detalle: (-2147352571, 'Los tipos no coinciden.')" — dijo HECHO con el
+        # error adentro. El motor (corel_core:escalar_pagina) había devuelto bien su
+        # {"status": "error"}; lo que fallaba era ESTA línea: envolvía el fracaso del
+        # motor dentro de un "ok" propio. Ese "ok" solo quería decir "logré llamar a
+        # la función", pero quien lo lee arriba entiende "salió bien".
+        # Se corrige aquí, en el único punto por donde pasan las ~517 herramientas,
+        # y no motor por motor. Conservador a propósito: solo se declara fracaso
+        # cuando el motor lo dice explícitamente — ningún camino de éxito cambia.
+        if isinstance(res, dict):
+            _st = str(res.get("status", "")).strip().lower()
+            _err = res.get("error")
+            if _st in _ESTADOS_FALLO or _err:
+                return {"status": "error",
+                        "detalle": str(res.get("detalle") or _err or res)[:300],
+                        "resultado": res}
         return {"status": "ok", "resultado": res}
     except Exception as e:
         return {"status": "error", "detalle": str(e)[:300]}

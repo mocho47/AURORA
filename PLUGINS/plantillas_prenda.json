@@ -1,0 +1,93 @@
+{
+  "app": "plantillas_prenda",
+  "nombre": "Plantillas de prenda",
+  "version": "1.0",
+  "creada": "2026-08-16",
+  "que_hace": "Deja listo el archivo de un estampado a la medida real de la prenda, para la impresora (sublimación, DTF, plancha) o para el plóter de vinil. 11 prendas, tallas reales, área de estampado o panel completo, y medida con cinta cuando la talla del proveedor no cuadra.",
+  "para_que_sirve": "Sacar un trabajo de estampado sin abrir Corel, viendo el diseño sobre el dibujo de la prenda antes de gastar tela.",
+  "motor": "EDITOR/plantilla_prenda.py",
+  "motor_dibujo": "EDITOR/flat_prenda.py",
+  "app_suelta": "C:\\PLANTILLAS_PRENDA\\plantillas.py",
+  "abre_con": "C:\\Program Files\\Python312\\pythonw.exe C:\\PLANTILLAS_PRENDA\\plantillas.py",
+  "manual": "C:\\PLANTILLAS_PRENDA\\MANUAL.md",
+  "salidas": {
+    "impresora": "PNG + PDF a 300 DPI en Descargas\\imagenes",
+    "ploter": "DXF con una capa por color de vinil en Descargas\\dxf"
+  },
+  "frases": [
+    "plantilla de prenda", "plantilla de playera", "area de estampado",
+    "área de estampado", "diseño para playera", "diseno para playera",
+    "estampado de playera", "medida de la playera", "panel de la playera",
+    "abre plantillas de prenda", "editor de prendas", "diseñador de prendas",
+    "para sublimar", "para el ploter", "para el plóter", "vinil por color"
+  ],
+  "palabras": [
+    "playera", "camiseta", "sudadera", "hoodie", "gorra", "mandil", "delantal",
+    "pañalero", "panalero", "body", "polo", "jersey", "sublimar",
+    "sublimación", "estampar", "estampado", "vinil", "plancha", "dtf", "talla"
+  ],
+  "prendas": [
+    "jersey", "playera", "playera_ml", "polo", "playera_nino", "panalero",
+    "sudadera", "sudadera_capucha", "sudadera_nino", "gorra", "mandil"
+  ],
+  "acciones": [
+    {
+      "nombre": "medidas",
+      "funcion": "medidas",
+      "que_hace": "Cuánto mide un panel de esa prenda y esa talla, en centímetros.",
+      "params": ["prenda", "talla", "panel", "medida_cm", "manga_cm"],
+      "frases": ["cuánto mide", "cuanto mide", "qué medida tiene", "medidas de"],
+      "ejemplo": "medidas(prenda='playera', talla='M', panel='frente')"
+    },
+    {
+      "nombre": "area_trabajo",
+      "funcion": "area_trabajo",
+      "que_hace": "El recuadro donde de verdad se estampa, y a cuántos cm del cuello va.",
+      "params": ["prenda", "panel"],
+      "frases": ["área de trabajo", "area de trabajo", "área de estampado",
+                 "qué tan grande puedo estampar"],
+      "ejemplo": "area_trabajo(prenda='sudadera_capucha', panel='frente')"
+    },
+    {
+      "nombre": "guardar",
+      "funcion": "guardar_compuesto",
+      "que_hace": "Compone el panel con su fondo y sus capas y lo guarda a 300 DPI, PNG y PDF.",
+      "params": ["prenda", "talla", "panel", "fondo", "capas", "medida_cm",
+                 "lienzo"],
+      "frases": ["guarda el panel", "sácame el archivo", "sacame el archivo",
+                 "prepara el diseño", "a 300 dpi"],
+      "ejemplo": "guardar(prenda='playera', talla='M', panel='frente', lienzo='area')"
+    },
+    {
+      "nombre": "juego_completo",
+      "funcion": "generar_juego",
+      "que_hace": "Frente, espalda y manga de un jalón, a partir de un diseño.",
+      "params": ["prenda", "talla", "diseno", "reparto", "medida_cm"],
+      "frases": ["frente y espalda", "el juego completo", "todos los paneles"],
+      "ejemplo": "juego_completo(prenda='playera', talla='M', diseno='C:/ruta/arte.png')"
+    },
+    {
+      "nombre": "para_ploter",
+      "funcion": "para_ploter",
+      "que_hace": "Separa el diseño por colores de vinil y lo vectoriza a DXF, una capa por color, diciendo los metros de corte.",
+      "params": ["diseno", "ancho_cm", "colores", "minimo_mm2", "salida"],
+      "frases": ["para el plóter", "para el ploter", "separa por color",
+                 "en vinil", "corte de vinil"],
+      "ejemplo": "para_ploter(diseno='C:/ruta/arte.png', ancho_cm=30, colores=3)"
+    },
+    {
+      "nombre": "catalogo",
+      "funcion": "catalogo",
+      "que_hace": "Las 11 prendas con sus tallas y paneles.",
+      "params": [],
+      "frases": ["qué prendas tienes", "que prendas tienes", "catálogo de prendas"],
+      "ejemplo": "catalogo()"
+    }
+  ],
+  "reglas_del_taller": [
+    "El sangrado va FUERA de la línea del patrón, 2 cm por lado, y solo en panel completo: en el área de estampado no se corta nada.",
+    "El PDF lleva el tamaño escrito adentro; al imprimir hay que escoger 100% o tamaño real, nunca «ajustar a la página».",
+    "La medida con cinta gana a la talla: la M de un proveedor no es la M de otro.",
+    "Se avisa el DPI real ANTES de gastar tela. Menos de 200 DPI sale pixeleado."
+  ]
+}

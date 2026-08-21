@@ -1,0 +1,86 @@
+{
+  "app": "etiquetas",
+  "nombre": "Etiquetas y Trazabilidad",
+  "que_hace": "Hace etiquetas de producto con logo, código QR, lote y fecha. Saca el PDF vectorial para imprimir, el pliego ya acomodado en la hoja y el DXF de suaje para cortar en el láser. Guarda bitácora de qué lote se imprimió para quién.",
+  "motor": "TALLER/etiquetas.py",
+  "app_suelta": "C:/ETIQUETAS/etiquetas_app.py",
+  "abre_con": "python C:/ETIQUETAS/etiquetas_app.py",
+  "manual": "C:/ETIQUETAS/MANUAL.md",
+  "salidas": [
+    "PDF vectorial con la medida metida en el archivo (la impresora no lo ajusta)",
+    "PNG a 300 DPI para ver y para mandar por WhatsApp",
+    "DXF de suaje en capa CORTE, en milímetros reales",
+    "Pliego acomodado con marcas de registro en las esquinas"
+  ],
+  "frases": [
+    "haz una etiqueta",
+    "necesito etiquetas para un producto",
+    "etiqueta con qr y lote",
+    "etiqueta de 35 por 70",
+    "etiquetas con codigo qr",
+    "haz stickers con mi logo",
+    "stickers redondos",
+    "cuanto cobro por etiquetas",
+    "que lotes he impreso",
+    "arma el pliego de etiquetas",
+    "saca el suaje de las etiquetas",
+    "etiquetas para salsa",
+    "etiquetas para miel",
+    "etiquetas con fecha de caducidad"
+  ],
+  "palabras": [
+    "etiqueta", "etiquetas", "sticker", "stickers", "calcomania",
+    "lote", "trazabilidad", "caducidad", "suaje", "pliego",
+    "qr", "codigo qr", "envase", "frasco", "bote"
+  ],
+  "acciones": {
+    "etiqueta": {
+      "funcion": "etiqueta",
+      "para_que": "Una etiqueta suelta. Saca PDF, PNG y DXF.",
+      "pide": ["nombre", "lote", "qr", "logo", "variante", "ancho_mm", "alto_mm"]
+    },
+    "pliego": {
+      "funcion": "pliego",
+      "para_que": "Las etiquetas ya acomodadas en la hoja, aprovechada, con marcas de registro. Es lo que se manda a imprimir.",
+      "pide": ["nombre", "lote", "cuantas", "hoja", "variante"]
+    },
+    "sticker": {
+      "funcion": "sticker",
+      "para_que": "Sticker redondo con suaje circular.",
+      "pide": ["nombre", "diametro_mm", "cuantas", "logo"]
+    },
+    "precio": {
+      "funcion": "cuanto_cobrar",
+      "para_que": "Cuánto cobrar con la fórmula de Anuar: materiales +20%, corte a $8/min a 20 mm/s, más diseño.",
+      "frases": ["cuanto cobro", "cuanto le cobro", "cuanto cuesta", "que precio",
+                 "cuanto vale", "cotiza las etiquetas", "precio de las etiquetas"],
+      "pide": ["piezas", "ancho_mm", "alto_mm", "hoja", "costo_hoja", "diseno"]
+    },
+    "bitacora": {
+      "funcion": "lotes",
+      "para_que": "Qué lotes se han impreso y para quién. Sirve cuando el cliente pregunta por un lote viejo.",
+      "frases": ["que lotes", "lotes he impreso", "que le he impreso",
+                 "historial de lotes", "bitacora de lotes"],
+      "pide": ["cliente"]
+    },
+    "colores": {
+      "funcion": "variantes",
+      "para_que": "Los colores de variante para distinguir lotes en el anaquel.",
+      "pide": []
+    },
+    "suaje": {
+      "funcion": "suaje_dxf",
+      "para_que": "Nada más el DXF de corte, sin reimprimir.",
+      "pide": ["ancho_mm", "alto_mm", "cols", "filas"]
+    }
+  },
+  "reglas_del_taller": [
+    "El sangrado va 2 mm AFUERA de la línea de corte. Si el suaje se recorre medio milímetro —y siempre se recorre— sin sangrado aparece la orilla blanca del papel.",
+    "El PDF lleva la medida adentro. Al imprimir hay que pedir 'al 100%, sin ajustar a página' o sale chico.",
+    "El QR se dibuja en vectores, no como imagen. Un QR rasterizado se muerde en imprenta y hay lectores que dejan de leerlo.",
+    "Las marcas de registro de las esquinas no son adorno: sin ellas el suaje no se alinea con lo impreso y sale corrida toda la tirada.",
+    "El programa prueba la etiqueta de pie y acostada, y se queda con la que rinda más piezas por hoja.",
+    "El corte se cobra del perímetro real a 20 mm/s, que es la velocidad de la máquina de Anuar."
+  ],
+  "por_que_existe": "El lote se repite cada mes. Un negocio que te compra sus etiquetas vuelve solo, sin que lo vuelvas a vender. Y entregar la etiqueta impresa CON su suaje es algo que casi nadie hace."
+}

@@ -1,0 +1,64 @@
+{
+  "variantes": {
+    "original": {
+      "color": "#C0392B",
+      "texto": "#FFFFFF"
+    },
+    "verde": {
+      "color": "#1E8449",
+      "texto": "#FFFFFF"
+    },
+    "azul": {
+      "color": "#1F4E79",
+      "texto": "#FFFFFF"
+    },
+    "naranja": {
+      "color": "#D35400",
+      "texto": "#FFFFFF"
+    },
+    "morado": {
+      "color": "#6C3483",
+      "texto": "#FFFFFF"
+    },
+    "negro": {
+      "color": "#1C1C1C",
+      "texto": "#FFFFFF"
+    },
+    "crema": {
+      "color": "#F4E3C1",
+      "texto": "#3A2E1F"
+    },
+    "blanco": {
+      "color": "#FFFFFF",
+      "texto": "#222222"
+    }
+  },
+  "medidas_comunes": {
+    "etiqueta_frasco": [
+      35,
+      70
+    ],
+    "etiqueta_bote": [
+      50,
+      80
+    ],
+    "sticker_chico": [
+      25,
+      25
+    ],
+    "sticker_redondo": [
+      40,
+      40
+    ],
+    "etiqueta_ancha": [
+      70,
+      35
+    ],
+    "colgante": [
+      40,
+      90
+    ]
+  },
+  "sangrado_mm": 2.0,
+  "margen_mm": 3.0
+}

@@ -75,11 +75,34 @@ def _consola_utf8() -> None:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
+# Qué tan fino se aplana una curva para poder trabajarla. 0.05 mm es menos de
+# lo que abre el láser al cortar y menos de lo que ve el ojo: la pieza sale
+# igual.
+_FINURA_CURVA = 0.05
+
+
 def _puntos(e) -> list:
     """Los vértices de una entidad, sea del tipo que sea.
 
     OJO: POLYLINE y LWPOLYLINE se leen distinto. Leer solo LWPOLYLINE dejaba
     fuera casi todos los archivos de Anuar (2026-08-05).
+
+    LAS CURVAS — y no es solo cosa de detectar ranuras (2026-08-14, cabeza de
+    toro). Ese archivo son **188 SPLINE y 2 polilíneas**. Al no saber leerlos,
+    esta función devolvía vacío y el escalado los SALTABA con un `continue`:
+    Anuar pidió el 50% y salió un archivo de 4931 × 2975 mm donde el ancho no
+    había cambiado — las 2 polilíneas encogidas y las 188 curvas del tamaño
+    original, revueltas. Y arriba decía "✅ el diseño quedó al 50%".
+
+    Leerlas arregla las dos cosas de un golpe:
+      · el escalado deja de saltarse el 99% del archivo;
+      · las ranuras aparecen — en esa cabeza son **374 lados**, 82 de ellos de
+        4.1 mm, donde el motor veía **2**.
+
+    Se aplana la curva a puntos. La pieza que se toque se guardará como
+    polilínea (`_reemplazar` ya lo hace para todos), así que la curva se pierde
+    solo donde hubo que modificar. Corta idéntico; lo que se pierde es poder
+    jalar esa silueta de un nodo más adelante.
     """
     t = e.dxftype()
     try:
@@ -89,6 +112,8 @@ def _puntos(e) -> list:
             return [(v.dxf.location.x, v.dxf.location.y) for v in e.vertices]
         if t == "LINE":
             return [(e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)]
+        if t in ("SPLINE", "ELLIPSE"):
+            return [(p[0], p[1]) for p in e.flattening(_FINURA_CURVA)]
     except Exception:
         pass
     return []
@@ -174,8 +199,40 @@ def detectar_grosor(ruta: Path) -> dict:
 
     candidatos.sort(key=lambda x: (-x[1], x[0]))
     grosor, veces = candidatos[0]
+
+    # TODOS los grosores del archivo, no solo el más repetido (2026-08-14).
+    #
+    # La cabeza de toro traía el mismo modelo DOS VECES: una versión para
+    # material de 4 mm (ranuras de 4.1 ×140) y otra para 12 mm (ranuras de
+    # 10.1 ×93). Lo vio Anuar abriendo el archivo, no mis conteos. Con un solo
+    # grosor el motor ajustaba 93 ranuras y dejaba las otras intactas: media
+    # cabeza servible y media inservible, con un ✅ arriba.
+    #
+    # Y su regla, dicha igual de claro: *"si viene o viniera a 2 escalas no me
+    # importa, lo que me importa es el resultado, yo pido un resultado"*. O sea
+    # que no hay que preguntarle cuál quiere — si pide el archivo para 2.5, se
+    # van a 2.5 TODAS las ranuras, midan lo que midan hoy.
+    #
+    # DOS INTENTOS FALLIDOS, ANOTADOS PARA NO REPETIRLOS (2026-08-14):
+    #
+    #  1) Pedir la mitad de repeticiones que el más frecuente dejó fuera el
+    #     juego de 10.1 mm (93 contra 243) y el motor ajustó 2 ranuras.
+    #  2) Quitar el filtro del todo —creyendo que "probar de más es gratis"—
+    #     detectó **104 grosores**, del 1.5 al 11.9, y "ajustó" **2497
+    #     ranuras**: el archivo entero deformado. No es gratis: con suficientes
+    #     medidas candidatas, cualquier tramo coincide con alguna.
+    #
+    # Se vuelve al criterio prudente. Para archivos con dos juegos de ranuras
+    # —como esa cabeza, que trae la versión de 4 mm y la de 12— la detección
+    # automática NO alcanza, y está bien que no alcance: para eso Anuar puede
+    # decir el grosor («de 4 a 2.5»), que es el camino que sí funciona y el que
+    # se arregló el mismo día. Adivinar mal cuesta material; preguntar no.
+    piso = max(REPETICIONES_MINIMAS, veces * 0.5)
+    grosores = sorted({L for L, n in candidatos if n >= piso})
+
     return {"status": "OK", "grosor": grosor, "veces": veces,
-            "tipos": dict(tipos), "otras": medidas.most_common(5)}
+            "grosores": grosores, "tipos": dict(tipos),
+            "otras": medidas.most_common(5)}
 
 
 def _es_ranura(pts: list, grosor: float, tol: float = 0.35) -> tuple:
@@ -448,6 +505,69 @@ def _ensanchar_hembra(pts: list, viejo: float, delta: float,
     return nuevos, sum(1 for m in mover if m)
 
 
+def _adaptar_ranuras_borde(pts: list, viejo: float, nuevo: float,
+                           tol: float = 0.3) -> tuple:
+    """Ajusta las ranuras TALLADAS EN EL CONTORNO — la hembra del diente.
+
+    `_adaptar_dientes` busca el MACHO: sale perpendicular *el grosor*, avanza,
+    y regresa. La hembra es al revés: baja lo que sea (la profundidad), y el
+    que mide el grosor es el TRAMO DE CRUCE — el ancho del hueco donde entra
+    la otra tabla.
+
+    Nadie buscaba esa forma, y por eso la casa de Calamardo salió con 332
+    segmentos en 1.4 mm (2026-08-11). El archivo tiene 314 contornos y solo 4
+    son rectángulos sueltos: las piezas vienen dibujadas de un trazo, con
+    contornos de hasta 3,280 vértices y los escalones tallados adentro.
+    `_es_ranura` exige exactamente 4 puntos, así que **no podía ver el 99%**
+    de ese diseño — y aun así el adaptador respondía "adaptado".
+
+    Para ensanchar el hueco se separan sus DOS PAREDES medio delta cada una.
+    Mover una sola dejaría el encastre corrido de su sitio.
+
+    Devuelve (puntos_nuevos, cuántas ranuras se ajustaron).
+    """
+    q, idx = _unir_colineales(pts)
+    if len(q) < 5:
+        return pts, 0
+    delta = nuevo - viejo
+    fuera = list(pts)
+    ajustadas = 0
+    i = 1
+    while i < len(q) - 2:
+        # baja / cruza / sube  →  el que mide el grosor es el que CRUZA
+        a, b, c, d = q[i - 1], q[i], q[i + 1], q[i + 2]
+        baja = (b[0] - a[0], b[1] - a[1])
+        cruza = (c[0] - b[0], c[1] - b[1])
+        sube = (d[0] - c[0], d[1] - c[1])
+        l_baja = math.hypot(*baja)
+        l_cruza = math.hypot(*cruza)
+        l_sube = math.hypot(*sube)
+        if l_cruza <= 0 or l_baja <= 0 or l_sube <= 0:
+            i += 1
+            continue
+        # El cruce mide el grosor; las paredes son perpendiculares a él, van en
+        # sentidos opuestos, y tienen fondo de verdad (no son un dentado fino).
+        if (abs(l_cruza - viejo) <= tol
+                and l_baja > 0.5 and l_sube > 0.5
+                and abs(baja[0] * cruza[0] + baja[1] * cruza[1]) < 0.2 * l_baja * l_cruza
+                and (baja[0] * sube[0] + baja[1] * sube[1]) < 0):
+            ux, uy = cruza[0] / l_cruza, cruza[1] / l_cruza
+            medio = delta / 2.0
+            # Pared de entrada: se recorre HACIA ATRÁS del cruce.
+            for k in range(idx[i - 1], idx[i] + 1):
+                p = fuera[k]
+                fuera[k] = (p[0] - ux * medio, p[1] - uy * medio)
+            # Pared de salida: hacia adelante.
+            for k in range(idx[i + 1], idx[i + 2] + 1):
+                p = fuera[k]
+                fuera[k] = (p[0] + ux * medio, p[1] + uy * medio)
+            ajustadas += 1
+            i += 3
+            continue
+        i += 1
+    return fuera, ajustadas
+
+
 def _adaptar_dientes(pts: list, viejo: float, nuevo: float, tol: float = 0.3) -> tuple:
     """Ajusta los dientes que van PEGADOS al contorno.
 
@@ -500,6 +620,127 @@ def _adaptar_dientes(pts: list, viejo: float, nuevo: float, tol: float = 0.3) ->
     return fuera, ajustados
 
 
+def contar_medidas(entidades, objetivos: list, tol: float = 0.25) -> dict:
+    """Cuántos segmentos miden como cada objetivo. Contabilidad, no criterio.
+
+    A propósito no decide qué es una ranura: cuenta longitudes. Lo que sirve
+    NO es el número suelto —en una figura vectorizada hay cientos de tramos de
+    contorno que miden igual que el grosor— sino la DIFERENCIA entre contar
+    antes y contar después.
+    """
+    cuenta = {round(o, 2): 0 for o in objetivos}
+    for e in entidades:
+        pts, _ = _unir_colineales(_puntos(e))
+        for i in range(len(pts) - 1):
+            L = math.dist(pts[i], pts[i + 1])
+            if L < MIN_GROSOR or L > 12.0:
+                continue
+            for o in objetivos:
+                if abs(L - o) <= tol:
+                    cuenta[round(o, 2)] += 1
+                    break
+    return cuenta
+
+
+def verificar_cambio(antes: dict, ruta_salida: Path, viejo: float, nuevo: float,
+                     tocadas: int, tol: float = 0.25) -> dict:
+    """¿El archivo guardado cambió como el motor DICE que lo cambió?
+
+    POR QUÉ ASÍ Y NO DE OTRA FORMA (2026-08-13). El primer intento medía solo
+    el archivo final y reprobaba si quedaba UNA medida del grosor viejo. Probado
+    contra el Crustáceo Cascarudo —la pieza que Anuar cortó y armó, y encastra—
+    lo reprobó: 444 tramos de 3.0 mm que no son ranuras sino contorno y grabado.
+    Un verificador que frena lo bueno hace más daño que no tener ninguno.
+
+    La salida es no intentar reconocer ranuras —ahí es donde el detector ya está
+    ciego, y heredar su ceguera no verifica nada— sino comparar dos conteos del
+    MISMO archivo antes y después. El ruido de contorno aparece igual en los dos
+    lados y se cancela solo. Lo que queda es el movimiento real.
+
+    Y el contraste que importa: el motor dice haber tocado `tocadas`. Si de
+    verdad las tocó, la cuenta del grosor viejo tuvo que bajar en proporción. Si
+    dice 300 y solo se movieron 5, el motor está mintiendo aunque no truene.
+    """
+    import ezdxf
+    try:
+        doc = ezdxf.readfile(str(ruta_salida))
+    except Exception as e:
+        return {"veredicto": "NO_SE_PUDO_VERIFICAR",
+                "detalle": f"{type(e).__name__}: {str(e)[:80]}"}
+
+    despues = contar_medidas(doc.modelspace(), [viejo, nuevo], tol)
+    kv, kn = round(viejo, 2), round(nuevo, 2)
+    bajo = antes.get(kv, 0) - despues.get(kv, 0)
+    subio = despues.get(kn, 0) - antes.get(kn, 0)
+
+    # Se pide que se note al menos la mitad de lo declarado: una ranura mueve
+    # dos paredes, pero un mismo tramo puede contarse una sola vez según cómo
+    # quede el contorno. Menos de la mitad ya no es margen, es que no pasó.
+    minimo = max(1, int(tocadas * 0.5))
+    coherente = bajo >= minimo if tocadas else bajo > 0
+
+    return {"veredicto": "OK" if coherente else "NO_CORTAR",
+            "declaradas_por_el_motor": tocadas,
+            "bajaron_del_grosor_viejo": bajo,
+            "subieron_al_grosor_nuevo": subio,
+            "minimo_exigido": minimo,
+            "antes": {"viejo": antes.get(kv, 0), "nuevo": antes.get(kn, 0)},
+            "despues": {"viejo": despues.get(kv, 0), "nuevo": despues.get(kn, 0)},
+            "grosor_viejo": viejo, "grosor_pedido": nuevo}
+
+
+def verificar_salida(ruta: Path, grosor_pedido: float, grosor_viejo: float = 0.0,
+                     tol: float = 0.25) -> dict:
+    """CONTROL DE CALIDAD del archivo YA ESCRITO — y NO lo hace quien lo escribió.
+
+    POR QUÉ EXISTE (2026-08-13). El adaptador contaba cuántas ranuras había
+    tocado y con ese conteo cantaba «✅ Adaptado», sin volver a mirar el archivo
+    que acababa de guardar. La casa de Calamardo salió justo así: palomita
+    verde, y 59 de 96 ranuras todavía en 1.54 mm — escaladas al 50% y nunca
+    ajustadas. Anuar lo descubrió midiéndolas él, con el motor ya diciendo
+    «listo». Un motor que se califica solo es una bomba de tiempo en el taller.
+
+    Esto reabre el DXF guardado y mide su geometría desde cero. A propósito NO
+    usa `_es_ranura` ni `_adaptar_ranuras_borde`: son los mismos que se quedaron
+    ciegos, y un verificador que hereda la ceguera del ejecutor no verifica
+    nada. Aquí solo se cuentan medidas, que es lo que se puede comprobar sin
+    opinar sobre qué es una ranura.
+
+    Devuelve cuántas medidas quedaron al grosor pedido, cuántas siguen en el
+    viejo, y el veredicto. Si queda UNA sola en el viejo: no se corta.
+    """
+    import ezdxf
+    try:
+        doc = ezdxf.readfile(str(ruta))
+    except Exception as e:
+        return {"veredicto": "NO_SE_PUDO_VERIFICAR",
+                "detalle": f"{type(e).__name__}: {str(e)[:80]}"}
+
+    al_nuevo, al_viejo = 0, 0
+    otras = collections.Counter()
+    for e in doc.modelspace():
+        pts, _ = _unir_colineales(_puntos(e))
+        for i in range(len(pts) - 1):
+            L = math.dist(pts[i], pts[i + 1])
+            if not (MIN_GROSOR <= L <= MAX_GROSOR) or L > 12.0:
+                continue
+            if abs(L - grosor_pedido) <= tol:
+                al_nuevo += 1
+            elif grosor_viejo and abs(L - grosor_viejo) <= tol:
+                al_viejo += 1
+            else:
+                otras[round(L, 1)] += 1
+
+    total = al_nuevo + al_viejo
+    return {"veredicto": "NO_CORTAR" if al_viejo else "OK",
+            "al_grosor_pedido": al_nuevo,
+            "al_grosor_viejo": al_viejo,
+            "total_medidas_de_ensamble": total,
+            "otras_medidas": otras.most_common(5),
+            "grosor_pedido": grosor_pedido,
+            "grosor_viejo": grosor_viejo}
+
+
 def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
             escala: float = 1.0, tocar_machos: bool = True) -> dict:
     """Deja el diseño listo para OTRO material, y opcionalmente a otro tamaño.
@@ -514,10 +755,28 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
     info = detectar_grosor(ruta)
     if info["status"] != "OK" and not grosor_viejo:
         return info
-    viejo = grosor_viejo or info["grosor"]
-    if abs(viejo - grosor_nuevo) < 0.05:
+
+    # TODOS los grosores que trae el archivo, no uno.
+    #
+    # `grosor_viejo` acepta un número o una lista. Anuar puede decir "de 4 a
+    # 2.5" y entonces manda él; si no dice nada, se usan todos los que se
+    # detectaron. Su regla es que él pide un resultado, no que elija entre
+    # versiones: un archivo con ranuras de 4.1 y de 10.1 pedido para 2.5 sale
+    # con TODAS en 2.5 (2026-08-14, cabeza de toro).
+    if isinstance(grosor_viejo, (list, tuple, set)):
+        viejos = sorted({float(g) for g in grosor_viejo if g})
+    elif grosor_viejo:
+        viejos = [float(grosor_viejo)]
+    else:
+        viejos = list(info.get("grosores") or [info["grosor"]])
+
+    # Un grosor que ya es el pedido no se toca; si TODOS lo son, no hay trabajo.
+    viejos = [v for v in viejos if abs(v - grosor_nuevo) >= 0.05]
+    if not viejos:
+        _ya = grosor_viejo or info.get("grosor")
         return {"status": "IGUAL",
-                "detalle": f"Ya está para {viejo} mm. No hay nada que cambiar."}
+                "detalle": f"Ya está para {_ya} mm. No hay nada que cambiar."}
+    viejo = viejos[0]        # el principal, para los mensajes y los conteos
 
     doc = ezdxf.readfile(str(ruta))
     msp = doc.modelspace()
@@ -528,23 +787,50 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
     # entra nada. Por eso se escala primero TODO —la pieza sí debe achicarse—
     # y después se ajustan SOLO las ranuras al grosor real del material.
     if abs(escala - 1.0) > 1e-9:
+        saltadas = {}
         for e in list(msp):
             pts = _puntos(e)
             if not pts:
+                # Una pieza que no se puede leer NO se puede escalar, y quedaría
+                # del tamaño original revuelta con las demás. Antes se saltaba
+                # en silencio: así salió la cabeza de toro con las 188 curvas
+                # sin encoger y un ✅ arriba (2026-08-14). Ahora se cuenta y se
+                # dice; el archivo no se entrega como bueno si falta algo.
+                saltadas[e.dxftype()] = saltadas.get(e.dxftype(), 0) + 1
                 continue
             _reemplazar(msp, e, [(p[0] * escala, p[1] * escala) + tuple(p[2:])
                                  for p in pts])
-        viejo = round(viejo * escala, 3)     # la ranura también se achicó
-        if abs(viejo - grosor_nuevo) < 0.05:
+        if saltadas:
+            detalle = " · ".join(f"{v} {k}" for k, v in saltadas.items())
+            return {"status": "NO_PUEDO_ESCALAR",
+                    "detalle": (
+                        f"No puedo escalar {sum(saltadas.values())} piezas de este "
+                        f"archivo ({detalle}), y dejarlas del tamaño original "
+                        f"revueltas con las demás te arruinaría el corte. "
+                        f"No te entrego un archivo a medias.")}
+        # Las ranuras se achicaron con todo lo demás: cada grosor viejo vale
+        # ahora lo que valía por la escala.
+        viejos = [round(v * escala, 3) for v in viejos]
+        viejos = [v for v in viejos if abs(v - grosor_nuevo) >= 0.05]
+        if not viejos:
             return {"status": "IGUAL",
                     "detalle": (f"Al {escala*100:.0f}% las ranuras quedan de "
-                                f"{viejo} mm, que ya es el grosor pedido.")}
+                                f"{round(viejo * escala, 3)} mm, que ya es el "
+                                f"grosor pedido.")}
+        viejo = viejos[0]
 
     for _capa, _color in ((CAPA_NUMEROS, COLOR_NUMEROS),
                           (CAPA_GRABADO, COLOR_GRABADO)):
         if _capa not in doc.layers:
             doc.layers.add(_capa, color=_color)
 
+    # FOTO DE CÓMO ESTABA, ANTES DE MOVER UNA SOLA RANURA (2026-08-13).
+    # Se toma DESPUÉS de escalar y ANTES de ajustar, para que la comparación
+    # mida exactamente el paso de ajuste y no se le mezcle el escalado.
+    medidas_antes = contar_medidas(list(msp), [viejo, grosor_nuevo])
+
+    # Valor de arranque para las ramas que no son ranura (dientes, bordes).
+    # Cada ranura recalcula el suyo según el grosor con el que coincidió.
     delta = (grosor_nuevo - viejo) / 2.0    # se abre/cierra por los dos lados
 
     ajustadas, contornos, sin_tocar, dientes, huecos, marcados = 0, 0, 0, 0, 0, 0
@@ -562,7 +848,37 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
             pts = _puntos(e)
             if not pts:
                 continue
-            es, eje = _es_ranura(pts, viejo)
+            # PRIMERO SE LIMPIAN LOS PUNTOS SOBRANTES, DESPUÉS SE PREGUNTA.
+            # Encontrado por Anuar el 2026-08-13 con la pista de canicas. Él lo
+            # sostuvo cuando yo decía lo contrario: *"cómo podrían ser hembras
+            # con más de 4 esquinas, eso no es posible"*. Tenía razón.
+            #
+            # Estas 58 hembras SON rectángulos de 4 esquinas, pero el DXF trae
+            # los lados largos PARTIDOS a la mitad — un punto de más en medio de
+            # una línea recta. Medido en una: lado 4.85 a 90°, otro 4.85 a 90°,
+            # 3.17 a 0°, y otra vez lo mismo. Seis puntos para un rectángulo.
+            #
+            # `_es_ranura` exige exactamente 4, así que contestaba "no es hembra"
+            # y seguía de largo: ajustó 155 y se saltó 58 idénticas. La única
+            # diferencia entre unas y otras era cómo las dibujó el diseñador.
+            #
+            # `_unir_colineales` ya existía y ya se usaba en detectar_grosor y en
+            # _adaptar_ranuras_borde; aquí faltaba. Se limpia una sola vez y se
+            # reusa: los puntos originales quedan en `pts` para el resto.
+            pts_limpios, _ = _unir_colineales(pts)
+            # Se prueba contra CADA grosor del archivo. Un archivo con dos
+            # versiones —una de 4 mm y otra de 12— tiene ranuras de dos
+            # medidas, y probar solo contra una dejaba la mitad sin ajustar
+            # (2026-08-14). El delta se saca del grosor que coincidió, no de
+            # uno global: cada ranura se abre lo que le toca a ella.
+            es, eje, delta = False, None, 0.0
+            for _v in viejos:
+                es, eje = _es_ranura(pts_limpios, _v)
+                if es:
+                    delta = (grosor_nuevo - _v) / 2.0
+                    break
+            if es:
+                pts = pts_limpios
             if not es:
                 # EL GRABADO NO SE TOCA, POR NINGÚN CAMINO. Este candado estaba
                 # solo en la rama de los dientes y por eso los números seguían
@@ -604,20 +920,42 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
                 # [dejarlos], por código es perfecto si los alargas"*. A mano
                 # alargar 139 dientes no vale la pena; en código no cuesta nada y
                 # la junta queda al ras en vez de hundida.
-                if tocar_machos and not _es_grabado(pts, viejo):
-                    xs = [p[0] for p in pts]
-                    ys = [p[1] for p in pts]
-                    if max(xs) - min(xs) > viejo * 4 or max(ys) - min(ys) > viejo * 4:
-                        contornos += 1
+                xs = [p[0] for p in pts]
+                ys = [p[1] for p in pts]
+                if max(xs) - min(xs) > viejo * 4 or max(ys) - min(ys) > viejo * 4:
+                    contornos += 1
+                    nuevos, cuantos = pts, 0
+                    if tocar_machos:
                         nuevos, cuantos = _adaptar_dientes(pts, viejo, grosor_nuevo)
-                        if cuantos:
-                            fallo = _reemplazar(msp, e, nuevos)
-                            if fallo:
-                                sin_tocar += 1
-                                fallos.append(fallo)
-                            else:
-                                dientes += cuantos
-                        continue
+                    # LAS HEMBRAS TALLADAS EN EL CONTORNO SE AJUSTAN SIEMPRE.
+                    # `tocar_machos` decide si se alargan los dientes —eso es
+                    # opcional, Anuar a veces los deja—; pero el hueco donde
+                    # entra la tabla NO es opcional: si queda angosto, no arma.
+                    # Este paso no existía y por eso Calamardo salió pidiendo
+                    # material de 1.4 mm (2026-08-11).
+                    # Se pasa por CADA grosor del archivo. Las ranuras de la
+                    # cabeza de toro no son huecos cerrados sino MUESCAS EN EL
+                    # BORDE —la media madera, donde una tabla entra en la otra—
+                    # y ese archivo trae dos juegos: el de 4.1 mm y el de 10.1.
+                    # Con un solo grosor se ajustaba uno y el otro quedaba tal
+                    # cual (2026-08-14). Un grosor que no existe en la pieza no
+                    # encuentra nada y no estorba.
+                    cuantas_h = 0
+                    for _v in viejos:
+                        nuevos, _n = _adaptar_ranuras_borde(
+                            nuevos, _v, grosor_nuevo)
+                        cuantas_h += _n
+                    if cuantos or cuantas_h:
+                        fallo = _reemplazar(msp, e, nuevos)
+                        if fallo:
+                            sin_tocar += 1
+                            fallos.append(fallo)
+                        else:
+                            dientes += cuantos
+                            ajustadas += cuantas_h
+                    else:
+                        sin_tocar += 1
+                    continue
                 sin_tocar += 1
                 continue
 
@@ -672,11 +1010,18 @@ def adaptar(ruta: Path, grosor_nuevo: float, grosor_viejo: float = 0,
         n += 1
     doc.saveas(str(salida))
 
+    # NO SE CANTA VICTORIA SIN MEDIR LO QUE SE ESCRIBIÓ (2026-08-13).
+    # Hasta hoy el ✅ salía del conteo interno de "cuántas toqué", que es la
+    # opinión del propio motor. Ahora el archivo se vuelve a abrir y se mide.
+    control = verificar_cambio(medidas_antes, salida, viejo, grosor_nuevo,
+                               ajustadas + dientes)
+
     return {"status": "OK", "archivo": str(salida),
             "grosor_viejo": viejo, "grosor_nuevo": grosor_nuevo,
             "ranuras_ajustadas": ajustadas, "grabados_marcados": marcados, "dientes": dientes,
             "contornos": contornos, "escala": escala,
             "sin_tocar": sin_tocar,
+            "control": control,
             "kb": round(salida.stat().st_size / 1024, 1)}
 
 
@@ -719,6 +1064,39 @@ def _texto(r: dict, ruta: Path = None) -> str:
     esc = r.get("escala", 1.0) or 1.0
     tam = ("el tamaño NO cambió" if abs(esc - 1.0) < 1e-9
            else f"y el diseño quedó al **{esc * 100:g}%**")
+
+    # EL VEREDICTO MANDA SOBRE EL CONTEO INTERNO (2026-08-13). Si al medir el
+    # archivo guardado siguen apareciendo ranuras del grosor viejo, no hay
+    # palomita: se dice el número y se dice que no se corte. La casa de
+    # Calamardo salió con ✅ y 59 ranuras sin ajustar; eso ya no puede pasar.
+    ctrl = r.get("control") or {}
+    # EL VEREDICTO NO BLOQUEA TODAVÍA, Y ESO ES A PROPÓSITO (2026-08-13).
+    # La primera versión decía «⛔ NO LO CORTES» en cuanto quedara una sola
+    # medida del grosor viejo. Probada contra el Crustáceo Cascarudo —la pieza
+    # que Anuar SÍ cortó y armó— la reprobó: cuenta cualquier segmento que mida
+    # como el grosor, y en una figura vectorizada hay cientos que son contorno
+    # o grabado, no ensambles. O sea el criterio marca bueno lo malo y malo lo
+    # bueno. Hasta calibrarlo (comparando el archivo ANTES contra el DESPUÉS,
+    # que es una medida relativa y no exige saber qué es una ranura), esto
+    # INFORMA y no decide. Bloquear con un criterio equivocado es peor que no
+    # bloquear: le pararía cortes que sí sirven.
+    if ctrl.get("veredicto") == "NO_CORTAR":
+        aviso += (f"\n\n📏 Medición del archivo guardado (en calibración, "
+                  f"todavía NO es un veredicto): quedaron "
+                  f"**{ctrl['al_grosor_pedido']}** medidas de "
+                  f"{ctrl['grosor_pedido']} mm y **{ctrl['al_grosor_viejo']}** "
+                  f"que siguen midiendo {ctrl['grosor_viejo']} mm.\n"
+                  "   Este conteo todavía no distingue una ranura de un tramo "
+                  "de contorno que mide igual, así que **no lo tomes como que "
+                  "está mal** — tómalo como que hay que revisar antes de cortar.")
+    if ctrl.get("veredicto") == "NO_SE_PUDO_VERIFICAR":
+        return (f"⚠️ Adapté de {r['grosor_viejo']} mm a {r['grosor_nuevo']} mm y "
+                f"guardé el archivo, pero **no pude volver a abrirlo para "
+                f"comprobarlo** ({ctrl.get('detalle', '')}).\n\n"
+                f"📁 `{r['archivo']}`\n\n"
+                "No te digo que está listo porque no lo verifiqué. "
+                "Revísalo antes de cortar.")
+
     return (f"✅ Adaptado de **{r['grosor_viejo']} mm** a **{r['grosor_nuevo']} mm**\n"
             f"   {' y '.join(detalle) or 'nada'} · {tam}\n\n"
             f"📁 `{r['archivo']}`  ({r['kb']} KB)\n"

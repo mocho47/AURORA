@@ -1,0 +1,69 @@
+{
+  "app": "estratega_shorts",
+  "nombre": "Estratega de YouTube Shorts",
+  "que_hace": "Dice con números si un canal de Shorts deja dinero o no. Saca los 5 nichos que le tocan a tu perfil, cuánto paga de verdad AdSense, cuánto falta para monetizar, el plan de 30 días y las 3 razones técnicas por las que mueren los canales nuevos.",
+  "motor": "MARKETING/estratega_shorts.py",
+  "manual": "MARKETING/estratega_shorts.py (el encabezado del archivo)",
+  "salidas": [
+    "Los 5 nichos ordenados por compatibilidad con tu perfil, no por moda",
+    "Lo que paga AdSense de verdad, en pesos, con rango bajo y alto",
+    "La comparación entre cobrar anuncios y captar clientes",
+    "El plan de 30 días con cuántos Shorts al día y qué estructura",
+    "Qué tan lejos estás de las dos puertas de monetización"
+  ],
+  "frases": [
+    "vale la pena hacer shorts",
+    "cuanto paga youtube shorts",
+    "que nicho me conviene en youtube",
+    "cuanto gano con un millon de vistas",
+    "plan para empezar un canal",
+    "por que mueren los canales de youtube",
+    "cuanto falta para monetizar",
+    "me conviene youtube o no",
+    "estrategia de shorts"
+  ],
+  "palabras": [
+    "shorts", "youtube", "canal", "monetizar", "monetizacion", "cpm", "rpm",
+    "suscriptores", "vistas", "adsense", "nicho", "viral"
+  ],
+  "acciones": {
+    "perfil": {
+      "funcion": "analizar",
+      "para_que": "El análisis completo: los 5 nichos, la compatibilidad, lo que falta para monetizar y por qué mueren los canales.",
+      "pide": ["edad", "temas", "horas_semana", "inversion", "subs", "vistas_90", "pct_extranjero", "videos_ya_grabados"]
+    },
+    "cuanto_paga": {
+      "funcion": "cuanto_paga",
+      "para_que": "Lo que YouTube deposita por X vistas. Es la cifra que despierta a la gente.",
+      "pide": ["vistas", "nicho", "pct_extranjero"]
+    },
+    "como_negocio": {
+      "funcion": "como_negocio",
+      "para_que": "Los dos ingresos lado a lado: AdSense contra clientes captados. Es la comparación que cambia decisiones.",
+      "pide": ["vistas_mes", "nicho", "clientes_por_millon", "ticket"]
+    },
+    "plan": {
+      "funcion": "plan_30_dias",
+      "para_que": "El plan mínimo viable del primer mes: cuántos al día, qué duración y qué estructura premia el algoritmo.",
+      "pide": ["nicho", "horas_semana", "videos_ya"]
+    },
+    "falta": {
+      "funcion": "cuanto_falta",
+      "para_que": "Qué tan lejos estás de que YouTube te pague, sin adornos.",
+      "pide": ["subs", "vistas_90"]
+    },
+    "nichos": {
+      "funcion": "nichos",
+      "para_que": "La tabla de nichos con RPM y saturación.",
+      "pide": []
+    }
+  },
+  "la_verdad_incomoda": [
+    "Shorts NO paga CPM de video largo. Paga de un fondo repartido, y el RPM real anda en CENTAVOS de dólar por cada mil vistas.",
+    "Los 10 millones de vistas que YouTube exige para monetizar — la meta completa, 90 días publicando diario — pagan alrededor de $9,250 pesos UNA vez. Medido con la tabla del 2026-08-18.",
+    "Con audiencia mexicana el RPM va de 1 a 3 centavos de dólar. La misma vista desde Estados Unidos vale de 5 a 10 veces más.",
+    "Para quien ya tiene un oficio, el canal deja MÁS por los clientes que llegan que por los anuncios. Con 300,000 vistas al mes: $278 de AdSense contra $2,250 en clientes. Ocho veces más.",
+    "Por eso la app calcula los DOS ingresos, no uno. Perseguir la monetización cuando tienes taller es perseguir lo que menos paga."
+  ],
+  "de_donde_salen_los_numeros": "CONFIG/nichos_shorts.json, con la fecha en que se capturaron. Los RPM cambian por temporada y por país. El dato que no miente es el de tu propio YouTube Studio: cuando lo tengas, corrige ese archivo y la app se ajusta sola."
+}

@@ -1,0 +1,269 @@
+{
+  "capturado": "2026-08-19",
+  "dolar": 18.5,
+  "aviso": "rpm_mx y rpm_us son DÓLARES POR CADA MIL VISTAS de Shorts, no CPM de video largo. Cambian por temporada y por el país de quien te ve. Ajusta con lo que veas en tu propio YouTube Studio: ese es el único dato que no miente.",
+  "nichos": [
+    {
+      "nicho": "Finanzas personales e inversión",
+      "rpm_mx": [
+        0.03,
+        0.09
+      ],
+      "rpm_us": [
+        0.12,
+        0.4
+      ],
+      "saturacion": 5,
+      "barrera": "Hay que saber de verdad o se nota. Y YouTube castiga el consejo financiero irresponsable.",
+      "necesitas": [
+        "conocimiento real",
+        "guion cuidado"
+      ],
+      "temas": [
+        "finanzas",
+        "inversion",
+        "dinero",
+        "ahorro",
+        "credito",
+        "negocio",
+        "emprendimiento",
+        "bolsa",
+        "cripto"
+      ]
+    },
+    {
+      "nicho": "Tecnología, software y herramientas de IA",
+      "rpm_mx": [
+        0.02,
+        0.07
+      ],
+      "rpm_us": [
+        0.1,
+        0.3
+      ],
+      "saturacion": 5,
+      "barrera": "Se renueva cada semana; si no publicas seguido, te apagas.",
+      "necesitas": [
+        "computadora",
+        "grabar pantalla"
+      ],
+      "temas": [
+        "tecnologia",
+        "software",
+        "ia",
+        "inteligencia artificial",
+        "computacion",
+        "apps",
+        "programacion",
+        "gadgets"
+      ]
+    },
+    {
+      "nicho": "Automotriz y modificación de autos",
+      "rpm_mx": [
+        0.02,
+        0.06
+      ],
+      "rpm_us": [
+        0.08,
+        0.25
+      ],
+      "saturacion": 3,
+      "barrera": "Necesitas taller y autos de verdad. Esa es justo la razón por la que está menos saturado que los demás.",
+      "necesitas": [
+        "taller",
+        "autos",
+        "oficio"
+      ],
+      "temas": [
+        "autos",
+        "carros",
+        "automotriz",
+        "faros",
+        "retrofit",
+        "mecanica",
+        "tuning",
+        "vehiculos",
+        "iluminacion"
+      ]
+    },
+    {
+      "nicho": "Oficios y trabajos manuales (satisfying)",
+      "rpm_mx": [
+        0.01,
+        0.04
+      ],
+      "rpm_us": [
+        0.05,
+        0.18
+      ],
+      "saturacion": 2,
+      "barrera": "Necesitas el taller y la máquina. Poca gente lo tiene, y por eso es de los menos saturados que existen.",
+      "necesitas": [
+        "taller",
+        "maquinaria",
+        "oficio"
+      ],
+      "temas": [
+        "laser",
+        "corte",
+        "carpinteria",
+        "herreria",
+        "manualidades",
+        "artesania",
+        "taller",
+        "grabado",
+        "sublimacion",
+        "cnc",
+        "oficio",
+        "hazlo tu mismo",
+        "diy"
+      ]
+    },
+    {
+      "nicho": "Salud, fitness y bienestar",
+      "rpm_mx": [
+        0.02,
+        0.06
+      ],
+      "rpm_us": [
+        0.08,
+        0.22
+      ],
+      "saturacion": 5,
+      "barrera": "YouTube exige mucho con los consejos de salud; sin credencial te limita el alcance.",
+      "necesitas": [
+        "cuerpo o credencial"
+      ],
+      "temas": [
+        "salud",
+        "fitness",
+        "ejercicio",
+        "gym",
+        "nutricion",
+        "dieta",
+        "bienestar"
+      ]
+    },
+    {
+      "nicho": "Bienes raíces y construcción",
+      "rpm_mx": [
+        0.03,
+        0.08
+      ],
+      "rpm_us": [
+        0.1,
+        0.32
+      ],
+      "saturacion": 3,
+      "barrera": "Necesitas acceso a propiedades u obra real.",
+      "necesitas": [
+        "propiedades",
+        "obra"
+      ],
+      "temas": [
+        "bienes raices",
+        "casas",
+        "construccion",
+        "arquitectura",
+        "inmobiliaria",
+        "remodelacion"
+      ]
+    },
+    {
+      "nicho": "Cocina y recetas rápidas",
+      "rpm_mx": [
+        0.01,
+        0.03
+      ],
+      "rpm_us": [
+        0.04,
+        0.12
+      ],
+      "saturacion": 5,
+      "barrera": "Ninguna, y por eso está lleno. Compites contra millones.",
+      "necesitas": [
+        "cocina"
+      ],
+      "temas": [
+        "cocina",
+        "recetas",
+        "comida",
+        "postres",
+        "reposteria"
+      ]
+    },
+    {
+      "nicho": "Comedia y entretenimiento",
+      "rpm_mx": [
+        0.005,
+        0.02
+      ],
+      "rpm_us": [
+        0.03,
+        0.1
+      ],
+      "saturacion": 5,
+      "barrera": "El RPM más bajo que hay. Se necesita volumen enorme para que pague algo.",
+      "necesitas": [
+        "gracia"
+      ],
+      "temas": [
+        "comedia",
+        "humor",
+        "entretenimiento",
+        "memes",
+        "bromas"
+      ]
+    },
+    {
+      "nicho": "Educación y tutoriales",
+      "rpm_mx": [
+        0.02,
+        0.05
+      ],
+      "rpm_us": [
+        0.08,
+        0.2
+      ],
+      "saturacion": 4,
+      "barrera": "Hay que dominar el tema y explicarlo claro en 40 segundos.",
+      "necesitas": [
+        "dominio del tema"
+      ],
+      "temas": [
+        "educacion",
+        "tutorial",
+        "aprender",
+        "escuela",
+        "clases",
+        "matematicas",
+        "idiomas",
+        "ingles"
+      ]
+    },
+    {
+      "nicho": "Mascotas y animales",
+      "rpm_mx": [
+        0.01,
+        0.03
+      ],
+      "rpm_us": [
+        0.04,
+        0.14
+      ],
+      "saturacion": 5,
+      "barrera": "Ninguna. Es el más fácil de empezar y el que menos paga.",
+      "necesitas": [
+        "mascota"
+      ],
+      "temas": [
+        "mascotas",
+        "perros",
+        "gatos",
+        "animales",
+        "veterinaria"
+      ]
+    }
+  ]
+}

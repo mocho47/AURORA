@@ -3,12 +3,14 @@
   "laser_reglas": {
     "costo_minuto_diseno_listo": 6,
     "costo_minuto_con_edicion": 10,
-    "velocidad_corte_3mm_mm_s": 15,
+    "velocidad_corte_3mm_mm_s": 20,
     "velocidad_corte_6mm_mm_s": 5,
     "velocidad_grabado_mm_s": 200,
     "edicion_o_creacion_archivo": 50,
     "cobro_minimo_grabado": 60,
-    "nota_6mm": "corte 6mm = 3x tiempo = 3x costo vs 3mm"
+    "nota_6mm": "corte 6mm = 3x tiempo = 3x costo vs 3mm",
+    "precio_minuto_corte_VENTA": 8,
+    "_velocidad_resuelta": "Anuar 2026-08-13: 20 mm/s. Resuelve el conflicto entre el 15 del catalogo y el 25 que usaba el cotizador."
   },
   "prendas": [
     {
@@ -652,5 +654,26 @@
   ],
   "pendientes_confirmar": [
     "Costos de cada producto: Anuar los ajusta sobre la marcha en Taller·Precios"
-  ]
+  ],
+  "diseno_reglas": {
+    "_dictado_por": "Anuar 2026-08-13, en vivo",
+    "_como_se_decide": "por la extension del archivo que trae el cliente",
+    "trae_vector_pdf_o_dxf": 10,
+    "trae_imagen_hay_que_vectorizar": 15,
+    "no_trae_nada_diseno_desde_cero": 20,
+    "_nota": "REEMPLAZA a edicion_o_creacion_archivo=50 y al extra del mismo nombre"
+  },
+  "instalacion_reglas": {
+    "_dictado_por": "Anuar 2026-08-13, en vivo",
+    "minimo": 20,
+    "si_mide_mas_de_1_metro": 40,
+    "_regla": "20 pesos minimo; si la pieza pasa de 1 m en su lado mayor, el doble"
+  },
+  "proceso_mdf_con_vinil": {
+    "_dictado_por": "Anuar 2026-08-13, en vivo",
+    "_regla": "El vinil se PEGA al MDF y se corta TODO A LA VEZ con el laser.",
+    "NO_se_cobra_corte_de_vinil": true,
+    "_por_que": "no hay corte de plotter: el laser corta MDF y vinil en una sola pasada",
+    "formula": "(MDF + vinil) x 1.20 + corte laser + diseno + instalacion"
+  }
 }

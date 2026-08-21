@@ -33,6 +33,31 @@ app = FastAPI(
     version="3.0.0",
 )
 
+
+# ── EL OJO DEL PANEL ─────────────────────────────────────────────────────
+# El panel —donde Anuar de verdad trabaja— no registraba NADA. Un año de
+# clics en Órdenes, Cotizar y Contabilidad sin dejar rastro, mientras el chat
+# sí se guardaba. El observador de procesos nacía tuerto: veía la mitad chica
+# del día. Anuar lo autorizó el 2026-08-10.
+# Va como middleware y no repartido en los 202 endpoints por la misma razón
+# de siempre: un endpoint nuevo queda visto sin que nadie se acuerde de
+# avisarle. No guarda el cuerpo de la petición —ahí van nombres de clientes y
+# teléfonos— y descarta el sondeo automático del panel, que si no sería 9 de
+# cada 10 renglones.
+@app.middleware("http")
+async def _ojo_del_panel(request, call_next):
+    import time as _t
+    _t0 = _t.perf_counter()
+    respuesta = await call_next(request)
+    try:
+        from CEREBRO import ojo_panel as _ojo
+        _ojo.anotar(request.method, request.url.path, respuesta.status_code,
+                    int((_t.perf_counter() - _t0) * 1000))
+    except Exception:
+        pass          # el ojo jamás puede tumbar una respuesta del panel
+    return respuesta
+
+
 # Servir imágenes de referencia de las órdenes de taller
 try:
     _img_dir = _ROOT / "UPLOADS" / "ordenes"
@@ -1273,13 +1298,25 @@ def _cot():
 class CotizarCorteReq(BaseModel):
     archivo: str
     material: str = ""
-    velocidad_mm_s: float = 15.0
-    margen_pct: float = 30.0
+    velocidad_mm_s: float = 20.0     # la que dictó Anuar (2026-08-13)
+    margen_pct: float = 0.0          # ya no se usa: la cuenta vive en formula_precios
+    # Lo que faltaba para que el precio saliera completo (2026-08-14):
+    vinil: str = ""                  # vinil de recorte que va pegado al MDF
+    diseno: str = ""                 # archivo del cliente; su extensión pone el precio
+    sin_diseno: bool = False         # marcar cuando el diseño ya está resuelto
+    instalacion: bool = False
+    cantidad: int = 1
 
 @app.post("/taller/cotizar-dxf", tags=["Taller"])
 async def taller_cotizar_dxf(req: CotizarCorteReq):
     """Cotiza corte láser desde un DXF: longitud real + tiempo + material (precios Milens)."""
-    return await asyncio.to_thread(_cot().cotizar_corte, req.archivo, req.material, req.velocidad_mm_s, req.margen_pct)
+    # `sin_diseno` gana sobre todo; si no, manda el archivo que trajo el cliente;
+    # y si no trae nada, es diseño desde cero (True) — su regla, $20.
+    diseno = False if req.sin_diseno else (req.diseno or True)
+    return await asyncio.to_thread(
+        _cot().cotizar_corte, req.archivo, req.material, req.velocidad_mm_s,
+        req.margen_pct, True, 0.0, diseno, req.instalacion, req.cantidad,
+        [req.vinil] if req.vinil else None)
 
 
 # ── COTIZAR desde IMAGEN pegada en el chat (quita fondo -> vectoriza -> escala -> cotiza) ──
@@ -2436,6 +2473,34 @@ def _adm():
 @app.get("/taller/precios", tags=["Taller"])
 async def taller_precios():
     return await asyncio.to_thread(_adm().listar_precios)
+
+
+@app.get("/taller/vinilos", tags=["Taller"])
+async def taller_vinilos():
+    """Los vinilos de recorte que Anuar SÍ maneja, con precio y ancho de rollo.
+
+    Solo salen los que tienen los dos datos: sin ancho de rollo no se puede
+    saber cuánto material consume una pieza, y un menú con opciones que no
+    cotizan es peor que no tenerlas (2026-08-14)."""
+    def _run():
+        import json as _js   # este módulo no importa json arriba, solo por función
+        try:
+            cat = _js.loads((_ROOT / "CONFIG" / "catalogo_maestro.json")
+                            .read_text(encoding="utf-8"))
+        except Exception as e:
+            return {"status": "error", "mensaje": str(e), "vinilos": []}
+        out = []
+        for r in cat.get("renglones", []):
+            if not isinstance(r, dict) or r.get("tipo") != "material":
+                continue
+            if "vinil" not in (r.get("nombre", "") or "").lower():
+                continue
+            if not (r.get("compra") and r.get("medida")):
+                continue
+            out.append({"nombre": r["nombre"], "precio_metro": r["compra"],
+                        "ancho_rollo_cm": r["medida"]})
+        return {"status": "ok", "vinilos": out}
+    return await asyncio.to_thread(_run)
 
 class MaterialReq(BaseModel):
     nombre: str

@@ -192,6 +192,38 @@ class AutoConocimiento:
 
         return capacidades
 
+    # ── MANUAL DE COMANDOS REAL ────────────────────────────────────
+    # Añadido 2026-08-20: cuando preguntan "qué puedes hacer" o "cómo te
+    # pido X", esto lee el manual GENERADO del código real (candados,
+    # apps de PLUGINS/*.json, cajas de Boxes.py, router universal) — no
+    # inventa la respuesta y no depende de que alguien lo mantenga a mano.
+    # Regenerarlo: `python CEREBRO/generar_manual.py`.
+
+    async def manual_de_comandos(self, grupo: str = "") -> Dict:
+        """El manual real. Sin `grupo` trae el completo; con uno de los 8
+        nombres reales (taller, ventas, marketing, diseño, conocimiento,
+        cerebro_y_sistema, apps_conectadas, cajas_boxes) trae solo ese trozo,
+        para no mandar el manual entero cuando solo hace falta un pedazo."""
+        base = ROOT / "MANUALES"
+        if grupo:
+            import unicodedata
+            limpio = "".join(c for c in unicodedata.normalize("NFD", grupo.strip().lower())
+                             if unicodedata.category(c) != "Mn").replace(" ", "_")
+            ruta = base / "por_motor" / f"{limpio}.md"
+            if not ruta.exists():
+                disponibles = sorted(p.stem for p in (base / "por_motor").glob("*.md"))
+                return {"status": "NO_ENCONTRADO",
+                        "detalle": f"No tengo manual de '{grupo}'.",
+                        "disponibles": disponibles}
+            return {"status": "OK", "grupo": grupo, "contenido": ruta.read_text(encoding="utf-8")}
+
+        ruta = base / "manual_comandos_aurora.md"
+        if not ruta.exists():
+            return {"status": "NO_GENERADO",
+                    "detalle": "El manual no se ha generado todavía. Corre "
+                                "python CEREBRO/generar_manual.py."}
+        return {"status": "OK", "contenido": ruta.read_text(encoding="utf-8")}
+
     async def estado_sistema_completo(self) -> Dict:
         """
         Fotografía completa del sistema en este momento.

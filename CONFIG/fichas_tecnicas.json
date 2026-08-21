@@ -23,10 +23,10 @@
       "precio": 2300.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Tiras Secuenciales Premium para retrofit de faros ATF, precio $2,300.00 (version Premium de la linea de tiras secuenciales). Especificaciones tecnicas (numero de LEDs, patron de secuencia, voltaje) y compatibilidad vehicular: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
-      "diferencias": "",
+      "diferencias": "Version Premium: $2,300.00 vs. version Std: $1,600.00 (mismo catalogo ATF, misma categoria retrofit). Diferencia tecnica exacta entre ambas versiones: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "specs": {},
       "instalacion": {
         "dificultad": "",
@@ -44,10 +44,10 @@
       "precio": 1600.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Tiras Secuenciales Std para retrofit de faros ATF, precio $1,600.00 (version estandar de la linea de tiras secuenciales). Especificaciones tecnicas (numero de LEDs, patron de secuencia, voltaje) y compatibilidad vehicular: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
-      "diferencias": "",
+      "diferencias": "Version Std: $1,600.00 vs. version Premium: $2,300.00 (mismo catalogo ATF, misma categoria retrofit). Diferencia tecnica exacta entre ambas versiones: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "specs": {},
       "instalacion": {
         "dificultad": "",
@@ -139,8 +139,8 @@
       "precio": 2000.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Fibra Optica Interior para retrofit de faros ATF, precio $2,000.00, categoria retrofit. Especificaciones tecnicas y compatibilidad vehicular: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
       "diferencias": "",
       "specs": {},
@@ -160,8 +160,8 @@
       "precio": 1850.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "LED H4 Premium para retrofit de faros ATF, precio $1,850.00, compatible con Volkswagen, Mercedes-Benz, BMW, Audi, Hyundai y Kia (dato ya existente en la ficha). Especificaciones tecnicas (potencia, lumenes, temperatura de color): PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [
         "Volkswagen",
         "Mercedes-Benz",
@@ -180,8 +180,7 @@
       },
       "recomendado_para": "",
       "argumentos_venta": [],
-      "fuentes": [],
-      "nota_verificacion": "Degradada por incoherencia: texto menciona modelo ['h7'] pero el producto es ['h4']"
+      "fuentes": []
     },
     {
       "id": "led_h7_prem",
@@ -189,8 +188,8 @@
       "precio": 1850.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "LED Premium para retrofit de faros ATF, precio $1,850.00, categoria retrofit. Compatibilidad vehicular y especificaciones tecnicas (potencia, lumenes, temperatura de color): PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
       "diferencias": "",
       "specs": {},
@@ -210,8 +209,8 @@
       "precio": 950.0,
       "negocio": "ATF",
       "categoria": "retrofit",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "LED Intermedio (General) para retrofit de faros ATF, precio $950.00, categoria retrofit. Especificaciones tecnicas y compatibilidad vehicular: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
       "diferencias": "",
       "specs": {},
@@ -231,8 +230,8 @@
       "precio": 100,
       "negocio": "MILENS",
       "categoria": "Tazas",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Taza Magica, precio en ficha $100.00. AVISO: el catalogo real (CONFIG/catalogo_servicios.json) solo tiene 'Taza magica 11oz'=$130.00 y 'Taza magica 15oz'=$150.00 -- ninguna coincide con $100.00; no se puede saber cual variante es sin que Anuar lo confirme. Material, capacidad exacta y especificaciones tecnicas: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
       "diferencias": "",
       "specs": {},
@@ -251,20 +250,30 @@
       "precio": 60,
       "negocio": "MILENS",
       "categoria": "Tazas",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Taza Ceramica 11oz, precio $60.00. Coincide con 'Taza blanca 11oz (grabada)' del catalogo real (CONFIG/catalogo_servicios.json), precio por pieza $60.00.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Precio por volumen real (catalogo_servicios.json): 1 pieza $60.00, desde 13 piezas $55.00 c/u, desde 36 piezas $45.00 c/u.",
+      "specs": {
+        "Capacidad": "11oz",
+        "Color": "Blanca",
+        "Proceso": "Grabado laser"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
-      "argumentos_venta": [],
-      "fuentes": []
+      "recomendado_para": "Regalo personalizado, pedidos por volumen (escala de precio desde 13 y desde 36 piezas).",
+      "argumentos_venta": [
+        "Precio baja por volumen: desde 13 piezas y desde 36 piezas."
+      ],
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Termo 20oz",
@@ -272,20 +281,29 @@
       "precio": 270,
       "negocio": "MILENS",
       "categoria": "Termos",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Termo 20oz (Skinny), precio $270.00. Coincide con 'Termo skinny sublimable (20oz, personalizado a color)' del catalogo real (CONFIG/catalogo_servicios.json), $270.00, sublimacion full color, ya personalizado.",
+      "compatibilidad": [
+        "sublimacion"
+      ],
+      "diferencias": "Proceso sublimacion (full color), a diferencia de otros termos de la linea que se graban con laser.",
+      "specs": {
+        "Capacidad": "20oz",
+        "Proceso": "Sublimacion full color"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
-      "argumentos_venta": [],
-      "fuentes": []
+      "recomendado_para": "Personalizacion a color completo (fotos/disenos con color), no solo grabado.",
+      "argumentos_venta": [
+        "Personalizacion a color completo, ya incluida en el precio."
+      ],
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Termo 30oz",
@@ -331,20 +349,30 @@
       "precio": 350,
       "negocio": "MILENS",
       "categoria": "Termos",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Termo 40oz (Travel), precio $350.00. Coincide con 'Termo 40oz acero grabado laser' del catalogo real (CONFIG/catalogo_servicios.json), $350.00, ya grabado.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Version grabado laser (acero, $350.00) distinta de 'Termo 40oz personalizado con DTF' ($450.00 en catalogo real) -- esta ultima no tiene version sublimada, se hace con DTF.",
+      "specs": {
+        "Capacidad": "40oz",
+        "Material": "Acero",
+        "Proceso": "Grabado laser"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
-      "argumentos_venta": [],
-      "fuentes": []
+      "recomendado_para": "Cliente que ya trae el diseno listo para grabado laser (viene ya grabado).",
+      "argumentos_venta": [
+        "Ya viene grabado, sin costo de diseno adicional dentro del precio base."
+      ],
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Termo 18oz",
@@ -352,26 +380,28 @@
       "precio": 230,
       "negocio": "MILENS",
       "categoria": "Termos",
-      "estado_ficha": "PARCIAL",
-      "que_es": "Termo con dispensador, 18 L, fabricado en polipropileno resistente a impactos",
-      "compatibilidad": [],
-      "diferencias": "",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Termo 18oz (Bala), precio $230.00. Coincide con 'Termo 18oz acero grabado laser' del catalogo real (CONFIG/catalogo_servicios.json), $230.00, ya grabado. (Se corrige: la version anterior de esta ficha traia specs de un dispensador de agua de 18 litros, producto equivocado por confusion oz/L.)",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Mismo precio ($230.00) que el Termo 20oz Skinny grabado y el Termo 30oz grabado, segun nota del catalogo real.",
       "specs": {
-        "Capacidad": "18 L (4.7 gal)",
-        "Peso": "2.2 kg",
-        "Dimensiones": "25 x 44 cm"
+        "Capacidad": "18oz",
+        "Material": "Acero",
+        "Proceso": "Grabado laser"
       },
       "instalacion": {
         "dificultad": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
-      "argumentos_venta": [],
+      "recomendado_para": "Cliente que ya trae el diseno listo para grabado laser (viene ya grabado).",
+      "argumentos_venta": [
+        "Ya viene grabado, sin costo de diseno adicional dentro del precio base."
+      ],
       "fuentes": [
-        "https://www.truper.com/ficha_tecnica/controllers/index.php?codigo=62125",
-        "https://rigba.com/wp-content/uploads/2021/06/2272.pdf",
-        "https://es.scribd.com/document/630376883/MANUAL-TECNICO-TERMOPANEL-2021-2"
+        "CONFIG/catalogo_servicios.json (interno)"
       ]
     },
     {
@@ -380,8 +410,8 @@
       "precio": 45,
       "negocio": "MILENS",
       "categoria": "Termos",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Vasos Plasticos (Cafetero), precio $45.00, categoria Termos. No existe una linea 'vasos' en ningun catalogo interno del proyecto (catalogo_servicios.json ni catalogo_maestro.json) -- no hay como confirmar material, capacidad ni proceso real. Especificaciones tecnicas: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
       "compatibilidad": [],
       "diferencias": "",
       "specs": {},
@@ -401,10 +431,12 @@
       "precio": 200,
       "negocio": "MILENS",
       "categoria": "Textil",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Playera Algodon (DTF), precio $200.00, categoria Textil. El catalogo real (CONFIG/catalogo_servicios.json) tiene reglas de DTF (costo por metro $160-$235, venta por metro $280.00, colocacion/planchado $30.00 aparte) pero ninguna prenda especifica de $200.00 en algodon DTF listada -- no se puede confirmar composicion exacta de tela ni medidas del diseno incluido. Especificaciones: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
+      "compatibilidad": [
+        "DTF"
+      ],
+      "diferencias": "DTF (transferencia de peliculA con planchado) funciona sobre algodon, a diferencia de la sublimacion que requiere poliester.",
       "specs": {},
       "instalacion": {
         "dificultad": "",
@@ -414,7 +446,9 @@
       },
       "recomendado_para": "",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Playera Po",
@@ -422,20 +456,27 @@
       "precio": 140,
       "negocio": "MILENS",
       "categoria": "Textil",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Playera Poliester (Subli), precio $140.00. Coincide con 'Playera blanca poliester (para sublimar)' del catalogo real (CONFIG/catalogo_servicios.json), $140.00.",
+      "compatibilidad": [
+        "sublimacion"
+      ],
+      "diferencias": "Poliester blanca sin personalizar (base para sublimar); el proceso de sublimacion requiere tela de poliester para fijar el color.",
+      "specs": {
+        "Material": "Poliester",
+        "Color": "Blanca"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Base para sublimado de disenos a color completo.",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Gorra (Sub",
@@ -443,10 +484,13 @@
       "precio": 100,
       "negocio": "MILENS",
       "categoria": "Textil",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
+      "estado_ficha": "PARCIAL",
+      "que_es": "Gorra (Subli/Vinil), precio $100.00, categoria Textil. El catalogo real (CONFIG/catalogo_servicios.json) tiene 'Gorra personalizada (sublimada)'=$120.00 y 'Gorra personalizada (vinil textil)'=$150.00 -- ninguna coincide con $100.00; no se puede saber cual proceso corresponde a este precio sin que Anuar lo confirme. Especificaciones: PENDIENTE: falta que Anuar dicte este dato (no existe en ningun catalogo interno del proyecto).",
+      "compatibilidad": [
+        "sublimacion",
+        "vinil textil"
+      ],
+      "diferencias": "Catalogo real distingue 2 procesos para gorra: sublimada ($120.00) y vinil textil ($150.00), ambos distintos del precio de esta ficha ($100.00).",
       "specs": {},
       "instalacion": {
         "dificultad": "",
@@ -456,7 +500,9 @@
       },
       "recomendado_para": "",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Agenda Vin",
@@ -464,10 +510,12 @@
       "precio": 280.0,
       "negocio": "MILENS",
       "categoria": "Oficina",
-      "estado_ficha": "PARCIAL",
-      "que_es": "Agenda Vinipiel (Laser)",
-      "compatibilidad": [],
-      "diferencias": "",
+      "estado_ficha": "COMPLETA",
+      "que_es": "Agenda Vinipiel (Laser), precio $280.00. Coincide con 'Agenda de vinipiel (grabado laser)' del catalogo real (CONFIG/catalogo_servicios.json), $280.00.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Cubierta de vinipiel personalizada con grabado laser (no impresion).",
       "specs": {
         "potencia_laser": "20%",
         "velocidad": "1500 mm",
@@ -478,7 +526,7 @@
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Regalo corporativo / agenda personalizada con logo grabado.",
       "argumentos_venta": [],
       "fuentes": [
         "https://elmundolaser.com/parametros-para-corte-y-grabado-en-laser-de-fibra-optica/",
@@ -492,20 +540,27 @@
       "precio": 45.0,
       "negocio": "MILENS",
       "categoria": "Oficina",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Boligrafo Metal (Laser), precio $45.00. Coincide con 'Boligrafo metalico (grabado laser)' del catalogo real (CONFIG/catalogo_servicios.json), $45.00.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Material": "Metal",
+        "Proceso": "Grabado laser"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Regalo corporativo pequeno, grabado de logo o nombre.",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "sello_goma_chico",
@@ -513,20 +568,28 @@
       "precio": 180.0,
       "negocio": "MILENS",
       "categoria": "Oficina",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Sello de Goma (Chico), precio $180.00. Coincide con 'Sello de goma chico (grabado laser)' del catalogo real (CONFIG/catalogo_servicios.json), $180.00.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Version chica: $180.00 vs. version grande: $280.00 (mismo catalogo).",
+      "specs": {
+        "Material": "Goma",
+        "Proceso": "Grabado laser",
+        "Tamano": "Chico"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Sello de uso frecuente para negocio (tamano chico).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "sello_goma_grande",
@@ -534,20 +597,28 @@
       "precio": 280.0,
       "negocio": "MILENS",
       "categoria": "Oficina",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
-      "diferencias": "",
-      "specs": {},
+      "estado_ficha": "COMPLETA",
+      "que_es": "Sello de Goma (Grande), precio $280.00. Coincide con 'Sello de goma grande (grabado laser)' del catalogo real (CONFIG/catalogo_servicios.json), $280.00.",
+      "compatibilidad": [
+        "grabado laser"
+      ],
+      "diferencias": "Version grande: $280.00 vs. version chica: $180.00 (mismo catalogo).",
+      "specs": {
+        "Material": "Goma",
+        "Proceso": "Grabado laser",
+        "Tamano": "Grande"
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Sello de uso frecuente para negocio (tamano grande, mas area de marca).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/catalogo_servicios.json (interno)"
+      ]
     },
     {
       "id": "Módulo de ",
@@ -591,20 +662,29 @@
       "precio": 110.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 122x244 cm. Precio de hoja en catalogo real (CONFIG/precios_base.json): $110.00, coincide con el precio de esta ficha.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "122x244 cm",
+        "Ancho_cm": 122,
+        "Alto_cm": 244
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     },
     {
       "id": "MDF 5.5mm ",
@@ -612,20 +692,29 @@
       "precio": 280.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 122x244 cm. Precio de hoja en catalogo real (CONFIG/precios_base.json): $280.00, coincide con el precio de esta ficha.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "122x244 cm",
+        "Ancho_cm": 122,
+        "Alto_cm": 244
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     },
     {
       "id": "Multiplay ",
@@ -633,20 +722,29 @@
       "precio": 350.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 122x244 cm. Precio de hoja en catalogo real (CONFIG/precios_base.json): $350.00, coincide con el precio de esta ficha.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "122x244 cm",
+        "Ancho_cm": 122,
+        "Alto_cm": 244
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     },
     {
       "id": "acrilico_3mm_color",
@@ -654,20 +752,29 @@
       "precio": 900.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 120x180 cm. AVISO: precio de hoja en catalogo real (CONFIG/precios_base.json) es $1300.00, NO coincide con el precio de esta ficha ($900.00) -- diferencia sin resolver, requiere que Anuar confirme cual es el correcto.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "120x180 cm",
+        "Ancho_cm": 120,
+        "Alto_cm": 180
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     },
     {
       "id": "acrilico_3mm_transparente",
@@ -675,20 +782,29 @@
       "precio": 800.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 120x180 cm. AVISO: precio de hoja en catalogo real (CONFIG/precios_base.json) es $1300.00, NO coincide con el precio de esta ficha ($800.00) -- diferencia sin resolver, requiere que Anuar confirme cual es el correcto.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "120x180 cm",
+        "Ancho_cm": 120,
+        "Alto_cm": 180
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     },
     {
       "id": "Acrílico 6",
@@ -696,20 +812,29 @@
       "precio": 1800.0,
       "negocio": "MILENS",
       "categoria": "material laser",
-      "estado_ficha": "PENDIENTE",
-      "que_es": "",
-      "compatibilidad": [],
+      "estado_ficha": "PARCIAL",
+      "que_es": "Hoja de material para corte y grabado laser en Milens. Dimension real de hoja (CONFIG/precios_base.json): 120x180 cm. AVISO: precio de hoja en catalogo real (CONFIG/precios_base.json) es $1600.00, NO coincide con el precio de esta ficha ($1800.00) -- diferencia sin resolver, requiere que Anuar confirme cual es el correcto.",
+      "compatibilidad": [
+        "corte laser",
+        "grabado laser"
+      ],
       "diferencias": "",
-      "specs": {},
+      "specs": {
+        "Dimension_hoja": "120x180 cm",
+        "Ancho_cm": 120,
+        "Alto_cm": 180
+      },
       "instalacion": {
         "dificultad": "",
         "tiempo_aprox": "",
         "requiere": [],
         "pasos": []
       },
-      "recomendado_para": "",
+      "recomendado_para": "Corte y grabado laser de piezas MDF/acrilico en Milens (velocidad real de corte 3mm: 20 mm/s, 6mm: 5 mm/s, segun CONFIG/catalogo_servicios.json).",
       "argumentos_venta": [],
-      "fuentes": []
+      "fuentes": [
+        "CONFIG/precios_base.json (interno)"
+      ]
     }
   ]
 }

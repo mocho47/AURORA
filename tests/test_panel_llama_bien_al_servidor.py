@@ -99,11 +99,25 @@ def test_activar_equipo_no_tira_el_trabajo_a_la_basura(panel, servidor):
 
 
 def test_el_resultado_usa_los_campos_que_el_servidor_devuelve(panel):
-    """Lo que se pinta tiene que existir en la respuesta real, medida en vivo."""
-    reales = {"archivo", "medida_cm", "cabe_en_la_maquina", "piezas_aprox",
-              "longitud_corte_m", "tiempo_min", "velocidad_mm_s", "costo_minuto",
-              "costo_corte", "costo_material", "costo_desperdicio", "material",
-              "margen_pct", "total", "status"}
+    """Lo que se pinta tiene que existir en la respuesta real, medida en vivo.
+
+    Los campos se sacan del DICCIONARIO QUE DEVUELVE el cotizador, no de una
+    lista escrita aquí. La lista a mano se desincronizó en cuanto el cotizador
+    empezó a devolver `precio` y `avisos` (2026-08-14): la prueba se ponía roja
+    por campos que sí existían. Leerlos del código real es lo que la mantiene
+    honesta sin mantenimiento.
+    """
+    import importlib.util as _ilu
+    _sp = _ilu.spec_from_file_location("cotizador_corte",
+                                       RAIZ / "EDITOR" / "cotizador_corte.py")
+    _cc = _ilu.module_from_spec(_sp)
+    _sp.loader.exec_module(_cc)
+    fuente = (RAIZ / "EDITOR" / "cotizador_corte.py").read_text(encoding="utf-8",
+                                                               errors="ignore")
+    # las claves del `return {...}` de cotizar_corte, tal como están escritas
+    reales = set(re.findall(r'^\s{8}"(\w+)":', fuente, re.M))
+    assert "total" in reales, "no se pudieron leer las claves del cotizador"
+
     cuerpo = _cuerpo(panel, "clCotizar")
     usados = set(re.findall(r"\br\.(\w+)", cuerpo))
     inventados = usados - reales - {"error", "detalle"}

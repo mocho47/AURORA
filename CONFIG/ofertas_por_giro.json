@@ -1,0 +1,275 @@
+{
+  "_lee_esto": "Esta es la tabla que convierte una lista de negocios en una lista de ventas. Cada grupo dice a qué giros aplica, qué ofrecerles, con qué frase entrar y cuánto vale el primer trabajo. Cámbiala por lo que TÚ vendes y la herramienta sirve para cualquier ramo.",
+  "_como_se_usa": {
+    "grupo": "Nombre que verás en los reportes.",
+    "giros": "Pedazos de palabra que busca en el giro del INEGI, en minúsculas y sin acentos. 'peluquer' encuentra peluquería y peluquerías.",
+    "ofrecer": "Lista de lo que le vendes a ese grupo, del más fácil al más caro.",
+    "gancho": "Con qué abres la conversación. Una frase, la que de verdad funciona.",
+    "ticket": "Cuánto cobras más o menos el primer trabajo, en pesos."
+  },
+  "moneda": "MXN",
+  "generica": {
+    "grupo": "Otros negocios",
+    "ofrecer": [
+      "Lona de fachada",
+      "Letrero o placa grabada",
+      "Playeras o uniformes con logo",
+      "Artículos promocionales"
+    ],
+    "gancho": "Empieza por la lona o el letrero: es lo que todo negocio necesita y lo que más rápido se cierra.",
+    "ticket": 700
+  },
+  "grupos": [
+    {
+      "grupo": "Salones de belleza y barberías",
+      "giros": [
+        "salon",
+        "belleza",
+        "peluquer",
+        "estetica",
+        "barber",
+        "spa",
+        "uñas",
+        "unas"
+      ],
+      "ofrecer": [
+        "Batas y capas personalizadas",
+        "Espejo o letrero grabado en acrílico",
+        "Tarjetas de cita en MDF grabado",
+        "Vinil para el aparador"
+      ],
+      "gancho": "Batas con su nombre bordado o sublimado: se ven en cada foto que suben.",
+      "ticket": 900
+    },
+    {
+      "grupo": "Talleres y servicio automotriz",
+      "giros": [
+        "taller",
+        "mecanic",
+        "automotriz",
+        "hojalater",
+        "llantera",
+        "refaccion",
+        "autopart",
+        "faros",
+        "electrico automotriz"
+      ],
+      "ofrecer": [
+        "Uniformes y camisolas con logo",
+        "Señalética de seguridad en el taller",
+        "Lona de fachada",
+        "Llaveros y placas grabadas para entrega",
+        "Retrofit de faros (ATF)"
+      ],
+      "gancho": "Uniformes con logo: cambia por completo cómo lo ve el cliente que deja su coche.",
+      "ticket": 1500
+    },
+    {
+      "grupo": "Restaurantes, taquerías y cafés",
+      "giros": [
+        "restaurant",
+        "taco",
+        "antojito",
+        "cafeter",
+        "fonda",
+        "cocina economica",
+        "pizzer",
+        "marisc",
+        "bar,",
+        "cantina",
+        "never",
+        "refresquer",
+        "juguer"
+      ],
+      "ofrecer": [
+        "Mandiles con logo",
+        "Menú grabado en madera o acrílico",
+        "Portacuentas grabado",
+        "Señalética de mesas y baños",
+        "Lona de fachada",
+        "Termos y vasos personalizados"
+      ],
+      "gancho": "Mandiles con logo y el menú grabado: es lo que sube el ticket sin cambiar la comida.",
+      "ticket": 1200
+    },
+    {
+      "grupo": "Escuelas y colegios",
+      "giros": [
+        "escuela",
+        "primaria",
+        "secundaria",
+        "preescolar",
+        "kinder",
+        "colegio",
+        "bachiller",
+        "universidad",
+        "educacion"
+      ],
+      "ofrecer": [
+        "Uniformes y playeras de generación",
+        "Reconocimientos grabados en MDF",
+        "Señalética de salones",
+        "Paquetes escolares (Milens)",
+        "Porta gafetes y credenciales"
+      ],
+      "gancho": "Playeras de generación y reconocimientos: se piden cada ciclo, es cliente que vuelve.",
+      "ticket": 3000
+    },
+    {
+      "grupo": "Gimnasios y deportivos",
+      "giros": [
+        "gimnasio",
+        "deportivo",
+        "fitness",
+        "crossfit",
+        "yoga",
+        "box",
+        "futbol"
+      ],
+      "ofrecer": [
+        "Jerseys y playeras deportivas sublimadas",
+        "Termos personalizados",
+        "Lona y señalética",
+        "Medallas y trofeos en MDF grabado"
+      ],
+      "gancho": "Jerseys sublimados por equipo: se venden por docenas, no por pieza.",
+      "ticket": 2500
+    },
+    {
+      "grupo": "Veterinarias y mascotas",
+      "giros": [
+        "veterinar",
+        "mascota",
+        "pet",
+        "estetica canina"
+      ],
+      "ofrecer": [
+        "Placas grabadas para collar",
+        "Batas y mandiles",
+        "Señalética y letrero",
+        "Termos y tazas del negocio"
+      ],
+      "gancho": "Placas grabadas para collar: se venden todos los días y dejan buen margen por pieza.",
+      "ticket": 600
+    },
+    {
+      "grupo": "Papelerías e imprentas",
+      "giros": [
+        "papeler",
+        "imprenta",
+        "copias",
+        "regalo",
+        "novedad",
+        "libros"
+      ],
+      "ofrecer": [
+        "Artículos personalizados para revender",
+        "Letrero y vinil de aparador",
+        "Corte láser por maquila para sus pedidos"
+      ],
+      "gancho": "Maquila de corte: en vez de competirle, se le vende a él y revende.",
+      "ticket": 1000
+    },
+    {
+      "grupo": "Abarrotes y tiendas de barrio",
+      "giros": [
+        "abarrote",
+        "tienda",
+        "miscelanea",
+        "minisuper",
+        "carnicer",
+        "tortiller",
+        "frutas y verduras",
+        "pollo"
+      ],
+      "ofrecer": [
+        "Lona de precios y fachada",
+        "Letrero de horario y promociones",
+        "Vinil para vitrina"
+      ],
+      "gancho": "Una lona de fachada bien hecha, de $400 a $900. Es la venta más rápida y la que abre la puerta a las demás.",
+      "ticket": 700
+    },
+    {
+      "grupo": "Hoteles y hospedaje",
+      "giros": [
+        "hotel",
+        "moteles",
+        "hospedaje",
+        "posada",
+        "cabañ"
+      ],
+      "ofrecer": [
+        "Señalética de habitaciones",
+        "Amenidades grabadas",
+        "Uniformes de personal",
+        "Placas de numeración en MDF o acrílico"
+      ],
+      "gancho": "Numeración y señalética de cuartos: se cotiza por juego completo.",
+      "ticket": 4000
+    },
+    {
+      "grupo": "Consultorios y salud",
+      "giros": [
+        "consultorio",
+        "medic",
+        "dental",
+        "dentista",
+        "clinica",
+        "laboratorio",
+        "farmacia",
+        "optic"
+      ],
+      "ofrecer": [
+        "Placas de consultorio grabadas",
+        "Batas personalizadas",
+        "Señalética y directorio",
+        "Porta recetas grabado"
+      ],
+      "gancho": "La placa del consultorio: cuesta poco, se ve mucho, y abre la puerta a la señalética de todo el edificio.",
+      "ticket": 800
+    },
+    {
+      "grupo": "Construcción, herrería y carpintería",
+      "giros": [
+        "inmobiliar",
+        "bienes raices",
+        "construc",
+        "arquitect",
+        "ingenier",
+        "herrer",
+        "carpinter",
+        "vidrio",
+        "aluminio"
+      ],
+      "ofrecer": [
+        "Letreros de obra y lonas",
+        "Maquetas y cortes en MDF",
+        "Placas de entrega de obra",
+        "Señalética de seguridad"
+      ],
+      "gancho": "Letreros de obra: cada obra nueva es un pedido nuevo del mismo cliente.",
+      "ticket": 1800
+    },
+    {
+      "grupo": "Eventos y fiestas",
+      "giros": [
+        "evento",
+        "fiesta",
+        "banquete",
+        "salon de fiesta",
+        "jardin",
+        "foto",
+        "boda"
+      ],
+      "ofrecer": [
+        "Recuerdos y souvenirs en MDF o acrílico",
+        "Letras gigantes",
+        "Centros de mesa cortados",
+        "Invitaciones grabadas"
+      ],
+      "gancho": "Recuerdos por evento: se piden de 50 a 300 piezas de un jalón.",
+      "ticket": 2500
+    }
+  ]
+}

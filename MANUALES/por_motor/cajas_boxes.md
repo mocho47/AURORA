@@ -1,0 +1,45 @@
+# Cajas de Boxes.py con palabra en español
+
+- **caja con forma de corazón** (HeartBox) — di «corazon», «corazón», «heart»
+- **cofre con tapa curva** (PirateChest) — di «cofre», «cofrecito», «baul», «baúl», «tesoro», «pirata», «chest»
+- **caja con pared flexible (kerf bending)** (FlexBox) — di «flex», «flexible», «curva», «doblada», «redondeada»
+- **caja con bisagras integradas** (HingeBox) — di «bisagra», «bisagras», «hinge», «con tapa abatible»
+- **bandeja con divisiones** (TypeTray) — di «divisiones», «division», «compartimentos», «separadores», «para chocolates», «organizador»
+- **bandeja con divisiones movibles** (DividerTray) — di «divisor», «divisoria», «divider»
+- **caja con tapa corrediza** (SlidingLidBox) — di «tapa deslizante», «tapa corrediza», «tapa que desliza», «tapa deslizable», «sliding lid»
+- **cajón que se desliza** (SlidingDrawer) — di «cajon», «cajón», «gaveta», «que se desliza», «corredizo»
+- **caja de esquinas redondeadas** (RoundedBox) — di «redonda», «redondeada», «esquinas redondas»
+- **caja de lados regulares** (RoundedRegularBox) — di «hexagonal», «hexagono», «hexágono»
+- **caja para dados** (DiceBox) — di «dados», «dado», «dice»
+- **caja para cartas** (CardBox) — di «cartas», «naipes», «card»
+- **caja tipo libro** (FlexBook) — di «libro», «book»
+- **castillo armable** (Castle) — di «castillo», «castle»
+- **casa de pájaros** (BirdHouse) — di «casa de pajaros», «pajarera», «birdhouse»
+- **marco para fotos** (PhotoFrame) — di «marco de fotos», «portarretrato», «porta retrato»
+- **vitrina cerrada para exhibir** (DisplayCase) — di «vitrina», «caja vitrina»
+- **marco tipo shadowbox, con fondo para pegar figuras** (Shadowbox) — di «marco con fondo», «shadowbox», «cuadro para figuras», «cuadro sombra»
+- **exhibidor de monedas** (CoinDisplay) — di «exhibidor de monedas», «presumidero de monedas»
+- **repisa exhibidora** (DisplayShelf) — di «repisa exhibidora», «anaquel exhibidor»
+- **revistero** (MagazineFile) — di «revistero», «organizador de revistas»
+- **organizador de cubiertos** (Silverware) — di «cubertero», «organizador de cubiertos»
+- **lámpara triangular** (TriangleLamp) — di «lampara triangular», «lámpara triangular»
+- **contenedor apilable para organizar** (StackableBin) — di «contenedor apilable», «bin apilable»
+- **carpeta/sobre organizador** (Folder) — di «carpeta organizadora», «sobre organizador»
+- **caja para papel u hojas** (PaperBox) — di «caja para hojas», «caja de papel»
+- **charola para piezas pequeñas (tornillos, tuercas)** (SmallPartsTray) — di «charola de piezas pequeñas», «organizador de tornillos»
+- **insert organizador para meter dentro de otra caja** (TrayInsert) — di «insert organizador», «charola insert»
+- **caja de regalo de dos piezas (la tapa cubre la base)** (TwoPiece) — di «caja de dos piezas», «tapa que cubre la base», «caja tapa y base»
+- **exhibidor de pie para volantes o folletos** (Display) — di «atril para volantes», «exhibidor de folletos», «porta volantes»
+- **huacal con asas, se puede hacer apilable** (Crate) — di «huacal», «cajon con asas», «cajón con asas», «caja tipo huacal»
+- **dispensador para cosas planas apiladas (servilletas, posavasos)** (Dispenser) — di «dispensador», «dispensador de servilletas»
+- **caja con la tapa y el frente abiertos** (OpenBox) — di «caja abierta», «charola abierta»
+- **consola de pared con panel inclinado** (Console) — di «consola de pared», «repisa con panel inclinado»
+- **caja con cortina enrollable tipo persiana** (ShutterBox) — di «caja con cortina enrollable», «caja persiana», «caja rolltop»
+- **organizador para una pila de papel o posavasos** (NotesHolder) — di «porta notas», «organizador de papel apilado», «porta posavasos»
+- **contenedor de pared, apilable o colgante** (WallStackableBin) — di «contenedor de pared apilable», «bin de pared»
+- **vinatera / portabotellas** (WineRack) — di «vinatera», «botellero», «portabotellas de vino»
+- **alcancía con caja fuerte** (CoinBankSafe) — di «moneda», «alcancia», «alcancía»
+- **bandeja simple** (BinTray) — di «bandeja», «charola», «tray»
+- **caja con compartimentos** (CompartmentBox) — di «compartimento», «compartimentos»
+- **caja cerrada por todos lados** (ClosedBox) — di «cerrada», «cerrado», «closed»
+- **lámpara de media luna con canal para difusor LED (custom, no es de boxes.py)** (lampara_media_luna) — di «media luna», «medialuna», «lampara de arco», «lampara arco», «half moon»

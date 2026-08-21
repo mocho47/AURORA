@@ -21,7 +21,59 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 CM_POR_PULGADA = 2.54
 
 
-def _cm_a_px(cm, dpi): return round(cm / CM_POR_PULGADA * dpi)
+def _cm_a_px(cm, dpi=300):
+    """cm -> pixeles. El dpi se blinda contra None a proposito.
+
+    El enrutador universal pasa None explicito cuando no logra sacar el valor
+    de la frase, y un None explicito ANULA el default de la firma. Anuar lo
+    cacho el 2026-08-10 pidiendo una plantilla de tazas: reventaba con
+    "unsupported operand type(s) for *: 'float' and 'NoneType'".
+    """
+    return round(cm / CM_POR_PULGADA * (dpi or 300))
+
+
+def _es_imagen(ruta) -> bool:
+    """¿Esto es una foto de verdad que existe en el disco?"""
+    if not isinstance(ruta, str) or not ruta.strip():
+        return False
+    p = Path(ruta.strip().strip('"').strip("'"))
+    return p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp", ".bmp",
+                                ".tif", ".tiff") and p.is_file()
+
+
+def _encajar(foto: "Image.Image", ancho: int, alto: int, recortar: bool = False,
+             relleno=(255, 255, 255)) -> "Image.Image":
+    """Mete la foto en la caja sin deformarla nunca.
+
+    recortar=False (lo normal): la foto entra COMPLETA y sobra fondo a los
+    lados. recortar=True: llena toda la caja y se pierde orilla.
+
+    EL DEFAULT ES «COMPLETA» POR UNA RAZÓN CARA.
+    El área de una taza es 21x9 cm — ratio 2.3:1, larguísima y bajita. Una
+    foto de celular es casi cuadrada. Al rellenar esa caja se recorta arriba
+    y abajo, y lo primero que desaparece son las CABEZAS. Anuar mandó dos
+    fotos de familia el 2026-08-10 y la primera versión de esto le entregó
+    tres tazas con las caras cortadas. Una taza así no se entrega: se vuelve
+    a hacer, y el material ya se gastó.
+
+    Estirar no es opción en ninguno de los dos casos: una cara aplastada se
+    nota más que una orilla de menos.
+    """
+    fw, fh = foto.size
+    if recortar:
+        escala = max(ancho / fw, alto / fh)
+        nueva = foto.resize((max(1, round(fw * escala)), max(1, round(fh * escala))),
+                            Image.LANCZOS)
+        izq = (nueva.width - ancho) // 2
+        arr = (nueva.height - alto) // 2
+        return nueva.crop((izq, arr, izq + ancho, arr + alto))
+
+    escala = min(ancho / fw, alto / fh)
+    nueva = foto.resize((max(1, round(fw * escala)), max(1, round(fh * escala))),
+                        Image.LANCZOS)
+    lienzo = Image.new("RGB", (ancho, alto), relleno)
+    lienzo.paste(nueva, ((ancho - nueva.width) // 2, (alto - nueva.height) // 2))
+    return lienzo
 def _norm(s): return "".join(c for c in _ud.normalize("NFD", (s or "").lower()) if _ud.category(c) != "Mn")
 
 
@@ -330,9 +382,24 @@ def _wrap(d, texto, font, max_w):
 
 def componer_taza(fondo_id: str, frase: str = "", modo: str = "frase_foto",
                   con_foto=None, ancho_cm: float = 20.0, alto_cm: float = 8.5,
-                  dpi: int = 300, salida: str = "") -> dict:
+                  dpi: int = 300, salida: str = "", foto: str = "",
+                  recortar: bool = False) -> dict:
     """Compone la taza: fondo elegido + (según modo) foto y/o frase.
-    modo: 'frase_foto' | 'solo_foto' | 'solo_frase'."""
+    modo: 'frase_foto' | 'solo_foto' | 'solo_frase'.
+    foto: ruta a una imagen REAL; si no se da, se dibuja el recuadro guía.
+
+    El parámetro `foto` se agregó el 2026-08-10. Hasta entonces este módulo
+    NO podía recibir imágenes: dibujaba un recuadro con una X y la palabra
+    "FOTO", y nada más. Anuar pidió «una plantilla para 3 tazas con estas 2
+    fotos» y se topó con que la herramienta que el enrutador le ofrecía era
+    incapaz de hacer justo eso. El recuadro sigue existiendo para cuando no
+    hay foto — sirve de guía de armado —, pero ya no es lo único posible.
+    """
+    # Se normaliza AQUÍ y no solo en _cm_a_px: el dpi también viaja hasta
+    # img.save(dpi=(dpi, dpi)), y ahí un None revienta igual pero con otro
+    # mensaje. Blindar la conversión y dejar suelto el guardado fue mi error
+    # del 2026-08-10: el bug se movió de sitio en vez de cerrarse.
+    dpi = int(dpi or 300)
     if fondo_id not in FONDOS:
         return {"status": "error", "mensaje": f"Fondo '{fondo_id}' no existe.", "disponibles": list(FONDOS)}
     frase = (frase or "").strip()
@@ -350,15 +417,29 @@ def componer_taza(fondo_id: str, frase: str = "", modo: str = "frase_foto",
     quiere_foto = modo in ("frase_foto", "solo_foto")
     quiere_frase = modo in ("frase_foto", "solo_frase")
 
+    foto_puesta = ""
     if quiere_foto:
         m = round(h * 0.12)
         caja = [m, m, (w - m) if modo == "solo_foto" else round(w * 0.40), h - m]
-        d.rounded_rectangle(caja, radius=24, outline=(255, 255, 255), width=6)
-        d.line([caja[0], caja[1], caja[2], caja[3]], fill=(255, 255, 255), width=2)
-        d.line([caja[2], caja[1], caja[0], caja[3]], fill=(255, 255, 255), width=2)
-        ff = _font(round(h * 0.06)); bb = d.textbbox((0, 0), "FOTO", font=ff)
-        d.text(((caja[0] + caja[2]) / 2 - (bb[2] - bb[0]) / 2, (caja[1] + caja[3]) / 2 - (bb[3] - bb[1]) / 2),
-               "FOTO", font=ff, fill=(255, 255, 255))
+        cw, ch = caja[2] - caja[0], caja[3] - caja[1]
+        if _es_imagen(foto):
+            # LA FOTO DE VERDAD. Se recorta para llenar la caja sin deformar.
+            ruta = str(Path(str(foto).strip().strip('"').strip("'")))
+            with Image.open(ruta) as _f:
+                puesta = _encajar(_f.convert("RGB"), cw, ch, recortar=recortar)
+            img.paste(puesta, (caja[0], caja[1]))
+            # El marco blanco se conserva: en la taza impresa separa la foto
+            # del fondo de color y hace que no se vea "pegada".
+            d.rounded_rectangle(caja, radius=24, outline=(255, 255, 255), width=6)
+            foto_puesta = ruta
+        else:
+            # Sin foto: el recuadro guía de siempre, para armar la plantilla.
+            d.rounded_rectangle(caja, radius=24, outline=(255, 255, 255), width=6)
+            d.line([caja[0], caja[1], caja[2], caja[3]], fill=(255, 255, 255), width=2)
+            d.line([caja[2], caja[1], caja[0], caja[3]], fill=(255, 255, 255), width=2)
+            ff = _font(round(h * 0.06)); bb = d.textbbox((0, 0), "FOTO", font=ff)
+            d.text(((caja[0] + caja[2]) / 2 - (bb[2] - bb[0]) / 2, (caja[1] + caja[3]) / 2 - (bb[3] - bb[1]) / 2),
+                   "FOTO", font=ff, fill=(255, 255, 255))
 
     if quiere_frase:
         frase = frase or ("Tu frase" if modo == "solo_frase" else "Tu nombre")
@@ -385,20 +466,51 @@ def componer_taza(fondo_id: str, frase: str = "", modo: str = "frase_foto",
     Path(salida).parent.mkdir(parents=True, exist_ok=True)
     img.save(salida, dpi=(dpi, dpi))
     return {"status": "ok", "fondo": meta["nombre"], "tema": meta["tema"], "modo": modo,
-            "salida": salida, "px": f"{w}x{h}", "dpi": dpi}
+            "salida": salida, "px": f"{w}x{h}", "dpi": dpi,
+            "foto": foto_puesta or "(recuadro guía, sin foto)"}
 
 
 def generar_hoja_a4(items=None, dpi: int = 300, salida: str = "") -> dict:
     """Imposición: hasta 3 tazas (21x9 cm) apiladas en una hoja A4 lista para imprimir.
     items = [{'fondo_id','frase','modo'}, ...]  (si viene vacío, arma 3 de muestra)."""
     import tempfile
+    dpi = int(dpi or 300)
     A4W, A4H = _cm_a_px(21, dpi), _cm_a_px(29.7, dpi)
     mw, mh = _cm_a_px(21, dpi), _cm_a_px(9, dpi)
-    if not items:
+
+    # ── ENTENDER LO QUE DE VERDAD LLEGA ───────────────────────────────────
+    # Anuar escribió: «genera una plantilla para 3 tazas con estas 2 fotos
+    # "C:\...\taza arbol.jpg" "C:\...\taza arbol2.jpeg"». El enrutador hizo lo
+    # correcto —le pasó las dos rutas— y esta función reventaba con
+    # "'str' object has no attribute 'get'" porque solo sabía de diccionarios.
+    # El error no estaba en cómo pidió las cosas: estaba aquí.
+    if isinstance(items, str):
+        items = [items]
+    items = list(items or [])
+    fotos = [str(x) for x in items if _es_imagen(x)]
+    dicts = [x for x in items if isinstance(x, dict)]
+
+    if fotos:
+        # Con fotos manda la foto: se rellenan las 3 tazas rotando las que
+        # haya. Con 2 fotos y 3 tazas salen foto1, foto2, foto1 — que es lo
+        # que Anuar pidió y lo que se manda a imprimir en una hoja.
+        base = [d for d in FONDOS] or [""]
+        items = [{"fondo_id": dicts[i].get("fondo_id") if i < len(dicts) and dicts[i].get("fondo_id") in FONDOS
+                                else base[i % len(base)],
+                  "frase": dicts[i].get("frase", "") if i < len(dicts) else "",
+                  "modo": "solo_foto",
+                  "foto": fotos[i % len(fotos)]}
+                 for i in range(3)]
+    elif dicts:
+        items = [it for it in dicts if it.get("fondo_id") in FONDOS][:3]
+    else:
         items = [{"fondo_id": i, "frase": "", "modo": "frase_foto"} for i in list(FONDOS)[:3]]
-    items = [it for it in items if it.get("fondo_id") in FONDOS][:3]
+
     if not items:
-        return {"status": "error", "mensaje": "Sin fondos válidos para la hoja."}
+        return {"status": "error",
+                "mensaje": "No reconocí ni fotos existentes ni fondos válidos. "
+                           "Pásame rutas de imágenes reales o nombres de fondo.",
+                "fondos_disponibles": list(FONDOS)[:12]}
     hoja = Image.new("RGB", (A4W, A4H), (255, 255, 255))
     dh = ImageDraw.Draw(hoja)
     gap = max(10, (A4H - len(items) * mh) // (len(items) + 1))
@@ -407,7 +519,7 @@ def generar_hoja_a4(items=None, dpi: int = 300, salida: str = "") -> dict:
         tmp = str(Path(tempfile.gettempdir()) / f"_taza_slot_{idx}.png")
         r = componer_taza(it["fondo_id"], frase=it.get("frase", ""),
                           modo=it.get("modo", "frase_foto"), ancho_cm=21, alto_cm=9,
-                          dpi=dpi, salida=tmp)
+                          dpi=dpi, salida=tmp, foto=it.get("foto", ""))
         if r.get("status") != "ok":
             continue
         img = Image.open(tmp).convert("RGB")

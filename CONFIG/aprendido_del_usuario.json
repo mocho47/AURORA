@@ -159,6 +159,336 @@
       "aprendido": 1786357047.5585554,
       "ultima_vez": 1786357047.5585554,
       "a_la_primera": true
+    },
+    {
+      "clave": "dame la lista de agenda",
+      "como_lo_dijo": "dame la lista de agenda",
+      "que_si_funciono": "dame la lista de agenda",
+      "herramienta": "AGENDA/agenda:listar",
+      "veces": 1,
+      "aprendido": 1786367211.7938535,
+      "ultima_vez": 1786367211.7938535,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame proximas",
+      "como_lo_dijo": "dame proximas",
+      "que_si_funciono": "dame proximas",
+      "herramienta": "AGENDA/agenda:proximas",
+      "veces": 1,
+      "aprendido": 1786367217.5247397,
+      "ultima_vez": 1786367217.5247397,
+      "a_la_primera": true
+    },
+    {
+      "clave": "necesito proximas",
+      "como_lo_dijo": "necesito proximas",
+      "que_si_funciono": "necesito proximas",
+      "herramienta": "AGENDA/agenda:proximas",
+      "veces": 1,
+      "aprendido": 1786367218.72728,
+      "ultima_vez": 1786367218.72728,
+      "a_la_primera": true
+    },
+    {
+      "clave": "checa proximas",
+      "como_lo_dijo": "checa proximas",
+      "que_si_funciono": "checa proximas",
+      "herramienta": "AGENDA/agenda:proximas",
+      "veces": 1,
+      "aprendido": 1786367221.0132515,
+      "ultima_vez": 1786367221.0132515,
+      "a_la_primera": true
+    },
+    {
+      "clave": "analizame necesidad",
+      "como_lo_dijo": "analizame necesidad",
+      "que_si_funciono": "analizame necesidad",
+      "herramienta": "AUTH/flujo_venta_atf:FlujoVentaATF.analizar_necesidad",
+      "veces": 1,
+      "aprendido": 1786367286.9580464,
+      "ultima_vez": 1786367286.9580464,
+      "a_la_primera": true
+    },
+    {
+      "clave": "checa necesidad",
+      "como_lo_dijo": "checa necesidad",
+      "que_si_funciono": "checa necesidad",
+      "herramienta": "AUTH/flujo_venta_atf:FlujoVentaATF.analizar_necesidad",
+      "veces": 1,
+      "aprendido": 1786367288.0987504,
+      "ultima_vez": 1786367288.0987504,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que ves en necesidad",
+      "como_lo_dijo": "que ves en necesidad",
+      "que_si_funciono": "que ves en necesidad",
+      "herramienta": "AUTH/flujo_venta_atf:FlujoVentaATF.analizar_necesidad",
+      "veces": 1,
+      "aprendido": 1786367289.3099928,
+      "ultima_vez": 1786367289.3099928,
+      "a_la_primera": true
+    },
+    {
+      "clave": "como esta estado",
+      "como_lo_dijo": "como esta estado",
+      "que_si_funciono": "como esta estado",
+      "herramienta": "PUBLICADOR/social_manager:estado_conexiones",
+      "veces": 2,
+      "aprendido": 1786367332.2706263,
+      "ultima_vez": 1786367473.65578,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que onda con estado",
+      "como_lo_dijo": "que onda con estado",
+      "que_si_funciono": "que onda con estado",
+      "herramienta": "MOTORES/adaptadores:MotorPublicador.estado_redes",
+      "veces": 2,
+      "aprendido": 1786367336.092008,
+      "ultima_vez": 1786367474.707276,
+      "a_la_primera": true
+    },
+    {
+      "clave": "checa estado",
+      "como_lo_dijo": "checa estado",
+      "que_si_funciono": "checa estado",
+      "herramienta": "PUBLICADOR/social_manager:estado_conexiones",
+      "veces": 2,
+      "aprendido": 1786367340.5785568,
+      "ultima_vez": 1786367479.2840922,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame el resumen de resumen crm",
+      "como_lo_dijo": "dame el resumen de resumen crm",
+      "que_si_funciono": "dame el resumen de resumen crm",
+      "herramienta": "AUTH/sleep_cycle:SleepCycle.resumen_crm",
+      "veces": 1,
+      "aprendido": 1786367397.4301631,
+      "ultima_vez": 1786367397.4301631,
+      "a_la_primera": true
+    },
+    {
+      "clave": "como va resumen crm",
+      "como_lo_dijo": "como va resumen crm",
+      "que_si_funciono": "como va resumen crm",
+      "herramienta": "AUTH/sleep_cycle:SleepCycle.resumen_crm",
+      "veces": 1,
+      "aprendido": 1786367400.3995152,
+      "ultima_vez": 1786367400.3995152,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que tal resumen crm",
+      "como_lo_dijo": "que tal resumen crm",
+      "que_si_funciono": "que tal resumen crm",
+      "herramienta": "AUTH/sleep_cycle:SleepCycle.resumen_crm",
+      "veces": 1,
+      "aprendido": 1786367403.4076576,
+      "ultima_vez": 1786367403.4076576,
+      "a_la_primera": true
+    },
+    {
+      "clave": "como va resumen taller",
+      "como_lo_dijo": "como va resumen taller",
+      "que_si_funciono": "como va resumen taller",
+      "herramienta": "AUTH/sleep_cycle:SleepCycle.resumen_taller",
+      "veces": 1,
+      "aprendido": 1786367410.6951883,
+      "ultima_vez": 1786367410.6951883,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que tal resumen taller",
+      "como_lo_dijo": "que tal resumen taller",
+      "que_si_funciono": "que tal resumen taller",
+      "herramienta": "AUTH/sleep_cycle:SleepCycle.resumen_taller",
+      "veces": 1,
+      "aprendido": 1786367414.2806923,
+      "ultima_vez": 1786367414.2806923,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame la lista de usuarios",
+      "como_lo_dijo": "dame la lista de usuarios",
+      "que_si_funciono": "dame la lista de usuarios",
+      "herramienta": "AUTH/usuarios:listar_usuarios",
+      "veces": 1,
+      "aprendido": 1786367438.9384801,
+      "ultima_vez": 1786367438.9384801,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que usuarios hay",
+      "como_lo_dijo": "que usuarios hay",
+      "que_si_funciono": "que usuarios hay",
+      "herramienta": "AUTH/usuarios:listar_usuarios",
+      "veces": 1,
+      "aprendido": 1786367439.8717613,
+      "ultima_vez": 1786367439.8717613,
+      "a_la_primera": true
+    },
+    {
+      "clave": "sacame los usuarios",
+      "como_lo_dijo": "sacame los usuarios",
+      "que_si_funciono": "sacame los usuarios",
+      "herramienta": "AUTH/usuarios:listar_usuarios",
+      "veces": 1,
+      "aprendido": 1786367443.1058412,
+      "ultima_vez": 1786367443.1058412,
+      "a_la_primera": true
+    },
+    {
+      "clave": "hay biblioteca",
+      "como_lo_dijo": "hay biblioteca",
+      "que_si_funciono": "hay biblioteca",
+      "herramienta": "TALLER/taller_core:catalogo",
+      "veces": 1,
+      "aprendido": 1786367456.0021007,
+      "ultima_vez": 1786367456.0021007,
+      "a_la_primera": true
+    },
+    {
+      "clave": "buscame archivo",
+      "como_lo_dijo": "buscame archivo",
+      "que_si_funciono": "buscame archivo",
+      "herramienta": "CEREBRO/acciones_sistema:buscar_archivo",
+      "veces": 1,
+      "aprendido": 1786367520.798753,
+      "ultima_vez": 1786367520.798753,
+      "a_la_primera": true
+    },
+    {
+      "clave": "hay archivo",
+      "como_lo_dijo": "hay archivo",
+      "que_si_funciono": "hay archivo",
+      "herramienta": "CEREBRO/acciones_sistema:buscar_archivo",
+      "veces": 1,
+      "aprendido": 1786367536.0047622,
+      "ultima_vez": 1786367536.0047622,
+      "a_la_primera": true
+    },
+    {
+      "clave": "hay aprende del usuario",
+      "como_lo_dijo": "hay aprende del usuario",
+      "que_si_funciono": "hay aprende del usuario",
+      "herramienta": "CEREBRO/aprende_del_usuario:buscar",
+      "veces": 1,
+      "aprendido": 1786367682.1786249,
+      "ultima_vez": 1786367682.1786249,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame la lista de aprende del usuario",
+      "como_lo_dijo": "dame la lista de aprende del usuario",
+      "que_si_funciono": "dame la lista de aprende del usuario",
+      "herramienta": "CEREBRO/aprende_del_usuario:listar",
+      "veces": 1,
+      "aprendido": 1786367687.730485,
+      "ultima_vez": 1786367687.730485,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que aprende del usuario hay",
+      "como_lo_dijo": "que aprende del usuario hay",
+      "que_si_funciono": "que aprende del usuario hay",
+      "herramienta": "CEREBRO/aprende_del_usuario:listar",
+      "veces": 1,
+      "aprendido": 1786367688.9210317,
+      "ultima_vez": 1786367688.9210317,
+      "a_la_primera": true
+    },
+    {
+      "clave": "sacame los aprende del usuario",
+      "como_lo_dijo": "sacame los aprende del usuario",
+      "que_si_funciono": "sacame los aprende del usuario",
+      "herramienta": "CEREBRO/aprende_del_usuario:buscar",
+      "veces": 1,
+      "aprendido": 1786367689.9788678,
+      "ultima_vez": 1786367689.9788678,
+      "a_la_primera": true
+    },
+    {
+      "clave": "hay en codigo",
+      "como_lo_dijo": "hay en codigo",
+      "que_si_funciono": "hay en codigo",
+      "herramienta": "CEREBRO/auto_conocimiento:AutoConocimiento.buscar_en_codigo",
+      "veces": 1,
+      "aprendido": 1786367720.0263307,
+      "ultima_vez": 1786367720.0263307,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame diagnosticar modulos",
+      "como_lo_dijo": "dame diagnosticar modulos",
+      "que_si_funciono": "dame diagnosticar modulos",
+      "herramienta": "CEREBRO/auto_conocimiento:AutoConocimiento.diagnosticar_modulos",
+      "veces": 1,
+      "aprendido": 1786367725.9032087,
+      "ultima_vez": 1786367725.9032087,
+      "a_la_primera": true
+    },
+    {
+      "clave": "necesito diagnosticar modulos",
+      "como_lo_dijo": "necesito diagnosticar modulos",
+      "que_si_funciono": "necesito diagnosticar modulos",
+      "herramienta": "CEREBRO/auto_conocimiento:AutoConocimiento.diagnosticar_modulos",
+      "veces": 1,
+      "aprendido": 1786367729.4126484,
+      "ultima_vez": 1786367729.4126484,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que onda con estado sistema",
+      "como_lo_dijo": "que onda con estado sistema",
+      "que_si_funciono": "que onda con estado sistema",
+      "herramienta": "CEREBRO/auto_conocimiento:AutoConocimiento.estado_sistema_completo",
+      "veces": 1,
+      "aprendido": 1786371429.2585392,
+      "ultima_vez": 1786371429.2585392,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame crisis summary",
+      "como_lo_dijo": "dame crisis summary",
+      "que_si_funciono": "dame crisis summary",
+      "herramienta": "CORE/aurora_crisis_protocol:CrisisMonitor.get_crisis_summary",
+      "veces": 1,
+      "aprendido": 1786373232.5258567,
+      "ultima_vez": 1786373232.5258567,
+      "a_la_primera": true
+    },
+    {
+      "clave": "dame sdk status",
+      "como_lo_dijo": "dame sdk status",
+      "que_si_funciono": "dame sdk status",
+      "herramienta": "CORE/aurora_sdk_manager:AuroraSDKManager.get_sdk_status",
+      "veces": 1,
+      "aprendido": 1786374415.9662812,
+      "ultima_vez": 1786374415.9662812,
+      "a_la_primera": true
+    },
+    {
+      "clave": "guia y manual de aurora",
+      "como_lo_dijo": "guia y manual de aurora",
+      "que_si_funciono": "guia y manual de aurora",
+      "herramienta": "MANUALES/aprendizaje:catalogo",
+      "veces": 1,
+      "aprendido": 1786382651.3538122,
+      "ultima_vez": 1786382651.3538122,
+      "a_la_primera": true
+    },
+    {
+      "clave": "donde quedo el archivo que modificaste",
+      "como_lo_dijo": "donde quedo el archivo que modificaste",
+      "que_si_funciono": "donde quedo el archivo que modificaste",
+      "herramienta": "CEREBRO/acciones_sistema:buscar_archivo",
+      "veces": 1,
+      "aprendido": 1786662863.3108275,
+      "ultima_vez": 1786662863.3108275,
+      "a_la_primera": true
     }
   ]
 }

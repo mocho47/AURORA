@@ -1004,6 +1004,21 @@ def _es_generar_caja(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _GENERAR_CAJA)
 
 
+# Producción de piezas grandes (personajes/piñatas): escala + tabloides +
+# MDF + corte, todo en un cálculo. Pedido real de Anuar 2026-08-21 (cliente
+# Alicia Piñatas): "aurora calcula esta piñata completa es con despiece" /
+# "aurora calcula la caja de esta piñata es solo el contorno".
+_CALCULAR_PIEZA_GRANDE = (
+    "calcula esta pinata", "calcula la pinata", "calcula esta pieza",
+    "calcula el personaje", "calculame esta pinata", "cotiza esta pinata",
+    "calcula la caja de esta pinata", "calcula el contorno de",
+)
+
+
+def _es_calcular_pieza_grande(mensaje: str) -> bool:
+    return _contiene_trigger(_norm_txt(mensaje), _CALCULAR_PIEZA_GRANDE)
+
+
 # ── LA CAMPAÑA ESCOLAR QUE YA SALIÓ A LAS CLIENTAS ──────────────────────
 # Riesgo que Anuar señaló el 2026-08-06 con la campaña ya enviándose: AURORA
 # contesta sola el WhatsApp. Una clienta que acaba de leer «primaria $150» y
@@ -1076,6 +1091,20 @@ def _es_print_and_cut(mensaje: str) -> bool:
 _ADAPTAR_DISENO = (
     "ajusta", "ajustame", "adapta", "adaptame", "reduce", "reduceme",
     "escala", "escalame", "achica", "achicame", "agranda",
+    # Los INFINITIVOS faltaban y por eso "podrías escalar este archivo al 50%
+    # pero para material de 2.5mm" (prueba viva 2026-08-13) no cayó aquí: se fue
+    # al enrutador universal, que eligió MotorCorel:escalar_pagina y tronó.
+    # _contiene_trigger compara palabras completas: "escalar" y "escala" son dos
+    # palabras distintas. Anuar pide en infinitivo cuando pide con cortesía, que
+    # es como habla de verdad. Van con la señal de material, que es la que evita
+    # que estos verbos comunes se lleven frases que no eran para acá.
+    "escalar", "escalarlo", "escalarla", "ajustar", "ajustarlo", "ajustarla",
+    "adaptar", "adaptarlo", "adaptarla", "reducir", "reducirlo", "reducirla",
+    "achicar", "achicarlo", "achicarla", "agrandar", "agrandarlo", "agrandarla",
+    # "amplía" faltaba: estaba "agranda" pero no su sinónimo más común, y es el
+    # que Anuar usó al pedir el archivo del espiral (2026-08-13). Un sinónimo que
+    # falta se siente exactamente igual que un sistema roto.
+    "amplia", "ampliar", "amplialo", "ampliala", "amplialo", "aumenta", "aumentar",
     "pasalo a", "pasala a", "pon ", "ponme", "ponlo", "ponla",
     "deja ", "dejalo", "dejala", "conviertelo a", "conviertela a",
 )
@@ -1113,6 +1142,35 @@ def _es_adaptar_diseno(mensaje: str) -> bool:
     # Una medida de por medio: el porcentaje del tamaño o el espesor. Sin
     # ningún número esto no es una orden de trabajo, es plática.
     return bool(re.search(r"\d", m))
+
+
+# ── EL DELINEADO: SILUETA PARA RECORTAR, O LÍNEA PARA CORTAR ────────────
+# Anuar pidió las dos cosas el 2026-08-14 con el PDF de las K-pop, y son
+# trabajos distintos que él llama casi igual:
+#   1. *"me pidieron un delineado… cortarlo y dejar unas pequeñas pestañas
+#      para que no se suelten las piezas"* → la SILUETA de afuera.
+#   2. *"quiero el dibujo lineal puro y que las líneas se puedan engrosar
+#      pues lo cortaré"* → las LÍNEAS de adentro, para estarcido.
+# Cuál de las dos se decide por lo que él diga; si no lo aclara, gana la
+# silueta, que es lo que se pide nueve de cada diez veces.
+_DELINEADO = (
+    "delineado", "delinealo", "delineala", "delinear", "delineame",
+    "contorno de corte", "contorno para cortar", "sacale el contorno",
+    "silueta", "recortable", "linea de corte", "lineas de corte",
+    "dibujo lineal", "line art", "lineart", "estencil", "stencil",
+    "estarcido", "plantilla para trazar",
+)
+# Estas mandan el trabajo al dibujo lineal en vez de a la silueta.
+_SENAL_LINEAL = (
+    "lineal", "line art", "lineart", "estencil", "stencil", "estarcido",
+    "trazar", "trazarlo", "por dentro", "las lineas de adentro", "detalle",
+    "plantilla para trazar",
+)
+
+
+def _es_delineado(mensaje: str) -> bool:
+    """¿Pide el delineado de un dibujo — la silueta o las líneas?"""
+    return _contiene_trigger(_norm_txt(mensaje), _DELINEADO)
 
 
 # ── VINIL Y PLOTTER ─────────────────────────────────────────────────────
@@ -1748,11 +1806,18 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # cotizar_vinil gana solo si pregunta un PRECIO. Sin palabra de dinero,
     # «hazme la palabra X en vinil» es generar el archivo, y cae aquí.
     ("texto_a_corte",   _es_texto_a_corte,     "_texto_a_corte_real",     "texto_a_corte"),
+    # delineado va ANTES de print_and_cut: "sácame el delineado" es un archivo
+    # que él necesita ahora, no el manual del proceso.
+    ("delineado",       _es_delineado,         "_delineado_real",         "contorno_de_corte"),
     ("print_and_cut",   _es_print_and_cut,     "_print_and_cut_real",     "print_and_cut"),
     ("metodo_campana",  _es_metodo_campana,    "_metodo_campana_real",    "metodo_campanas"),
     ("campana_escolar", _es_campana_escolar,   "_campana_escolar_real",   "campana_escolar"),
     ("adaptar_diseno",  _es_adaptar_diseno,    "_adaptar_diseno_real",    "adaptar_grosor"),
     ("foto_a_dxf",      _es_foto_a_dxf,        "_foto_a_dxf_real",        "foto_a_dxf"),
+    # calcular_pieza_grande va ANTES de generar_caja: "calcula esta piñata/
+    # pieza" es el cálculo de producción (escala+tabloides+MDF+corte), no
+    # pedir que arme una caja nueva.
+    ("calcular_pieza_grande", _es_calcular_pieza_grande, "_calcular_pieza_grande_real", "produccion_piezas_grandes"),
     ("generar_caja",    _es_generar_caja,      "_generar_caja_real",      "generador_cajas"),
     ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
     ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
@@ -1973,7 +2038,8 @@ class Consciencia:
         if aviso_abandono:
             resultado["respuesta"] = aviso_abandono + "\n\n" + resultado.get("respuesta", "")
         try:
-            resultado["respuesta"] = await self._verificar_capacidad_real(mensaje, resultado.get("respuesta", ""))
+            resultado["respuesta"] = await self._verificar_capacidad_real(
+                mensaje, resultado.get("respuesta", ""), session_id or user_id)
         except Exception as e:
             logger.debug(f"_verificar_capacidad_real no aplicó: {e}")
 
@@ -2024,6 +2090,15 @@ class Consciencia:
         session_id = session_id or user_id
         inicio = datetime.utcnow()
         self._sueno.registrar_actividad()
+
+        # 0.5 CONTINUACIÓN — el dato suelto que completa lo que se venía pidiendo.
+        # Encontrado en vivo 2026-08-13: AURORA respondió "dime «escala a X cm»",
+        # Anuar contestó "al 50%", y se fue a motor_analisis — perdió el hilo de un
+        # renglón a otro. Ya existía _accion_pendiente para el sí/no y
+        # _ultimo_archivo para la ruta, pero nada para "te pedí un dato, aquí está".
+        # Se resuelve antes del routing para que el mensaje llegue completo a los
+        # candados, en vez de arreglarlo candado por candado.
+        mensaje = self._completar_continuacion(mensaje, session_id)
 
         # 1. CONTEXTO COMPLETO
         ctx_usuario = await self._ctx.obtener(user_id, canal)
@@ -2443,7 +2518,8 @@ class Consciencia:
         r"no cuento con (acceso|la capacidad|herramientas)",
     )
 
-    async def _verificar_capacidad_real(self, mensaje: str, respuesta: str) -> str:
+    async def _verificar_capacidad_real(self, mensaje: str, respuesta: str,
+                                        session_id: str = "") -> str:
         """Candado único: revisa CUALQUIER respuesta final (venga del candado que venga,
         del router universal, del razonador, o del LLM conversacional genérico) antes de
         mandarla. Si niega una capacidad que SÍ existe en el registro real de herramientas,
@@ -2483,7 +2559,24 @@ class Consciencia:
             # llegaba el texto crudo, el registro no encontraba nada, y la
             # negación falsa pasaba limpia. Justo la palabra que Anuar escribe
             # mal era la que desarmaba el candado.
-            candidatos = await asyncio.to_thread(reg.buscar, _norm_txt(mensaje), 4)
+            # Encontrado en vivo 2026-08-13. Anuar escribió solo "al 50%" y AURORA
+            # contestó "no puedo ejecutar una acción real en la PC, como escalar un
+            # archivo DXF" — mentira: lo acababa de hacer con adaptar_grosor.
+            # El candado SÍ detectó la negación; lo que falló fue esta búsqueda:
+            # "al 50%" no tiene una sola palabra que apunte a una herramienta, así
+            # que no encontró nada y dejó pasar la mentira. El candado no estaba
+            # mal — estaba CIEGO. Con un mensaje corto se busca también con lo que
+            # se venía hablando, la misma memoria de sesión que usa _ultimo_archivo.
+            _busq = _norm_txt(mensaje)
+            if len(_busq.split()) < 4 and session_id:
+                for _t in reversed(self._memoria_corto.get(session_id, [])):
+                    if _t.get("rol") != "user":
+                        continue
+                    _prev = _norm_txt(_t.get("contenido") or "")
+                    if len(_prev.split()) >= 4:
+                        _busq = f"{_prev} {_busq}"
+                        break
+            candidatos = await asyncio.to_thread(reg.buscar, _busq, 4)
         except Exception:
             candidatos = []
 
@@ -2794,6 +2887,135 @@ class Consciencia:
 
     # ── BÚSQUEDA WEB ───────────────────────────────────────────
 
+    async def _delineado_real(self, mensaje: str, session_id: str = "") -> Dict:
+        """El delineado de un dibujo: la silueta de afuera o las líneas de adentro.
+
+        Las dos salieron del trabajo de las K-pop (2026-08-14). Él las pide
+        casi con las mismas palabras, así que la diferencia la marca lo que
+        diga: si habla de dibujo lineal, estencil o de trazar, son las líneas;
+        si no, es la silueta para recortar.
+
+        Así lo pide él:
+            «sácame el delineado de C:\\ruta\\kpop.pdf con pestañas,
+             que quepa en la cama del láser»
+            «el dibujo lineal de ese archivo, línea de 2.5, para cortarlo»
+        """
+        import asyncio
+        import importlib.util as _ilu
+
+        ruta = self._ultimo_archivo(mensaje, session_id)
+        if not ruta:
+            return {"respuesta": (
+                "Dime de cuál archivo saco el delineado — pásame la ruta o "
+                "arrástramelo.\n\n_Así te lo entiendo:_ «sácame el delineado "
+                "de C:\\\\ruta\\\\dibujo.pdf con pestañas, que quepa en la "
+                "cama del láser»")}
+
+        m = _norm_txt(mensaje)
+        lineal = _contiene_trigger(m, _SENAL_LINEAL)
+
+        # ¿A qué tamaño? Tres formas, de la más clara a la más suelta.
+        caber, ancho_cm, escala = None, 0.0, 1.0
+        if _contiene_trigger(m, ("cama", "que quepa", "en el laser",
+                                 "area de trabajo", "sin deformar")):
+            caber = self._cama_del_laser()
+        mc = re.search(r"(\d+(?:[.,]\d+)?)\s*cm", m)
+        if mc and not caber:
+            ancho_cm = float(mc.group(1).replace(",", "."))
+        mp = re.search(r"(?:al|a|en|un)\s*(\d+(?:[.,]\d+)?)\s*%", m)
+        if mp and not caber and not ancho_cm:
+            escala = float(mp.group(1).replace(",", ".")) / 100.0
+
+        # El grosor de la línea o el sobrante del contorno.
+        grosor = 0.0
+        mg = re.search(r"(?:linea|grosor|contorno|sobrante|por fuera)\s*"
+                       r"(?:de\s*)?(\d+(?:[.,]\d+)?)", m)
+        if mg:
+            grosor = float(mg.group(1).replace(",", "."))
+
+        try:
+            if lineal:
+                spec = _ilu.spec_from_file_location(
+                    "dibujo_lineal", ROOT / "EDITOR" / "dibujo_lineal.py")
+                mod = _ilu.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                r = await asyncio.to_thread(
+                    mod.generar, str(ruta), ancho_cm, grosor or 2.0,
+                    "cortar", 15, 1.5, 0.0, caber)
+            else:
+                spec = _ilu.spec_from_file_location(
+                    "contorno_de_corte", ROOT / "EDITOR" / "contorno_de_corte.py")
+                mod = _ilu.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                # Las pestañas SOLO si las pide. Un contorno cerrado es lo
+                # normal; picarlo sin que lo haya pedido le arruinaría la hoja.
+                quiere = _contiene_trigger(m, ("pestana", "pestanas", "union",
+                                               "uniones", "puente", "puentes",
+                                               "que no se suelte",
+                                               "que no se suelten"))
+                cuantas = 8 if quiere else 0
+                mn = re.search(r"(\d+)\s*(?:pestanas|uniones|puentes)", m)
+                if mn:
+                    cuantas = int(mn.group(1))
+                r = await asyncio.to_thread(
+                    mod.generar, str(ruta), grosor or 3.0, 20.0,
+                    cuantas, 5.0, escala, caber)
+        except Exception as e:
+            return {"respuesta": f"No pude sacar el delineado: {e}"}
+
+        texto = mod._texto(r)
+        if r.get("status") == "OK":
+            texto += self._cuanto_cuesta_cortarlo(r.get("archivo", ""))
+        return {"respuesta": texto, "archivo": r.get("archivo", "")}
+
+    def _cama_del_laser(self):
+        """El área de trabajo real de su máquina, de su propia ficha."""
+        import json
+        try:
+            d = json.loads((ROOT / "CONFIG" / "maquinas.json").read_text(
+                encoding="utf-8"))
+        except Exception:
+            return (1300.0, 900.0)          # su 1390, el dato que él dio
+        for v in (d.values() if isinstance(d, dict) else []):
+            if isinstance(v, dict):
+                an, al = v.get("cama_ancho_mm"), v.get("cama_alto_mm")
+                if an and al:
+                    return (float(an), float(al))
+        return (1300.0, 900.0)
+
+    def _cuanto_cuesta_cortarlo(self, archivo: str) -> str:
+        """Los minutos de máquina y lo que valen, de una vez.
+
+        Se dice SIEMPRE y aquí mismo: el line art de las K-pop eran 47
+        minutos de láser —$376 solo de corte— y eso no se ve en el archivo.
+        Enterarse después de aceptar el trabajo es tarde.
+        """
+        try:
+            import ezdxf
+            import importlib.util as _ilu
+            d = ezdxf.readfile(archivo)
+            largo = 0.0
+            for e in d.modelspace():
+                if e.dxftype() != "LWPOLYLINE":
+                    continue
+                pts = [(q[0], q[1]) for q in e.get_points()]
+                if e.closed and pts:
+                    pts = pts + [pts[0]]
+                largo += sum(((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5
+                             for a, b in zip(pts, pts[1:]))
+            spec = _ilu.spec_from_file_location(
+                "formula_precios", ROOT / "TALLER" / "formula_precios.py")
+            fp = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(fp)
+            vel = fp.numero("velocidad_mm_s")
+            minutos = largo / vel / 60.0
+            costo = fp.cotizar(minutos_corte=minutos)["corte"]
+            return (f"\n\n⏱️ **{largo / 1000:.1f} m de corte ≈ "
+                    f"{minutos:.1f} min** a {vel:g} mm/s — de pura máquina son "
+                    f"**${costo:,.2f}**.")
+        except Exception:
+            return ""
+
     async def _print_and_cut_real(self, mensaje: str) -> Dict:
         """El proceso completo de imprimir y cortar, con sus advertencias.
 
@@ -3058,12 +3280,86 @@ class Consciencia:
                 "el largo de los dientes.\n\n_Dímelo así:_ «para material de "
                 "2.5»")}
 
+        # EL GROSOR VIEJO — el que trae el archivo hoy.
+        #
+        # BUG ENCONTRADO POR ANUAR EN VIVO (2026-08-14): con la cabeza de toro,
+        # AURORA contestó "no estoy seguro del grosor, dime cuál es" — y cuando
+        # él respondió «4.1mm», volvió a preguntar exactamente lo mismo. Cuatro
+        # veces seguidas. La causa no era el detector: era que esta función
+        # SIEMPRE le pasaba 0.0 al adaptador en el hueco del grosor viejo, así
+        # que el dato que él daba no tenía por dónde entrar. AURORA preguntaba
+        # algo que no podía escuchar.
+        #
+        # Se lee de tres formas, en orden de qué tan claro lo dijo:
+        grosor_viejo = 0.0
+        # 1) "de 4 mm a 2.5" / "las ranuras de 4 a 2.5" — lo dice todo junto.
+        m_de_a = re.search(r"de\s*(\d+(?:[.,]\d+)?)\s*(?:mm)?\s*a\s*"
+                           r"(\d+(?:[.,]\d+)?)\s*(?:mm)?", m)
+        if m_de_a:
+            v, n = (float(x.replace(",", ".")) for x in m_de_a.groups())
+            if v != n:
+                grosor_viejo, grosor = v, n
+        # 2) Dijo el material nuevo con su palabra ("para material de 2.5") y
+        #    además otra medida suelta: esa otra es la que trae el archivo.
+        if not grosor_viejo:
+            for x in re.findall(r"(\d+(?:[.,]\d+)?)\s*mm", m):
+                val = float(x.replace(",", "."))
+                # Un espesor de MDF vive entre 1.5 y 25 mm; fuera de ahí es
+                # otra cosa (una medida de la pieza, un porcentaje mal leído).
+                if val != grosor and 1.5 <= val <= 25:
+                    grosor_viejo = val
+                    break
+
+        # Si el archivo tiene ranuras de 4.1 y el material nuevo es 2.5, el
+        # viejo es el mayor: reducir es lo normal, pero se respeta lo que él
+        # dijo — aquí no se adivina, solo se ordena lo que ya está escrito.
+
         # LA ESCALA: la otra perilla, la del tamaño. Si no la dice, no se
         # cambia el tamaño — que es distinto de suponer que quiere la mitad.
         escala = 1.0
-        me = re.search(r"(?:al|a|en)\s*(\d+(?:[.,]\d+)?)\s*%", m)
-        if me:
+        # Encontrado en vivo 2026-08-13: Anuar escribió "aplea este dxf un 20 %"
+        # y el porcentaje se perdió — el patrón exigía "al/a/en" y él dijo "un".
+        # AURORA adaptó el espesor, avisó "el tamaño NO cambió", y siguió como si
+        # nada: obedeció la mitad del pedido sin decir que ignoró la otra mitad.
+        #
+        # Y hay algo peor que no leer el número: leerlo mal. En taller no es lo
+        # mismo "al 20%" (queda en la quinta parte) que "un 20% más" (queda en
+        # 1.2) ni "reduce un 20%" (queda en 0.8). Entre esos tres hay material
+        # echado a perder. Cuando la frase no distingue cuál es, NO se adivina:
+        # se pregunta. Es la regla de Anuar — ante riesgo de romper, parar.
+        # El atajo sin ambigüedad, idea de Anuar (2026-08-13): "+20%" / "-20%".
+        # Se lee antes que nada porque el signo no se presta a interpretación —
+        # es la forma más rápida y más segura de pedirlo, sobre todo por voz o
+        # con prisa en el taller.
+        m_signo = re.search(r"([+-])\s*(\d+(?:[.,]\d+)?)\s*%", m)
+        me = re.search(r"(?:al|a|en)\s+(\d+(?:[.,]\d+)?)\s*%", m)
+        m_rel = re.search(r"(\d+(?:[.,]\d+)?)\s*%", m)
+        if m_signo:
+            _p = float(m_signo.group(2).replace(",", ".")) / 100.0
+            escala = (1.0 + _p) if m_signo.group(1) == "+" else max(0.01, 1.0 - _p)
+        elif me:
             escala = float(me.group(1).replace(",", ".")) / 100.0
+        elif m_rel:
+            pct = float(m_rel.group(1).replace(",", ".")) / 100.0
+            crece = _contiene_trigger(m, ("mas", "mayor", "grande", "amplia",
+                                          "ampliar", "amplialo", "ampliala",
+                                          "agranda", "agrandar", "aumenta", "aumentar"))
+            mengua = _contiene_trigger(m, ("menos", "menor", "chico", "reduce",
+                                           "reducir", "achica", "achicar", "quita"))
+            if crece and not mengua:
+                escala = 1.0 + pct
+            elif mengua and not crece:
+                escala = max(0.01, 1.0 - pct)
+            else:
+                num = m_rel.group(1)
+                return {"respuesta": (
+                    f"Ese **{num}%** lo puedo entender de tres formas distintas, y "
+                    f"entre ellas hay material echado a perder. Dime cuál:\n\n"
+                    f"• «déjalo **al** {num}%» → queda en {pct:.0%} del tamaño actual\n"
+                    f"• «**+{num}%**» → queda en {1 + pct:.0%} _(más grande)_\n"
+                    f"• «**-{num}%**» → queda en {max(0.0, 1 - pct):.0%} _(más chico)_\n\n"
+                    f"_El signo es lo más rápido y no se presta a confusión._\n"
+                    f"_No lo adivino: el archivo se corta y el material se paga._")}
         elif _contiene_trigger(m, ("a la mitad", "mitad de tamano",
                                    "mitad del tamano")):
             escala = 0.5
@@ -3076,8 +3372,16 @@ class Consciencia:
         except Exception as e:
             return {"respuesta": f"No pude abrir el adaptador: {e}"}
 
-        r = await asyncio.to_thread(ag.adaptar, _P(ruta), grosor, 0.0, escala)
+        r = await asyncio.to_thread(ag.adaptar, _P(ruta), grosor,
+                                    grosor_viejo, escala)
         txt = ag._texto(r, _P(ruta))
+
+        # Si volvió a no reconocer el grosor, la pregunta tiene que decir CÓMO
+        # contestarla. Antes solo pedía el dato y el dato no entraba: se veía
+        # igual que un sistema colgado (2026-08-14).
+        if r.get("status") != "OK" and not grosor_viejo:
+            txt += ("\n\n_Contéstame con las dos medidas juntas y lo hago:_\n"
+                    f"«de **4.1 mm** a **{grosor:g} mm**»")
 
         # LA REGLA DE ORO DEL TALLER, y no es un adorno: esto ajusta geometría,
         # no adivina cómo quedó el ensamble en la vida real. Ya pasó que los
@@ -3128,6 +3432,102 @@ class Consciencia:
         if r.get("status") == "OK" and r.get("dxf"):
             txt += f"\n\n_¿Cuánto cuesta cortarla? Dime: «cotiza {r['dxf']}»_"
         return {"respuesta": txt}
+
+    async def _calcular_pieza_grande_real(self, mensaje: str) -> Dict:
+        """CHAT → TALLER/produccion_piezas_grandes.py: escala + tabloides +
+        MDF + corte de una pieza grande (personaje/piñata) a partir de un DXF.
+
+        Pedido real de Anuar 2026-08-21 (cliente Alicia Piñatas): distinguir
+        "con despiece" (cara/pelo/chamarra/falda/piernas/botas separadas) de
+        "solo contorno" (silueta completa, para la caja de la piñata).
+        """
+        import importlib.util as _ilu
+        try:
+            spec = _ilu.spec_from_file_location(
+                "produccion_piezas_grandes", ROOT / "TALLER" / "produccion_piezas_grandes.py")
+            ppg = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(ppg)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el calculador de piezas grandes: {e}"}
+
+        m = _norm_txt(mensaje)
+
+        # Ruta del DXF: la última ".dxf" que aparezca en el mensaje.
+        mr = re.search(r"[^\s\"']+\.dxf", mensaje, re.IGNORECASE)
+        if not mr:
+            return {"respuesta": "Necesito la ruta del DXF de la pieza (ej: "
+                                  "«aurora calcula esta piñata C:\\...\\rumo.dxf a 90cm con despiece»)."}
+        ruta = mr.group(0)
+
+        modo = "despiece" if "despiece" in m else "contorno"
+
+        alto_cm = None
+        ma = re.search(r"(\d+(?:[.,]\d+)?)\s*cm", m)
+        if ma:
+            alto_cm = float(ma.group(1).replace(",", "."))
+
+        con_suaje = "con suaje" in m or ("suaje" in m and "sin suaje" not in m)
+        r = await asyncio.to_thread(ppg.calcular, ruta, alto_cm, None, modo,
+                                     2.7, 10.0, 25.0, 5.0, mensaje, con_suaje)
+        if r.get("status") != "OK":
+            return {"respuesta": f"No pude calcularlo: {r.get('detalle', r.get('status'))}"}
+
+        txt = (f"Pieza a {r['tamano_pedido_cm'][0]}x{r['tamano_pedido_cm'][1]}cm "
+               f"(escala {r['escala']}), modo {modo}.\n"
+               f"Tabloides: {r['tabloides']['cantidad']} ({r['tabloides']['grid'][0]}x{r['tabloides']['grid'][1]}), "
+               f"te cuestan ${r['tabloides']['costo_total']}")
+        if r['tabloides'].get('venta_total') is not None:
+            txt += f", los vendes en ${r['tabloides']['venta_total']} (margen ${r['tabloides']['margen']})"
+        txt += f". {r['tabloides']['nota']}\n"
+        if r["mdf"].get("costo_con_margen") is not None:
+            txt += f"MDF: {r['mdf']['hojas_necesarias']} hoja(s) de {r['mdf']['material']}, ${r['mdf']['costo_con_margen']}.\n"
+        if r["mdf"].get("aviso"):
+            txt += f"⚠️ {r['mdf']['aviso']}\n"
+        txt += f"Corte láser: {r['corte']['metros']}m, {r['corte']['minutos']}min, ${r['corte']['costo']}.\n"
+        txt += f"Total estimado: ${r['total_estimado']}.\n\n{r['recordatorio_maquila']}"
+        if r.get("aviso_despiece"):
+            txt += f"\n\n⚠️ {r['aviso_despiece']}"
+        return {"respuesta": txt}
+
+    # Confirmaciones y negativas: NO son datos, ya tienen su propio camino
+    # (_confirmar_accion_pendiente). Si se tratan como continuación se rompe el
+    # flujo de "¿le doy?" → "sí", que hoy funciona bien.
+    _NO_ES_DATO = {"si", "sí", "no", "dale", "ok", "okey", "va", "sale", "hazlo",
+                   "adelante", "correcto", "exacto", "listo", "gracias", "gracias!"}
+    # Un dato suelto trae una medida: "al 50%", "20x30", "a 15 cm", "2.5mm".
+    _RE_ES_MEDIDA = re.compile(
+        r"\d+(?:[.,]\d+)?\s*(?:%|cm|mm|m\b|x\s*\d|por\s+\d)|(?:^|\s)al?\s+\d+", re.I)
+
+    def _completar_continuacion(self, mensaje: str, session_id: str = "") -> str:
+        """Pega el dato suelto a la petición que se quedó a medias.
+
+        Caso real 2026-08-13: AURORA pidió "dime «escala a X cm»" y Anuar
+        respondió "al 50%". Sola, esa frase no dice qué archivo ni para qué, así
+        que ningún candado la reconocía y caía al motor de texto — que además
+        contestó que no podía hacer algo que sí puede.
+
+        Solo actúa cuando el mensaje es CORTO, trae una medida, y no es un sí/no.
+        Con cualquier duda devuelve el mensaje tal cual: es preferible no
+        entender a entender mal y cortar el material equivocado.
+        """
+        crudo = (mensaje or "").strip()
+        if not crudo or len(crudo.split()) > 5:
+            return mensaje
+        if _norm_txt(crudo) in self._NO_ES_DATO:
+            return mensaje
+        if not self._RE_ES_MEDIDA.search(crudo):
+            return mensaje
+        # Ya se basta solo (trae ruta o verbo): no hay nada que completar.
+        if _rutas_del_texto(crudo) or _contiene_trigger(_norm_txt(crudo), _ADAPTAR_DISENO):
+            return mensaje
+        for turno in reversed(self._memoria_corto.get(session_id, [])):
+            if turno.get("rol") != "user":
+                continue
+            previo = (turno.get("contenido") or "").strip()
+            if previo == crudo or len(previo.split()) < 4:
+                continue
+            return f"{previo} — {crudo}"
+        return mensaje
 
     def _ultimo_archivo(self, mensaje: str, session_id: str = "") -> str:
         """La ruta del archivo del que se está hablando, aunque no se repita.
@@ -3185,7 +3585,9 @@ class Consciencia:
         archivo no hay metros, y sin metros no hay precio. Vendió una casa de
         muñecas en $280 costando ~$200 producirla.
 
-        Usa sus números reales: $8.00 por minuto y 25 mm/s de su receta probada.
+        Usa sus números reales: $8.00 por minuto y 20 mm/s, la velocidad que
+        dictó el 2026-08-13. El precio no se calcula aquí: se lo pide al mismo
+        cotizador que usa el panel, para que las dos pantallas no se separen.
         """
         import re as _re
         import importlib.util as _ilu
@@ -3230,31 +3632,47 @@ class Consciencia:
                 "• Arrastra el .dxf aquí, o\n"
                 "• Dime la ruta completa: `cotiza C:\\Users\\...\\diseno.dxf`\n\n"
                 "Te doy los metros de corte, los minutos y el precio con tus "
-                "números ($8/min a 25 mm/s).")}
+                "números ($8/min a 20 mm/s).")}
 
         if not ruta.exists():
             return {"respuesta": f"No encontré ese archivo:\n`{ruta}`\nRevisa la ruta."}
 
-        r = await asyncio.to_thread(ix.medir, ruta)
-        if r.get("error"):
-            return {"respuesta": (f"No pude leer el DXF (no lo invento): {r['error']}\n"
+        # El precio lo calcula el MISMO cotizador que usa el panel, que a su vez
+        # usa TALLER/formula_precios.py. Antes esta rama tenía su propia cuenta
+        # —25 mm/s, ×3, merma fija del 40% y un "mínimo $450" que Anuar nunca
+        # dictó— y por eso el chat y el panel daban precios distintos para el
+        # mismo archivo: $284 aquí contra $195 allá (2026-08-14).
+        def _cotizar_real():
+            import importlib.util as _ilu
+            _sp = _ilu.spec_from_file_location(
+                "cotizador_corte", ROOT / "EDITOR" / "cotizador_corte.py")
+            _m = _ilu.module_from_spec(_sp)
+            _sp.loader.exec_module(_m)
+            # diseño=True: si no sabemos qué trajo el cliente, se cobra como
+            # diseño desde cero ($20). Cobrar de menos sale de su bolsa.
+            return _m.cotizar_corte(str(ruta), "MDF 2.7", diseno=True)
+
+        r = await asyncio.to_thread(_cotizar_real)
+        if r.get("status") != "ok":
+            return {"respuesta": (f"No pude leer el DXF (no lo invento): "
+                                  f"{r.get('mensaje', 'error desconocido')}\n"
                                   "Puede estar dañado o en un formato viejo. "
                                   "Vuélvelo a guardar desde Corel como DXF y lo mido.")}
 
-        # El desperdicio de material según la forma: una pieza con curvas
-        # desperdicia más hoja que un rectángulo.
-        material = round((r["ancho_cm"] * r["alto_cm"]) / 29768.0 * 110 * 1.4, 2)
-        costo = r["costo_corte"] + material
+        cabe = r.get("cabe_en_la_maquina") or {}
+        aviso_cama = ""
+        if cabe.get("sabemos") and not cabe.get("cabe"):
+            aviso_cama = f"\n\n⚠️ {cabe.get('detalle', 'No cabe en tu láser.')}"
+
         return {"respuesta": (
             f"📐 **{r['archivo']}**\n"
-            f"   {r['ancho_cm']} × {r['alto_cm']} cm · {r['entidades']} piezas\n\n"
-            f"✂️ **{r['metros_corte']} m** de corte  ·  **{r['minutos']} min** "
-            f"(a tus 25 mm/s)\n\n"
-            f"   corte  ${r['costo_corte']:.2f}   (${8.0:.0f}/min)\n"
-            f"   MDF 2.7 + merma  ${material:.2f}\n"
-            f"   **COSTO  ${costo:.2f}**\n\n"
-            f"💰 **PRECIO SUGERIDO: ${max(r['precio_sugerido'], costo * 3):.0f}**\n\n"
-            f"_(Si es pieza armable con forma, tu mínimo es $450.)_")}
+            f"   {r['medida_cm']} cm · {r['piezas_aprox']} piezas\n\n"
+            f"✂️ **{r['longitud_corte_m']} m** de corte  ·  "
+            f"**{r['tiempo_min']} min** (a tus {r['velocidad_mm_s']:.0f} mm/s)\n\n"
+            f"{r['desglose']}\n\n"
+            f"_Falta saber si lleva **vinil**, si trae **diseño** o hay que hacerlo, "
+            f"y si va con **instalación**. Dímelo y lo ajusto._"
+            f"{aviso_cama}")}
 
     async def _alta_lead_real(self, mensaje: str) -> Dict:
         """CHAT ↔ ORACLE: da de alta un cliente nuevo con lo que se dictó.
@@ -3867,10 +4285,12 @@ class Consciencia:
         try:
             res = await asyncio.to_thread(reg.ejecutar, clave, args)
         except Exception as e:
-            return {"respuesta": f"Intenté usar {clave} pero falló (no lo invento): {str(e)[:200]}"}
+            return {"respuesta": f"Intenté usar {clave} pero falló (no lo invento): {str(e)[:200]}",
+                    "ok": False}
         if not isinstance(res, dict) or res.get("status") != "ok":
             detalle = res.get("detalle") if isinstance(res, dict) else str(res)
-            return {"respuesta": f"No pude completar {clave} (no lo invento): {str(detalle)[:250]}"}
+            return {"respuesta": f"No pude completar {clave} (no lo invento): {str(detalle)[:250]}",
+                    "ok": False}
         salida = res.get("resultado")
         titulo = f"🔧 {h.get('funcion', clave)}"
         if isinstance(salida, dict):
@@ -3879,7 +4299,7 @@ class Consciencia:
             texto = titulo + ":\n" + "\n".join(f"• {x}" for x in list(salida)[:30])
         else:
             texto = f"{titulo}:\n{str(salida)[:1500]}"
-        return {"respuesta": texto}
+        return {"respuesta": texto, "ok": True}
 
     async def _cotizar_real(self, mensaje: str) -> Dict:
         """Cotiza con los precios REALES del catálogo. Si no encuentra, lo dice.
@@ -4249,7 +4669,15 @@ class Consciencia:
         # Antes re-leía la clave y todos los parámetros con signos. Al confirmar
         # ya no hace falta repetir QUÉ se va a hacer: se hace y se entrega el
         # resultado. Anuar lo pidió textual: es tedioso y largo, sobre todo por voz.
-        r["respuesta"] = "Hecho. " + r["respuesta"]
+        #
+        # El "Hecho." se pegaba a ciegas. Encontrado en vivo 2026-08-13: la
+        # herramienta falló y la respuesta salió como
+        # "Hecho. 🔧 escalar_pagina: • detalle: (-2147352571, 'Los tipos no coinciden.')".
+        # Decir "Hecho" con el error adentro es la peor de las mentiras posibles:
+        # Anuar se va a cortar material creyendo que quedó. Ahora solo se pone
+        # cuando la ejecución de verdad salió bien.
+        if r.get("ok"):
+            r["respuesta"] = "Hecho. " + r["respuesta"]
         return r
 
     async def _router_universal(self, mensaje: str, session_id: str = "", canal: str = "api") -> Optional[Dict]:
@@ -4855,6 +5283,34 @@ class Consciencia:
             if r.get("status") == "ok":
                 return {"respuesta": f"✅ Exportado real: {r['ruta']} ({r['kb']}KB)."}
             return {"respuesta": f"No pude exportarlo (no te miento): {r.get('detalle', r.get('status'))}"}
+
+        # Encontrado real 2026-08-21 (pendiente #1 de ESTADO_REAL.md): "vectoriza"/
+        # "vectorizar"/"traza"/"trazar" están en _COREL_ACCIONES (así que "corel
+        # vectoriza <ruta>" SÍ dispara este candado), pero esta función nunca tuvo
+        # una rama para ellos — caían aquí abajo, al fallback de "info del
+        # documento", que ignora la ruta y contesta datos del documento abierto en
+        # vez de vectorizar. No hay una función COM de Corel para esto (PowerTrace
+        # no está expuesto); lo que de verdad vectoriza es taller_core.vectorizar,
+        # el mismo motor que ya usa el candado "dxf" cuando se dice "vectoriza
+        # <ruta>" SIN la palabra "corel". Se llama aquí igual, para que decirlo CON
+        # "corel" delante ejecute directo también — consistente con el resto de
+        # comandos de este candado, sin inventar una capacidad que Corel no tiene.
+        if any(p in m for p in ("vectoriza", "vectorizar", "vectorizado", "traza", "trazar")):
+            if not rutas:
+                return {"respuesta": "Dame la ruta completa de la imagen y la vectorizo de verdad (SVG + DXF)."}
+            try:
+                spec = _ilu.spec_from_file_location("taller_core", raiz / "TALLER" / "taller_core.py")
+                tc = _ilu.module_from_spec(spec); spec.loader.exec_module(tc)
+            except Exception as e:
+                return {"respuesta": f"No pude cargar el vectorizador: {str(e)[:120]}"}
+            try:
+                r = await asyncio.to_thread(tc.vectorizar, rutas[0])
+            except Exception as e:
+                return {"respuesta": f"Falló la vectorización (no te lo adorno): {str(e)[:150]}"}
+            if isinstance(r, dict) and r.get("status") == "OK":
+                return {"respuesta": f"✅ Vectorizado real:\n{r.get('salida')}\n"
+                                     f"({r.get('kb','?')} KB). Listo para RDWorks/Aspire."}
+            return {"respuesta": f"No se logró vectorizar: {r.get('detalle', r) if isinstance(r, dict) else r}"}
 
         # "info del documento" u otro caso — siempre real, nunca inventado
         r = await _corel_con_timeout(cc.info_documento)

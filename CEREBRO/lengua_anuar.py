@@ -86,8 +86,21 @@ FAMILIAS: tuple = (
     )),
     # «Métete a mercadolibre y búscame faros aozoom» es abrir el navegador.
     # Va antes que servicio_atf, que reconoce «aozoom» en cualquier lado.
+    #
+    # Encontrado real 2026-08-21 (probando el candado ruta_sola/bug de "ruta
+    # sola" de ESTADO_REAL.md): la primera línea calzaba con CUALQUIER mensaje
+    # que empezara con "abre", sin importar de qué. "abre esta imagen en
+    # corel" (o "abre <ruta> en corel" al completarse la petición pendiente)
+    # también entraba aquí, secuestrando el mensaje hacia pc_access/abrir_
+    # navegador —que contestaba "dime qué página abro"— en vez de dejar que
+    # el candado real de Corel (que sí reconoce "abre ... corel") lo
+    # ejecutara. El (?!...) solo excluye los dos casos ya probados donde
+    # "abre" NO es sobre un sitio web: se nombra Corel, o se da una ruta real
+    # de Windows (unidad:\). "abre pinterest", "métete a mercadolibre", etc.
+    # siguen calzando exactamente igual que antes.
     ("abrir_navegador", (
-        r"^\s*(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a)\b",
+        r"^\s*(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a)\b"
+        r"(?!.*\b(?:corel|corell|cdr)\b)(?!.*[a-z]:\\)",
         r"\b(?:abre|metete\s+a|entra\s+a)\s+(?:a\s+)?"
         r"(?:pinterest|youtube|facebook|mercado\s*libre|google|amazon|aliexpress)\b",
     )),
@@ -193,8 +206,16 @@ FAMILIAS: tuple = (
         # de verdad— nada más por el verbo «borra». Medido en la ronda 2.
         r"\b(?:quita\w*|borra\w*|elimina\w*|sin)\s+(?:el\s+)?fondo\b"
         r".*\b(?:dxf|corte|cortar|vectoriz\w+|laser)\b",
-        r"\b(?:foto|imagen|jpg|png)\b.*\bvectoriz\w+\b",
-        r"\bvectoriz\w+\b.*\b(?:foto|imagen|jpg|png)\b",
+        # Encontrado real 2026-08-21: sin el (?<!\.), "corel vectoriza C:\...\pieza.png"
+        # calzaba aquí SOLO porque la ruta termina en ".png" — el \b de "png" se
+        # satisface con el punto de la extensión igual que con un espacio. Eso
+        # secuestraba CUALQUIER "vectoriza <ruta con .jpg/.png>" hacia foto_a_dxf
+        # (que además quita el fondo, cosa que no se pidió) y nunca dejaba que el
+        # candado de Corel corriera lo que sí se pidió. El (?<!\.) solo bloquea el
+        # caso "es la extensión del archivo"; "vectoriza este jpg" (con espacio
+        # antes) sigue calzando igual que antes.
+        r"(?<!\.)\b(?:foto|imagen|jpg|png)\b.*\bvectoriz\w+\b",
+        r"\bvectoriz\w+\b.*(?<!\.)\b(?:foto|imagen|jpg|png)\b",
         r"\bde\s+esta\s+(?:foto|imagen)\b.*\b(?:cortar|corte|laser|dxf)\b",
         # «esta imagen la quiero limpia y en vector para el laser»: nombra el
         # resultado —limpia, en vector— sin decir «quita el fondo».

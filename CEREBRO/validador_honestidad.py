@@ -137,9 +137,42 @@ def _comandos_inventados(texto: str, registro_claves) -> List[str]:
     return inventados
 
 
-def _archivos_inexistentes(texto: str) -> List[str]:
-    """Archivos que la respuesta menciona pero que no están en el disco."""
+def _archivos_inexistentes(texto: str, pregunta: str = "") -> List[str]:
+    """Archivos que la respuesta menciona pero que no están en el disco.
+
+    `pregunta` es lo que escribió el usuario. Se usa para no acusar de
+    inventado un archivo que ÉL acaba de dar con su ruta completa.
+    """
     faltantes, vistos = [], set()
+    # CUARTO FALSO POSITIVO DEL MISMO TIPO (2026-08-14): Anuar pidió cotizar
+    # `C:\...\Downloads\DXF\happybirth.dxf`. El cotizador contestó con el
+    # nombre corto —`happybirth.dxf`, que es lo correcto— y la regla de
+    # "archivo suelto" lo buscó SOLO dentro de la carpeta de AURORA. Como sus
+    # diseños viven en Descargas, salía "este archivo no existe" pegado a una
+    # cotización correcta. Los tres arreglos anteriores miraban solo la
+    # respuesta; el dato que faltaba estaba en la pregunta.
+    de_la_pregunta = set()
+    for r in _RE_RUTA.findall(pregunta or ""):
+        r = r.strip().rstrip(".,;:)\"'")
+        try:
+            if Path(r).exists():
+                de_la_pregunta.add(Path(r).name.lower())
+        except OSError:
+            continue
+
+    # Y los EJEMPLOS que la propia AURORA escribe para enseñar a pedir las
+    # cosas: «así te lo entiendo: ajusta C:\ruta\casa.dxf al 50%». Esa ruta no
+    # existe porque NO ES UNA PROMESA, es un molde. El aviso salía pegado a la
+    # explicación y la contradecía (visto en vivo 2026-08-14).
+    _EJEMPLO = re.compile(
+        r"(?:^|\n)\s*_?(?:as[íi] te lo entiendo|d[íi]melo as[íi]|"
+        r"ejemplo|por ejemplo|as[íi] me lo pides|cont[ée]stame)\b[^\n]*",
+        re.I)
+    for linea in _EJEMPLO.findall(texto):
+        for r in _RE_RUTA.findall(linea):
+            vistos.add(r.strip().rstrip(".,;:)\"'"))
+        for n in _RE_ARCHIVO_SUELTO.findall(linea):
+            vistos.add(n.strip())
     # Los nombres de archivo que YA se comprobaron en disco. Sirve para no
     # juzgar dos veces la misma cosa por caminos distintos.
     confirmadas = []
@@ -182,6 +215,9 @@ def _archivos_inexistentes(texto: str) -> List[str]:
         # tercera variante del mismo falso positivo.
         if any(c.endswith(nombre.lower()) for c in confirmadas):
             continue
+        # ¿Es el archivo que el propio Anuar acaba de pasar con su ruta?
+        if nombre.lower() in de_la_pregunta:
+            continue
         if _es_libreria(nombre):
             continue
         try:
@@ -221,6 +257,150 @@ _DA_POR_HECHO = (
     r"\b(?:excelente|perfecto|genial|muy bien)[,.]? (?:dato|entonces|ya que|con)\b",
 )
 
+# ═════════════════════════════════════════════════════════════════════════
+# LAS CINCO CLASES QUE FALTABAN (2026-08-10)
+#
+# Anuar le preguntó a AURORA «qué comandos entiendes realmente y sin humo» y
+# le inventó tres listas seguidas. Su reclamo fue exacto: «no entiendo por qué
+# sigue apareciendo si lo has corregido cien veces».
+#
+# La causa medida (PRUEBAS_VIVAS/auditoria_mentiras.py, 5 de 18 detectadas):
+# todo lo de arriba vigila el PASADO —«ya lo hice», «se ha guardado»— porque
+# eso fue lo que falló en julio. Ninguna regla miraba el presente ni el futuro.
+# No falló el candado: nunca hubo candado ahí. Y como los 241 `return` del
+# pipeline salen por `consciencia.procesar()`, cerrar esto aquí lo cierra para
+# los 33 candados, el enrutador y el LLM crudo de un solo golpe.
+#
+# El filtro que evita el ruido en las cinco: solo se juzgan cuando NO hubo
+# ejecución real. Un candado que de verdad corrió algo puede afirmar lo que
+# hizo; el modelo de texto hablando de sí mismo está adivinando siempre.
+# ═════════════════════════════════════════════════════════════════════════
+
+# ── 1. CAPACIDAD: afirma que sabe/puede, sin haber consultado el registro.
+# NO se marca «puedo ayudarte» ni «puedo explicarte» a propósito: eso sí lo
+# puede hacer un modelo de texto y marcarlo volvería el candado ruido.
+# Se marca únicamente cuando dice poseer COMANDOS, FUNCIONES o SABERES.
+_VERBOS_DE_OFICIO = (
+    r"(?:hacer|generar|emitir|timbrar|calcular|gestionar|administrar|"
+    r"publicar|facturar|cobrar|agendar|imprimir|cortar|grabar|bordar|"
+    r"sublimar|vectorizar|cotizar)\b")
+_AFIRMA_CAPACIDAD = (
+    r"\b(?:entiendo|reconozco|manejo|soporto|acepto) (?:el |los |estos )?comandos?\b",
+    r"\bcomandos? que (?:entiendo|reconozco|manejo|soporto|acepto)\b",
+    r"\b(?:estos|los|mis) comandos?\b[^.]{0,60}\b(?:integrad|disponible|"
+    r"en mi arquitectura|los ejecuto|puedo ejecutar)",
+    r"\bpuedo ejecutar(?:los|las)?\b(?:\s+con éxito|\s+sin problema)?",
+    # Los dos se escriben con la MISMA lista de verbos a propósito. La primera
+    # versión los tenía separados y «soy capaz de cotizar» se coló entre los
+    # dos: el verbo estaba en una lista y la forma de decirlo en la otra.
+    r"\b(?:puedo|sé|se|soy capaz de|tengo la capacidad de)\s+" + _VERBOS_DE_OFICIO,
+)
+
+# ── 2. APROPIACIÓN: los comandos de OTRO programa dichos como propios.
+# Es la más peligrosa de las cinco porque cada dato es cierto y solo es falso
+# de quién es. Pasó tal cual: AURORA leyó los manuales de la BIBLIOTECA que se
+# le meten al prompt (consciencia.py, «--- BIBLIOTECA (manuales reales) ---»)
+# y devolvió «Toolpaths», «Carve» y «Seleccionar cortador» como comandos suyos.
+_PROGRAMAS_AJENOS = (
+    r"corel\s*draw|coreldraw|vectric|aspire|inkscape|silhouette|rdworks|"
+    r"libre\s*office|photoshop|illustrator|autocad|fusion\s*360|lightburn")
+_SE_LOS_APROPIA = (
+    r"\bmis comandos? (?:en|de|para)\b",
+    r"\b(?:comandos?|funciones|herramientas) (?:que )?(?:entiendo|manejo|tengo)"
+    r"\b[^.]{0,40}\b(?:en|de)\b",
+    r"\ben \w+[,:]?\s*(?:puedo|sé|se)\b",
+)
+
+# ── 3. PROMESA: se compromete a algo futuro que nadie va a cumplir.
+# En la misma sesión del 2026-08-10 le dijo «ese error se está corrigiendo»
+# — y nadie estaba corrigiendo nada en ese momento. Suena a servicio y es
+# humo: AURORA no tiene trabajos en segundo plano que respalden eso.
+_PROMESA = (
+    r"\bse est[áa] (?:corrigiendo|arreglando|solucionando|actualizando|"
+    r"resolviendo|revisando|implementando)\b",
+    r"\b(?:estoy|estamos) (?:trabajando en|corrigiendo|arreglando|"
+    r"implementando|desarrollando)\b",
+    r"\bvoy a (?:estar pendiente|avisarte|monitorear|revisarlo|checarlo)\b",
+    r"\bte (?:aviso|informo|notifico) (?:cuando|en cuanto|apenas)\b",
+    r"\ben (?:un momento|unos minutos|breve) (?:queda|estará|lo tengo|te lo)",
+    r"\b(?:pr[óo]ximamente|muy pronto|en la pr[óo]xima versi[óo]n)\b",
+)
+
+# ── 4. CONEXIÓN: dice estar conectada a un servicio.
+# Esta sí se puede comprobar de verdad: las integraciones reales salen de
+# variables de entorno (CEREBRO/auto_conocimiento.py:156-163). Si el servicio
+# no está en el mapa, AURORA no lo tiene — punto. Y si está pero le falta su
+# llave, tampoco. Nada de esto es opinión.
+_SERVICIOS_REALES = {
+    "groq": "GROQ_API_KEY",
+    "whatsapp": "GREEN_API_TOKEN",
+    "green api": "GREEN_API_TOKEN",
+    "facebook": "FB_PAGE_TOKEN",
+    "instagram": "INSTAGRAM_ACCESS_TOKEN",
+    "supabase": "SUPABASE_KEY",
+}
+_RE_DICE_CONECTADA = re.compile(
+    r"\b(?:estoy|ya estoy|me encuentro) conectad[ao] (?:a|con|al)\s+"
+    r"(?:tu |su |la |el |mi )?([\w\s]{3,25})|"
+    r"\btengo (?:acceso|conexi[óo]n) (?:a|con|al)\s+"
+    r"(?:tu |su |la |el |mi )?([\w\s]{3,25})", re.I)
+
+# ── 5. NÚMEROS PROPIOS: cifras sobre sí misma.
+# El peor de los cinco para lo que Anuar necesita, porque una demo se sostiene
+# en estos números y si están inflados queda mal ÉL, no AURORA. Y este también
+# se comprueba exacto: el registro sabe cuántas herramientas hay de verdad.
+_RE_NUM_PROPIO = re.compile(
+    r"\b(?:tengo|manejo|cuento con|dispongo de|son)\s+"
+    r"(?:m[áa]s de\s+|cerca de\s+|unas?\s+|unos?\s+)?"
+    r"([\d][\d,\.]{0,8})\s*"
+    r"(herramientas?|comandos?|funciones?|candados?|motores?|m[óo]dulos?)", re.I)
+# Cuánto se le tolera antes de marcarlo. «Unas 600 herramientas» siendo 635 es
+# hablar en redondo, no mentir; 2,400 siendo 635 sí es inventar.
+_TOLERANCIA_NUM = 0.15
+
+
+# ── EL GUARDIÁN DE LOS CINCO: la negación ────────────────────────────────
+# Sin esto el candado castiga «NO puedo publicar en TikTok, no tengo la llave»
+# — que es AURORA siendo honesta— exactamente igual que a una mentira. Salió
+# en la primera contraprueba del 2026-08-10 y es el peor error posible aquí:
+# enseñarle a no reconocer sus límites es lo contrario de lo que se busca.
+_NIEGA = re.compile(
+    r"\b(?:no|nunca|jam[áa]s|tampoco|ni)\b|\b(?:a[úu]n|todav[íi]a)\s+no\b|"
+    r"\bsin\s+(?:poder|saber)\b", re.I)
+
+
+def _va_negado(texto: str, inicio: int) -> bool:
+    """¿La afirmación viene negada? Se mira solo su propia frase.
+
+    Se corta por signos de puntuación a propósito: en «Sí puedo cotizar. No
+    tengo TikTok», el «No» de la segunda frase no debe absolver a la primera,
+    ni al revés.
+    """
+    trozo = re.split(r"[.;:!?\n]", texto[:inicio])[-1]
+    return bool(_NIEGA.search(trozo))
+
+
+def _conteos_reales(registro_claves) -> Dict[str, int]:
+    """Lo que AURORA es de verdad, contado del sistema y no de un texto fijo.
+
+    Se cuenta en vivo a propósito: una constante escrita a mano aquí se
+    desincroniza el día que alguien agregue un candado, y el candado que
+    vigila mentiras acabaría diciendo una.
+    """
+    reales: Dict[str, int] = {}
+    if registro_claves:
+        reales["herramientas"] = len(registro_claves)
+        reales["m[óo]dulos"] = len({k.split("/", 1)[0]
+                                    for k in registro_claves if "/" in k})
+    try:
+        # Import perezoso: consciencia importa este módulo dentro de una
+        # función, así que aquí no se cierra ningún ciclo.
+        from CEREBRO.consciencia import _CANDADOS
+        reales["candados"] = len(_CANDADOS)
+    except Exception:
+        pass
+    return reales
+
 
 def revisar(respuesta: str, motores_usados=None, registro_claves=None,
             pregunta: str = "") -> Tuple[str, Dict]:
@@ -234,7 +414,11 @@ def revisar(respuesta: str, motores_usados=None, registro_claves=None,
     """
     informe = {"afirmo_accion_sin_hacerla": False, "dio_por_hecho": False,
                "comandos_inventados": [],
-               "archivos_inexistentes": [], "corregida": False}
+               "archivos_inexistentes": [], "corregida": False,
+               # Las cinco clases que se agregaron el 2026-08-10.
+               "afirmo_capacidad": False, "se_apropio": False,
+               "prometio": False, "conexiones_falsas": [],
+               "numeros_inflados": []}
     if not respuesta or not respuesta.strip():
         return respuesta, informe
 
@@ -283,13 +467,107 @@ def revisar(respuesta: str, motores_usados=None, registro_claves=None,
             f"{lista}. No los uses — pídeme la lista real y la saco del registro del sistema.")
 
     # 3) ¿Menciona archivos que no están?
-    faltantes = _archivos_inexistentes(respuesta)
+    faltantes = _archivos_inexistentes(respuesta, pregunta or "")
     if faltantes:
         informe["archivos_inexistentes"] = faltantes
         lista = ", ".join(f"`{a}`" for a in faltantes[:5])
         avisos.append(
             f"⚠️ {'Este archivo no existe' if len(faltantes) == 1 else 'Estos archivos no existen'} "
             f"en el disco: {lista}. Si dije que lo generé, no es cierto.")
+
+    # ── 4) ¿Dice que SABE o PUEDE, sin haberlo consultado? ────────────────
+    # El eje que faltaba entero. Solo aplica cuando no hubo ejecución real:
+    # ahí quien habla es el modelo de texto, que no tiene forma de saber qué
+    # hay en el registro y lo rellena con lo que suena razonable.
+    bajo = respuesta.lower()
+    if not ejecuto:
+        for patron in _AFIRMA_CAPACIDAD:
+            _m = re.search(patron, bajo)
+            if _m and not _va_negado(bajo, _m.start()):
+                informe["afirmo_capacidad"] = True
+                avisos.append(
+                    "⚠️ Dije lo que sé hacer **sin consultar mi registro** — esa parte "
+                    "la escribió el modelo de texto y puede estar inventada. "
+                    "Pregúntame **«qué sabes hacer»** y te doy la lista real, "
+                    "sacada del sistema.")
+                break
+
+        # ── 5) ¿Se está apropiando de comandos de otro programa? ──────────
+        if re.search(_PROGRAMAS_AJENOS, bajo):
+            for patron in _SE_LOS_APROPIA:
+                _m = re.search(patron, bajo)
+                if _m and not _va_negado(bajo, _m.start()):
+                    informe["se_apropio"] = True
+                    avisos.append(
+                        "⚠️ Arriba mezclé **funciones de otros programas** (Corel, "
+                        "Aspire, Inkscape…) con las mías. Las leí de tus manuales; "
+                        "no son comandos que yo ejecute. Lo que yo hago con esos "
+                        "programas es otra cosa y es más corto.")
+                    break
+
+        # ── 6) ¿Prometió algo que nadie va a cumplir? ─────────────────────
+        for patron in _PROMESA:
+            _m = re.search(patron, bajo)
+            if _m and not _va_negado(bajo, _m.start()):
+                informe["prometio"] = True
+                avisos.append(
+                    "⚠️ Prometí algo a futuro (que se está corrigiendo, que te aviso). "
+                    "**No tengo forma de cumplirlo solo**: no hay nadie trabajando en "
+                    "eso ahora mismo ni me quedo pendiente después de responderte.")
+                break
+
+    # ── 7) ¿Dice estar conectada a algo que no? ───────────────────────────
+    # Este se comprueba de verdad contra las variables de entorno, así que
+    # aplica siempre — hasta un candado que ejecutó puede decirlo mal.
+    import os
+    # SI NO PUEDO COMPROBAR, ME CALLO. Si no hay NINGUNA llave en el entorno,
+    # no es que AURORA esté desconectada de todo: es que este proceso no cargó
+    # el .env. Salió en la contraprueba del 2026-08-10, acusando de mentira un
+    # «estoy conectada a WhatsApp» que era cierto. «No lo puedo verificar» y
+    # «es falso» no son lo mismo, y confundirlos es la misma falla que se está
+    # persiguiendo, solo que del otro lado.
+    _hay_entorno = any(os.getenv(v) for v in set(_SERVICIOS_REALES.values()))
+    for m in (_RE_DICE_CONECTADA.finditer(respuesta) if _hay_entorno else ()):
+        servicio = (m.group(1) or m.group(2) or "").strip().lower()
+        servicio = re.sub(r"\s+", " ", servicio).strip(" .,;:")
+        if not servicio:
+            continue
+        env = next((v for k, v in _SERVICIOS_REALES.items() if k in servicio), None)
+        if env and os.getenv(env):
+            continue                        # conectada de verdad, sin aviso
+        if servicio not in informe["conexiones_falsas"]:
+            informe["conexiones_falsas"].append(servicio)
+    if informe["conexiones_falsas"]:
+        lista = ", ".join(f"**{s}**" for s in informe["conexiones_falsas"][:4])
+        avisos.append(
+            f"⚠️ Dije estar conectada a {lista} y **no lo estoy**. Mis conexiones "
+            f"reales son las que tienen su llave puesta: WhatsApp, Facebook, "
+            f"Instagram, Groq y Supabase. Lo demás no está enlazado.")
+
+    # ── 8) ¿Infló los números sobre sí misma? ─────────────────────────────
+    # El más caro para una demo: Anuar va a repetir esa cifra enfrente de un
+    # cliente. Se compara contra el conteo real del sistema, no contra un
+    # número escrito a mano que se desincroniza.
+    reales = _conteos_reales(registro_claves)
+    if reales:
+        for m in _RE_NUM_PROPIO.finditer(respuesta):
+            try:
+                dicho = int(m.group(1).replace(",", "").replace(".", ""))
+            except ValueError:
+                continue
+            cosa = m.group(2).lower()
+            real = next((v for k, v in reales.items() if re.match(k, cosa)), None)
+            if real is None or real == 0:
+                continue
+            if abs(dicho - real) / real > _TOLERANCIA_NUM:
+                informe["numeros_inflados"].append(
+                    {"dijo": dicho, "real": real, "de": cosa})
+    if informe["numeros_inflados"]:
+        det = "; ".join(f"dije {x['dijo']:,} {x['de']} y son {x['real']:,}"
+                        for x in informe["numeros_inflados"][:3])
+        avisos.append(
+            f"⚠️ Di un número mío que no cuadra: {det}. **No repitas esa cifra** — "
+            f"los conteos buenos los saco del registro cuando me los pidas.")
 
     if not avisos:
         return respuesta, informe

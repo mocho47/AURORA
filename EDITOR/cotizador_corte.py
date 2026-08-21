@@ -18,6 +18,18 @@ ROOT = Path(__file__).resolve().parent.parent
 PRECIOS = ROOT / "CONFIG" / "precios_base.json"
 
 
+def _formula():
+    """La fórmula de precios de Anuar. Aquí no se calcula ningún total: se
+    mide el DXF y se le pasan los números a `TALLER/formula_precios.py`, que
+    es el único lugar donde vive su cuenta (2026-08-14)."""
+    import importlib.util as _ilu
+    ruta = ROOT / "TALLER" / "formula_precios.py"
+    spec = _ilu.spec_from_file_location("formula_precios", ruta)
+    mod = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _norm(s: str) -> str:
     s = (s or "").lower()
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
@@ -63,6 +75,71 @@ def _long_entidad(e) -> float:
     return 0.0
 
 
+def _costo_de_rollo(nombre: str, ancho_cm: float, alto_cm: float) -> dict:
+    """Lo que cuesta el vinil que cubre una pieza de ancho×alto.
+
+    El vinil se vende por METRO LINEAL de un rollo de ancho fijo. Una pieza de
+    60×60 salida de un rollo de 60 cm consume 60 cm lineales — no "0.36 m²".
+    Cobrar por metro cuadrado da números que no existen en su factura.
+
+    Se prueba en las dos orientaciones porque girar la pieza es gratis.
+    """
+    q = _norm(nombre)
+    try:
+        cat = json.loads((ROOT / "CONFIG" / "catalogo_maestro.json")
+                         .read_text(encoding="utf-8"))
+    except Exception:
+        return {"ok": False, "aviso": "No se pudo leer el catálogo de materiales."}
+
+    # Se juntan TODOS los que coinciden antes de decidir. Buscar "dorado"
+    # encuentra el textil (que está vacío a propósito) y el de recorte (que sí
+    # tiene su precio): quedarse con el primero devolvía "no tiene precio"
+    # teniendo el dato a dos renglones de distancia (2026-08-14).
+    candidatos, sin_precio = [], []
+    for r in cat.get("renglones", []):
+        if not isinstance(r, dict) or r.get("tipo") != "material":
+            continue
+        if q not in _norm(r.get("nombre", "")):
+            continue
+        if r.get("compra") and r.get("medida"):
+            candidatos.append(r)
+        else:
+            sin_precio.append(r.get("nombre", "?"))
+
+    if not candidatos:
+        if sin_precio:
+            return {"ok": False,
+                    "aviso": (f"Encontré {', '.join(sin_precio)} pero sin precio ni ancho "
+                              f"de rollo capturado. Dime cuánto te cuesta el metro.")}
+        return {"ok": False, "aviso": f"'{nombre}' no está en tu catálogo de materiales."}
+
+    # Con varios candidatos válidos gana el de nombre más corto: es el que
+    # menos palabras añade a lo que él pidió, o sea el más parecido.
+    no_cupieron = []
+    for r in sorted(candidatos, key=lambda x: len(x.get("nombre", ""))):
+        precio_m = float(r["compra"])
+        ar = float(r["medida"])
+        # ¿De qué lado sale? El que quepa en el ancho del rollo.
+        if ancho_cm <= ar:
+            lineales_cm = alto_cm
+        elif alto_cm <= ar:
+            lineales_cm = ancho_cm
+        else:
+            # Este rollo es angosto para la pieza, pero puede haber otro más
+            # ancho del mismo material: se sigue buscando antes de rendirse.
+            no_cupieron.append(f"{r.get('nombre')} ({ar:.0f} cm)")
+            continue
+        costo = round(precio_m * (lineales_cm / 100.0), 2)
+        return {"ok": True, "nombre": r.get("nombre"), "costo": costo,
+                "precio_metro": precio_m, "ancho_rollo_cm": ar,
+                "metros_lineales": round(lineales_cm / 100.0, 3)}
+
+    return {"ok": False,
+            "aviso": (f"La pieza mide {ancho_cm:.0f}×{alto_cm:.0f} cm y no la cubre "
+                      f"ningún rollo que tienes de ese material: {', '.join(no_cupieron)}. "
+                      f"Hay que unirlo o cambiar de material.")}
+
+
 def _cabe_en_la_maquina(ancho_mm: float, alto_mm: float) -> dict:
     """¿Este diseño entra en su láser, o se va a enterar con el material puesto?
 
@@ -102,16 +179,33 @@ def _cabe_en_la_maquina(ancho_mm: float, alto_mm: float) -> dict:
     return r
 
 
-def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 15.0,
-                  margen_pct: float = 30.0, cortar_recuadro: bool = True,
-                  merma_pct: float = 0.0) -> dict:
+def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 20.0,
+                  margen_pct: float = 0.0, cortar_recuadro: bool = True,
+                  merma_pct: float = 0.0, diseno=None,
+                  instalacion: bool = False, cantidad: int = 1,
+                  materiales_extra=None) -> dict:
     """
     Cotiza corte láser desde un DXF con precios reales de Milens.
-    - velocidad_mm_s: velocidad de corte (Anuar pone la suya).
+    - velocidad_mm_s: 20 mm/s, la que Anuar dictó el 2026-08-13.
     - cortar_recuadro: suma los mm del perímetro del recuadro X×Y al corte.
     - merma_pct: desperdicio EXTRA sobre el material (acomodo/sobrante entre trabajos).
+    - diseno: archivo del cliente; su extensión decide el precio del diseño.
+    - instalacion: si él la va a poner (el lado mayor decide si es doble).
+    - materiales_extra: lo que va ADEMÁS de la hoja — típicamente el vinil de
+      recorte. Lista de {"nombre", "costo"} o el nombre del vinil en texto (se
+      busca su precio en el catálogo y se cobra la superficie del recuadro).
+      Su regla: el vinil se pega al MDF y se corta TODO A LA VEZ, así que NO
+      se suma corte de plotter aparte — son los mismos minutos de láser.
+
     DESPERDICIO: el material se cobra por el RECUADRO X×Y completo (lo que de verdad
     consumes de la hoja), así el sobrante alrededor de las piezas YA queda cobrado.
+
+    `margen_pct` SIGUE EN LA FIRMA pero ya no se usa para el total. Los tres
+    llamadores (el panel y el chat) lo mandan por posición y quitarlo los
+    rompería. La cuenta real vive en `TALLER/formula_precios.py`: el 20% es de
+    compraventa y va solo al material, porque los $8 del minuto de corte YA son
+    precio de venta. Aplicarle margen encima era cobrar ganancia sobre la
+    ganancia — eso daba $284 donde su cuenta da $180 (2026-08-14).
     """
     p = Path(ruta)
     if not p.exists():
@@ -168,12 +262,51 @@ def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 15.0,
         if material_info is None:
             material_info = {"aviso": f"Material '{material}' no está en tu lista; costo material = 0."}
 
-    subtotal = costo_corte + costo_material
-    total = round(subtotal * (1 + margen_pct / 100.0), 2)
+    # ── el precio, con la fórmula de Anuar ───────────────────────────────
+    # `costo_material` es lo que a él le CUESTA (fracción de hoja + merma).
+    # La compraventa, el diseño y la instalación los pone la fórmula única.
+    lado_mayor_cm = max(ancho_cm, alto_cm)
+
+    lista_mat = []
+    if costo_material:
+        lista_mat.append({"nombre": (material_info or {}).get("nombre", material) or "material",
+                          "costo": costo_material})
+
+    # Lo que va pegado encima: vinil de recorte, normalmente. Mismo corte.
+    avisos_extra = []
+    for extra in (materiales_extra or []):
+        if isinstance(extra, dict) and "costo" in extra:
+            lista_mat.append({"nombre": extra.get("nombre", "extra"),
+                              "costo": float(extra["costo"])})
+            continue
+        nombre_extra = extra.get("nombre", "") if isinstance(extra, dict) else str(extra)
+        v = _costo_de_rollo(nombre_extra, ancho_cm, alto_cm)
+        if v.get("ok"):
+            lista_mat.append({"nombre": v["nombre"], "costo": v["costo"]})
+        else:
+            avisos_extra.append(v.get("aviso", f"No pude cotizar '{nombre_extra}'."))
+
+    try:
+        _f = _formula()
+        precio = _f.cotizar(
+            materiales=lista_mat if lista_mat else 0.0,
+            minutos_corte=tiempo_min, diseno=diseno,
+            instalacion=instalacion, lado_mayor_cm=lado_mayor_cm,
+            cantidad=cantidad)
+        total = precio["total"]
+        desglose = _f.texto(precio)
+    except Exception as e:
+        # Si la fórmula no carga, se dice — no se inventa un número.
+        precio = {"status": "error", "mensaje": f"No se pudo cargar la fórmula: {e}"}
+        total = round(costo_material * 1.20 + costo_corte, 2)
+        desglose = "(fórmula no disponible; total = material×1.20 + corte)"
 
     return {
         "status": "ok",
         "archivo": p.name,
+        "precio": precio,
+        "desglose": desglose,
+        "avisos": avisos_extra,
         "medida_cm": f"{ancho_cm:.1f} x {alto_cm:.1f}",
         "cabe_en_la_maquina": _cabe_en_la_maquina(ancho_mm, alto_mm),
         "area_recuadro_cm2": round(area_recuadro_cm2, 1),
@@ -190,9 +323,11 @@ def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 15.0,
         "costo_material": costo_material,
         "costo_desperdicio": costo_desperdicio,
         "merma_pct": merma_pct,
-        "margen_pct": margen_pct,
+        "margen_pct_ignorado": margen_pct,
         "total": total,
-        "nota": "Material por recuadro X×Y (incluye desperdicio). +merma_pct opcional. Corte suma el perímetro del recuadro.",
+        "nota": ("Material por recuadro X×Y (incluye desperdicio). +merma_pct opcional. "
+                 "Corte suma el perímetro del recuadro. El precio lo calcula "
+                 "TALLER/formula_precios.py — aquí no se hace ninguna cuenta."),
     }
 
 

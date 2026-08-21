@@ -43,12 +43,6 @@
         "precio_hoja": 1600.0,
         "ancho": 120,
         "alto": 180
-      },
-      {
-        "nombre": "mi primera comunion",
-        "precio_hoja": 110.0,
-        "ancho": 122.0,
-        "alto": 244.0
       }
     ]
   },

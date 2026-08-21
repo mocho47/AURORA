@@ -5,11 +5,36 @@ import os, subprocess
 from pathlib import Path
 
 INK = r"C:\Program Files\Inkscape\bin\inkscape.com"
-# Salida RELATIVA a la raíz de AURORA (antes estaba quemada a C:\AURORA\TALLER_OUT,
-# que es la carpeta del proyecto viejo: los DXF se generaban fuera de AURORA).
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "TALLER_OUT"
-OUT.mkdir(parents=True, exist_ok=True)
+
+
+def _salida_dxf() -> Path:
+    """Dónde caen los archivos que se le entregan a Anuar.
+
+    ANTES caían en `AURORA.worktrees\\TALLER_OUT\\`, una carpeta interna del
+    proyecto. Él lo cachó en vivo el 2026-08-14 convirtiendo el PDF de las
+    K-pop: *"lo entregó en taller out como dxf, ahí no iba"*. Y tiene razón —
+    su regla ya existía y la dijo el mismo día: *"el dxf siempre cae a su
+    carpeta, al igual que svg o pdf"*, o sea `Downloads\\dxf\\`.
+
+    El resto del sistema ya preguntaba en `CONFIG/carpetas_por_tipo.py`; esta
+    parte se había quedado con la convención vieja. Un archivo que él no
+    encuentra es un archivo que no existe.
+    """
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location(
+            "carpetas_por_tipo", ROOT / "CONFIG" / "carpetas_por_tipo.py")
+        cpt = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(cpt)
+        return cpt.carpeta_de("dxf")
+    except Exception:
+        d = Path.home() / "Downloads" / "dxf"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+
+OUT = _salida_dxf()
 
 # Timeout medido en vivo 2026-07-29 con un PDF real de Anuar ("Animal - Perro -
 # Pitbull (Cabeza).pdf"): Inkscape se paso de 120s convirtiendo a DXF y la

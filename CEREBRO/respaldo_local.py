@@ -51,6 +51,7 @@ MODELOS_PREFERIDOS = ("llama3.2:3b", "qwen2.5-coder:1.5b", "qwen2.5:7b",
                       "dolphin-mistral:7b")
 
 AVISO_LOCAL = "\n\n_(Groq no respondió; esto lo contestó el modelo local, que es más limitado.)_"
+AVISO_GEMINI = "\n\n_(Groq no tenía cuota; esto lo contestó Gemini.)_"
 
 
 def _ollama_vivo(timeout: float = 2.0) -> bool:
@@ -145,9 +146,29 @@ class _Completions:
                 # 429 = sin cuota. Los demás fallos (red, timeout) también se
                 # respaldan: el usuario no tiene por qué quedarse sin respuesta
                 # porque el proveedor tuvo un mal momento.
-                logger.warning(f"Groq falló ({texto[:90]}) → intento con el modelo local")
+                logger.warning(f"Groq falló ({texto[:90]}) → sigo con el respaldo")
 
-        # 2) Ollama local.
+        # 2) Gemini. Escalón agregado el 2026-08-19, después de que Anuar
+        # esperara 780 s por una respuesta que nunca llegó: Groq sin cuota y el
+        # modelo local sin RAM donde caber. La llave de Gemini llevaba meses en
+        # el .env sin que el cerebro la conociera, y regala 1,500 peticiones
+        # diarias. Va ANTES del modelo local porque responde en segundos y es
+        # mucho mejor que un modelo de 3B corriendo en CPU.
+        try:
+            from CEREBRO.respaldo_nube import responder as _gemini
+        except Exception:
+            _gemini = None
+        if _gemini is not None:
+            try:
+                texto_g = await asyncio.to_thread(
+                    _gemini, messages, max_tokens, temperature)
+            except Exception as e:
+                logger.warning(f"Gemini falló ({str(e)[:90]})")
+                texto_g = None
+            if texto_g and texto_g.strip():
+                return _Respuesta(texto_g.rstrip() + AVISO_GEMINI, "gemini-flash")
+
+        # 3) Ollama local.
         modelo_local = self._d.modelo_local
         if not modelo_local:
             raise RuntimeError("Groq no respondió y no hay modelo local disponible. "
@@ -161,11 +182,13 @@ class _Completions:
             # un dato honesto, no un fallo que haya que disimular.
             logger.warning(f"El modelo local tampoco pudo ({str(e)[:70]})")
             raise RuntimeError(
-                "El proveedor de IA no tiene cuota ahora y el modelo local de esta "
-                "PC no alcanzó a responder (le falta memoria). No te invento nada: "
-                "vuelve a intentar en un momento, o pídeme algo que no necesite el "
-                "modelo — la contabilidad, la agenda, las órdenes y los archivos "
-                "funcionan sin él.") from e
+                "Se cayeron los tres: Groq sin cuota, Gemini tampoco pudo "
+                "(revisa GEMINI_API_KEY en el .env o ya se acabaron las 1,500 "
+                "peticiones de hoy) y el modelo local no alcanzó a responder "
+                "porque a esta PC le falta memoria. No te invento nada: vuelve "
+                "a intentar en un momento, o pídeme algo que no necesite el "
+                "modelo — la contabilidad, la agenda, las órdenes, las "
+                "cotizaciones y los archivos funcionan sin él.") from e
         if not contenido.strip():
             raise RuntimeError("Ni Groq ni el modelo local devolvieron nada. "
                                "No se inventó una respuesta.")

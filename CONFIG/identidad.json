@@ -11,6 +11,11 @@
       "salt": "298ae4d92dc728a1",
       "hash": "f60bbc427ef217fe858b31375cf3af34d228b5c650ba5e8861595a4baaed1850",
       "creado": "2026-07-30T14:58:09"
+    },
+    {
+      "salt": "94a90a36cdd903c4",
+      "hash": "2c7d25a235498ad53388367963dff207d3d0431a85c3f5d169a4bcd6784f5cb2",
+      "creado": "2026-08-18T13:53:48"
     }
   ]
 }

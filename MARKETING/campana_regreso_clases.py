@@ -188,9 +188,13 @@ def clientas() -> list:
         vistos.add(t)
         limpio = _nombre_de_persona(str(nom or ""))
         # Si en la orden quedó apuntado el producto en vez de la clienta
-        # —"servilleteros"— es mejor saludar sin nombre que llamarle así.
+        # —"servilleteros"— se saluda SIN nombre, pero se le manda igual.
+        # Anuar lo pidió así el 2026-08-14: *"a todos los clientes registrados
+        # con o sin nombre"*. Antes aquí se descartaban, y eran clientes reales
+        # que ya le compraron: perderlos por un dato mal capturado no tiene
+        # ningún sentido cuando la plantilla ya sabe saludar sin nombre.
         if limpio is None:
-            continue
+            limpio = ""
         salida.append({"nombre": limpio, "telefono": t[-10:]})
     con.close()
     return salida
