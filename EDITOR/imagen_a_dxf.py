@@ -132,6 +132,27 @@ def svg_a_dxf(svg: Path, salida: Path) -> dict:
             "corte": 1, "grabado": len(trazados) - 1}
 
 
+def _ya_tiene_fondo_quitado(ruta: Path) -> bool:
+    """¿El PNG YA trae transparencia real (alpha 0-255), o es un flat RGB/JPG?
+
+    Encontrado el 2026-08-22 con el sticker de Alicia: rembg tardó más de 10
+    minutos (CPU real, no colgado — se midió el CPU time subiendo) sobre una
+    imagen que YA era un recorte con fondo transparente de verdad. Correrle
+    IA de segmentación a algo que ya está aislado es puro tiempo perdido, y
+    con cliente esperando en el chat 10 minutos no es "listo", es inservible.
+    """
+    try:
+        from PIL import Image
+        img = Image.open(ruta)
+        if img.mode not in ("RGBA", "LA"):
+            return False
+        alpha = img.split()[-1]
+        lo, hi = alpha.getextrema()
+        return lo < 10 and hi > 245        # de verdad hay zonas transparentes Y opacas
+    except Exception:
+        return False
+
+
 def _ya_es_dibujo_lineal(ruta: Path) -> bool:
     """¿La imagen YA es un dibujo de líneas, o es una foto?
 
@@ -181,6 +202,12 @@ def convertir(entrada: str, quitar_fondo: bool = True,
         # rembg lo puede destrozar (2026-08-05, el Volvo de Anuar).
         quitar_fondo = False
         pasos.append("es un dibujo de líneas: se traza tal cual")
+    elif quitar_fondo and _ya_tiene_fondo_quitado(origen):
+        # Ya viene con alpha real (recorte tipo sticker): correrle rembg
+        # encima es tiempo perdido de verdad, no cosmético (ver cabecera de
+        # _ya_tiene_fondo_quitado).
+        quitar_fondo = False
+        pasos.append("el PNG ya traía fondo transparente: se usa tal cual")
 
     # 1) Quitar el fondo con rembg
     if quitar_fondo:
@@ -230,14 +257,44 @@ def convertir(entrada: str, quitar_fondo: bool = True,
             try:
                 import cv2
                 arr = np.array(gris)
-                # Se suaviza primero: si no, cada grano de la foto sale como
-                # un trazo suelto y el DXF queda con miles de basuritas.
-                suave = cv2.GaussianBlur(arr, (5, 5), 0)
-                bordes = cv2.Canny(suave, 60, 150)
+                # BILATERAL, no Gaussian (2026-08-22, sticker de Alicia con
+                # degradados en pelo/piel): un blur normal difumina parejo,
+                # pero el degradado sigue generando bandas de contraste que
+                # Canny lee como líneas — cientos de anillos falsos. El
+                # bilateral alisa el degradado SIN tocar los bordes de
+                # verdad (cejas, ojos, contorno), que es justo lo que hace
+                # falta: quitar la banda, no la línea.
+                suave = cv2.bilateralFilter(arr, 9, 90, 90)
+                bordes = cv2.Canny(suave, 80, 200)
+                # FILTRO DE BASURITAS: sin esto, cada chispita/brillo suelto
+                # salía como un contorno cerrado propio — miles de trazos que
+                # ni cortan nada útil y dejaban a svgpathtools 7+ minutos
+                # procesando basura. Mismo criterio que ya usa
+                # EDITOR/contorno_de_corte.py: se descarta lo menor a un
+                # área mínima ANTES de vectorizar, no después.
+                cont, _ = cv2.findContours(bordes, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+                area_min = max(9, (min(arr.shape) * 0.006) ** 2)   # ~ manchitas de <0.6% del lado corto
+                largo_min = min(arr.shape) * 0.02
+                candidatos = [c for c in cont
+                             if cv2.contourArea(c) >= area_min or cv2.arcLength(c, False) >= largo_min]
+                descartadas = len(cont) - len(candidatos)
+                # TOPE DURO: pase lo que pase con el contenido de la imagen,
+                # nunca se mandan más de 400 trazos a vectorizar. Es lo que
+                # de verdad evita que esto vuelva a tardar minutos con
+                # cliente esperando en el chat — un límite en tiempo real,
+                # no una esperanza de que el filtro de arriba baste siempre.
+                TOPE_TRAZOS = 400
+                if len(candidatos) > TOPE_TRAZOS:
+                    candidatos.sort(key=lambda c: cv2.arcLength(c, False), reverse=True)
+                    descartadas += len(candidatos) - TOPE_TRAZOS
+                    candidatos = candidatos[:TOPE_TRAZOS]
+                limpio = np.zeros_like(bordes)
+                cv2.drawContours(limpio, candidatos, -1, 255, 1)
                 # Los bordes salen blancos sobre negro; se invierte porque
                 # vtracer traza lo NEGRO.
-                bn = Image.fromarray(255 - bordes).convert("1")
-                pasos.append("dibujo lineal por detección de bordes")
+                bn = Image.fromarray(255 - limpio).convert("1")
+                pasos.append("dibujo lineal por detección de bordes"
+                            + (f" ({descartadas} basuritas descartadas)" if descartadas else ""))
             except ImportError:
                 bn = gris.point(lambda v: 0 if v < umbral else 255, mode="1")
                 pasos.append("blanco y negro puro (falta OpenCV para el lineal)")

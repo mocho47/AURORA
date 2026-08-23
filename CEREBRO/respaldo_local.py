@@ -138,11 +138,19 @@ class _Completions:
         # 1) Groq, como siempre.
         if self._d._groq is not None:
             try:
-                return await self._d._groq.chat.completions.create(
-                    model=model, messages=messages, max_tokens=max_tokens,
-                    temperature=temperature, **extra)
+                # TIMEOUT CORTO (2026-08-22): el SDK de Groq no traía límite
+                # propio — cuando el modelo está mal (404) o la cuenta sin
+                # acceso (403), la conexión igual tardaba ~60s en fallar
+                # ANTES de caer a Gemini. Eso retrasaba TODO mensaje del
+                # chat, no solo el de piñatas. Con 10s de tope se cae rápido
+                # y Gemini (que responde en segundos) toma el mensaje.
+                return await asyncio.wait_for(
+                    self._d._groq.chat.completions.create(
+                        model=model, messages=messages, max_tokens=max_tokens,
+                        temperature=temperature, **extra),
+                    timeout=10)
             except Exception as e:
-                texto = str(e)
+                texto = str(e) if not isinstance(e, asyncio.TimeoutError) else "tardó más de 10s"
                 # 429 = sin cuota. Los demás fallos (red, timeout) también se
                 # respaldan: el usuario no tiene por qué quedarse sin respuesta
                 # porque el proveedor tuvo un mal momento.

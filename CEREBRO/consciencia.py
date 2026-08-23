@@ -1013,10 +1013,21 @@ _CALCULAR_PIEZA_GRANDE = (
     "calcula el personaje", "calculame esta pinata", "cotiza esta pinata",
     "calcula la caja de esta pinata", "calcula el contorno de",
 )
+# Frase fija de arriba NO alcanzó en vivo (2026-08-22): Anuar pidió "cotizar
+# una piñata para alicia..." — "cotizar" y "una" no calzaban con la lista.
+# Mismo error que abrir_archivo/leer_archivo (pendiente #2, arreglado
+# 2026-08-21): exigir la frase EXACTA en vez del verbo+sustantivo en
+# cualquier orden. Aquí igual: basta con el verbo (cotiz*/calcul*) y el
+# sustantivo (piñata/pieza/personaje) en cualquier parte del mensaje.
+_RE_VERBO_COTIZAR_CALCULAR = re.compile(r"\bcotiz\w*|\bcalcul\w*")
+_RE_PIEZA_GRANDE = re.compile(r"\bpi[nñ]ata\w*|\bpieza\w*|\bpersonaje\w*")
 
 
 def _es_calcular_pieza_grande(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), _CALCULAR_PIEZA_GRANDE)
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _CALCULAR_PIEZA_GRANDE):
+        return True
+    return bool(_RE_VERBO_COTIZAR_CALCULAR.search(m) and _RE_PIEZA_GRANDE.search(m))
 
 
 # ── LA CAMPAÑA ESCOLAR QUE YA SALIÓ A LAS CLIENTAS ──────────────────────
@@ -3452,12 +3463,76 @@ class Consciencia:
 
         m = _norm_txt(mensaje)
 
+        def _ruta_con_extension(texto: str, ext_regex: str) -> str:
+            # Las rutas reales traen espacios (ej: "WhatsApp Image 2026-08-21
+            # at 11.32.35 PM.png") — se comprobó en vivo 2026-08-22: cortaba
+            # en el primer espacio y solo veía "PM.png". Primero se busca
+            # ENTRE COMILLAS (como manda el archivo el panel), y solo si no
+            # hay comillas se cae al patrón sin espacios de antes.
+            mq = re.search(r'"([^"]+\.(?:' + ext_regex + r'))"', texto, re.IGNORECASE)
+            if mq:
+                return mq.group(1)
+            ms = re.search(r"[^\s\"']+\.(?:" + ext_regex + r")", texto, re.IGNORECASE)
+            return ms.group(0) if ms else ""
+
         # Ruta del DXF: la última ".dxf" que aparezca en el mensaje.
-        mr = re.search(r"[^\s\"']+\.dxf", mensaje, re.IGNORECASE)
+        _rdxf = _ruta_con_extension(mensaje, "dxf")
+        mr = bool(_rdxf)
+        aviso_vectorizado = ""
         if not mr:
-            return {"respuesta": "Necesito la ruta del DXF de la pieza (ej: "
-                                  "«aurora calcula esta piñata C:\\...\\rumo.dxf a 90cm con despiece»)."}
-        ruta = mr.group(0)
+            # Si mandó una imagen (jpg/png) en vez de un DXF, no se le dice
+            # "no puedo" — se vectoriza real primero y se sigue con ESE dxf.
+            # Pedido real de Anuar 2026-08-22: mandó un .jpg directo.
+            # OJO — se usa EDITOR/imagen_a_dxf.convertir (vtracer + rembg), NO
+            # taller_core.vectorizar (Inkscape trace-bitmap: se probó en vivo
+            # 3 veces seguidas y las 3 se pasó de 180s) NI
+            # conversiones.papercraft_a_dxf (esa es para PLANTILLAS de
+            # papercraft con números/dobleces impresos — Anuar 2026-08-22:
+            # "esa función ya había quedado la de generar máscaras
+            # polyline/low poly, no la vallas a romper". Para un personaje a
+            # todo color, imagen_a_dxf.convertir SÍ separa la silueta externa
+            # (capa CORTE, 1 solo trazo) del detalle interno (capa GRABADO) —
+            # con papercraft_a_dxf salían 192 polilíneas sueltas (ojos, pelo,
+            # brillos) mezcladas con el contorno, inservible para cortar.
+            _rimg = _ruta_con_extension(mensaje, r"jpe?g|png")
+            mi = bool(_rimg)
+            if not mi:
+                return {"respuesta": "Necesito la ruta del DXF (o una imagen jpg/png que "
+                                      "vectorice primero) de la pieza (ej: «cotiza esta piñata "
+                                      "para alicia C:\\...\\rumo.dxf a 90cm con despiece»)."}
+            try:
+                spec_v = _ilu.spec_from_file_location(
+                    "imagen_a_dxf", ROOT / "EDITOR" / "imagen_a_dxf.py")
+                cv = _ilu.module_from_spec(spec_v)
+                spec_v.loader.exec_module(cv)
+            except Exception as e:
+                return {"respuesta": f"No pude abrir el vectorizador: {e}"}
+            # "lineal" siempre para láser (Anuar, 2026-08-22): separa CORTE
+            # (contorno de afuera) de GRABADO (detalle de adentro) en el
+            # mismo DXF — sirve igual para contorno que para despiece, y es
+            # lo que de verdad se corta/graba en la máquina.
+            # TOPE DURO DE 45s (2026-08-22): con el sticker de Alicia
+            # (degradados en pelo/piel) esto llegó a tardar minutos incluso
+            # después de arreglar el filtro de ruido — no se pudo aislar la
+            # causa exacta a tiempo, así que en vez de dejar el chat
+            # congelado con un cliente esperando, se avisa y se corta.
+            try:
+                rv = await asyncio.wait_for(
+                    asyncio.to_thread(cv.convertir, _rimg, True, 128, "lineal"), timeout=45)
+            except asyncio.TimeoutError:
+                return {"respuesta": "La imagen se está tardando más de 45s en vectorizar "
+                                     "(pasa con degradados/brillos muy detallados) — "
+                                     "mándame el DXF si ya lo tienes, o dime y lo corro "
+                                     "aparte sin que se te congele el chat."}
+            if rv.get("status") != "OK" or not rv.get("archivo"):
+                return {"respuesta": f"No pude vectorizar la imagen: {rv.get('detalle', rv.get('status'))}"}
+            ruta = rv["archivo"]
+            aviso_vectorizado = (f"\n\n_Primero vectoricé tu imagen a DXF (rembg+vtracer, "
+                                 f"modo lineal) — revísalo antes de cortar: {ruta}"
+                                 + (f" (vista previa: {rv['vista']})" if rv.get("vista") else "")
+                                 + "._")
+        else:
+            ruta = _rdxf
 
         modo = "despiece" if "despiece" in m else "contorno"
 
@@ -3467,8 +3542,20 @@ class Consciencia:
             alto_cm = float(ma.group(1).replace(",", "."))
 
         con_suaje = "con suaje" in m or ("suaje" in m and "sin suaje" not in m)
+        hoja = "a4" if re.search(r"\ba4\b", m) else "tabloide"
+        if re.search(r"\bhorizontal\w*\b", m):
+            orientacion = "horizontal"
+        elif re.search(r"\bvertical\w*\b", m):
+            orientacion = "vertical"
+        else:
+            orientacion = "auto"
+        n_hojas = None
+        mn = re.search(r"\b(\d+)\s*(tabloides?|hojas?|a4s?)\b", m)
+        if mn:
+            n_hojas = int(mn.group(1))
         r = await asyncio.to_thread(ppg.calcular, ruta, alto_cm, None, modo,
-                                     2.7, 10.0, 25.0, 5.0, mensaje, con_suaje)
+                                     2.7, 10.0, 25.0, 5.0, mensaje, con_suaje, hoja,
+                                     orientacion, n_hojas)
         if r.get("status") != "OK":
             return {"respuesta": f"No pude calcularlo: {r.get('detalle', r.get('status'))}"}
 
@@ -3487,6 +3574,7 @@ class Consciencia:
         txt += f"Total estimado: ${r['total_estimado']}.\n\n{r['recordatorio_maquila']}"
         if r.get("aviso_despiece"):
             txt += f"\n\n⚠️ {r['aviso_despiece']}"
+        txt += aviso_vectorizado
         return {"respuesta": txt}
 
     # Confirmaciones y negativas: NO son datos, ya tienen su propio camino
@@ -5400,15 +5488,46 @@ class Consciencia:
             detalle = r.get("mensaje") or r.get("detalle") or r if isinstance(r, dict) else r
             return {"respuesta": f"No se logró convertir a {destino.upper()}: {detalle}"}
 
+        es_img = _P(ruta).suffix.lower() in (".png", ".jpg", ".jpeg")
+        if es_img:
+            # EDITOR/imagen_a_dxf, NO taller_core.vectorizar (2026-08-22):
+            # taller_core usa Inkscape trace-bitmap directo — probado en vivo
+            # que se pasa de 180s, y cuando SÍ termina mezcla todo en una
+            # sola capa "LAYER_1" (380 entidades sueltas con el sticker de
+            # Alicia) — mata la pieza si se corta todo. imagen_a_dxf separa
+            # CORTE (contorno) de GRABADO (detalle) y usa vtracer, no
+            # Inkscape. Sin tope de tiempo aquí a propósito: Anuar pidió que
+            # este paso vaya SEPARADO del cálculo de piezas, justo para no
+            # pelear con un tope corto — se corre solo, con calma.
+            try:
+                spec = _ilu.spec_from_file_location(
+                    "imagen_a_dxf", raiz / "EDITOR" / "imagen_a_dxf.py")
+                iad = _ilu.module_from_spec(spec); spec.loader.exec_module(iad)
+            except Exception as e:
+                return {"respuesta": f"No pude cargar el vectorizador: {str(e)[:120]}"}
+            try:
+                r = await asyncio.wait_for(
+                    asyncio.to_thread(iad.convertir, ruta, True, 128, "lineal"), timeout=90)
+            except asyncio.TimeoutError:
+                return {"respuesta": "Se pasó de 90s vectorizando (imagen con mucho "
+                                     "detalle/degradado) — lo estoy corriendo aparte, "
+                                     "te aviso en cuanto salga."}
+            except Exception as e:
+                return {"respuesta": f"Falló la conversión (no te lo adorno): {str(e)[:150]}"}
+            if r.get("status") == "OK":
+                return {"respuesta": f"✅ Convertido de verdad a DXF (CORTE+GRABADO separados):\n"
+                                     f"{r.get('archivo')}\n({r.get('kb','?')} KB)"
+                                     + (f"\nVista previa: {r['vista']}" if r.get("vista") else "")
+                                     + "\nListo para RDWorks/Aspire."}
+            return {"respuesta": f"No se logró convertir: {r.get('detalle', r.get('status'))}"}
+
         try:
             spec = _ilu.spec_from_file_location("taller_core", raiz / "TALLER" / "taller_core.py")
             tc = _ilu.module_from_spec(spec); spec.loader.exec_module(tc)
         except Exception as e:
             return {"respuesta": f"No pude cargar el convertidor: {str(e)[:120]}"}
-        es_img = _P(ruta).suffix.lower() in (".png", ".jpg", ".jpeg")
-        fn = tc.vectorizar if es_img else tc.convertir_a_dxf
         try:
-            r = await asyncio.to_thread(fn, ruta)
+            r = await asyncio.to_thread(tc.convertir_a_dxf, ruta)
         except Exception as e:
             return {"respuesta": f"Falló la conversión (no te lo adorno): {str(e)[:150]}"}
         if isinstance(r, dict) and r.get("status") == "OK":

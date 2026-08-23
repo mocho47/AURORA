@@ -107,6 +107,75 @@ def escalar_a_medida(imagen: str, ancho_cm: float, alto_cm: float = 0, dpi: int 
                       "Para calidad de cerca usa modo Premium con IA." if ampliando else None)}
 
 
+def dividir_imagen_en_hojas(imagen: str, ancho_cm: float, alto_cm: float = 0,
+                            dpi: int = 300, formato: str = "tabloide",
+                            orientacion: str = "auto", traslape_cm: float = 0.5,
+                            salida_dir: str = "") -> dict:
+    """Escala la imagen a su medida física real y la PARTE en hojas que sí
+    caben en la maquila (tabloide/A4), con traslape para alinear al pegar.
+
+    Pedido real de Anuar (2026-08-22): *"aurora solo ajustaría la imagen a
+    maquilar en el tamaño y dividida como se le pida"* — el mismo criterio de
+    rejilla que ya usa el despiece en DXF (`TALLER/dividir_en_hojas.py`,
+    `TALLER/produccion_piezas_grandes.py`), pero aquí para el RASTER que se
+    manda a imprimir, no para el corte. `generar_planilla` no sirve para esto:
+    esa repite copias de un ítem chico, aquí se parte UNA imagen grande.
+    """
+    if formato not in FORMATOS and formato != "gran_formato":
+        return {"status": "error", "mensaje": f"Formato '{formato}' desconocido. {list(FORMATOS)}"}
+    hoja_w_cm, hoja_h_cm = FORMATOS.get(formato, FORMATOS["tabloide"])
+
+    esc = escalar_a_medida(imagen, ancho_cm, alto_cm, dpi,
+                           mantener_proporcion=not bool(alto_cm), salida="")
+    if esc.get("status") != "ok":
+        return esc
+    grande = Image.open(esc["salida"]).convert("RGBA")
+
+    import math as _m
+    orient = (orientacion or "auto").lower()
+    if orient == "vertical":
+        candidatos = ((hoja_w_cm, hoja_h_cm),) if hoja_w_cm <= hoja_h_cm else ((hoja_h_cm, hoja_w_cm),)
+    elif orient == "horizontal":
+        candidatos = ((hoja_w_cm, hoja_h_cm),) if hoja_w_cm >= hoja_h_cm else ((hoja_h_cm, hoja_w_cm),)
+    else:
+        candidatos = ((hoja_w_cm, hoja_h_cm), (hoja_h_cm, hoja_w_cm))
+    mejor = None
+    for hw, hh in candidatos:
+        nx = max(1, _m.ceil(ancho_cm / hw))
+        ny = max(1, _m.ceil((alto_cm or ancho_cm * grande.height / grande.width) / hh))
+        if mejor is None or nx * ny < mejor[2]:
+            mejor = (nx, ny, nx * ny, (hw, hh))
+    nx, ny, total, (hw_cm, hh_cm) = mejor
+
+    traslape_px = cm_a_px(traslape_cm, dpi)
+    paso_x = grande.width / nx
+    paso_y = grande.height / ny
+    p = Path(imagen)
+    dest = Path(salida_dir) if salida_dir else p.parent
+    dest.mkdir(parents=True, exist_ok=True)
+    archivos = []
+    for iy in range(ny):
+        for ix in range(nx):
+            x0 = max(0, round(ix * paso_x - (traslape_px if ix > 0 else 0)))
+            x1 = min(grande.width, round((ix + 1) * paso_x + (traslape_px if ix < nx - 1 else 0)))
+            y0 = max(0, round(iy * paso_y - (traslape_px if iy > 0 else 0)))
+            y1 = min(grande.height, round((iy + 1) * paso_y + (traslape_px if iy < ny - 1 else 0)))
+            tile = grande.crop((x0, y0, x1, y1))
+            nombre = dest / f"{p.stem}_f{iy+1}c{ix+1}_de{nx*ny}.png"
+            tile.convert("RGB").save(nombre, dpi=(dpi, dpi))
+            archivos.append({"archivo": str(nombre), "fila": iy + 1, "columna": ix + 1,
+                             "px": f"{tile.width}x{tile.height}",
+                             "cm": f"{px_a_cm(tile.width, dpi)} x {px_a_cm(tile.height, dpi)}"})
+    try:
+        Path(esc["salida"]).unlink(missing_ok=True)   # era solo el paso intermedio
+    except OSError:
+        pass
+    return {"status": "ok", "grid": (nx, ny), "n_hojas": nx * ny,
+            "hoja_usada_cm": f"{hw_cm:g} x {hh_cm:g}", "formato": formato,
+            "tamano_total_cm": f"{ancho_cm:g} x {(alto_cm or round(ancho_cm * grande.height / grande.width, 1)):g}",
+            "dpi": dpi, "traslape_cm": traslape_cm, "archivos": archivos}
+
+
 def generar_planilla(imagen: str, item_ancho_cm: float, item_alto_cm: float = 0,
                      formato: str = "A4", dpi: int = 300, margen_cm: float = 1.0,
                      gap_cm: float = 0.5, orientacion: str = "vertical",

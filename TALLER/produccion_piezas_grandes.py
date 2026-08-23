@@ -80,18 +80,36 @@ def _perimetro_mm(msp) -> float:
     return total
 
 
+HOJAS_MM = {"tabloide": (279.4, 431.8), "a4": (210.0, 297.0)}
+
+
 def calcular(ruta_dxf: str, alto_cm: float = None, ancho_cm: float = None,
              modo: str = "contorno", grosor_mdf_mm: float = 2.7,
              costo_tabloide: float = 10.0, precio_tabloide: float = 25.0,
              traslape_mm: float = 5.0, cliente: str = "",
-             con_suaje: bool = False) -> dict:
-    """El cálculo completo: escala + tabloides + MDF + corte + recordatorio.
+             con_suaje: bool = False, hoja: str = "tabloide",
+             orientacion: str = "auto", n_hojas: int = None) -> dict:
+    """El cálculo completo: escala + hojas de impresión + MDF + corte + recordatorio.
 
     cliente: si trae "alicia" (el acuerdo real de reventa de tabloides a
     $25 que ya cuesta $10, más el corte bajo registro — pedido 2026-08-21),
     se muestra venta/margen del tabloide como en ese trato. Con cualquier
     otro cliente (o sin dato) se usa el precio real de reventa general:
-    $95 con suaje, $70 sin suaje (dictado por Anuar 2026-08-21)."""
+    $95 con suaje, $70 sin suaje (dictado por Anuar 2026-08-21).
+
+    hoja: "tabloide" (default) o "a4" — el tamaño de hoja para calcular
+    cuántas hacen falta. Pedido real 2026-08-22: elegir el tamaño de hoja.
+    NO mezcla tamaños ni orientaciones distintas en un mismo trabajo — arma
+    UNA sola cuadrícula con un solo tamaño y una sola orientación de hoja.
+
+    orientacion: "auto" (default, la que dé menos hojas en total),
+    "vertical" (obliga hoja en pie) u "horizontal" (obliga hoja acostada) —
+    pedido real 2026-08-22: puede que salgan más hojas que con "auto", es a
+    propósito, porque la maquila o el papel lo piden así.
+
+    n_hojas: si Anuar YA sabe cuántas hojas quiere (las contó él, o así se
+    lo pidió la maquila), se usa ese número tal cual para el costo — no se
+    recalcula la cuadrícula. Pedido real 2026-08-22."""
     try:
         import ezdxf
     except ImportError as e:
@@ -147,19 +165,26 @@ def calcular(ruta_dxf: str, alto_cm: float = None, ancho_cm: float = None,
             "clasificación, no es automático — dime si lo hago a mano "
             "(como con RUMO) o si me puedes dar el archivo ya con capas.")
 
-    # TABLOIDES (mismo cálculo real de dividir_en_hojas, sobre el tamaño YA escalado)
-    import importlib.util as _ilu
-    spec = _ilu.spec_from_file_location("dividir_en_hojas", RAIZ / "TALLER" / "dividir_en_hojas.py")
-    dh = _ilu.module_from_spec(spec)
-    spec.loader.exec_module(dh)
-    hoja_mm = dh.TABLOIDE_MM
+    # HOJAS DE IMPRESIÓN (mismo cálculo real de dividir_en_hojas, sobre el tamaño YA escalado)
+    hoja_mm = HOJAS_MM.get((hoja or "tabloide").lower(), HOJAS_MM["tabloide"])
+    orient = (orientacion or "auto").lower()
+    if orient == "vertical":
+        candidatos = (hoja_mm,) if hoja_mm[0] <= hoja_mm[1] else ((hoja_mm[1], hoja_mm[0]),)
+    elif orient == "horizontal":
+        candidatos = (hoja_mm,) if hoja_mm[0] >= hoja_mm[1] else ((hoja_mm[1], hoja_mm[0]),)
+    else:
+        candidatos = (hoja_mm, (hoja_mm[1], hoja_mm[0]))
     mejor = None
-    for hw, hh in (hoja_mm, (hoja_mm[1], hoja_mm[0])):
+    for hw, hh in candidatos:
         nx = max(1, math.ceil(ancho_final_mm / hw))
         ny = max(1, math.ceil(alto_final_mm / hh))
         if mejor is None or nx * ny < mejor[2]:
             mejor = (nx, ny, nx * ny)
     nx, ny, n_tabloides = mejor
+    if n_hojas:
+        # Anuar ya decidió el número — se respeta tal cual para el costo,
+        # el grid (nx,ny) queda solo como referencia de la orientación.
+        n_tabloides = int(n_hojas)
     es_alicia = "alicia" in (cliente or "").lower()
     r["tabloides"] = {"grid": (nx, ny), "cantidad": n_tabloides,
                        "costo_total": round(n_tabloides * costo_tabloide, 2)}
