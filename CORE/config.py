@@ -32,7 +32,7 @@ class Config:
 
     # ========== MODELOS ==========
     DEFAULT_MODEL_CLAUDE = "claude-3-5-sonnet-20241022"
-    DEFAULT_MODEL_GROQ = "llama-3.1-8b-instant"
+    DEFAULT_MODEL_GROQ = "openai/gpt-oss-20b"
     DEFAULT_MODEL_OLLAMA = "mistral"
     MAX_TOKENS = 1024
 

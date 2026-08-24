@@ -29,7 +29,7 @@ Si confianza >= 0.75 → ACTÚA (recomienda acción inmediata).
 Si confianza < 0.75 → da 2 opciones y pide confirmación.
 NUNCA das respuestas vagas. Siempre terminas con acción concreta."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorReasoning:

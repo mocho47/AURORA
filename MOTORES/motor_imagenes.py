@@ -40,7 +40,7 @@ Para sublimación MILENS:
 
 Siempre das especificaciones técnicas exactas y reales."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 SPECS_LASER = {
     "formato": "PNG o SVG",

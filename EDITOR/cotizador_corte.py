@@ -207,6 +207,10 @@ def cotizar_corte(ruta: str, material: str = "", velocidad_mm_s: float = 20.0,
     precio de venta. Aplicarle margen encima era cobrar ganancia sobre la
     ganancia — eso daba $284 donde su cuenta da $180 (2026-08-14).
     """
+    # Windows agrega comillas al copiar una ruta ("Copiar como ruta de acceso");
+    # el chat ya las quitaba, este cotizador no — por eso el panel decía "no
+    # se pudo medir" con una ruta real y bien escrita (2026-08-23).
+    ruta = ruta.strip().strip('"').strip("'").strip()
     p = Path(ruta)
     if not p.exists():
         return {"status": "error", "mensaje": f"No existe: {ruta}"}

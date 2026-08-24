@@ -241,7 +241,7 @@ def mensaje_sugerido(lead_id: int) -> Dict:
         import requests
         r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                           headers={"Authorization": f"Bearer {key}"},
-                          json={"model": "llama-3.1-8b-instant",
+                          json={"model": "openai/gpt-oss-20b",
                                 "messages": [{"role": "user", "content": prompt}],
                                 "temperature": 0.8}, timeout=30)
         r.raise_for_status()

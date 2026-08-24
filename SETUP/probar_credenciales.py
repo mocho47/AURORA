@@ -105,7 +105,7 @@ def probar_groq() -> tuple[str, str]:
     # aunque la llave sirviera, y marcaba como rota una llave buena. Una prueba
     # que da falsos negativos es peor que no tenerla.
     cuerpo = json.dumps({
-        "model": "llama-3.1-8b-instant",
+        "model": "openai/gpt-oss-20b",
         "messages": [{"role": "user", "content": "di ok"}],
         "max_tokens": 5,
     }).encode()

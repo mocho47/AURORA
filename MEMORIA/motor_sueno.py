@@ -31,7 +31,7 @@ logger = logging.getLogger("aurora.motor_sueno")
 UMBRAL_INACTIVIDAD_SEG: int = 300      # 5 min sin actividad → iniciar sueño
 MIN_EPISODIOS_PARA_SUENO: int = 5      # mínimo de episodios para consolidar
 MAX_EPISODIOS_POR_CICLO: int = 40      # máximo que procesa en un ciclo
-MODELO_LLM: str = "llama-3.1-8b-instant"
+MODELO_LLM: str = "openai/gpt-oss-20b"
 INTERVALO_VIGILANCIA_SEG: int = 60     # revisa inactividad cada 60 segundos
 
 PROMPT_CONSOLIDACION = """Eres el sistema de consolidación de memoria de AURORA.

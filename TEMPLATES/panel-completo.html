@@ -3386,7 +3386,7 @@ async function clCotizar(){
                          sin_diseno:dis==='ninguno',
                          instalacion:document.getElementById('cl-inst').checked})});
   if(r.error||r.status!=='ok'){
-    out.innerHTML=`<span style="color:#fca5a5">${r.detalle||r.error||'No se pudo medir el archivo.'}</span>`; return; }
+    out.innerHTML=`<span style="color:#fca5a5">${r.mensaje||r.detalle||r.error||'No se pudo medir el archivo.'}</span>`; return; }
   const $=n=>'$'+Number(n||0).toFixed(2);
   const cabe=r.cabe_en_la_maquina||{};
   const p=r.precio||{};   // el desglose que arma TALLER/formula_precios.py

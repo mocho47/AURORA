@@ -120,6 +120,14 @@ def test_el_resultado_usa_los_campos_que_el_servidor_devuelve(panel):
 
     cuerpo = _cuerpo(panel, "clCotizar")
     usados = set(re.findall(r"\br\.(\w+)", cuerpo))
-    inventados = usados - reales - {"error", "detalle"}
+    # "mensaje" es un campo real de cotizar_corte() (EDITOR/cotizador_corte.py,
+    # sus 3 `return {"status": "error", "mensaje": ...}`) — el regex de arriba
+    # no lo agarra porque esos returns van en una sola línea, no con cada clave
+    # en su propio renglón de 8 espacios como el resto del diccionario. Sigue
+    # el mismo trato que "error"/"detalle": un campo real que no se ve con
+    # este regex, no uno inventado por el panel (2026-08-23: sin esto, el
+    # panel de Cotizar mostraba "No se pudo medir el archivo" en vez del
+    # motivo real que el servidor sí calculaba bien).
+    inventados = usados - reales - {"error", "detalle", "mensaje"}
     assert not inventados, (
         f"el panel pinta campos que el servidor no manda: {sorted(inventados)}")

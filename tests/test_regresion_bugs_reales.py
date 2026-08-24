@@ -2174,23 +2174,26 @@ class TestCorelVectorizaEjecutaDirecto:
 # trigger calzó. Encontrado real 2026-08-21 end-to-end contra el servidor.
 # ===========================================================================
 class TestLenguaAnuarNoSecuestraVectorizaPorExtension:
+    """lengua_anuar.py se fusionó dentro de consciencia.py el 2026-08-23
+    (ver _FAMILIAS_ANUAR / _candado_por_familia) — mismos patrones, mismo
+    comportamiento, un solo archivo. Estos tests ahora cargan consciencia.py."""
 
-    def _lengua(self):
-        return _cargar("lengua_anuar", "CEREBRO/lengua_anuar.py")
+    def _consciencia(self):
+        return _cargar("consciencia", "CEREBRO/consciencia.py")
 
     def test_ruta_con_extension_no_activa_foto_a_dxf(self):
-        lengua = self._lengua()
+        c = self._consciencia()
         casos = [
             r"corel vectoriza C:\Users\Administrador\Desktop\pieza.png",
             r"vectoriza C:\Users\Administrador\Desktop\pieza.jpg",
         ]
         for m in casos:
-            assert lengua.intencion(m) != "foto_a_dxf", (
+            assert c._candado_por_familia(m) != "foto_a_dxf", (
                 f"'{m}' sigue secuestrado hacia foto_a_dxf solo por la extensión")
 
     def test_frases_naturales_siguen_siendo_foto_a_dxf(self):
         """El arreglo no debe romper la calibración original de 90 frases."""
-        lengua = self._lengua()
+        c = self._consciencia()
         casos = [
             "vectoriza esta foto",
             "vectoriza la imagen",
@@ -2199,7 +2202,7 @@ class TestLenguaAnuarNoSecuestraVectorizaPorExtension:
             "vectoriza el png que te mande",
         ]
         for m in casos:
-            assert lengua.intencion(m) == "foto_a_dxf", (
+            assert c._candado_por_familia(m) == "foto_a_dxf", (
                 f"'{m}' dejó de reconocerse como foto_a_dxf")
 
 
@@ -2213,24 +2216,27 @@ class TestLenguaAnuarNoSecuestraVectorizaPorExtension:
 # corel". Encontrado real 2026-08-21 end-to-end contra el servidor.
 # ===========================================================================
 class TestLenguaAnuarNoSecuestraAbreParaCorel:
+    """lengua_anuar.py se fusionó dentro de consciencia.py el 2026-08-23
+    (ver _FAMILIAS_ANUAR / _candado_por_familia) — mismos patrones, mismo
+    comportamiento, un solo archivo. Estos tests ahora cargan consciencia.py."""
 
-    def _lengua(self):
-        return _cargar("lengua_anuar", "CEREBRO/lengua_anuar.py")
+    def _consciencia(self):
+        return _cargar("consciencia", "CEREBRO/consciencia.py")
 
     def test_abre_con_corel_o_ruta_no_es_navegador(self):
-        lengua = self._lengua()
+        c = self._consciencia()
         casos = [
             "abre esta imagen en corel",
             r"abre esta imagen en corel C:\Users\Administrador\Desktop\pieza.png",
             r"abre C:\Users\Administrador\Desktop\pieza.dxf",
         ]
         for m in casos:
-            assert lengua.intencion(m) != "abrir_navegador", (
+            assert c._candado_por_familia(m) != "abrir_navegador", (
                 f"'{m}' sigue secuestrado hacia abrir_navegador")
 
     def test_sitios_reales_siguen_abriendo_navegador(self):
         """El arreglo no debe romper la calibración original de 90 frases."""
-        lengua = self._lengua()
+        c = self._consciencia()
         casos = [
             "abre pinterest",
             "abreme facebook",
@@ -2238,7 +2244,7 @@ class TestLenguaAnuarNoSecuestraAbreParaCorel:
             "entra a youtube",
         ]
         for m in casos:
-            assert lengua.intencion(m) == "abrir_navegador", (
+            assert c._candado_por_familia(m) == "abrir_navegador", (
                 f"'{m}' dejó de reconocerse como abrir_navegador")
 
 

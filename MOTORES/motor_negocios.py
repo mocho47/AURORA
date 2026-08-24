@@ -35,7 +35,7 @@ Tu rol: reportar estado real, proponer acciones, detectar oportunidades.
 Regla fundamental: NUNCA inventes métricas. Si no tienes datos reales, dilo y propone cómo obtenerlos.
 Siempre termina con "PRÓXIMA ACCIÓN RECOMENDADA:" + acción concreta."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorNegocios:

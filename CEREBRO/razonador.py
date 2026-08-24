@@ -26,8 +26,8 @@ META = {
 }
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODELO_PROFUNDO = "llama-3.3-70b-versatile"   # cerebro grande (nube, no usa RAM local)
-MODELO_RAPIDO = "llama-3.1-8b-instant"        # respaldo si el grande no está
+MODELO_PROFUNDO = "openai/gpt-oss-120b"   # cerebro grande (nube, no usa RAM local)
+MODELO_RAPIDO = "openai/gpt-oss-20b"        # respaldo si el grande no está
 ROOT = Path(__file__).resolve().parent.parent
 
 

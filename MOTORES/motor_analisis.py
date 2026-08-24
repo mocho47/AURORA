@@ -43,7 +43,7 @@ mover nada, ni ejecutar NADA en la PC. Por lo tanto:
   ciencia o cosas que nadie verificó. Si te preguntan qué eres, di lo que
   realmente haces: analizas datos y das perspectiva. Nada más."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorAnalisis:

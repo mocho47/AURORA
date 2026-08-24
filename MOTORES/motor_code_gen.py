@@ -26,7 +26,7 @@ Reglas absolutas:
 4. Respondes con el código directamente, sin relleno innecesario.
 5. Si necesitas datos que no tienes (API key, path), los marcas con os.getenv() o variables claras."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorCodeGen:

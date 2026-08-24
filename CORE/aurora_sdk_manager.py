@@ -75,7 +75,7 @@ class AuroraSDKManager:
             messages.append({"role": "user", "content": prompt})
 
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 max_tokens=1024,
                 messages=messages
             )

@@ -130,7 +130,7 @@ def _groq(prompt: str, temperature: float = 0.4) -> dict:
         r = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {key}"},
-            json={"model": "llama-3.1-8b-instant",
+            json={"model": "openai/gpt-oss-20b",
                   "messages": [{"role": "user", "content": prompt}],
                   "temperature": temperature},
             timeout=40,

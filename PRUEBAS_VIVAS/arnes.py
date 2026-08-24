@@ -93,10 +93,9 @@ def _post(ruta: str, cuerpo: dict, timeout: int = 180):
 def capa1() -> list:
     """Qué candado gana cada frase, recorriendo _CANDADOS en su orden real."""
     from CEREBRO import consciencia as C
-    try:
-        from CEREBRO import lengua_anuar as L
-    except Exception:
-        L = None
+    # lengua_anuar.py se fusionó dentro de consciencia.py el 2026-08-23:
+    # _candado_por_familia() es la misma función de antes (mismos patrones),
+    # ahora viviendo en el mismo archivo que _CANDADOS.
 
     filas = []
     for esperado, (frases, criterio) in FRASES.items():
@@ -105,7 +104,7 @@ def capa1() -> list:
             # Se copia el pipeline real, incluida la lengua: si ella reconoce
             # la familia, ese candado manda y los demás se hacen a un lado.
             # Sin esto la capa 1 mediría un sistema que ya no existe.
-            intencion = L.intencion(frase) if L else None
+            intencion = C._candado_por_familia(frase)
             for nombre, trigger, _met, _mid in C._CANDADOS:
                 if intencion and nombre != intencion:
                     continue

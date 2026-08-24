@@ -1274,7 +1274,7 @@ async def vend_pitch(req: PitchReq):
         try:
             r = _rq.post("https://api.groq.com/openai/v1/chat/completions",
                          headers={"Authorization": f"Bearer {key}"},
-                         json={"model": "llama-3.1-8b-instant",
+                         json={"model": "openai/gpt-oss-20b",
                                "messages": [{"role": "system", "content": system},
                                             {"role": "user", "content": user}],
                                "temperature": 0.8, "max_tokens": 1200}, timeout=45)
@@ -1368,7 +1368,7 @@ async def mk_generar_contenido(req: ContenidoReq):
         try:
             r = _rq.post("https://api.groq.com/openai/v1/chat/completions",
                          headers={"Authorization": f"Bearer {key}"},
-                         json={"model": "llama-3.1-8b-instant",
+                         json={"model": "openai/gpt-oss-20b",
                                "messages": [{"role": "user", "content": prompt}],
                                "temperature": 0.85}, timeout=30)
             texto = r.json()["choices"][0]["message"]["content"]
@@ -1409,7 +1409,7 @@ async def mk_plan_contenido(req: PlanReq):
         try:
             r = _rq.post("https://api.groq.com/openai/v1/chat/completions",
                          headers={"Authorization": f"Bearer {key}"},
-                         json={"model": "llama-3.1-8b-instant",
+                         json={"model": "openai/gpt-oss-20b",
                                "messages": [{"role": "user", "content": prompt}],
                                "temperature": 0.9, "max_tokens": 2200}, timeout=45)
             texto = r.json()["choices"][0]["message"]["content"]

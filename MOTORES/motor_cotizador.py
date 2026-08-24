@@ -41,7 +41,7 @@ ATF margen real: 120-130%. MILENS margen real: 50-150%.
 Formato de respuesta: claro, directo, con desglose de precios y próximo paso de acción.
 Nunca inventas precios. Si el producto no está en catálogo, dices que necesitas verificar."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 # Deteccion del negocio por lo que el cliente REALMENTE pide (arreglo 2026-07-29).
 # Bug encontrado en vivo: negocio se tomaba SIEMPRE como "atf" por default y nunca

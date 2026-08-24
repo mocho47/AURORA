@@ -354,7 +354,7 @@ async def _arrancar() -> None:
     logger.info("")
     logger.info("=" * 60)
     logger.info("  AURORA completamente inicializada")
-    logger.info("  Motor LLM : llama-3.1-8b-instant (Groq)")
+    logger.info("  Motor LLM : openai/gpt-oss-20b (Groq)")
     logger.info(f"  Motores   : {registrados} activos en el bus")
     logger.info("  Memoria   : SQLite WAL (episodica + semantica)")
     logger.info("  Sueno     : consolidacion automatica activa")

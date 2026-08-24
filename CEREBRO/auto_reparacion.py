@@ -32,13 +32,13 @@ Si no es posible corregir, responde exactamente: IRREPARABLE: [motivo]"""
 # Anuar: "NO restar funciones (2 años de trabajo limpio que YA funciona)".
 #
 # Tres candados, cada uno suficiente por si solo:
-# Mejora 2026-07-29: se pasa del modelo chico (llama-3.1-8b-instant) al grande
-# (llama-3.3-70b-versatile, verificado disponible con la llave real de Anuar).
+# Mejora 2026-07-29: se pasa del modelo chico (openai/gpt-oss-20b) al grande
+# (openai/gpt-oss-120b, verificado disponible con la llave real de Anuar).
 # Reescribir codigo es justo la tarea donde el modelo chico se equivoca; y su
 # contexto de 128k permite subir el limite de tamaño de 6,000 a 40,000
 # caracteres SIN romper la garantia de "el archivo cabe completo": eso pasa la
 # cobertura de 80 a mas de 170 de los 195 archivos propios de AURORA.
-MODELO_REPARACION = "llama-3.3-70b-versatile"
+MODELO_REPARACION = "openai/gpt-oss-120b"
 CHARS_AL_LLM = 40000         # lo que el LLM alcanza a ver de verdad
 # 1) Archivos del nucleo: NUNCA se auto-reparan sin Anuar (son el corazon).
 ARCHIVOS_NUCLEO = {
@@ -82,7 +82,7 @@ def _limpiar_respuesta_llm(texto: str) -> str:
     Encontrado probandolo en vivo 2026-07-29: el auto-reparador NUNCA habia
     reparado nada. El modelo devuelve el codigo dentro de ```python ... ``` y
     eso jamas compila, asi que TODOS los intentos morian en FIX_INVALIDO. El
-    prompt ya pedia "sin markdown" pero el modelo (llama-3.1-8b-instant) lo
+    prompt ya pedia "sin markdown" pero el modelo (openai/gpt-oss-20b) lo
     ignora — pedirlo no basta, hay que limpiarlo.
     """
     t = (texto or "").strip()

@@ -104,12 +104,41 @@ FAMILIAS: tuple = (
         r"\b(?:abre|metete\s+a|entra\s+a)\s+(?:a\s+)?"
         r"(?:pinterest|youtube|facebook|mercado\s*libre|google|amazon|aliexpress)\b",
     )),
+    # cotizar_laser_medidas ANTES que cotizar_vinil: «corte laser con vinil
+    # dorado» trae AMBAS palabras y es MDF+vinil cortado junto (un solo
+    # corte), no vinil puro por catálogo. Mismo bug real que ya se corrigió
+    # en el candado directo (consciencia.py, 2026-08-23: cobraba $1208.88 en
+    # vez de los ~$270 reales) — pero ESTA lista manda sobre el orden de
+    # _CANDADOS, así que si no se corrige aquí también, el arreglo de allá
+    # nunca se llega a ejecutar. El (?!.*\.dxf) deja ese caso para
+    # cotizar_dxf, que mide el archivo real y es más exacto.
+    ("cotizar_laser_medidas", (
+        r"^(?!.*\.dxf).*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|"
+        r"lasser|grabado|grabar)\b.*"
+        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|sale|cobro|a\s+como)\b",
+        r"^(?!.*\.dxf).*"
+        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|cobro|a\s+como)\b.*"
+        r"\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|grabado|"
+        r"grabar)\b",
+    )),
     # Precio de vinil antes que crear letras de vinil: la palabra de dinero
     # decide. Sin esto, «cotisa unas letras en vinil» genera el archivo en
     # vez de dar el precio.
     ("cotizar_vinil", (
-        r"\b(?:vinil|vinilo|plotter|ploter|recorte|textil)\b.*"
-        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|sale|cobro|a\s+como)\b",
+        # Si trae un .dxf real, siempre gana medirlo — la escalera de
+        # catálogo está calibrada para calcas chicas (20-30cm) y da números
+        # absurdos al extrapolarla a piezas grandes reales (real 2026-08-23:
+        # "material 2.5 + vinil dorado" con un .dxf de 109x85cm sonaba a
+        # "vinil" y "material 2.5" no traía ninguna palabra de la lista de
+        # abajo, así que solo esa lista no bastaba).
+        r"(?!.*\.dxf)"
+        r"(?!.*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|"
+        r"grabado|grabar)\b)\b(?:vinil|vinilo|plotter|ploter|recorte|"
+        r"textil)\b.*\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|sale|cobro|"
+        r"a\s+como)\b",
+        r"(?!.*\.dxf)"
+        r"(?!.*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|"
+        r"grabado|grabar)\b)"
         r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|cobro|a\s+como)\b.*"
         r"\b(?:vinil|vinilo|de\s+recorte|textil)\b",
         # «5 calcas de 12x12 cuanto queda cada una»: el producto de recorte
@@ -410,3 +439,14 @@ if __name__ == "__main__":
               "acuerdate que el telefono de atf es el 3326148674"):
         r = explica(f)
         print(f"  «{f[:56]:58}» → {r['candado']}")
+
+# ══════════════════════════════════════════════════════════════════════════
+# RETIRADO el 2026-08-23. Este archivo ya NO se importa desde consciencia.py.
+# Su contenido real (FAMILIAS, patrones, comentarios de qué bug midió cada
+# uno) se movió tal cual dentro de CEREBRO/consciencia.py, cerca de
+# _CANDADOS (busca "_FAMILIAS_ANUAR" y "_candado_por_familia"), para que
+# quedara UN solo sistema de lenguaje en vez de dos archivos que se podían
+# desincronizar sin que nadie se enterara — eso pasó de verdad el mismo día
+# de este retiro, con el bug de "material 2.5 + vinilmetalico + instalacion".
+# Se conserva aquí completo, sin borrar nada, solo como referencia histórica.
+# ══════════════════════════════════════════════════════════════════════════

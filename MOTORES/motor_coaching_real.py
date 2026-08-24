@@ -30,7 +30,7 @@ Reglas del coaching:
 4. Propones UNA acción concreta al terminar, no una lista de 10.
 5. Máximo 300 palabras. Directo al punto. Sin frases motivacionales vacías."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorCoachingReal:

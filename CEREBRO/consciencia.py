@@ -34,6 +34,34 @@ def _llm_local_sync(messages: list) -> str:
     r.raise_for_status()
     return r.json()["message"]["content"]
 
+# ── Vectorizado imagen→DXF en SUBPROCESO aparte (2026-08-22) ──────────
+# El trazado (bilateral+Canny+vtracer+ezdxf) es CPU real y pesado. Corrido
+# con asyncio.to_thread queda en el MISMO proceso que el resto de AURORA
+# (listener de WhatsApp, consolidación del sueño cada 60s) y comparte GIL/
+# CPU con eso — medido en vivo: aislado tarda ~15s, dentro del servidor
+# llegó a tardar varios minutos con la imagen de Alicia. Un proceso aparte
+# no comparte ese hilo y se puede matar limpio si se pasa de tiempo (con
+# asyncio.to_thread el hilo huérfano seguía vivo de fondo, sin avisar).
+async def _vectorizar_imagen_subproceso(ruta_img: str, modo: str, timeout: float) -> dict:
+    import sys as _sys, json as _json
+    script = str(ROOT / "EDITOR" / "imagen_a_dxf.py")
+    proc = await asyncio.create_subprocess_exec(
+        _sys.executable, script, ruta_img, modo, "--json",
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    try:
+        salida, error = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    except asyncio.TimeoutError:
+        proc.kill()
+        await proc.wait()
+        return {"status": "TIMEOUT"}
+    if proc.returncode != 0:
+        return {"status": "ERROR", "detalle": error.decode("utf-8", "replace")[:200]}
+    try:
+        return _json.loads(salida.decode("utf-8", "replace"))
+    except Exception as e:
+        return {"status": "ERROR", "detalle": f"salida no era JSON: {e}"}
+
+
 # ── Cartuchos externos cacheados (Web real + Biblioteca/RAG) ──────────
 _WEB_REAL_MOD = None
 def _web_real():
@@ -1231,10 +1259,25 @@ def _es_cotizar_vinil(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
     if not _contiene_trigger(m, _DINERO_TRIGGERS):
         return False
-    if _contiene_trigger(m, _VINIL_TRIGGERS):
-        return True
+    # Si trae un .dxf REAL, siempre gana medirlo (cotizar_dxf) — nunca la
+    # escalera de catálogo del plotter, que está calibrada para calcas
+    # chicas (20-30cm) y da números absurdos al extrapolarla a una pieza de
+    # 109x85cm real (encontrado en vivo 2026-08-23: "material 2.5 + vinil
+    # dorado + instalacion" con un .dxf real de 109x85cm — "material 2.5"
+    # no trae ninguna palabra de _MATERIAL_LASER, así que ese chequeo por
+    # sí solo no bastaba).
+    if re.search(r"\.dxf\b", m):
+        return False
+    # Primero el material: "corte laser con vinil dorado" trae AMBAS
+    # palabras, y es MDF cortado con vinil encima, no vinil puro. Si esto
+    # se revisara después del trigger de vinil (como estaba antes,
+    # 2026-08-23), nunca se llegaría a ver que también dice "laser" y
+    # cotizaba por catálogo de vinil un trabajo que era de láser+MDF —
+    # $1208.88 en vez de los ~$178 reales de la fórmula.
     if _contiene_trigger(m, _MATERIAL_LASER):
         return False
+    if _contiene_trigger(m, _VINIL_TRIGGERS):
+        return True
     # letras/palabras + un área con dos medidas = rótulo de recorte
     return (_contiene_trigger(m, _TEXTO_CORTE_TRIGGERS)
             and bool(re.search(r"\d+(?:[.,]\d+)?\s*(?:cm|mm)?\s*"
@@ -1296,6 +1339,33 @@ def _es_cotizar_dxf(mensaje: str) -> bool:
             m, ("cotiza", "cotizame", "cuanto", "precio", "corte", "cortar")):
         return True
     return False
+
+
+def _es_cotizar_laser_medidas(mensaje: str) -> bool:
+    """Cotiza láser+material (y vinil encima, si lo dice) dando las medidas EN
+    EL TEXTO, sin necesitar un DXF real.
+
+    Encontrado el 2026-08-23 con un cliente esperando: "cotiza esta imagen en
+    corte laser con vinil dorado, 72x41" no traía ningún .dxf (era una foto
+    sin vectorizar todavía), así que ni cotizar_dxf ni cotizar_vinil (que ya
+    se hace a un lado si hay material de láser) lo alcanzaban — se iba al
+    cotizador genérico de catálogo, que no sabe de metros de corte reales.
+    Anuar fue claro: *"no puedo tener al cliente esperando 30 min por el
+    costo de 1mt aprox de vinil y mdf"* — esto da el número en un solo turno.
+    """
+    m = _norm_txt(mensaje)
+    if not _contiene_trigger(m, _DINERO_TRIGGERS):
+        return False
+    if not _contiene_trigger(m, _MATERIAL_LASER):
+        return False
+    if re.search(r"\.dxf\b", m):
+        return False   # eso lo mide cotizar_dxf del archivo real, más exacto
+    return bool(re.search(r"\d+(?:[.,]\d+)?\s*(?:cm|mm)?\s*[x×por]\s*\d", m))
+
+
+_COLORES_VINIL = ("dorado", "plateado", "negro", "blanco", "rojo", "azul",
+                  "verde", "amarillo", "rosa", "morado", "tornasol",
+                  "metalico", "metálico")
 
 
 def _es_ficha_vendedor(mensaje: str) -> bool:
@@ -1831,6 +1901,11 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("calcular_pieza_grande", _es_calcular_pieza_grande, "_calcular_pieza_grande_real", "produccion_piezas_grandes"),
     ("generar_caja",    _es_generar_caja,      "_generar_caja_real",      "generador_cajas"),
     ("cotizar_dxf",     _es_cotizar_dxf,       "_cotizar_dxf_real",       "cotizador_laser"),
+    # cotizar_laser_medidas va ANTES que cotizar (catálogo): material de
+    # láser + medidas en el texto pero SIN .dxf adjunto (foto sin vectorizar
+    # todavía) — 2026-08-23, cliente esperando el número, no puede caer al
+    # cotizador de catálogo que no mide corte real.
+    ("cotizar_laser_medidas", _es_cotizar_laser_medidas, "_cotizar_laser_medidas_real", "cotizador_laser_medidas"),
     ("cotizar",         _es_cotizar,           "_cotizar_real",           "cotizador"),
     ("video",           _es_comando_video,     "_video_real",             "motor_video"),
     ("voz",             _es_comando_voz,       "_voz_real",               "voz"),
@@ -1868,6 +1943,328 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     ("editar_codigo",   _es_editar_codigo,     "_editar_codigo_real",     "ide_editor"),
     ("accion_fisica",   _es_accion_fisica,     "_accion_sistema_real",    "accion_sistema"),
 ]
+
+# ══════════════════════════════════════════════════════════════════════════
+# LA LENGUA DE ANUAR — fusionada aquí el 2026-08-23. Antes vivía en su propio
+# archivo (lengua_anuar.py, creado 2026-08-10) con su propia función
+# intencion(), que le ganaba el turno a la fila de _CANDADOS de arriba SIN
+# IMPORTAR el orden: si reconocía una familia, todos los demás candados se
+# saltaban, aunque su propio disparador dijera que sí. Esa separación fue el
+# problema, no el arreglo — un bug real había que corregirlo DOS VECES, una en
+# cada archivo, y arreglar solo uno dejaba el otro exactamente igual de roto
+# (pasó hoy mismo, 2026-08-23, con "material 2.5 + vinilmetalico +
+# instalacion": el candado nativo ya sabía que no era vinil de catálogo, pero
+# lengua_anuar.py, en su archivo aparte, todavía no).
+#
+# Sigue siendo necesario que una familia reconocida gane el turno saltándose
+# el orden de _CANDADOS — se probó quitarlo (que cada candado solo "sumara"
+# estos patrones a su propio disparador, respetando el orden de la fila de
+# arriba) y falló en 3 de 40 casos reales de la misma manera que fallaba
+# antes de que existiera esto: "traigo una jetta quiero ponerle aozoom
+# cuanto me sale" se lo llevaba el cotizador de catálogo, "como le vendo un
+# retrofit" se lo llevaba servicios ATF, "qué hace el cotizador de vinil" se
+# lo llevaba el cotizador de vinil. La diferencia real con antes NO es que ya
+# no haya prioridad — es que ahora esa prioridad vive en este mismo archivo,
+# como una función más sobre los mismos 38 candados, y no en un segundo
+# archivo que se puede desincronizar del primero sin que nadie se entere
+# (pasó hoy mismo, 2026-08-23: el bug de "material 2.5 + vinilmetalico +
+# instalacion" se corrigió en el candado nativo pero seguía roto porque
+# lengua_anuar.py, aparte, todavía no lo sabía). El texto de abajo,
+# comentarios incluidos, es el mismo que tenía lengua_anuar.py: se movió, no
+# se reescribió.
+_FAMILIAS_ANUAR: tuple = (
+
+    # ══ PRIMERO LO QUE HABLA *DE* ALGO, NO LO QUE PIDE ALGO ══════════════
+    # Medido: al conectar esto la primera vez, «que hace el cotizador de
+    # vinil» se lo llevó el cotizador de vinil —le pidió un precio a una
+    # pregunta sobre su propio código—. Preguntar POR una herramienta y USAR
+    # esa herramienta se escriben casi igual; lo único que las separa es que
+    # una empieza con «qué hace» o «explícame». Por eso van hasta arriba.
+    ("consulta_codigo", (
+        r"\bque\s+hace\s+(?:el|la|tu|su)\s+\w+",
+        r"\b(?:explicame|explica)\b.*\b(?:como\s+funciona|como\s+trabaja)\b",
+        r"\ben\s+que\s+archivo\s+(?:esta|vive|guardas)\b",
+        r"\bcomo\s+(?:esta|le\s+haces\s+para)\b.*\b(?:programad|codig)\w*\b",
+        r"\bcomo\s+funciona\s+(?:el|la|tu)\s+\w+",
+    )),
+    # Un verbo de búsqueda al principio no admite discusión: «googlea cuánto
+    # cobran por retrofit» es salir a internet, aunque traiga la palabra
+    # retrofit. Medido en la ronda 2: sin esto, servicio_atf se lo llevaba.
+    ("busqueda_web", (
+        r"^\s*(?:investiga|googlea|busca\s+en\s+internet|buscame\s+en\s+internet)\b",
+        r"\bbusca\s+en\s+(?:internet|linea|google)\b",
+    )),
+    # Vender el producto vs. cotizarlo: «cómo le vendo un retrofit» es pedir
+    # argumentos, no precio. Va antes que servicio_atf, que reconoce
+    # «retrofit» y se lo llevaba.
+    ("ficha_vendedor", (
+        r"\b(?:que|como)\s+le\s+(?:digo|contesto|respondo)\s+al?\s+cliente\b",
+        r"\bcomo\s+(?:le\s+)?(?:vendo|convenzo|cierro)\b",
+        r"\bme\s+dice\s+que\s+esta\s+caro\b",
+        r"\b(?:objecion|argumento)(?:es)?\s+de\s+venta\b",
+        r"\bficha\s+(?:de|del)\b",
+        r"\bque\s+(?:le\s+)?pongo\s+en\s+la\s+cotizacion\b",
+    )),
+    # «Métete a mercadolibre y búscame faros aozoom» es abrir el navegador.
+    # Va antes que servicio_atf, que reconoce «aozoom» en cualquier lado.
+    ("abrir_navegador", (
+        r"^\s*(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a)\b"
+        r"(?!.*\b(?:corel|corell|cdr)\b)(?!.*[a-z]:\\)",
+        r"\b(?:abre|metete\s+a|entra\s+a)\s+(?:a\s+)?"
+        r"(?:pinterest|youtube|facebook|mercado\s*libre|google|amazon|aliexpress)\b",
+    )),
+    ("cotizar_laser_medidas", (
+        r"^(?!.*\.dxf).*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|"
+        r"lasser|grabado|grabar)\b.*"
+        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|sale|cobro|a\s+como)\b",
+        r"^(?!.*\.dxf).*"
+        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|cobro|a\s+como)\b.*"
+        r"\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|grabado|"
+        r"grabar)\b",
+    )),
+    ("cotizar_vinil", (
+        r"(?!.*\.dxf)"
+        r"(?!.*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|"
+        r"grabado|grabar)\b)\b(?:vinil|vinilo|plotter|ploter|recorte|"
+        r"textil)\b.*\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|sale|cobro|"
+        r"a\s+como)\b",
+        r"(?!.*\.dxf)"
+        r"(?!.*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|lasser|"
+        r"grabado|grabar)\b)"
+        r"\b(?:cuanto|precio|costo|cotiz\w+|cotis\w+|cobro|a\s+como)\b.*"
+        r"\b(?:vinil|vinilo|de\s+recorte|textil)\b",
+        r"\b(?:calcas?|calcomanias?|stickers?|stikers?|rotul\w+)\b.*"
+        r"\d+\s*[x×]\s*\d+.*\b(?:cuanto|precio|costo|queda|sale)\b",
+        r"\b(?:cuanto|a\s+como|precio)\b.*\brotular\b",
+    )),
+
+    # ── PREGUNTAS CORTAS: su sello. 2 a 5 palabras, sin contexto ──────────
+    ("negocio", (
+        r"^\s*(?:y\s+)?como\s+(?:voy|vamos|va\s+(?:el|mi)\s+negocio|va\s+todo)\b",
+        r"\bcomo\s+(?:voy|vamos)\s+(?:este\s+mes|esta\s+semana|hoy)\b",
+        r"\bcuanto\s+(?:llevo|llevamos)\s+(?:vendido|de\s+venta|ganado)\b",
+        r"\bcomo\s+(?:esta|va)\s+(?:la\s+)?(?:venta|caja|lana|feria)\b",
+        r"\bque\s+tal\s+(?:va|vamos|voy)\b",
+        r"\bcuanto\s+me\s+deben\b",
+    )),
+    ("agenda", (
+        r"^\s*que\s+(?:sigue|me\s+toca|tengo)\s*\??$",
+        r"\bque\s+(?:sigue|me\s+toca)\s+(?:hoy|manana|ahora|al\s+rato)\b",
+        r"\bque\s+traigo\s+(?:pendiente|agendado|para\s+hoy)\b",
+        r"\bpara\s+cuando\s+(?:quedo|quede|es)\s+(?:la|el)\b",
+        r"\bcon\s+quien\s+(?:quede|tengo)\b",
+    )),
+    ("intuicion", (
+        r"\ben\s+que\s+(?:deberia|debo|me\s+conviene)\s+(?:enfocarme|meterme|"
+        r"invertir|concentrarme|pegarle)\b",
+        r"\b(?:en\s+que|donde)\s+estoy\s+(?:perdiendo|dejando|tirando)\s+"
+        r"(?:dinero|lana|feria|tiempo)\b",
+        r"\bque\s+(?:me\s+)?(?:conviene|convendria)\s+(?:hacer|mas)\b",
+        r"\bque\s+(?:oportunidad|area)\s+(?:hay|ves|tengo)\b",
+        r"\bque\s+harias\s+(?:tu\s+)?en\s+mi\s+lugar\b",
+    )),
+
+    # ── LO QUE VENDE: su producto por NOMBRE, no por categoría ────────────
+    ("servicio_atf", (
+        r"\b(?:aozoom|bi[- ]?led|biled|retrofit|proyector(?:es)?\s+de\s+faro)\b",
+        r"\bfaros?\b.*\b(?:instala|ponerle|cambiar|mejorar|actualizar)\b",
+        r"\b(?:instala|ponerle|montar)\b.*\bfaros?\b",
+        r"\b(?:mi|traigo\s+(?:un|una)|tengo\s+(?:un|una))\s+"
+        r"(?:jetta|golf|tsuru|sentra|civic|mazda|kia|hilux|ranger|tacoma|"
+        r"camioneta|coche|carro|nave|troca)\b.*\b(?:faro|led|luz|luces)\b",
+        r"\b(?:mejorar|cambiar|renovar)\b.*\b(?:los\s+)?faros?\b",
+    )),
+
+    # ── EL TALLER: pide por el trabajo, no por la herramienta ─────────────
+    ("generar_caja", (
+        r"\b(?:caja|cajita|cofre|baul|estuche|organizador)\b.*\d+\s*[x×]\s*\d+",
+        r"\d+\s*[x×]\s*\d+\s*[x×]\s*\d+\b.*\b(?:caja|cofre|baul|estuche)\b",
+        r"\b(?:hazme|armame|necesito|quiero)\b.*\b(?:caja|cofre|baul)\b",
+    )),
+    ("adaptar_diseno", (
+        r"\b(?:archivo|diseno|dibujo|plantilla)\b.*\bde\s*\d+(?:[.,]\d+)?\s*mm\b"
+        r".*\b(?:material|mdf|acrilico)\b",
+        r"\bmi\s+material\s+es\s+de\s*\d+(?:[.,]\d+)?\b",
+        r"\b(?:ajusta|adapta|reescala|acomoda)\b.*\b(?:a|para)\s*\d+(?:[.,]\d+)?\s*(?:mm)?\b",
+        r"\bes(?:ta|tan)?\s+(?:hecho|para)\s+\d+(?:[.,]\d+)?\s*mm\b.*\btengo\s+(?:de\s+)?\d",
+        r"\bencastres?\b",
+        r"\b(?:ajusta|adapta|reescala|acomoda)\b.*\bmi\s+"
+        r"(?:material|mdf|acrilico|lamina|hoja)\b",
+        r"\bmi\s+(?:material|mdf|acrilico)\b.*\b(?:mas\s+)?(?:delgad|gruesa?|"
+        r"finit?|grues)\w*\b",
+        r"\bviene\s+para\s+\d+(?:[.,]\d+)?\s*(?:mm)?\b",
+    )),
+    ("texto_a_corte", (
+        r"\b(?:letras?|numeros?|palabra|nombre|rotulo|leyenda|frase|texto)\b.*"
+        r"\b(?:plotter|ploter|recorte|vinil)\b",
+        r"\b(?:ponme|hazme|escribe|sacame|quiero)\b.*\b(?:en|con|tipo)\s+"
+        r"(?:letra|tipografia|fuente|script|negrita)\b",
+        r"\b(?:letras?|numeros?|nombre|frase|palabra)\b.*"
+        r"\bpara\s+(?:cortar|recortar|el\s+corte)\b",
+        r"\b(?:el\s+nombre|la\s+frase|la\s+palabra)\b.*"
+        r"\b(?:recortar|cortar|plotter|ploter|vinil)\b",
+    )),
+    ("print_and_cut", (
+        r"\bprint\s*(?:and|&|y)\s*cut\b",
+        r"\bimprim\w+\b.*\b(?:y|con)\s+(?:recortar|corte|linea\s+de\s+corte)\b",
+        r"\b(?:stickers?|stikers?|calcas?|calcomanias?)\b.*"
+        r"\b(?:impres\w+|imprimir|impreso|full\s+color|contorno)\b",
+        r"\bmarcas?\s+de\s+registro\b",
+        r"\bcontorno\s+de\s+corte\b",
+    )),
+    ("foto_a_dxf", (
+        r"\b(?:quita\w*|borra\w*|elimina\w*|sin)\s+(?:el\s+)?fondo\b"
+        r".*\b(?:dxf|corte|cortar|vectoriz\w+|laser)\b",
+        r"(?<!\.)\b(?:foto|imagen|jpg|png)\b.*\bvectoriz\w+\b",
+        r"\bvectoriz\w+\b.*(?<!\.)\b(?:foto|imagen|jpg|png)\b",
+        r"\bde\s+esta\s+(?:foto|imagen)\b.*\b(?:cortar|corte|laser|dxf)\b",
+        r"\b(?:imagen|foto|logo)\b.*\b(?:limpia|en\s+vector|vectorizad\w+)\b",
+    )),
+    ("cotizar_dxf", (
+        r"\bcuant[oa]s?\s+(?:metros|mts|m)\s+de\s+corte\b",
+        r"\b(?:cuanto|precio|costo|cobro|cobrarias)\b.*"
+        r"\b(?:cortar|corte\s+de)\s+(?:este|ese|el|un)\s+"
+        r"(?:archivo|dxf|diseno|dibujo)\b",
+        r"\bmide\s+(?:este|el)\s+(?:archivo|dxf)\b",
+    )),
+
+    # ── SU PROPIA MÁQUINA: Corel, videos, voz ─────────────────────────────
+    ("corel", (
+        r"\bcorel\w*\b",
+        r"\bcdr\b",
+        r"\b(?:que|lo\s+que)\s+(?:tengo|traigo)\s+abierto\b",
+    )),
+    ("video", (
+        r"\b(?:videos?|clips?|material\s+de\s+video|tomas?)\b.*"
+        r"\b(?:tengo|hay|listos?|sirvan?|sirven?|carpeta|publicar|subir|"
+        r"guardad\w+|grabad\w+|reel|reels|tiktok|short)\b",
+        r"\b(?:cuantos|que|cuales)\s+(?:videos?|clips?)\b",
+        r"\b(?:saca|extrae|dame|busca)\w*\s+(?:los\s+)?(?:videos?|clips?)\b",
+    )),
+    ("voz", (
+        r"\b(?:hablame|hablarme|que\s+me\s+hables|contestarme\s+hablando)\b",
+        r"\b(?:en\s+lugar\s+de|en\s+vez\s+de|sin)\s+(?:escribir|teclear)\b",
+        r"\b(?:prende|apaga|activa|desactiva|prueba)\b.*"
+        r"\b(?:la\s+voz|que\s+me\s+escuches|el\s+microfono|el\s+micro)\b",
+        r"\bcomo\s+suenas\b",
+        r"\b(?:platicar|hablar|conversar)\s+(?:contigo|con\s+aurora)\b",
+        r"\bque\s+me\s+escuches\b",
+    )),
+
+    # ── MEMORIA Y APRENDIZAJE ─────────────────────────────────────────────
+    ("memoria", (
+        r"^\s*(?:acuerdate|recuerda|apuntate|no\s+se\s+te\s+olvide)\b",
+        r"\bque\s+te\s+dije\s+(?:de|sobre|del)\b",
+        r"\bguarda(?:te)?\s+(?:que|esto|este\s+dato)\b",
+    )),
+    ("ver_aprendizaje", (
+        r"\bque\s+(?:has\s+|has\s+ido\s+)?aprendi\w+\b",
+        r"\bque\s+sabes\s+(?:hacer|de\s+mi)\b",
+        r"\ben\s+que\s+(?:soy|he\s+sido)\s+repetitiv\w+\b",
+        r"\bque\s+patrones\b",
+        r"\bcomo\s+(?:trabajo|te\s+pido\s+las\s+cosas)\b.*\b(?:aprend|sabes|ves)\w*\b",
+    )),
+    ("acerca_de", (
+        r"\bque\s+eres\b",
+        r"\b(?:para\s+que|de\s+que)\s+(?:me\s+)?sirves\b",
+        r"\bque\s+(?:ganamos|gano)\s+con\s+que\s+estes\b",
+        r"\bexplicame\s+que\s+eres\b",
+        r"\bquien\s+eres\b",
+    )),
+    ("equipos", (
+        r"\bequipos?\s+de\s+(?:trabajo|marketing|ventas?|diseno|publicacion|taller)\b",
+        r"\b(?:que|cuales)\s+equipos?\b",
+        r"\b(?:activa|echame\s+a\s+andar|pon\s+a\s+trabajar|arranca)\b.*\bequipo\b",
+        r"\bque\s+puede\s+hacer\s+el\s+equipo\b",
+    )),
+
+    # ── VENTA Y CLIENTES ──────────────────────────────────────────────────
+    ("alta_lead", (
+        r"^\s*(?:apunta|registra|da\s+de\s+alta|anota|guarda)\b.*"
+        r"(?:\b\d{10}\b|\bcliente\b|\binteresad|\bquiere\b)",
+        r"^\s*(?:apunta|registra|da\s+de\s+alta|anota)\s+a\s+\w+",
+        r"\b(?:nuevo|otro)\s+(?:cliente|lead|prospecto)\b",
+        r"\bmetelo\s+(?:al|a\s+la)\s+(?:crm|lista|base)\b",
+    )),
+    ("proveedor", (
+        r"\b(?:donde|quien|con\s+quien)\s+(?:compro|consigo|vende|surto)\b",
+        r"\bproveedor(?:es)?\s+de\b",
+        r"\bmi\s+proveedor\b",
+    )),
+    ("campana_escolar", (
+        r"\b(?:cuanto|precio|costo)\b.*\bpaquete\s+(?:de\s+)?"
+        r"(?:primaria|secundaria|preescolar|kinder|escolar)\b",
+        r"\bel\s+de\s+(?:primaria|secundaria|preescolar|kinder)\b",
+        r"\bcuanto\b.*\bel\s+de\s+la\s+campana\b",
+        r"\bpaquete\s+escolar\b",
+    )),
+    ("metodo_campana", (
+        r"\b(?:como\s+ves|que\s+opinas\s+de|que\s+le\s+falta\s+a)\s+"
+        r"(?:la|esta|mi)\s+campana\b",
+        r"\brevisa\w*\s+(?:la|esta|mi)\s+campana\b",
+    )),
+    ("publicar", (
+        r"\bque\s+publico\s+(?:hoy|manana)\b",
+        r"\barma\w*\s+(?:el\s+)?post\b",
+        r"\bque\s+(?:subo|saco)\s+hoy\b",
+        r"\bque\s+toca\s+publicar\b",
+        r"\bque\s+subo\s+(?:hoy\s+)?a\s+(?:las\s+)?redes\b",
+    )),
+    ("dxf", (
+        r"\b(?:convierte|convierteme|pasa|pasalo|pasala)\b.*\ba\s+dxf\b",
+        r"\ben\s+dxf\b.*\b(?:necesito|quiero|dame)\b",
+        r"\b(?:necesito|quiero|dame)\b.*\ben\s+dxf\b",
+        r"\b(?:pasa|convierte|ponlo|dejalo)\b.*"
+        r"\ba\s+formato\s+de\s+corte\b",
+    )),
+
+    # ══ HASTA EL FINAL: LO MÁS GENERAL ═══════════════════════════════════
+    ("cotizar", (
+        r"\b(?:cuanto|precio|costo|a\s+como|en\s+cuanto|cotiz\w+|cotis\w+)\b.*"
+        r"\b(?:taza|termo|playera|gorra|vaso|agenda|boligrafo|sello|"
+        r"sublimad\w+|grabad\w+|personalizad\w+|bordad\w+)\b",
+        r"\b(?:taza|termo|playera|gorra|vaso|agenda|boligrafo|sello)s?\b.*"
+        r"\b(?:cuanto|precio|costo|en\s+cuanto|dejo|sale)\b",
+    )),
+)
+
+# Se compilan EN EL MISMO ORDEN en que están escritas arriba — ese orden es a
+# propósito (lo específico antes que lo general) y es justo lo que resuelve
+# las colisiones reales que _CANDADOS no puede resolver por sí solo, como
+# "traigo una jetta quiero ponerle aozoom cuanto me sale" (que sin esto se lo
+# lleva el cotizador de catálogo por traer "cuanto...sale", antes de que la
+# fila llegue a servicios_atf) o "que hace el cotizador de vinil" (que sin
+# esto se lo lleva cotizar_vinil, por traer literalmente "cotizador" y
+# "vinil"). Verificado con una batería real de 40 casos antes de conectarse
+# — 3 de 40 fallaban intentando "ampliar" cada candado por separado sin
+# respetar este orden; con el orden, los 40 pasan.
+_FAMILIAS_ANUAR_COMPILADAS: tuple = tuple(
+    (_f_candado, tuple(re.compile(_p) for _p in _f_patrones))
+    for _f_candado, _f_patrones in _FAMILIAS_ANUAR
+)
+
+# Un mensaje que es SOLO una ruta de archivo o carpeta, sin nada más, no es
+# una petición nueva — es el dato que le faltaba a la anterior (lo resuelve
+# ruta_sola). Sin este freno, "D:\algo.cdr" se lo llevaba Corel por traer
+# "cdr" (medido 2026-08-10).
+_SOLO_RUTA_ANUAR = re.compile(r"^\s*[a-z]:[\\/][^\s]*\s*$|^\s*[\\/]{2}[^\s]+\s*$")
+
+
+def _candado_por_familia(mensaje: str) -> Optional[str]:
+    """Qué candado pide el mensaje según cómo Anuar PIDE de verdad (no cómo
+    lo tiene memorizado cada candado por separado). None si ninguna familia
+    calza — en ese caso _CANDADOS decide exactamente como si esto no
+    existiera, así que esto nunca puede restarle nada al sistema, solo
+    sumarle reconocimiento y resolver las colisiones que su propio orden no
+    puede resolver solo."""
+    texto = _norm_txt(mensaje)
+    if not texto or _SOLO_RUTA_ANUAR.match(texto):
+        return None
+    for _candado, _patrones in _FAMILIAS_ANUAR_COMPILADAS:
+        for _p in _patrones:
+            if _p.search(texto):
+                return _candado
+    return None
 
 # Candados con efecto real de escritura/físico/externo — nunca ejecutables desde un
 # cliente de WhatsApp (canal="whatsapp" nunca es Anuar operando el panel, es siempre
@@ -1909,11 +2306,11 @@ _MOTORES_DE_VENTA = frozenset({"motor_negocios", "motor_vendedor", "motor_cotiza
                                "motor_ventas", "vendedor", "oracle"})
 _MSG_SOLO_DUENIO = "Esa acción es del dueño desde el panel — no la ejecuto desde WhatsApp."
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 # El 8B se equivoca eligiendo entre herramientas parecidas (ej: "convertir a PDF"
 # eligió convertir_a_dxf en vez de conversor_formatos:convertir). Para ESA decisión
 # puntual (una sola llamada JSON por turno, no es cuello de botella) usar el 70B.
-_MODELO_SELECTOR = "llama-3.3-70b-versatile"
+_MODELO_SELECTOR = "openai/gpt-oss-120b"
 _MAX_HISTORIAL_SESION = 20  # mensajes en RAM por sesión
 
 
@@ -2226,46 +2623,37 @@ class Consciencia:
         # de acción, no de uno.
         _solo_memoria = _es_pregunta_de_memoria(_norm_txt(mensaje))
 
-        # LA LENGUA DE ANUAR — cómo PIDE, no cómo escribe (2026-08-10).
-        # Se le hablaron 90 frases suyas reales: 33 fallaron. Se midieron las
-        # dos hipótesis obvias antes de escribir nada: agregarle su ortografía
-        # ganó +1 de 90, y reordenar la fila habría arreglado 1 de 9 colisiones
-        # —en 8 de 9 el candado correcto NI SIQUIERA reconoció la frase—. Lo
-        # que falla es que los candados comparan contra frases memorizadas:
-        # `intuicion` tiene "que deberia hacer" pero no "en que deberia
-        # enfocarme", y falla por dos palabras.
-        # Se pregunta UNA vez y aquí, no en los 33 candados, por la misma razón
-        # de siempre: una regla en 33 lugares se despega en cuanto se toca uno.
-        # Si `intencion` no reconoce la familia devuelve None y todo sigue
-        # exactamente como antes — por eso esto no puede restar nada.
-        _intencion_anuar = None
-        try:
-            from CEREBRO import lengua_anuar as _lengua
-            _intencion_anuar = _lengua.intencion(mensaje)
-        except Exception as _e:                      # nunca tumbar el chat por esto
-            logger.debug(f"[LENGUA] no disponible ({_e})")
+        # LA LENGUA DE ANUAR ya no vive aparte: vive aquí mismo (ver
+        # _FAMILIAS_ANUAR/_candado_por_familia arriba). Sigue siendo la misma
+        # idea de siempre — se pregunta UNA vez, no en los 38 candados por
+        # separado, porque una regla repetida en 38 lugares se despega en
+        # cuanto se toca uno — pero ya no hay un archivo aparte que se pueda
+        # desincronizar del que sí importa: es una función más de este mismo
+        # módulo, sobre los mismos 38 candados de arriba.
+        _candado_de_familia = _candado_por_familia(mensaje)
 
         for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
             if _solo_memoria and _nombre_candado not in ("memoria", "ver_aprendizaje"):
                 continue
-            # La intención reconocida manda sobre el orden de la fila: el que
-            # ella nombra dispara aunque su lista no calce, y los demás se
-            # hacen a un lado. Eso es lo que mata las colisiones —"traigo una
-            # jetta quiero ponerle aozoom" se lo llevaba el cotizador de
-            # catálogo en vez de servicios ATF—.
-            if _intencion_anuar and _nombre_candado != _intencion_anuar:
+            # La familia reconocida manda sobre el orden de la fila: el
+            # candado que nombra dispara aunque su propia lista no calce, y
+            # los demás se hacen a un lado. Así se resuelven colisiones reales
+            # como "traigo una jetta quiero ponerle aozoom cuanto me sale"
+            # (que sin esto se lo lleva el cotizador de catálogo por traer
+            # "cuanto...sale", antes de llegar a servicios_atf en la fila).
+            if _candado_de_familia and _nombre_candado != _candado_de_familia:
                 continue
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
                 continue
             if _tema_sistema and _nombre_candado in _CANDADOS_DE_VENTA:
                 continue
-            # El disparador normal manda; lo aprendido es la segunda oportunidad.
+            # El disparador normal manda; lo aprendido es la segunda oportunidad,
+            # y la familia reconocida es la tercera — la que atrapa "como voy"
+            # o "que sigue": frases de dos palabras que ningún candado tiene
+            # memorizadas tal cual.
             _por_aprendizaje = (_aprendido is not None
                                 and _aprendido.get("herramienta") == _motor_id_candado)
-            # ...y la lengua de Anuar es la tercera, que es la que atrapa
-            # "como voy" o "que sigue": frases suyas de dos palabras que
-            # ninguna de las 16 listas tiene.
-            _por_intencion = (_intencion_anuar == _nombre_candado)
+            _por_familia = (_candado_de_familia == _nombre_candado)
             if _nombre_candado == "crear_capacidad" and not FABRICA_HABILITADA:
                 if _trigger(mensaje):
                     self._agregar_sesion(session_id, mensaje, _MSG_FABRICA_FUERA)
@@ -2274,9 +2662,9 @@ class Consciencia:
                             "temperatura_lead": "frio", "duracion_ms": ms,
                             "timestamp": inicio.isoformat()}
                 continue
-            if not _trigger(mensaje) and not _por_aprendizaje and not _por_intencion:
+            if not _trigger(mensaje) and not _por_aprendizaje and not _por_familia:
                 continue
-            if _por_intencion and not _trigger(mensaje):
+            if _por_familia and not _trigger(mensaje):
                 logger.info(f"[LENGUA] '{mensaje[:40]}' → {_nombre_candado} "
                             f"(su lista no la reconoció; la familia sí)")
             if _por_aprendizaje and not _trigger(mensaje):
@@ -3169,6 +3557,22 @@ class Consciencia:
         m = _norm_txt(mensaje)
         piezas = self._todas_las_medidas_cm(mensaje)
         if not piezas:
+            # No dijo medidas en texto, pero si mandó un DXF real, la medida
+            # ya está en el archivo — no hay por qué preguntarle. Encontrado
+            # el 2026-08-23: le pasó "mibautizo.dxf" y esto seguía
+            # preguntando "¿de qué medida es?" con el archivo justo ahí.
+            for r in _rutas_del_texto(mensaje or ""):
+                if r.lower().endswith(".dxf") and Path(r).exists():
+                    try:
+                        import ezdxf
+                        import ezdxf.bbox
+                        doc = ezdxf.readfile(r)
+                        ext = ezdxf.bbox.extents(doc.modelspace())
+                        piezas = [(round(ext.size.x / 10, 1), round(ext.size.y / 10, 1))]
+                    except Exception:
+                        pass
+                    break
+        if not piezas:
             return {"respuesta": (
                 "¿De qué medida es el trabajo? Con el área te doy el precio "
                 "de tu lista.\n\n_Dímelo así:_ «cuánto cuesta un vinil de "
@@ -3183,16 +3587,22 @@ class Consciencia:
             "ponerla", "ponerlas", "poner"))
 
         # una pieza o varias: la regla de sumar áreas vive en el cotizador
+        # cm² solo, sin más, se lee fácil como si fuera m² con el punto
+        # corrido (real: Anuar leyó "9325.7 cm²" como "más de 9 m²" el
+        # 2026-08-23). Se aclara con el equivalente en m² al lado.
+        def _area_txt(area_cm2: float) -> str:
+            return f"{area_cm2:g} cm² ≈ {area_cm2/10000:.2f} m²"
+
         if len(piezas) > 1:
             r = await asyncio.to_thread(cv.precio_de_trabajo, piezas, colocar)
             titulo = (f"✂️ **Vinil de recorte · {len(piezas)} piezas** ("
                       + " + ".join(f"{a:g}×{b:g}" for a, b in piezas)
-                      + f" = {r.get('area_cm2', 0):g} cm²)\n")
+                      + f" = {_area_txt(r.get('area_cm2', 0))})\n")
         else:
             r = await asyncio.to_thread(cv.precio_de_lista, ancho, alto,
                                         colocar)
             titulo = (f"✂️ **Vinil de recorte {ancho:g} × {alto:g} cm** "
-                      f"({r.get('area_cm2', 0):g} cm²)\n")
+                      f"({_area_txt(r.get('area_cm2', 0))})\n")
         if r.get("status") != "OK":
             return {"respuesta": (
                 "No tengo tu lista de precios de vinil a la mano. Está en "
@@ -3500,30 +3910,18 @@ class Consciencia:
                 return {"respuesta": "Necesito la ruta del DXF (o una imagen jpg/png que "
                                       "vectorice primero) de la pieza (ej: «cotiza esta piñata "
                                       "para alicia C:\\...\\rumo.dxf a 90cm con despiece»)."}
-            try:
-                spec_v = _ilu.spec_from_file_location(
-                    "imagen_a_dxf", ROOT / "EDITOR" / "imagen_a_dxf.py")
-                cv = _ilu.module_from_spec(spec_v)
-                spec_v.loader.exec_module(cv)
-            except Exception as e:
-                return {"respuesta": f"No pude abrir el vectorizador: {e}"}
             # "lineal" siempre para láser (Anuar, 2026-08-22): separa CORTE
             # (contorno de afuera) de GRABADO (detalle de adentro) en el
             # mismo DXF — sirve igual para contorno que para despiece, y es
-            # lo que de verdad se corta/graba en la máquina.
-            # TOPE DURO DE 45s (2026-08-22): con el sticker de Alicia
-            # (degradados en pelo/piel) esto llegó a tardar minutos incluso
-            # después de arreglar el filtro de ruido — no se pudo aislar la
-            # causa exacta a tiempo, así que en vez de dejar el chat
-            # congelado con un cliente esperando, se avisa y se corta.
-            try:
-                rv = await asyncio.wait_for(
-                    asyncio.to_thread(cv.convertir, _rimg, True, 128, "lineal"), timeout=45)
-            except asyncio.TimeoutError:
-                return {"respuesta": "La imagen se está tardando más de 45s en vectorizar "
+            # lo que de verdad se corta/graba en la máquina. Corre en
+            # SUBPROCESO aparte (ver _vectorizar_imagen_subproceso arriba),
+            # no en un hilo del proceso de AURORA.
+            rv = await _vectorizar_imagen_subproceso(_rimg, "lineal", timeout=60)
+            if rv.get("status") == "TIMEOUT":
+                return {"respuesta": "La imagen se está tardando más de 60s en vectorizar "
                                      "(pasa con degradados/brillos muy detallados) — "
-                                     "mándame el DXF si ya lo tienes, o dime y lo corro "
-                                     "aparte sin que se te congele el chat."}
+                                     "mándame el DXF si ya lo tienes, o pide primero "
+                                     "«convierte a dxf» aparte y luego cotiza desde ese archivo."}
             if rv.get("status") != "OK" or not rv.get("archivo"):
                 return {"respuesta": f"No pude vectorizar la imagen: {rv.get('detalle', rv.get('status'))}"}
             ruta = rv["archivo"]
@@ -3666,6 +4064,86 @@ class Consciencia:
             txt = f"_De_ `{Path(ruta).name}`\n\n{txt}"
         return {"respuesta": txt}
 
+    async def _cotizar_laser_medidas_real(self, mensaje: str) -> Dict:
+        """CHAT ↔ LÁSER: cotiza con las medidas que dio en el texto, sin
+        esperar a que exista un DXF (foto sin vectorizar, o cliente presente
+        que solo quiere el número). Reusa cotizador_corte.py pieza por pieza
+        —el mismo que ya está probado— armando un rectángulo real por cada
+        medida que dio.
+        """
+        import importlib.util as _ilu
+        import ezdxf as _ezdxf
+        import tempfile as _tempfile
+        from pathlib import Path as _P
+
+        try:
+            spec = _ilu.spec_from_file_location(
+                "cotizador_corte", ROOT / "EDITOR" / "cotizador_corte.py")
+            cc = _ilu.module_from_spec(spec)
+            spec.loader.exec_module(cc)
+        except Exception as e:
+            return {"respuesta": f"No pude abrir el cotizador de láser: {e}"}
+
+        piezas = self._todas_las_medidas_cm(mensaje)
+        if not piezas:
+            return {"respuesta": (
+                "¿De qué medida es la pieza? Dime ancho×alto y te doy el "
+                "número de una vez.")}
+
+        m = _norm_txt(mensaje)
+        # Grosor: 2.x -> hoja de 2.7mm (la que corta a 2.5 con el kerf,
+        # regla suya del 2026-08-13); 5.x -> 5.5mm; si no dice, 2.7 por ser
+        # la que más usa.
+        material = "MDF 5.5mm" if re.search(r"\b5[.,]?\d?\s*mm?\b", m) else "MDF 2.7mm"
+        lleva_vinil = _contiene_trigger(m, ("vinil", "vinilo"))
+        color = next((c for c in _COLORES_VINIL if c in m), "")
+        # Solo el color como consulta: el catálogo real dice "vinil de
+        # recorte METÁLICO dorado" y _costo_de_rollo exige que la consulta
+        # completa esté CONTENIDA tal cual en el nombre (substring), así que
+        # armar "vinil de recorte dorado" no calzaba con "metálico" de por
+        # medio y no cobraba nada de vinil (bug real encontrado en la propia
+        # prueba en vivo del 2026-08-23: dio $63.22 en vez de ~$99).
+        materiales_extra = [color] if (lleva_vinil and color) else (
+            ["vinil"] if lleva_vinil else None)
+
+        ruta_diseno = self._ultimo_archivo(mensaje) if hasattr(self, "_ultimo_archivo") else ""
+
+        resultados = []
+        tmp_dir = _P(_tempfile.gettempdir())
+        for idx, (ancho_cm, alto_cm) in enumerate(piezas):
+            doc = _ezdxf.new("R2000")
+            doc.units = 4
+            msp = doc.modelspace()
+            w, h = ancho_cm * 10, alto_cm * 10
+            msp.add_lwpolyline([(0, 0), (w, 0), (w, h), (0, h)], close=True)
+            ruta_tmp = tmp_dir / f"_cotiza_rapida_{idx}.dxf"
+            doc.saveas(str(ruta_tmp))
+            r = cc.cotizar_corte(
+                str(ruta_tmp), material=material,
+                materiales_extra=materiales_extra,
+                diseno=(ruta_diseno if idx == 0 else None))
+            resultados.append(((ancho_cm, alto_cm), r))
+            try:
+                ruta_tmp.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        malos = [r for _, r in resultados if r.get("status") != "ok"]
+        if malos:
+            return {"respuesta": f"No pude cotizar: {malos[0].get('mensaje')}"}
+
+        total = sum(r["total"] for _, r in resultados)
+        t = [f"✂️ **{material}"
+             + (f" + vinil{(' ' + color) if color else ''}" if lleva_vinil else "")
+             + f"** · {len(piezas)} pieza{'s' if len(piezas) > 1 else ''}\n"]
+        for (a, b), r in resultados:
+            t.append(f"   {a:g}×{b:g}cm → ${r['total']:.2f}")
+        t.append(f"\n**TOTAL ${total:.2f}**")
+        t.append("\n_Fórmula real: materiales×1.20 + corte $8/min + diseño._ "
+                 "Si son piezas repetidas del mismo diseño, el diseño solo se "
+                 "cobró una vez.")
+        return {"respuesta": "\n".join(t)}
+
     async def _cotizar_dxf_real(self, mensaje: str) -> Dict:
         """CHAT ↔ LÁSER: mide los METROS DE CORTE reales de un DXF y lo cotiza.
 
@@ -3730,6 +4208,20 @@ class Consciencia:
         # —25 mm/s, ×3, merma fija del 40% y un "mínimo $450" que Anuar nunca
         # dictó— y por eso el chat y el panel daban precios distintos para el
         # mismo archivo: $284 aquí contra $195 allá (2026-08-14).
+        # Si en el mismo mensaje ya dijo vinil/color y/o instalación, se usa
+        # de una vez — no tiene sentido volver a preguntar algo que ya
+        # contestó (real 2026-08-23: "en mdf de 2.5 + vinilmetalico +
+        # instalacion" seguía preguntando "¿lleva vinil? ¿instalación?").
+        m_txt = _norm_txt(mensaje)
+        lleva_vinil = _contiene_trigger(m_txt, ("vinil", "vinilo"))
+        color_vinil = next((c for c in _COLORES_VINIL if c in m_txt), "")
+        materiales_extra = ([color_vinil] if (lleva_vinil and color_vinil)
+                             else (["vinil"] if lleva_vinil else None))
+        lleva_instalacion = _contiene_trigger(m_txt, (
+            "colocad", "colocacion", "instalad", "instalacion", "puesto",
+            "puesta", "pegado", "planchado", "planchada", "aplicado",
+            "ponerla", "ponerlas", "poner"))
+
         def _cotizar_real():
             import importlib.util as _ilu
             _sp = _ilu.spec_from_file_location(
@@ -3738,7 +4230,9 @@ class Consciencia:
             _sp.loader.exec_module(_m)
             # diseño=True: si no sabemos qué trajo el cliente, se cobra como
             # diseño desde cero ($20). Cobrar de menos sale de su bolsa.
-            return _m.cotizar_corte(str(ruta), "MDF 2.7", diseno=True)
+            return _m.cotizar_corte(str(ruta), "MDF 2.7", diseno=True,
+                                    materiales_extra=materiales_extra,
+                                    instalacion=lleva_instalacion)
 
         r = await asyncio.to_thread(_cotizar_real)
         if r.get("status") != "ok":
@@ -3752,14 +4246,24 @@ class Consciencia:
         if cabe.get("sabemos") and not cabe.get("cabe"):
             aviso_cama = f"\n\n⚠️ {cabe.get('detalle', 'No cabe en tu láser.')}"
 
+        # Solo se pregunta lo que de verdad falta — lo que ya dijo no se
+        # vuelve a pedir.
+        faltan = []
+        if not lleva_vinil:
+            faltan.append("si lleva **vinil**")
+        faltan.append("si trae **diseño** o hay que hacerlo")
+        if not lleva_instalacion:
+            faltan.append("si va con **instalación**")
+        aviso_falta = (f"\n\n_Falta saber {', '.join(faltan)}. Dímelo y lo ajusto._"
+                       if faltan else "")
+
         return {"respuesta": (
             f"📐 **{r['archivo']}**\n"
             f"   {r['medida_cm']} cm · {r['piezas_aprox']} piezas\n\n"
             f"✂️ **{r['longitud_corte_m']} m** de corte  ·  "
             f"**{r['tiempo_min']} min** (a tus {r['velocidad_mm_s']:.0f} mm/s)\n\n"
-            f"{r['desglose']}\n\n"
-            f"_Falta saber si lleva **vinil**, si trae **diseño** o hay que hacerlo, "
-            f"y si va con **instalación**. Dímelo y lo ajusto._"
+            f"{r['desglose']}"
+            f"{aviso_falta}"
             f"{aviso_cama}")}
 
     async def _alta_lead_real(self, mensaje: str) -> Dict:
@@ -5496,24 +6000,18 @@ class Consciencia:
             # sola capa "LAYER_1" (380 entidades sueltas con el sticker de
             # Alicia) — mata la pieza si se corta todo. imagen_a_dxf separa
             # CORTE (contorno) de GRABADO (detalle) y usa vtracer, no
-            # Inkscape. Sin tope de tiempo aquí a propósito: Anuar pidió que
-            # este paso vaya SEPARADO del cálculo de piezas, justo para no
-            # pelear con un tope corto — se corre solo, con calma.
-            try:
-                spec = _ilu.spec_from_file_location(
-                    "imagen_a_dxf", raiz / "EDITOR" / "imagen_a_dxf.py")
-                iad = _ilu.module_from_spec(spec); spec.loader.exec_module(iad)
-            except Exception as e:
-                return {"respuesta": f"No pude cargar el vectorizador: {str(e)[:120]}"}
-            try:
-                r = await asyncio.wait_for(
-                    asyncio.to_thread(iad.convertir, ruta, True, 128, "lineal"), timeout=90)
-            except asyncio.TimeoutError:
-                return {"respuesta": "Se pasó de 90s vectorizando (imagen con mucho "
-                                     "detalle/degradado) — lo estoy corriendo aparte, "
-                                     "te aviso en cuanto salga."}
-            except Exception as e:
-                return {"respuesta": f"Falló la conversión (no te lo adorno): {str(e)[:150]}"}
+            # Inkscape. Corre en SUBPROCESO aparte (ver
+            # _vectorizar_imagen_subproceso), no en un hilo del proceso de
+            # AURORA — medido en vivo: dentro del servidor llegó a tardar
+            # ~2min con la imagen de Alicia aun con el filtro de ruido ya
+            # puesto; aislado en su propio proceso no compite por el mismo
+            # CPU. 150s de tope: este paso va SEPARADO del cálculo de
+            # piezas (a propósito, para no pelear con un tope corto).
+            r = await _vectorizar_imagen_subproceso(ruta, "lineal", timeout=150)
+            if r.get("status") == "TIMEOUT":
+                return {"respuesta": "Se pasó de 150s vectorizando (imagen con mucho "
+                                     "detalle/degradado) — probablemente el equipo está "
+                                     "muy cargado ahora mismo, intenta de nuevo en un rato."}
             if r.get("status") == "OK":
                 return {"respuesta": f"✅ Convertido de verdad a DXF (CORTE+GRABADO separados):\n"
                                      f"{r.get('archivo')}\n({r.get('kb','?')} KB)"
@@ -5729,7 +6227,7 @@ class Consciencia:
         try:
             r = await self._groq.chat.completions.create(
                 # Modelo GRANDE a propósito: editar código exige reproducir el
-                # archivo entero, y el chico (llama-3.1-8b-instant) devolvía 413
+                # archivo entero, y el chico (openai/gpt-oss-20b) devolvía 413
                 # con archivos de 20 KB. Aquí la precisión importa más que la
                 # velocidad — es el único lugar donde se escribe código real.
                 model=_MODELO_SELECTOR,

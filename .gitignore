@@ -95,9 +95,6 @@ VIDEO/
 # Otros
 node_modules/
 
-# Secrets
-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
-
 
 # --- Añadido: datos de clientes y entradas (no van a GitHub) ---
 *.db

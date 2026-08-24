@@ -25,7 +25,7 @@ FORMATOS = {
     "A3":        (29.7, 42.0),
     "carta":     (21.59, 27.94),
     "oficio":    (21.59, 33.02),
-    "tabloide":  (27.94, 43.18),   # Ledger 11x17"
+    "tabloide":  (33.0, 48.0),      # tabloide real del taller de Anuar (confirmado 2026-08-23), NO es Ledger 11x17"
     "gran_formato": (200.0, 100.0),  # rollo típico taller (editable con formato_cm)
 }
 

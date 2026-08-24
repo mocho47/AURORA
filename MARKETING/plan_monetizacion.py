@@ -361,7 +361,7 @@ def copy_borrador(plataforma: str = "TikTok", tipo: str = "Antes/Después",
         import requests
         r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                           headers={"Authorization": f"Bearer {key}"},
-                          json={"model": "llama-3.1-8b-instant",
+                          json={"model": "openai/gpt-oss-20b",
                                 "messages": [{"role": "user", "content": prompt}],
                                 "temperature": 0.85}, timeout=30)
         return {"status": "ok", "plataforma": plataforma, "tipo": tipo,

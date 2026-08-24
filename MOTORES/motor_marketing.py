@@ -19,7 +19,7 @@ Producto: retrofit LED de faros, iluminación automotriz premium. Margen 120%. P
 Buyer persona: hombre 20-40 años, le gusta su carro, quiere diferenciarse, poder adquisitivo medio-alto.
 NUNCA inventes métricas. SIEMPRE propone contenido accionable y grabable HOY."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 PLATAFORMAS = {
     "tiktok":     {"duracion": "15-60s", "formato": "vertical 9:16", "hook": "primeros 3s"},

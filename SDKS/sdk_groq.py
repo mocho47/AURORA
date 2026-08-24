@@ -33,7 +33,7 @@ async def call_groq(prompt: str, mensaje: str, historial: list = None, api_key: 
             messages = historial + messages
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "system", "content": prompt}] + messages,
             max_tokens=500,
             temperature=0.7,

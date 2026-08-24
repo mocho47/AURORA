@@ -489,6 +489,16 @@
       "aprendido": 1786662863.3108275,
       "ultima_vez": 1786662863.3108275,
       "a_la_primera": true
+    },
+    {
+      "clave": "rebisa el archivo c users administrador downloads mibautizo dxf",
+      "como_lo_dijo": "rebisa el archivo C:\\Users\\Administrador\\Downloads\\mibautizo.dxf",
+      "que_si_funciono": "rebisa el archivo C:\\Users\\Administrador\\Downloads\\mibautizo.dxf",
+      "herramienta": "CEREBRO/pc_access:PcAccess.leer_archivo",
+      "veces": 1,
+      "aprendido": 1787509596.7030056,
+      "ultima_vez": 1787509596.7030056,
+      "a_la_primera": true
     }
   ]
 }

@@ -48,7 +48,7 @@ SEGURIDAD: si detectas crisis real (que hable de hacerse daño, de no querer seg
 
 Máximo ~350 palabras. Concreto, cálido, honesto. Eres su amigo que lo conoce y no lo suelta."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorCoaching:

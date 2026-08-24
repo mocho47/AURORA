@@ -194,7 +194,7 @@ Máximo 2 habilidades y 2 áreas. Solo lo realmente observable en el mensaje. Si
 
         try:
             r = await self._groq.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=400, temperature=0.2,
             )
@@ -265,7 +265,7 @@ Máximo 2 habilidades y 2 áreas. Solo lo realmente observable en el mensaje. Si
         area_principal = areas[0]
         try:
             r = await self._groq.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[{"role": "user", "content": (
                     f"AURORA detectó que Anuar necesita ayuda frecuente en: '{area_principal['descripcion']}' (categoría: {area_principal['categoria']}).\n"
                     f"Frecuencia: {area_principal['frecuencia']} veces.\n"

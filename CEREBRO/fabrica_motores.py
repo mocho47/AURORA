@@ -34,7 +34,7 @@ CUSTOM_DIR = ROOT / "MOTORES_CUSTOM"
 ENV_FILE = ROOT / ".env"
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "openai/gpt-oss-20b"
 
 
 # ── utilidades ────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ _MANIFIESTO_CREACION = """Eres el CEREBRO DE CREACIÓN de AURORA: construyes mot
 - ddgs → búsqueda web, imágenes y noticias EN VIVO (from ddgs import DDGS).
 - psutil → estado del sistema (CPU, RAM, disco, procesos).
 - sqlite3 (stdlib) → persistencia local real (crea tu propia .db si el motor necesita guardar datos).
-- Groq (LLM) → razonamiento/generación de texto: POST a https://api.groq.com/openai/v1/chat/completions, modelo "llama-3.1-8b-instant", con la GROQ_API_KEY del entorno (os.environ). Úsalo para motores que entiendan lenguaje, redacten, clasifiquen o decidan.
+- Groq (LLM) → razonamiento/generación de texto: POST a https://api.groq.com/openai/v1/chat/completions, modelo "openai/gpt-oss-20b", con la GROQ_API_KEY del entorno (os.environ). Úsalo para motores que entiendan lenguaje, redacten, clasifiquen o decidan.
 Elige del arsenal SOLO lo que el motor de verdad necesite; si con stdlib basta, no metas dependencias.
 
 ═══ DISEÑO ═══

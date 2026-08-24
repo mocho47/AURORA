@@ -27,7 +27,7 @@ Metodología de venta:
 5. Seguimiento: registrar en ORACLE. Ningún lead se enfría.
 6. Velocidad: respuesta < 2 minutos en WhatsApp = ventaja competitiva enorme."""
 
-_MODELO = "llama-3.1-8b-instant"
+_MODELO = "openai/gpt-oss-20b"
 
 
 class MotorVentas:

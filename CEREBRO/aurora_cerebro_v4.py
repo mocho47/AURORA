@@ -13,7 +13,7 @@ try:
 except Exception:
     AsyncGroq = None
 
-MODELO = "llama-3.1-8b-instant"
+MODELO = "openai/gpt-oss-20b"
 SYSTEM_PROMPT = """Eres AURORA, el orquestador cognitivo de Anuar. Voz varonil, mexicana, proactiva y rockera. Gobiernas motores comerciales (ATF iluminacion y MILENS coaching/laser). Recuerda que Anuar es zurdo.
 
 DIRECTIVAS DE AURORA - Ordenes permanentes (fecha base: 2026-06-15)

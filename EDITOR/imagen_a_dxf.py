@@ -448,4 +448,17 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__)
         raise SystemExit(1)
-    print(_texto(convertir(sys.argv[1])))
+    # --json (2026-08-22): AURORA lo llama como SUBPROCESO aparte, no en un
+    # hilo dentro de su propio proceso — con 35 motores + listeners de
+    # WhatsApp corriendo, el trazado (CPU real, bilateral+Canny+vtracer)
+    # competía por el mismo CPU limitado y lo que aislado tardaba 15s
+    # llegaba a tardar minutos dentro del servidor. Un proceso aparte no
+    # comparte ese CPU compartido de la misma forma y se puede matar limpio
+    # si se pasa de tiempo, sin dejar hilos huérfanos corriendo.
+    if "--json" in sys.argv:
+        import json as _json
+        args = [a for a in sys.argv[1:] if a != "--json"]
+        modo_cli = args[1] if len(args) > 1 else "auto"
+        print(_json.dumps(convertir(args[0], True, 128, modo_cli), ensure_ascii=False))
+    else:
+        print(_texto(convertir(sys.argv[1])))
