@@ -2348,7 +2348,21 @@ class Consciencia:
     async def inicializar(self) -> None:
         if self._listo:
             return
+        # El .env se carga AQUI, donde de verdad se necesita la llave, y no en
+        # quien llame. Antes solo lo cargaba run_aurora.py: arrancar la
+        # Consciencia por cualquier otro camino (una prueba, PRUEBAS_VIVAS/
+        # arnes.py, un script) levantaba una AURORA sin llaves que se caia
+        # callada al modelo local de Ollama —180 s por llamada— sin avisar.
+        from CONFIG.entorno import cargar as _cargar_entorno, falta as _falta
+        _cargar_entorno()
         api_key = os.getenv("GROQ_API_KEY", "")
+        if not api_key:
+            # En voz alta. Degradarse en silencio es lo que hizo que nadie
+            # notara durante semanas que contestaba el modelo chico.
+            logger.warning(
+                "SIN GROQ_API_KEY: AURORA va a contestar con el modelo LOCAL, "
+                "que es mas lento y se equivoca mas. Revisa el .env. "
+                f"Variables que faltan: {_falta('GROQ_API_KEY')}")
         # max_retries=1: medido el 2026-07-31, un 429 de Groq costaba 16-22 s de
         # espera (tres reintentos con backoff) antes de responder. Todo lo que NO
         # llama a Groq responde en menos de un segundo. Si Groq dice que no, es

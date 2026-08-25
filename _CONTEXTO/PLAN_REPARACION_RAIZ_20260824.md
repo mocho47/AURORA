@@ -143,6 +143,48 @@ propósito— **fallan** si se rompe el comportamiento adrede.
 
 **Vuelta atrás:** no aplica, solo agrega.
 
+#### Estado al 25-ago, con números medidos
+
+| Prueba | Archivo | Resultado real |
+|---|---|---|
+| 1. Chat de punta a punta | `tests/test_chat_punta_a_punta.py` | ✅ **5 pasan, 3 xfail**, 2 min 47 s |
+| 2. Endpoints del taller por HTTP | `tests/test_servidor_taller_http.py` | ✅ **12 de 12**, 10 s |
+| 3. Cadena foto→DXF | `tests/test_foto_a_dxf_real.py` | ⏳ escrita; midiendo tiempos reales |
+
+Los 3 `xfail` de la prueba 1 **son el bug 2.1**, atrapado por la red: `abre mi
+agenda de hoy`, `abre mi agenda` y `abreme la agenda` contestan *"Dime qué
+página abro"* con motor `pc_access`. Comprobado también a mano contra AURORA
+en vivo, no solo en la prueba. Están marcados `strict=True`: el día que la
+Fase 2 lo arregle, pytest **avisa** de que ya no debería estar marcado como
+fallo esperado. Así el arreglo no puede pasar desapercibido.
+
+#### Tres cosas que salieron al escribir la red — y que la justifican
+
+**a) Dos errores míos, en mis propias pruebas.** La primera versión del caso
+de la agenda quitaba a mano el acento de "qué" y se le olvidaba el de
+"página": la comparación nunca coincidía y **la prueba pasaba con el bug
+delante**. Y la de vinilos buscaba campos `precio`/`ancho` cuando se llaman
+`precio_metro`/`ancho_rollo_cm`, y acusaba al código de un fallo que no tenía.
+Las dos salieron por correrlas contra AURORA de verdad. Una prueba escrita y
+no ejercida vale menos que ninguna, porque además da confianza falsa.
+
+**b) AURORA se degradaba en silencio sin `.env`.** Solo `run_aurora.py`
+cargaba el `.env`. `consciencia.py` —quien de verdad necesita `GROQ_API_KEY`—
+daba por hecho que alguien lo había cargado antes. Cualquier otro arranque
+(una prueba, `PRUEBAS_VIVAS/arnes.py`, un script) levantaba una AURORA **sin
+llaves y sin decirlo**: se caía al modelo local de Ollama, 180 s por llamada.
+Un "hola" tardó **más de diez minutos** y contestó igual de campante.
+*Arreglado de raíz:* `CONFIG/entorno.py` carga el `.env` desde donde se usa, y
+si falta la llave AURORA lo **dice en el log** en vez de degradarse callada.
+Es la misma causa de todo el plan: una lista que alguien tiene que acordarse
+de mantener —"acuérdate de cargar el entorno"— siempre acaba olvidada.
+
+**c) 29 segundos para decir "hola".** Medido en el servidor en vivo, no en la
+prueba: `POST /chat` con "hola" = **28.7 s**; `"cuanto llevo vendido este
+mes"` = **1.1 s**. Todo lo que pasa por el modelo cuesta ~29 s; lo que
+resuelve un candado, uno. No se toca ahora —no es un bug, es un costo— pero
+queda medido y anotado: es candidato serio a fase propia después de la 5.
+
 ### FASE 2 — El candado que sabe lo que hace
 *Causa B. Es lo que rompe la confianza en el uso diario.*
 
