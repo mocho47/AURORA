@@ -80,22 +80,49 @@ verificar la siguiente.
 > demostró no ver nada. **La red se pone antes de caminar por el alambre.**
 
 ### FASE 0 — Cerrar la puerta
-*Causas D, E, K. No toca lógica de negocio, así que no puede romper AURORA.*
+*Causas D, E, K.*
 
-1. Reemplazar `SETUP/backup_aurora.py` (ya escrito, ver §6).
-2. **Correr el respaldo y abrir el resultado.** No se da por bueno porque el
-   script "ya no truena".
-3. Corregir la tarea programada de Windows, que también apunta a `C:\AURORA`.
-4. Endurecer el PIN (ya escrito, ver §6) y elegir uno de 8+.
-5. Sacar `CONFIG/identidad.json` y `CONFIG/contactos.json` de git; purgar del
-   historial esos y la llave vieja de Groq.
-6. Borrar `_OBSOLETOS/AURORA_duplicado/` (copia byte a byte).
+1. ✅ **HECHO** — `SETUP/backup_aurora.py` reemplazado.
+2. ✅ **HECHO Y VERIFICADO** — respaldo corrido de verdad: 41 elementos, **15
+   bases verificadas íntegras**, y se abrió el resultado para confirmar que
+   `aurora_memoria.db` (1.4 MB), el `.env`, los CONFIG y el modelo de voz de
+   Vosk están adentro.
+3. ✅ **HECHO Y VERIFICADO** — tarea programada apuntando a la ruta real,
+   ejecutada a mano: **`LastTaskResult = 0`**.
+4. ⏳ **ESPERA DECISIÓN** — endurecer el PIN. Ver la salvaguarda de abajo.
+5. ✅ **HECHO (parte 1 de 2)** — `CONFIG/identidad.json`,
+   `CONFIG/contactos.json` y `CONFIG/usuarios.json` fuera del seguimiento de
+   git y en `.gitignore`; siguen en disco, AURORA no se entera. ⏳ **La purga
+   del historial espera autorización** (es irreversible).
 
-**Terminada cuando:** existe un ZIP de respaldo con las 14 bases verificadas
-íntegras, `LastTaskResult` de la tarea es 0, y `git log` ya no contiene ninguna
-credencial.
+   > **Corrección del 25-ago: se me había escapado el gemelo.** El día 24 saqué
+   > `identidad.json` y olvidé `CONFIG/usuarios.json`, que guarda el hash del
+   > PIN de Anuar **y el de Rocío** y estaba versionado en el repo público.
+   > Es exactamente el error que la regla de "revisar sin gemelos" existe para
+   > evitar: arreglé el caso que tenía enfrente en vez de buscar todos los
+   > archivos con credenciales. La búsqueda completa (`grep -rl "pin_hash"
+   > --include=*.json`) ya se hizo: no queda ninguno más fuera de `BACKUPS/`.
+6. ✅ **HECHO** — `_OBSOLETOS/AURORA_duplicado/` (con la llave de Groq en
+   texto plano) movida fuera del repo a `C:\AURORA_ARCHIVO_FUERA_DEL_REPO\`.
+   No se borró. Verificado: la llave ya no aparece en el commit actual.
 
-**Vuelta atrás:** trivial, nada de esto cambia comportamiento.
+> **SALVAGUARDA que le faltaba a este plan — para el paso 4.**
+> Yo había clasificado la Fase 0 como "riesgo casi nulo". **Eso era falso para
+> el cambio de autenticación.** Si el módulo nuevo tuviera un fallo, te
+> quedarías fuera de tu propio panel, y con AURORA corriendo tu negocio eso no
+> es un riesgo aceptable.
+> Antes de sustituir `AUTH/identidad_core.py` hay que **probar que tu PIN
+> actual sigue siendo aceptado por el módulo nuevo**, sin tocar el que está en
+> uso. Es una prueba de 30 segundos con el PIN real, y va antes del cambio, no
+> después. Sin esa prueba, este paso no se ejecuta.
+> *(Ya verificado aparte: `aurora_server.py:1997` llama `login(req.pin)` con un
+> solo argumento posicional, así que la firma nueva es compatible.)*
+
+**Terminada cuando:** respaldo verificado ✅, `LastTaskResult = 0` ✅, y
+`git log` ya no contiene ninguna credencial ⏳ (falta la purga).
+
+**Vuelta atrás:** trivial para lo hecho; nada cambió comportamiento y AURORA
+quedó comprobada sana después (`/health` OK).
 
 ### FASE 1 — Poner la red
 *Causa C. Sin esto, ninguna fase posterior se puede dar por buena.*
@@ -180,6 +207,15 @@ aunque **el archivo no existe**.
 un cambio hecho dentro de una clase de motor se puede demostrar llegando al
 chat (o se documenta que los motores son solo prompts y se borra la lógica
 muerta).
+
+> **Caso concreto encontrado el 25-ago, que pertenece a esta fase.**
+> `AUTH/usuarios.py` y `AUTH/identidad_core.py` hacen exactamente el mismo
+> trabajo —guardar y verificar un PIN— y **contestan distinto**: uno devuelve
+> `status: "ok"` en minúscula y el otro `status: "OK"`. Escribí una herramienta
+> nueva y esa diferencia la hizo creer que un cambio correcto había fallado; la
+> detecté solo porque la probé antes de entregarla. Es la causa F en pequeño:
+> dos módulos gemelos sin un contrato común. Lo que corresponde no es poner
+> `.lower()` en cada llamada —eso es el parche— sino que ambos hablen igual.
 
 ### FASE 5 — La voz, completa
 *Causas H, I, J, K. Va al final porque la voz habla con la misma boca que el

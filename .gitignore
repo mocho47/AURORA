@@ -116,6 +116,9 @@ MODELOS/
 CONFIG/identidad.json
 # contactos.json esta pensado para telefonos reales de familia y clientes.
 CONFIG/contactos.json
+# usuarios.json guarda el hash del PIN de Anuar y el de Rocio: es el gemelo
+# exacto de identidad.json y se habia quedado fuera de esta lista.
+CONFIG/usuarios.json
 
 # Fotos con fecha que deja el propio sistema al editar catalogos: son
 # respaldos locales, no codigo. El respaldo diario ya los cubre.
