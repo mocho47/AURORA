@@ -109,3 +109,14 @@ scratchpad/
 
 # Modelos de voz y demas binarios pesados: no van en un repo de codigo
 MODELOS/
+
+# --- Credenciales y datos personales: NUNCA a git (auditoria 2026-08-24) ---
+# identidad.json guarda el hash y el salt del PIN de dueno, que da control
+# total de la PC. Estuvo versionado desde el primer commit (23-jul-2026).
+CONFIG/identidad.json
+# contactos.json esta pensado para telefonos reales de familia y clientes.
+CONFIG/contactos.json
+
+# Fotos con fecha que deja el propio sistema al editar catalogos: son
+# respaldos locales, no codigo. El respaldo diario ya los cubre.
+CONFIG/*.bak-*.json

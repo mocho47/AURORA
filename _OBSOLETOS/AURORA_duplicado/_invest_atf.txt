@@ -1,8 +1,0 @@
-Tiras Secuenciales Premium (2300) -> PARCIAL | fuentes:3 | 
-Tiras Secuenciales Std (1600) -> PARCIAL | fuentes:3 | 
-Ojos Demonio (1 Color) -> PARCIAL | fuentes:3 | Dispositivo de iluminación interior o exterior diseñado para vehículos, compuest
-Ojos Demonio RGB BT -> PARCIAL | fuentes:3 | Luces LED Ojo de Demonio RGB para Coche
-Fibra Óptica Interior -> PARCIAL | fuentes:3 | 
-LED H4 Premium -> PARCIAL | fuentes:3 | Bombillas LED H4 Premium con 10,000 lúmenes reales de 55w, DC 12-24V, consume la
-LED H7 Premium -> COMPLETA | fuentes:3 | La bombilla LED H7 es una mejora notable respecto a las halógenas gracias al inc
-LED Intermedio (General) -> ERROR timed out

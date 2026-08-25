@@ -1,0 +1,85 @@
+═══════════════════════════════════════════════════════════════════════════
+LÍNEAS A AGREGAR A .gitignore  —  NO APLICADO
+═══════════════════════════════════════════════════════════════════════════
+
+Agregar al final de C:\AURORA.worktrees\.gitignore:
+
+# --- Credenciales y datos personales: NUNCA a git ---
+# identidad.json guarda el hash y el salt del PIN de dueño, que da control
+# total de la PC. Estuvo versionado desde el primer commit (23-jul-2026).
+CONFIG/identidad.json
+# contactos.json está pensado para teléfonos reales de familia y clientes.
+CONFIG/contactos.json
+
+
+═══════════════════════════════════════════════════════════════════════════
+PERO AGREGARLO NO BASTA — y esto es lo importante
+═══════════════════════════════════════════════════════════════════════════
+
+.gitignore solo evita que un archivo se suba DE AQUÍ EN ADELANTE. No borra lo
+que ya está en el historial. Estos tres siguen siendo recuperables por
+cualquiera que tenga el repo, aunque se borren hoy:
+
+  1. CONFIG/identidad.json            (hash+salt del PIN, 4 commits)
+  2. _OBSOLETOS/AURORA_duplicado/.gitignore   (la llave vieja de Groq, en texto plano)
+  3. La llave de Groq en el .gitignore de la raíz (ya quitada del archivo
+     actual, pero viva en commits anteriores)
+
+El repo estuvo PÚBLICO en GitHub. Hay que asumir que lo que estaba ahí pudo
+ser leído o clonado por alguien más.
+
+
+═══════════════════════════════════════════════════════════════════════════
+LOS PASOS, EN ORDEN — requieren tu autorización explícita
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 1 — Lo que NO se puede posponer, y no depende de git:
+   La llave de Groq ya la revocaste (bien). Falta el PIN: mientras el hash
+   viejo siga siendo recuperable del historial, hay que asumir que ese PIN
+   está comprometido. Cámbialo por uno de 8 o más, con el archivo
+   identidad_core_endurecido.py ya aplicado.
+
+   Mientras no cambies el PIN, purgar el historial no sirve de mucho: el hash
+   ya salió de tu casa.
+
+PASO 2 — Sacar los archivos del seguimiento (reversible, seguro):
+
+   git rm --cached CONFIG/identidad.json CONFIG/contactos.json
+   git rm -r --cached _OBSOLETOS/AURORA_duplicado
+   # (agregar las líneas de arriba al .gitignore antes de commitear)
+   git commit -m "Saca credenciales y datos personales del seguimiento de git"
+
+PASO 3 — Purgar el historial (IRREVERSIBLE — solo con tu OK explícito):
+
+   Esto REESCRIBE todos los commits del repo. Los identificadores cambian y
+   hay que forzar la subida a GitHub. Si tuvieras otra copia del repo en otra
+   PC, quedaría desincronizada.
+
+   Antes de correrlo: hacer un respaldo completo de la carpeta (no solo git).
+
+   pip install git-filter-repo
+   git filter-repo --invert-paths \
+       --path CONFIG/identidad.json \
+       --path _OBSOLETOS/AURORA_duplicado \
+       --force
+   # revisar que el historial quedó bien ANTES de subirlo:
+   git log --oneline | head -20
+   git push origin main --force
+
+PASO 4 — Considerar seriamente:
+   El repo fue público. Aunque se purgue el historial, GitHub conserva copias
+   en caché de commits de repos que fueron públicos, y cualquiera pudo haber
+   clonado. La opción más limpia y definitiva es **borrar el repositorio de
+   GitHub y crear uno nuevo, privado, desde el estado ya limpio** — así no
+   queda ningún historial viejo del que rescatar nada.
+
+   Es tu decisión: pierdes el historial de commits público, ganas certeza.
+
+
+═══════════════════════════════════════════════════════════════════════════
+LO QUE YO NO VOY A HACER SIN QUE ME LO DIGAS
+═══════════════════════════════════════════════════════════════════════════
+
+Los pasos 3 y 4 reescriben o borran cosas que no se pueden deshacer. No los
+voy a ejecutar por mi cuenta aunque parezcan obviamente correctos. Dime
+explícitamente cuál quieres y lo hago; mientras tanto, quedan escritos aquí.
