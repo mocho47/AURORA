@@ -199,10 +199,56 @@ morir ahí. Son ~15 líneas (ya escritas, ver §6) y matan la clase entera de
 bugs de secuestro, no solo el de "abre".
 
 **Terminada cuando:** las 425 pruebas siguen verdes, la prueba nueva de
-punta a punta cubre "abre mi agenda de hoy" → agenda, y las 174 frases reales
+punta a punta cubre "abre mi agenda de hoy" → agenda, y las frases reales
 de `PRUEBAS_VIVAS/` siguen resolviendo al mismo candado que antes.
 
 **Vuelta atrás:** un solo bloque en un solo archivo; revertir es un `git revert`.
+
+#### ✅ HECHA Y VERIFICADA — 25-ago
+
+**Los cambios, ninguno un parche al verbo "abre":**
+
+1. **La familia prioriza, ya no obliga.** Antes hacía dos cosas: ponerse
+   primera *y* borrar al resto de la fila. Esa segunda parte era el bug. Ahora
+   solo reordena: su candado va primero, los demás siguen detrás.
+2. **`no_aplica`.** Un candado puede declarar que el mensaje no era suyo. No
+   se adivina leyendo su respuesta — la declara. El navegador lo dice cuando
+   no encontró ni dominio ni sitio conocido. Una familia equivocada deja de
+   ser fatal: el mensaje sigue su camino.
+3. **La regla que impide que vuelva a pasar.**
+   `tests/test_familias_no_arrastran.py` recorre TODAS las familias —las de
+   hoy y las que se agreguen— y falla si alguna calza con un verbo suelto.
+   Encontró exactamente un culpable, `abrir_navegador`, y ninguna otra.
+
+**Una regresión que me iba a colar, y cómo salió.** Al quitar el patrón de
+arrastre, `abre milens.com` dejaba de funcionar: el disparador propio del
+navegador solo aceptaba "navegador/chrome/ábrela", no el "abre" pelón. Esa
+capacidad existía **de rebote, gracias al mismo bug**. Devuelta bien: dominio
+escrito + cualquier verbo de abrir, y la familia ahora nombra el dominio, que
+es justo lo que la regla nueva exige. Salió por comprobar caso por caso qué
+seguía abriendo el navegador y qué no, en vez de dar por hecho que quitar algo
+malo no quita nada bueno.
+
+**La agenda, arreglada donde estaba la causa.** Ya no la secuestraba el
+navegador, pero tampoco la atendía nadie: `_es_agenda` era una lista de ~30
+frases memorizadas que no conocía "abreme LA agenda" ni "que tengo EN LA
+agenda hoy". No se le agregaron esas dos frases —ese es el parche que dejó la
+lista con 30 entradas sin cubrir lo obvio—. Ahora reconoce **la cosa**: si el
+mensaje nombra la agenda o una cita, es de la agenda, se pida como se pida. Y
+"precio de una agenda de vinipiel grabada" sigue yendo a cotizar, comprobado.
+
+**Verificación, con números:**
+
+| Qué | Resultado |
+|---|---|
+| Batería completa | **472 pasan, 0 fallan** |
+| `test_familias_no_arrastran.py` | 25 de 25 |
+| Las 180 frases reales de `PRUEBAS_VIVAS/` | **0 cambiaron de candado, 0 rotas** |
+| Frases de agenda que antes no atendía nadie | las 6 llegan a la agenda |
+
+Las 4 frases de `PRUEBAS_VIVAS/` que no van a su candado esperado **ya estaban
+así antes** de esta fase; se comparó el enrutado contra el commit anterior,
+frase por frase.
 
 ### FASE 3 — Una sola fuente para los números
 *Causa A. Es lo que cuesta dinero cada día que pasa.*

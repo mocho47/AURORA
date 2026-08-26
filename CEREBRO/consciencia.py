@@ -651,8 +651,19 @@ def _abrir_con_busqueda(mensaje: str) -> str:
 
 def _es_abrir_navegador(mensaje: str) -> bool:
     m = _norm_txt(mensaje)
-    # 1) Un dominio explícito + intención de abrirlo (como funcionaba antes)
-    if _DOMINIO_RE.search(mensaje) and _contiene_trigger(m, _ABRIR_NAVEGADOR_TRIGGERS):
+    # 1) Un dominio explícito + intención de abrirlo.
+    #    Se aceptan las DOS listas de verbos, y esto es un arreglo real, no un
+    #    detalle: aquí solo se miraba _ABRIR_NAVEGADOR_TRIGGERS ("navegador",
+    #    "chrome", "ábrela"...), que NO incluye el "abre" pelón. O sea que
+    #    «abre milens.com» no calzaba por esta vía: funcionaba de rebote,
+    #    porque la familia se llevaba cualquier frase que empezara con "abre"
+    #    —el mismo arrastre que se comía «abre mi agenda de hoy» (bug 2.1)—.
+    #    Al quitar ese arrastre habría desaparecido una capacidad real sin que
+    #    nadie lo notara. Un dominio escrito más un verbo de abrir no es
+    #    ambiguo en ningún caso.
+    if _DOMINIO_RE.search(mensaje) and (
+            _contiene_trigger(m, _ABRIR_NAVEGADOR_TRIGGERS)
+            or _contiene_trigger(m, _ABRIR_VERBOS)):
         return True
     # 2) Un sitio conocido por su nombre + un verbo de abrir. "abre youtube".
     if _sitio_conocido(mensaje) and _contiene_trigger(m, _ABRIR_VERBOS):
@@ -770,8 +781,28 @@ def _es_publicar(mensaje: str) -> bool:
         "publicalo de verdad", "publicalo ya"))
 
 
+# La AGENDA se reconoce por la COSA que se nombra, no por la frase memorizada.
+#
+# Esta lista tenía ~30 frases exactas ("mi agenda", "agenda de hoy"...) y aun
+# así no conocía «abreme LA agenda» ni «que tengo EN LA agenda hoy». Así son
+# todas las listas escritas a mano: siempre les falta la siguiente manera de
+# decirlo, y se arreglan agregando una frase más, que es lo que las dejó con
+# 30 entradas sin cubrir lo obvio.
+#
+# Ahora basta con que el mensaje NOMBRE la agenda o una cita. Da igual cómo se
+# pida —"ábreme la agenda", "enséñame la agenda", "qué tengo en la agenda"—
+# porque lo que se reconoce es la cosa, no la manera. Las frases de abajo se
+# quedan para lo que NO trae la palabra: "qué tengo hoy", "qué tengo mañana".
+_AGENDA_COSA = re.compile(
+    r"\b(?:agenda|agendas|agendar|agendame|agendado|agendada|"
+    r"cita|citas)\b", re.I)
+
+
 def _es_agenda(mensaje: str) -> bool:
-    return _contiene_trigger(_norm_txt(mensaje), (
+    m = _norm_txt(mensaje)
+    if _AGENDA_COSA.search(m):
+        return True
+    return _contiene_trigger(m, (
         "que tengo agendado", "mi agenda", "proximas citas", "proxima cita",
         "que citas tengo", "agenda de hoy", "que tengo hoy", "resumen de agenda",
         "citas de hoy", "tengo pendientes hoy",
@@ -2007,11 +2038,34 @@ _FAMILIAS_ANUAR: tuple = (
     )),
     # «Métete a mercadolibre y búscame faros aozoom» es abrir el navegador.
     # Va antes que servicio_atf, que reconoce «aozoom» en cualquier lado.
+    #
+    # AQUÍ HABÍA UN SEGUNDO PATRÓN Y ERA EL BUG 2.1 DE LA AUDITORÍA:
+    #     ^\s*(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a)\b...
+    # Un verbo suelto, sin nombrar ninguna cosa. Se llevaba «abre mi agenda de
+    # hoy», «abreme la agenda» y lo que cayera: como la familia se atiende
+    # primero, la agenda jamás era consultada y AURORA contestaba «Dime qué
+    # página abro».
+    #
+    # No se perdió nada al quitarlo, y esto es lo importante: la familia solo
+    # sirve para ADELANTARSE en la fila. El disparador propio del candado
+    # —`_es_abrir_navegador`, arriba— sigue igual y exige un dominio real o un
+    # sitio conocido, así que «abre youtube» o «abre milens.com» se atienden
+    # exactamente como antes por la vía normal.
+    #
+    # La regla que impide que esto se repita no vive en este comentario, vive
+    # en tests/test_familias_no_arrastran.py: recorre TODAS las familias y
+    # falla si alguna calza con un verbo solo.
     ("abrir_navegador", (
-        r"^\s*(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a)\b"
-        r"(?!.*\b(?:corel|corell|cdr)\b)(?!.*[a-z]:\\)",
         r"\b(?:abre|metete\s+a|entra\s+a)\s+(?:a\s+)?"
         r"(?:pinterest|youtube|facebook|mercado\s*libre|google|amazon|aliexpress)\b",
+        # Un dominio escrito con todas sus letras SÍ nombra la cosa, así que
+        # esta sí es una familia válida y no un arrastre: «abre milens.com»,
+        # «entra a mercadolibre.com.mx». Se excluye Corel y las rutas de
+        # disco, que son de otros candados.
+        r"\b(?:abre|abreme|metete\s+a|entra\s+a|vete\s+a|llevame\s+a|ve\s+a)\s+"
+        r"(?:a\s+)?(?:la\s+pagina\s+(?:de\s+)?)?"
+        r"[a-z0-9][a-z0-9-]*\.(?:com|mx|net|org|io|co|info|app|dev)\b"
+        r"(?!.*\b(?:corel|corell|cdr)\b)(?!.*[a-z]:\\)",
     )),
     ("cotizar_laser_medidas", (
         r"^(?!.*\.dxf).*\b(?:mdf|acrilico|madera|triplay|multiplay|laser|"
@@ -2646,16 +2700,30 @@ class Consciencia:
         # módulo, sobre los mismos 38 candados de arriba.
         _candado_de_familia = _candado_por_familia(mensaje)
 
-        for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _CANDADOS:
+        # La familia reconocida manda sobre el orden de la fila: el candado que
+        # nombra se atiende PRIMERO y dispara aunque su propia lista no calce.
+        # Así se resuelven colisiones reales como "traigo una jetta quiero
+        # ponerle aozoom cuanto me sale" (que sin esto se lo lleva el cotizador
+        # de catálogo por traer "cuanto...sale", antes de llegar a servicio_atf).
+        #
+        # ANTES la familia hacía DOS cosas: adelantarse Y EXCLUIR a todos los
+        # demás (un `continue` que saltaba el resto de la fila). Esa segunda
+        # parte era el bug 2.1 de la auditoría: si la familia se equivocaba, el
+        # mensaje moría ahí. `abrir_navegador` calza con cualquier cosa que
+        # empiece por "abre", así que "abre mi agenda de hoy" contestaba "Dime
+        # qué página abro" y la agenda jamás era consultada.
+        #
+        # Ahora la familia SOLO se adelanta. Los demás siguen en la fila detrás
+        # de ella, y se les llega si el candado de la familia declara que el
+        # mensaje no era suyo (ver `no_aplica` más abajo). La familia conserva
+        # su poder; deja de ser un callejón sin salida.
+        _fila = _CANDADOS
+        if _candado_de_familia:
+            _fila = ([_c for _c in _CANDADOS if _c[0] == _candado_de_familia]
+                     + [_c for _c in _CANDADOS if _c[0] != _candado_de_familia])
+
+        for _nombre_candado, _trigger, _metodo_candado, _motor_id_candado in _fila:
             if _solo_memoria and _nombre_candado not in ("memoria", "ver_aprendizaje"):
-                continue
-            # La familia reconocida manda sobre el orden de la fila: el
-            # candado que nombra dispara aunque su propia lista no calce, y
-            # los demás se hacen a un lado. Así se resuelven colisiones reales
-            # como "traigo una jetta quiero ponerle aozoom cuanto me sale"
-            # (que sin esto se lo lleva el cotizador de catálogo por traer
-            # "cuanto...sale", antes de llegar a servicios_atf en la fila).
-            if _candado_de_familia and _nombre_candado != _candado_de_familia:
                 continue
             if _nombre_candado == "accion_fisica" and (set(motor_ids) & _MOTORES_EJECUTORES):
                 continue
@@ -2705,6 +2773,20 @@ class Consciencia:
                 real = await getattr(self, _metodo_candado)(mensaje, session_id=session_id)
             else:
                 real = await getattr(self, _metodo_candado)(mensaje)
+
+            # UN CANDADO PUEDE DECIR "ESTO NO ERA MÍO" (auditoría 2026-08-24).
+            # No se adivina leyendo el texto de su respuesta: el candado lo
+            # DECLARA con `no_aplica`. Solo se le hace caso cuando llegó aquí
+            # empujado por la familia y su propio disparador NO lo reconoció
+            # —si su lista sí calzó, su respuesta se respeta aunque sea
+            # genérica, porque entonces el usuario sí pidió eso—.
+            # Con esto, una familia equivocada deja de ser fatal: el mensaje
+            # sigue su camino por la fila en vez de morir en el primer candado.
+            if real.get("no_aplica") and _por_familia and not _trigger(mensaje):
+                logger.info(f"[LENGUA] {_nombre_candado} declaró que "
+                            f"'{mensaje[:40]}' no era suyo; sigo con la fila")
+                continue
+
             self._agregar_sesion(session_id, mensaje, real["respuesta"])
             # Un candado ejecutó de verdad. Si el mensaje anterior de esta misma
             # conversación no había ejecutado nada, las dos formas significan lo
@@ -3250,8 +3332,14 @@ class Consciencia:
         # Nadie dice "abre youtube.com" — dice "abre youtube".
         destino = dominio.group(0) if dominio else _sitio_conocido(mensaje)
         if not destino:
+            # No hay dominio escrito ni sitio conocido: no había ninguna página
+            # que abrir. Si el usuario de verdad quería abrir algo, ve esta
+            # misma respuesta. Si llegó aquí porque la familia lo empujó —"abre
+            # mi agenda de hoy"—, `no_aplica` le dice al despachador que siga
+            # buscando en vez de contestar esto.
             return {"respuesta": "Dime qué página abro (ej. youtube, facebook, "
-                                 "mercadolibre) o el dominio exacto, y la abro de verdad."}
+                                 "mercadolibre) o el dominio exacto, y la abro de verdad.",
+                    "no_aplica": True}
         r = await pc_access.abrir_url(destino)
         if r.get("status") == "OK":
             return {"respuesta": f"✅ Abierta real en el navegador: {destino}"}

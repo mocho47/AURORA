@@ -57,10 +57,21 @@ def _consciencia():
     return _CEREBRO["c"]
 
 
-def _procesar(mensaje: str, session_id: str = "prueba_e2e") -> dict:
-    """Manda un mensaje por el MISMO camino que el chat y WhatsApp."""
+def _procesar(mensaje: str, session_id: str = "") -> dict:
+    """Manda un mensaje por el MISMO camino que el chat y WhatsApp.
+
+    CADA MENSAJE VA EN SU PROPIA SESIÓN, y no es un detalle: AURORA aprende
+    sola relacionando lo que se pide seguido dentro de una misma conversación
+    (`aprende_del_usuario.registrar_exito`). La primera versión de este archivo
+    mandaba varios mensajes con la misma sesión y le enseñó que "hola"
+    significaba "cuanto llevo vendido este mes" — quedó escrito en
+    CONFIG/aprendido_del_usuario.json y hubo que borrarlo.
+
+    Una prueba no tiene derecho a modificar lo que AURORA sabe de Anuar.
+    """
     c = _consciencia()
-    return asyncio.run(c.procesar(mensaje, "anuar", session_id=session_id, canal="api"))
+    sid = session_id or f"e2e_{abs(hash(mensaje))}"
+    return asyncio.run(c.procesar(mensaje, "anuar", session_id=sid, canal="api"))
 
 
 def _plano(texto: str) -> str:
@@ -107,36 +118,69 @@ def test_la_respuesta_trae_su_ficha_completa(saludo):
 # ═════════════════════════════════════════════════════════════════════════
 # 2. El bug crítico 2.1 — el verbo "abre" secuestrando mensajes ajenos.
 #
-#    ESTA PRUEBA FALLA HOY A PROPÓSITO. Es el bug real que la auditoría
-#    encontró y que la Fase 2 del plan corrige. Está escrita ANTES del
-#    arreglo para que el día que se aplique haya cómo demostrar que sirvió
-#    — en vez de "quedó" sin prueba, que es el patrón que se está matando.
+#    Esta prueba nació FALLANDO a propósito el 25-ago, antes de tener el
+#    arreglo, para que el día que se aplicara hubiera cómo demostrar que
+#    sirvió. La Fase 2 se aplicó ese mismo día y pasó a verde: el `strict=True`
+#    que traía hizo que pytest lo anunciara en vez de dejarlo pasar callado.
+#    Se queda aquí, sin marca, cuidando que no vuelva.
 # ═════════════════════════════════════════════════════════════════════════
 
-@pytest.mark.xfail(reason="Bug 2.1 de la auditoría: la familia 'abrir_navegador' "
-                          "secuestra el mensaje. Lo corrige la Fase 2 del plan.",
-                   strict=True)
 @pytest.mark.parametrize("frase", [
     "abre mi agenda de hoy",
     "abre mi agenda",
     "abreme la agenda",
 ])
-def test_abre_mi_agenda_no_abre_el_navegador(frase):
-    """'abre mi agenda' tiene que ir a la AGENDA, no al navegador.
+def test_pedir_la_agenda_no_abre_el_navegador(frase):
+    """Pedir la agenda no puede terminar en 'Dime qué página abro'.
 
-    Comprobado en vivo contra AURORA el 2026-08-25: las tres frases contestan
-    'Dime qué página abro' con motor `pc_access`. La familia 'abrir_navegador'
-    calza con cualquier cosa que empiece por 'abre', fuerza ese candado
-    saltándose a todos los demás, no encuentra ningún sitio, y se queda ahí.
-
-    Marcada `strict=True` a propósito: el día que la Fase 2 lo arregle, esta
-    prueba pasará y pytest **avisará** de que ya no debería estar marcada como
-    fallo esperado. Con `strict=False` el arreglo pasaría desapercibido.
+    El bug: la familia `abrir_navegador` calzaba con cualquier cosa que
+    empezara por "abre", se ponía primera Y borraba al resto de la fila. La
+    agenda jamás era consultada. Corregido en la Fase 2: la familia solo se
+    adelanta, y el navegador declara `no_aplica` cuando no encontró ninguna
+    página, así que el mensaje sigue su camino.
     """
     r = _procesar(frase, session_id=f"agenda_{abs(hash(frase))}")
     assert "dime que pagina abro" not in _plano(r["respuesta"]), (
-        f"Se lo llevó el navegador en vez de la agenda. "
+        f"Volvió el secuestro del navegador. "
         f"Motor: {r.get('motores_usados')} · {r['respuesta'][:120]}")
+
+
+@pytest.mark.parametrize("frase", [
+    "abreme la agenda",
+    "que tengo en la agenda hoy",
+    "ensename la agenda",
+    "sacame la agenda",
+    "tengo alguna cita",
+    "que citas hay manana",
+])
+def test_pedir_la_agenda_llega_a_la_agenda(frase):
+    """Que ya no se lo lleve el navegador no es lo mismo que atenderlo.
+
+    Al verificar la Fase 2 salió que estas frases ya no acababan en el
+    navegador —eso quedó resuelto— pero tampoco las reconocía ningún candado:
+    `_es_agenda` era una lista de ~30 frases memorizadas ("mi agenda",
+    "agenda de hoy"...) y no conocía "abreme LA agenda".
+
+    No se arregló agregando esas frases —eso es el parche que dejó la lista
+    con 30 entradas sin cubrir lo obvio—. Se arregló haciendo que reconozca
+    LA COSA: si el mensaje nombra la agenda o una cita, es de la agenda, se
+    pida como se pida.
+    """
+    r = _procesar(frase, session_id=f"agenda2_{abs(hash(frase))}")
+    assert "agenda" in [m.lower() for m in r.get("motores_usados", [])], (
+        f"No lo atendió la agenda. Motor: {r.get('motores_usados')} · "
+        f"{r['respuesta'][:120]}")
+
+
+def test_una_agenda_de_vinipiel_es_un_producto_no_la_agenda():
+    """El reverso: reconocer la cosa no puede volverse otra red de arrastre.
+    "precio de una agenda de vinipiel grabada" es una COTIZACIÓN de un
+    producto que Anuar vende, no una consulta de citas."""
+    from CEREBRO import consciencia as mod
+    frase = "precio de una agenda de vinipiel grabada"
+    destino = mod._candado_por_familia(frase) or next(
+        (n for n, t, _m, _i in mod._CANDADOS if t(frase)), None)
+    assert destino == "cotizar", f"Se lo llevó '{destino}' en vez de cotizar"
 
 
 # ═════════════════════════════════════════════════════════════════════════
