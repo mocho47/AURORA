@@ -8,16 +8,35 @@ Ruta: C:/AURORA/MOTORES/motor_marketing.py
 import asyncio, json, logging, os
 from datetime import datetime
 from typing import Dict, List, Optional
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_marketing")
+
+# ── SIN PRECIOS EN EL CONTENIDO PUBLICO (arreglo 2026-08-26) ───────────────
+# Este prompt traia: "Margen 120%. Precio $1,500-$8,000 MXN instalado". Es el
+# motor que escribe lo que se PUBLICA en TikTok, Instagram y Facebook, o sea que
+# ese rango inventado podia salir impreso en un reel y quedarse ahi para siempre
+# —igual que los 175 reels que salieron con el telefono viejo—. Ademas anunciaba
+# el margen de Anuar, que es informacion interna suya.
+# El contenido de redes se hace SIN precio: el precio se cotiza en el chat, con
+# el catalogo real delante.
 
 PROMPT_MARKETING = """Eres el estratega de marketing viral de ATF Retrofit — iluminación automotriz México.
 Especialidad: contenido que VENDE. Hooks que detienen el scroll. Captions que convierten.
 Formato siempre real por plataforma: TikTok (hook 3s + trend), Instagram (visual + CTA), YouTube (thumbnail + title SEO), Facebook (comunidad + FOMO).
-Producto: retrofit LED de faros, iluminación automotriz premium. Margen 120%. Precio $1,500–$8,000 MXN instalado.
+Producto: retrofit LED de faros, iluminación automotriz premium, instalado en Guadalajara.
 Buyer persona: hombre 20-40 años, le gusta su carro, quiere diferenciarse, poder adquisitivo medio-alto.
-NUNCA inventes métricas. SIEMPRE propone contenido accionable y grabable HOY."""
+
+⛔ NUNCA ESCRIBAS UN PRECIO NI UN MARGEN EN EL CONTENIDO. Ni cifras, ni rangos,
+ni "desde $X", ni "a partir de". Lo que tú escribes se PUBLICA y se queda ahí:
+un precio equivocado en un reel no se puede recoger. El CTA para el precio
+siempre es el mismo — que escriban por WhatsApp y se les cotiza.
+
+NUNCA inventes métricas. SIEMPRE propone contenido accionable y grabable HOY.
+Escribe en español de México."""
 
 _MODELO = "openai/gpt-oss-20b"
 
@@ -35,7 +54,7 @@ class MotorMarketing:
 
     def __init__(self):
         self.motor_id = "motor_marketing"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0}
 
     async def generar_contenido(
@@ -71,15 +90,9 @@ class MotorMarketing:
         )
 
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_MARKETING},
-                    {"role": "user",   "content": prompt_usuario},
-                ],
-                max_tokens=600, temperature=0.8,
-            )
-            contenido = r.choices[0].message.content.strip()
+            contenido = await _lm.responder(
+                self._groq, PROMPT_MARKETING, prompt_usuario,
+                max_tokens=600, temperature=0.8, modelo=_MODELO)
             self.stats["exitosos"] += 1
 
             # Registrar generación en episódica
@@ -104,23 +117,16 @@ class MotorMarketing:
             return {"status": "ERROR"}
         patrones = await self._leer_memoria_marketing("todas")
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_MARKETING},
-                    {"role": "user", "content": (
-                        f"Crea un calendario de contenido para 7 días. Objetivo: {objetivo}.\n"
-                        f"Plataformas: TikTok, Instagram, Facebook, YouTube.\n"
-                        f"Patrones exitosos de memoria AURORA: {patrones}\n"
-                        "Formato: día → plataforma → tipo → descripción breve del contenido."
-                    )},
-                ],
-                max_tokens=900, temperature=0.7,
-            )
+            plan = await _lm.responder(
+                self._groq, PROMPT_MARKETING,
+                (f"Crea un calendario de contenido para 7 días. Objetivo: {objetivo}.\n"
+                 f"Plataformas: TikTok, Instagram, Facebook, YouTube.\n"
+                 f"Patrones exitosos de memoria AURORA: {patrones}\n"
+                 "Formato: día → plataforma → tipo → descripción breve del contenido."),
+                max_tokens=900, temperature=0.7, modelo=_MODELO)
         except Exception as e:
             logger.error(f"Error en estrategia_semanal: {e}")
             return {"status": "ERROR", "detalle": str(e)[:200]}
-        plan = r.choices[0].message.content.strip()
         await self._registrar_generacion("estrategia_semanal", "todas", plan)
         return {"status": "OK", "plan": plan, "objetivo": objetivo}
 
@@ -138,22 +144,16 @@ class MotorMarketing:
             resultados_web = "Búsqueda web no disponible — usando conocimiento LLM."
 
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_MARKETING},
-                    {"role": "user", "content": (
-                        f"Analiza la competencia en: {nicho}\n"
-                        f"Datos web: {str(resultados_web)[:1000]}\n"
-                        "Responde: 1) Qué hace la competencia 2) Oportunidades para ATF 3) Diferenciación táctica."
-                    )},
-                ],
-                max_tokens=600,
-            )
+            analisis = await _lm.responder(
+                self._groq, PROMPT_MARKETING,
+                (f"Analiza la competencia en: {nicho}\n"
+                 f"Datos web: {str(resultados_web)[:1000]}\n"
+                 "Responde: 1) Qué hace la competencia 2) Oportunidades para ATF "
+                 "3) Diferenciación táctica."),
+                max_tokens=600, temperature=0.7, modelo=_MODELO)
         except Exception as e:
             logger.error(f"Error en analizar_competencia: {e}")
             return {"status": "ERROR", "detalle": str(e)[:200]}
-        analisis = r.choices[0].message.content.strip()
         # Guardar insight en semántica
         try:
             from MEMORIA.sistema_memoria import memoria

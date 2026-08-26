@@ -10,7 +10,10 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_coaching_real")
 
@@ -36,7 +39,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorCoachingReal:
     def __init__(self):
         self.motor_id = "motor_coaching_real"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def sesion_coaching(self, tema: str, contexto: dict = None) -> Dict:
@@ -52,16 +55,9 @@ class MotorCoachingReal:
             f"Conduce la sesión de coaching. Empieza con una pregunta poderosa si hay ambigüedad."
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_COACHING_REAL},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=450,
-                temperature=0.7,
-            )
-            respuesta = r.choices[0].message.content.strip()
+            respuesta = await _lm.responder(
+                self._groq, PROMPT_COACHING_REAL, prompt_usuario,
+                max_tokens=450, temperature=0.7, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("sesion_coaching_real", {
                 "tema": tema[:80], "preview": respuesta[:150]

@@ -12,34 +12,63 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_cotizador")
 
-# Precios reales del catálogo ATF Retrofit
-CATALOGO_ATF = {
-    "aozoom_x1": {"nombre": "Aozoom X1 Básico", "costo": 3500, "precio_publico": 8000, "instalacion": 800},
-    "aozoom_x3": {"nombre": "Aozoom X3 Standard", "costo": 6200, "precio_publico": 14999, "instalacion": 1200},
-    "aozoom_x5": {"nombre": "Aozoom X5 Premium", "costo": 10500, "precio_publico": 24999, "instalacion": 1500},
-    "aozoom_x7": {"nombre": "Aozoom X7 Elite", "costo": 16500, "precio_publico": 39999, "instalacion": 2000},
-}
+# ── NO HAY PRECIOS EN ESTE ARCHIVO. A PROPOSITO. ───────────────────────────
+# Aqui vivian dos listas de precios escritas a mano (4 productos ATF, 6 de
+# MILENS) que se usaban de "respaldo" cuando no se podia leer el catalogo real.
+# Dos problemas, los dos reales y encontrados el 2026-08-26:
+#   1. Estaban VIEJAS. El Aozoom X1 decia $8,000; el catalogo real de Anuar
+#      (CONFIG/catalogo_atf.json) dice $3,149. Dos veces y media de mas.
+#   2. El aviso que supuestamente advertia "cotizado con lista de respaldo" se
+#      calculaba en una variable y NUNCA se metia en la respuesta. O sea el
+#      cliente recibia un precio inventado sin una sola señal de que lo era.
+# Regla de Anuar: nunca se inventa un precio. Un precio equivocado cuesta mas
+# que no dar precio. Si no se puede leer el catalogo real, se DICE y no se
+# cotiza. Los precios se cambian en CONFIG/catalogo_atf.json y en el catalogo
+# de servicios — en un solo lugar, y llegan aqui solos.
 
-# Precios reales catálogo MILENS
-CATALOGO_MILENS = {
-    "polera": {"nombre": "Polera sublimada", "costo": 450, "precio_publico": 850, "mayorista": 650},
-    "taza": {"nombre": "Taza sublimada 11oz", "costo": 85, "precio_publico": 170, "mayorista": 130},
-    "taza_magica": {"nombre": "Taza mágica", "costo": 120, "precio_publico": 280, "mayorista": 200},
-    "bolsa": {"nombre": "Bolsa sublimada", "costo": 180, "precio_publico": 380, "mayorista": 280},
-    "caja": {"nombre": "Caja personalizada", "costo": 95, "precio_publico": 220, "mayorista": 160},
-    "laser_grabado": {"nombre": "Grabado láser pieza", "costo": 60, "precio_publico": 180, "mayorista": 130},
-}
+# ── EL MARGEN NO SE VUELVE A APLICAR AQUI (arreglo 2026-08-26) ─────────────
+# Encontrado corriendo el motor de verdad: se le pidio cotizar faros para un
+# Jetta y devolvio esto —
+#     "Faro LED Plus (Doble) - Precio público $550.00"
+#     Estándar  120% -> $1,320    Premium 125% -> $1,375    Cierre 130% -> $1,430
+# O sea agarro el precio del catalogo, que YA ES el precio de venta al publico,
+# y encima le multiplico el margen. El cliente recibia $1,320 por algo que
+# cuesta $550. La culpa era de una sola linea de este prompt: "ATF margen real:
+# 120-130%. MILENS margen real: 50-150%.".
+# Dos cosas mas que salieron mal de la misma linea:
+#   · La opcion de "Cierre agresivo" salia MAS CARA que la estandar ($1,430 vs
+#     $1,320). Un cierre que sube el precio no es un cierre.
+#   · El margen es informacion INTERNA de Anuar. No tiene por que viajar en un
+#     prompt que arma lo que ve el cliente.
+# La regla de Anuar es la de siempre: el precio del catalogo es el precio. Si
+# hay que sumarle algo (corte, diseño, instalacion) sale de su formula, no de
+# un porcentaje inventado por el modelo.
 
 PROMPT_COTIZADOR = """Eres el cotizador profesional de ATF Retrofit y MILENS de Anuar.
 Generas SIEMPRE exactamente 3 opciones de cotización: Estándar, Premium y Cierre.
-Usas los precios reales del catálogo proporcionado.
-ATF margen real: 120-130%. MILENS margen real: 50-150%.
-Formato de respuesta: claro, directo, con desglose de precios y próximo paso de acción.
-Nunca inventas precios. Si el producto no está en catálogo, dices que necesitas verificar."""
+
+⛔ LA REGLA QUE MANDA SOBRE TODO — EL PRECIO DEL CATÁLOGO ES EL PRECIO.
+El número que viene en el catálogo YA ES el precio de venta al público de Anuar.
+· NO le apliques margen, ni porcentaje, ni recargo, ni "120%", ni redondeos.
+· NO inventes un precio que no esté en el catálogo que te pasaron.
+· NO calcules precios "estimados", "aproximados" ni "desde".
+Las 3 opciones se diferencian por lo que INCLUYEN (cantidad, modelo, servicios,
+tiempo de entrega), NUNCA por un margen que tú le sumes al mismo producto.
+La opción de Cierre es la MÁS BARATA de las tres, no la más cara: es la que se
+usa para cerrar la venta.
+
+Si el producto que pide el cliente no está en el catálogo, dilo claramente y di
+que hay que verificar el precio. Vale mil veces más un "déjame confirmarte" que
+un número inventado: un precio equivocado ya le costó dinero real a Anuar.
+
+Formato: claro, directo, con desglose y próximo paso accionable. En español."""
 
 _MODELO = "openai/gpt-oss-20b"
 
@@ -164,7 +193,7 @@ def _detectar_negocio(texto: str) -> str:
 class MotorCotizador:
     def __init__(self):
         self.motor_id = "motor_cotizador"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def cotizar(self, requerimiento: str, contexto: dict = None) -> Dict:
@@ -179,15 +208,17 @@ class MotorCotizador:
         # lista minima de respaldo y se avisa honesto en la respuesta.
         if negocio == "atf":
             catalogo, _err_cat = _catalogo_atf_real()
-            respaldo = CATALOGO_ATF
+            _fuente = "CONFIG/catalogo_atf.json"
         else:
             catalogo, _err_cat = _catalogo_milens_real()
-            respaldo = CATALOGO_MILENS
-        _aviso_catalogo = ""
-        if catalogo is None:
-            catalogo = respaldo
-            _aviso_catalogo = (f"⚠️ Cotizado con la lista MINIMA de respaldo ({len(respaldo)} productos), "
-                               f"no con el catálogo completo: {_err_cat}")
+            _fuente = "el catálogo de servicios de MILENS"
+        if not catalogo:
+            # Sin precios de verdad NO se cotiza. Antes aqui se caia a una lista
+            # vieja escrita a mano y se entregaba el precio equivocado como si
+            # fuera bueno. Vale mas decir la verdad y arreglar la fuente.
+            return {"status": "ERROR", "motor": self.motor_id,
+                    "detalle": f"No pude leer {_fuente}, así que no tengo tus precios reales. "
+                               f"No te voy a inventar una cotización. Motivo: {_err_cat}"}
         folio = f"COT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         # Con el catalogo real (106 productos ATF / 73 servicios MILENS) mandarlo
         # completo no cabe bien en el prompt y diluye la atencion del modelo. Se
@@ -206,16 +237,9 @@ class MotorCotizador:
             f"Incluye desglose, total y próximo paso accionable."
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_COTIZADOR},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=700,
-                temperature=0.3,
-            )
-            cotizacion = r.choices[0].message.content.strip()
+            cotizacion = await _lm.responder(
+                self._groq, PROMPT_COTIZADOR, prompt_usuario,
+                max_tokens=900, temperature=0.3, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("cotizacion_generada", {
                 "folio": folio, "negocio": negocio,

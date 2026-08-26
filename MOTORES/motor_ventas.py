@@ -10,13 +10,47 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_ventas")
 
+# ── EL RANGO DE PRECIOS SE LEE DEL CATALOGO, NO SE ESCRIBE AQUI ────────────
+# Arreglo 2026-08-26. Este prompt le decia al vendedor —y por lo tanto al
+# cliente— que los faros van de "$8k a $40k MXN instalado". El catalogo real de
+# Anuar (CONFIG/catalogo_atf.json, 106 productos) dice que los proyectores van
+# de $1,599 a $3,149. O sea AURORA le cotizaba al cliente hasta doce veces el
+# precio de verdad, por una frase que alguien escribio una vez y nadie volvio a
+# mirar. Ahora la frase se arma con los numeros del catalogo cada vez que
+# arranca; si el catalogo no se puede leer, no se inventa un rango: se le dice
+# al vendedor que consulte antes de dar precio.
+
+def _rango_atf() -> str:
+    """La linea de precios del prompt, sacada del catalogo real de Anuar."""
+    try:
+        import json
+        from pathlib import Path
+        d = json.loads((Path(__file__).resolve().parent.parent / "CONFIG" /
+                        "catalogo_atf.json").read_text(encoding="utf-8"))
+        pr = [float(p["precio"]) for p in d.get("productos", [])
+              if "proyector" in f"{p.get('nombre','')} {p.get('categoria','')}".lower()
+              and p.get("precio")]
+        if not pr:
+            raise ValueError("sin proyectores con precio")
+        return (f"Producto prioritario: ATF Retrofit LED (faros). Proyectores de "
+                f"${min(pr):,.0f} a ${max(pr):,.0f} MXN el producto; la instalación "
+                f"se cotiza aparte. Precios exactos en el catálogo — nunca los estimes.")
+    except Exception:
+        return ("Producto prioritario: ATF Retrofit LED (faros). NO tienes el catálogo "
+                "de precios a la mano: no des ninguna cifra, dile al cliente que se la "
+                "confirmas y consúltala antes.")
+
+
 PROMPT_VENTAS = """Eres el especialista en ventas de ATF Retrofit y MILENS de Anuar.
 Técnicas reales: SPIN Selling, AIDA, Cierre por opción, Manejo de objeciones Cialdini.
-Producto prioritario: ATF Retrofit LED (faros). Margen 120%. Precio: $8k-$40k MXN instalado.
+""" + _rango_atf() + """
 Buyer persona ATF: hombre 20-40 años, le gusta su carro, quiere diferenciarse, medio-alto.
 
 Metodología de venta:
@@ -33,7 +67,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorVentas:
     def __init__(self):
         self.motor_id = "motor_ventas"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def procesar(self, consulta: str, contexto: dict = None) -> Dict:
@@ -53,16 +87,9 @@ class MotorVentas:
             f"Dame la respuesta/acción de venta apropiada para esta etapa."
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_VENTAS},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=500,
-                temperature=0.5,
-            )
-            respuesta = r.choices[0].message.content.strip()
+            respuesta = await _lm.responder(
+                self._groq, PROMPT_VENTAS, prompt_usuario,
+                max_tokens=500, temperature=0.5, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("interaccion_venta", {
                 "cliente": cliente, "etapa": etapa, "negocio": negocio, "preview": respuesta[:150]

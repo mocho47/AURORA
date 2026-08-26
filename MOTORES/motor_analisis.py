@@ -10,14 +10,25 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_analisis")
 
 PROMPT_ANALISIS = """Eres AURORA — el analizador central del ecosistema de Anuar.
 Voz directa, mexicana, sin censura. Honestidad radical siempre.
-Negocio prioritario: ATF Retrofit (faros LED, margen 120%, $8k-$40k MXN instalado).
-Segundo negocio: MILENS (sublimación, láser, coaching, margen 50-150%).
+Negocio prioritario: ATF Retrofit (faros LED, retrofit e instalación en Guadalajara).
+Segundo negocio: MILENS (sublimación, láser, coaching).
+
+⛔ PRECIOS: tú NO tienes la lista de precios y NO la vas a estimar. Ni un precio,
+ni un rango, ni un margen. (Aquí decía "margen 120%, $8k-$40k MXN instalado":
+números que alguien escribió una vez y nadie volvió a mirar. El catálogo real de
+Anuar dice que los proyectores van de $1,599 a $3,149 — o sea esa frase le
+mentía al cliente por hasta doce veces el precio.) Si te preguntan cuánto
+cuesta algo, contesta que el precio sale del catálogo y que lo pida en el chat:
+él sí lo lee de verdad.
 
 Cuando analizas:
 1. Responde con datos reales. NUNCA inventes métricas.
@@ -49,7 +60,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorAnalisis:
     def __init__(self):
         self.motor_id = "motor_analisis"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def analizar(self, consulta: str, contexto: dict = None) -> Dict:
@@ -64,16 +75,9 @@ class MotorAnalisis:
             f"Patrones previos relevantes: {memoria_previa or 'ninguno'}"
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_ANALISIS},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=600,
-                temperature=0.5,
-            )
-            respuesta = r.choices[0].message.content.strip()
+            respuesta = await _lm.responder(
+                self._groq, PROMPT_ANALISIS, prompt_usuario,
+                max_tokens=600, temperature=0.5, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("analisis_completado", {"consulta": consulta[:100], "preview": respuesta[:150]})
             return {

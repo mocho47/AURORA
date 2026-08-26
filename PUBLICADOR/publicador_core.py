@@ -59,7 +59,49 @@ def estado_redes() -> dict:
     return {"redes": redes, "timestamp": datetime.now().isoformat(timespec="seconds")}
 
 
-def publicar(plataforma: str, texto: str = "", media_url: str = "") -> dict:
+def _preparar_media(media_url: str, negocio: str = "atf") -> dict:
+    """Convierte lo que venga en una URL pública que Instagram pueda descargar.
+
+    ARREGLO 2026-08-26 — por esto Instagram llevaba meses sin publicar nada.
+    Instagram EXIGE una `image_url` pública; no acepta los bytes de la foto. Como
+    aquí solo llegaba una ruta del disco (o nada), la publicación moría en
+    `FALTA_MEDIA` y AURORA nunca subió una sola imagen.
+
+    Ahora, si lo que llega es un archivo del disco:
+      1. Se le pone la MARCA DE AGUA del negocio (lo pidió Anuar textual: que
+         todas la lleven, para que no haya bronca por salir de una cuenta
+         personal).
+      2. Se sube a su propia página de Facebook SIN publicarla y se usa la URL
+         del CDN de Facebook. El token de la página ya funciona a diario y no
+         expira. Detalle completo en PUBLICADOR/hospedaje_imagen.py.
+
+    Si ya venía una URL http(s), se respeta tal cual — nada de lo que funcionaba
+    antes cambia.
+    """
+    if not media_url:
+        return {"status": "OK", "url": ""}
+    if media_url.lower().startswith(("http://", "https://")):
+        return {"status": "OK", "url": media_url, "marcada": False}
+    if not os.path.isfile(media_url):
+        return {"status": "ERROR",
+                "detalle": f"No es una URL ni un archivo que exista: {media_url}"}
+    try:
+        from PUBLICADOR import marca_agua, hospedaje_imagen
+    except ImportError:
+        import marca_agua, hospedaje_imagen  # cuando se carga desde PUBLICADOR/
+
+    m = marca_agua.poner_marca(media_url, negocio=negocio)
+    if m["status"] != "OK":
+        return {"status": "ERROR", "paso": "marca_agua", "detalle": m.get("detalle")}
+    h = hospedaje_imagen.hospedar(m["ruta"], negocio=negocio)
+    if h["status"] != "OK":
+        return {"status": h["status"], "paso": "hospedaje", "detalle": h.get("detalle")}
+    return {"status": "OK", "url": h["url"], "marcada": True,
+            "marca": m["marca"], "photo_id": h["photo_id"], "ruta_marcada": m["ruta"]}
+
+
+def publicar(plataforma: str, texto: str = "", media_url: str = "",
+             negocio: str = "atf") -> dict:
     plataforma = (plataforma or "").lower()
     if plataforma not in TOKENS_API:
         return {"status": "ERROR", "detalle": f"Plataforma '{plataforma}' no soportada"}
@@ -67,7 +109,15 @@ def publicar(plataforma: str, texto: str = "", media_url: str = "") -> dict:
     if not token:
         return {"status": "FALTA_TOKEN", "plataforma": plataforma,
                 "detalle": f"No se publica: falta {TOKENS_API[plataforma]}. No se simula."}
-    return _publicar_api(plataforma, token, texto, media_url)
+    prep = _preparar_media(media_url, negocio)
+    if prep["status"] != "OK":
+        return {"status": prep["status"], "plataforma": plataforma,
+                "paso": prep.get("paso"), "detalle": prep.get("detalle")}
+    r = _publicar_api(plataforma, token, texto, prep["url"])
+    if prep.get("marcada"):
+        r["marca_de_agua"] = prep["marca"]
+        r["hospedada_en"] = "CDN de Facebook (foto no publicada en el muro)"
+    return r
 
 
 def _publicar_api(plataforma: str, token: str, texto: str, media_url: str) -> dict:
@@ -89,8 +139,14 @@ def _publicar_api(plataforma: str, token: str, texto: str, media_url: str) -> di
             if not ig_id:
                 return {"status": "FALTA_TOKEN", "plataforma": "instagram", "detalle": "Falta INSTAGRAM_USER_ID"}
             if not media_url:
+                # Ya no hace falta ngrok ni Supabase: basta con pasar la RUTA de
+                # una imagen del disco y `_preparar_media` la marca y la hospeda
+                # sola en el CDN de Facebook. Sin imagen no hay post: Instagram
+                # no publica solo texto, y eso no es un fallo que se disimule.
                 return {"status": "FALTA_MEDIA", "plataforma": "instagram",
-                        "detalle": "Instagram requiere una imagen en URL público (media_url). Enciende ngrok o sube la imagen."}
+                        "detalle": "Instagram no publica solo texto: necesita una imagen. "
+                                   "Pásame la ruta de la foto en el disco y yo le pongo la "
+                                   "marca de agua y la hospedo."}
             # 1. crear contenedor de media
             cr = requests.post(f"https://graph.facebook.com/v23.0/{ig_id}/media",
                                data={"image_url": media_url, "caption": texto, "access_token": token}, timeout=30)

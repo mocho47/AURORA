@@ -11,7 +11,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_imagenes")
 
@@ -63,7 +66,7 @@ SPECS_PLATAFORMAS = {
 class MotorImagenes:
     def __init__(self):
         self.motor_id = "motor_imagenes"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def analizar(self, descripcion: str, contexto: dict = None) -> Dict:
@@ -83,16 +86,9 @@ class MotorImagenes:
             f"Dame recomendaciones técnicas precisas y accionables."
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_IMAGENES},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=500,
-                temperature=0.3,
-            )
-            recomendaciones = r.choices[0].message.content.strip()
+            recomendaciones = await _lm.responder(
+                self._groq, PROMPT_IMAGENES, prompt_usuario,
+                max_tokens=500, temperature=0.3, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("imagen_analizada", {"uso": uso, "plataforma": plataforma})
             return {

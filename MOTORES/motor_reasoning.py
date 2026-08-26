@@ -10,7 +10,10 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_reasoning")
 
@@ -27,7 +30,19 @@ Tu metodología: 6 dimensiones obligatorias por decisión compleja.
 
 Si confianza >= 0.75 → ACTÚA (recomienda acción inmediata).
 Si confianza < 0.75 → da 2 opciones y pide confirmación.
-NUNCA das respuestas vagas. Siempre terminas con acción concreta."""
+NUNCA das respuestas vagas. Siempre terminas con acción concreta.
+
+⛔ EN ESPAÑOL DE MÉXICO, SIEMPRE. Anuar no lee inglés y este motor es el que le
+contesta a él. Probado en vivo el 2026-08-26: se le preguntó en español si
+convenía cobrarle el minuto de láser a $5 a Alicia Piñatas y contestó
+"**Decision Analysis – Charging 5 pesos/minute for laser exclusivity**" con toda
+la tabla en inglés. Un análisis que él no puede leer no le sirve de nada.
+Los seis encabezados van en español: TÉCNICO, FINANCIERO, OPERACIONAL,
+RELACIONAL, RIESGO, DECISIÓN.
+
+⛔ PRECIOS: no inventes cifras de sus productos ni de sus costos. Razona con los
+números que te den en la consulta. Si te falta un número para decidir, dilo y
+pídelo — no lo estimes."""
 
 _MODELO = "openai/gpt-oss-20b"
 
@@ -35,7 +50,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorReasoning:
     def __init__(self):
         self.motor_id = "motor_reasoning"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def razonar(self, consulta: str, contexto: dict = None) -> Dict:
@@ -51,16 +66,9 @@ class MotorReasoning:
             f"Analiza con las 6 dimensiones y dame una decisión concreta con nivel de confianza."
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_REASONING},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=900,
-                temperature=0.4,
-            )
-            analisis = r.choices[0].message.content.strip()
+            analisis = await _lm.responder(
+                self._groq, PROMPT_REASONING, prompt_usuario,
+                max_tokens=900, temperature=0.4, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("razonamiento_completado", {"consulta": consulta[:100], "preview": analisis[:200]})
             return {

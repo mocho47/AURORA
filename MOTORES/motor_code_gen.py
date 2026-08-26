@@ -10,7 +10,10 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_code_gen")
 
@@ -32,7 +35,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorCodeGen:
     def __init__(self):
         self.motor_id = "motor_code_gen"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def generar(self, requerimiento: str, contexto: dict = None) -> Dict:
@@ -49,16 +52,9 @@ class MotorCodeGen:
             f"Contexto adicional: {contexto}"
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_CODE},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=2000,
-                temperature=0.2,
-            )
-            codigo = r.choices[0].message.content.strip()
+            codigo = await _lm.responder(
+                self._groq, PROMPT_CODE, prompt_usuario,
+                max_tokens=2000, temperature=0.2, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("codigo_generado", {"lenguaje": lenguaje, "requerimiento": requerimiento[:100]})
             return {

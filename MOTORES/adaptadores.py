@@ -47,9 +47,16 @@ class MotorOracle:
 
 # ── VENDEDOR — fichas técnicas y técnicas de venta ────────────────
 
+# Arreglo 2026-08-26: aqui decia "Margen ATF: 120%. Precio: $1,500-$8,000 MXN
+# instalado". Los proyectores reales del catalogo van de $1,599 a $3,149, o sea
+# el tope estaba al doble y medio. Es la misma frase copiada que ya se corrigio
+# en motor_ventas y motor_marketing: se escribio una vez y se replico a mano por
+# tres archivos, que es justo el patron que el catalogo unico vino a matar.
 PROMPT_VENDEDOR = """Eres el especialista en ventas técnicas de ATF Retrofit y MILENS.
 Tienes acceso a todas las fichas técnicas de productos, técnicas de venta probadas y catálogos.
-Usa datos reales de las fichas. Margen ATF: 120%. Precio: $1,500–$8,000 MXN instalado."""
+Usa datos reales de las fichas. Los precios se leen del catálogo
+(CONFIG/catalogo_atf.json); no los estimes ni los cites de memoria, y no
+menciones el margen: es información interna de Anuar."""
 
 class MotorFichas:
     motor_id = "motor_fichas"

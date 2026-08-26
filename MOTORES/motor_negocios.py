@@ -12,27 +12,86 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-from groq import AsyncGroq
+try:
+    from MOTORES import _llamada_modelo as _lm
+except ImportError:
+    import _llamada_modelo as _lm
 
 logger = logging.getLogger("aurora.motor_negocios")
 
+# ── AQUI VIVIA LA PEOR LISTA DE PRECIOS INVENTADOS DEL PROYECTO ────────────
+# Arreglo 2026-08-26. Este prompt le decia al motor, y por lo tanto al cliente:
+#   · ATF: "kits Aozoom X1 ($8k), X3 ($15k), X5 ($25k), X7 ($40k) MXN instalado"
+#   · MILENS: "poleras ($850), tazas ($170), grabado láser ($180 por pieza)"
+#   · "Margen: 120% sobre costo"
+# NINGUNO de esos numeros sale de una fuente de Anuar. El catalogo real
+# (CONFIG/catalogo_atf.json, 106 productos) dice que los proyectores van de
+# $1,599 a $3,149: el "X7 a $40k" era TRECE VECES el precio de verdad. Y los de
+# MILENS ni siquiera coinciden con CONFIG/catalogo_servicios.json.
+#
+# Por que la prueba `tests/test_precios_una_sola_fuente.py` no lo agarro: esa
+# prueba lee el AST y busca constantes y diccionarios con numeros. Estos precios
+# estaban DENTRO DE UN STRING de prompt, que para el AST es texto y ya. El
+# candado cuidaba la puerta y los precios entraban por la ventana.
+#
+# Ahora el motor no trae ni un numero: los lee del catalogo cuando arranca, como
+# ya lo hacia motor_ventas.
+
+_RAIZ = Path(__file__).resolve().parent.parent
+
+
+def _catalogos_reales() -> str:
+    """Los productos de Anuar leidos de su catalogo. Si no se puede leer, se le
+    dice al motor que NO de precios — nunca se rellena con una lista vieja."""
+    lineas = []
+    try:
+        d = json.loads((_RAIZ / "CONFIG" / "catalogo_atf.json").read_text(encoding="utf-8"))
+        pr = [float(p["precio"]) for p in d.get("productos", []) if p.get("precio")]
+        if pr:
+            lineas.append(
+                f"ATF Retrofit — iluminación automotriz LED. Catálogo real: "
+                f"{len(pr)} productos, de ${min(pr):,.0f} a ${max(pr):,.0f} MXN. "
+                f"Los precios EXACTOS están en CONFIG/catalogo_atf.json.")
+    except Exception as e:
+        lineas.append(f"ATF Retrofit: NO pude leer el catálogo ({str(e)[:60]}). "
+                      f"No des ningún precio de ATF.")
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.spec_from_file_location("cotizador_servicios",
+                                            _RAIZ / "TALLER" / "cotizador_servicios.py")
+        cs = _ilu.module_from_spec(spec); spec.loader.exec_module(cs)
+        items = (cs.catalogo_plano() or {}).get("items") or []
+        pr = [float(i["precio"]) for i in items if i.get("precio")]
+        if pr:
+            lineas.append(
+                f"MILENS — sublimación y láser. Catálogo real: {len(items)} "
+                f"servicios, de ${min(pr):,.0f} a ${max(pr):,.0f} MXN. "
+                f"Los precios EXACTOS están en el catálogo de servicios.")
+    except Exception as e:
+        lineas.append(f"MILENS: NO pude leer el catálogo de servicios "
+                      f"({str(e)[:60]}). No des ningún precio de MILENS.")
+    return "\n".join(lineas)
+
+
 PROMPT_NEGOCIOS = """Eres el gestor operativo de los negocios de Anuar: ATF Retrofit y MILENS.
 
-ATF Retrofit — iluminación automotriz LED:
-- Producto: kits Aozoom X1 ($8k), X3 ($15k), X5 ($25k), X7 ($40k) MXN instalado.
-- Margen: 120% sobre costo.
-- Canales: TikTok, Instagram, YouTube, WhatsApp directo.
-- Prioridad #1: generar leads y cerrar instalaciones HOY.
-- Respuesta a lead: < 5 minutos. Ningún lead se enfría.
+""" + _catalogos_reales() + """
 
-MILENS — sublimación y láser:
-- Productos: poleras ($850), tazas ($170), grabado láser ($180 por pieza).
-- Margen: 50-150%.
-- Clientes: empresas, eventos, regalos personalizados.
-- Fortaleza: calidad + entrega rápida.
+⛔ PRECIOS: tú NO cotizas y NO das cifras de memoria. Ni precios, ni márgenes,
+ni rangos "aproximados". Aquí antes decía que el kit X7 costaba $40,000 cuando
+el producto más caro del catálogo real vale $3,900 — trece veces más, dicho con
+toda seguridad. Si te preguntan un precio: di que lo cotice el cotizador, que sí
+lee el catálogo. El margen de Anuar es información interna: nunca lo menciones.
+
+ATF: canales TikTok, Instagram, YouTube, WhatsApp directo. Prioridad #1 generar
+leads y cerrar instalaciones HOY. Respuesta a un lead: < 5 minutos.
+MILENS: clientes empresas, eventos y regalos personalizados. Fortaleza: calidad
+y entrega rápida.
 
 Tu rol: reportar estado real, proponer acciones, detectar oportunidades.
-Regla fundamental: NUNCA inventes métricas. Si no tienes datos reales, dilo y propone cómo obtenerlos.
+Regla fundamental: NUNCA inventes métricas. Si no tienes datos reales, dilo y
+propone cómo obtenerlos.
+Contesta SIEMPRE en español de México.
 Siempre termina con "PRÓXIMA ACCIÓN RECOMENDADA:" + acción concreta."""
 
 _MODELO = "openai/gpt-oss-20b"
@@ -41,7 +100,7 @@ _MODELO = "openai/gpt-oss-20b"
 class MotorNegocios:
     def __init__(self):
         self.motor_id = "motor_negocios"
-        self._groq = AsyncGroq(api_key=os.getenv("GROQ_API_KEY", "")) if os.getenv("GROQ_API_KEY") else None
+        self._groq = _lm.cliente()
         self.stats = {"requests": 0, "exitosos": 0, "errores": 0}
 
     async def consultar(self, consulta: str, contexto: dict = None) -> Dict:
@@ -58,16 +117,9 @@ class MotorNegocios:
             f"Contexto adicional: {contexto}"
         )
         try:
-            r = await self._groq.chat.completions.create(
-                model=_MODELO,
-                messages=[
-                    {"role": "system", "content": PROMPT_NEGOCIOS},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                max_tokens=600,
-                temperature=0.4,
-            )
-            respuesta = r.choices[0].message.content.strip()
+            respuesta = await _lm.responder(
+                self._groq, PROMPT_NEGOCIOS, prompt_usuario,
+                max_tokens=600, temperature=0.4, modelo=_MODELO)
             self.stats["exitosos"] += 1
             await self._registrar("consulta_negocio", {"negocio": negocio, "preview": respuesta[:150]})
             return {
