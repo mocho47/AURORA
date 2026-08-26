@@ -666,3 +666,34 @@ DEJAN_RASTRO = {
     "voz":                    "puede sonar la bocina",
     "corel":                  "toca CorelDRAW si esta abierto",
 }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Los dos candados que nacieron el 2026-08-26, después de que se escribió el
+# resto de este archivo. Son las dos formas en que Anuar le enseña ÉL MISMO,
+# sin programador de por medio — la prioridad #1 del proyecto es que AURORA
+# le sirva sin nadie más. Sin estas frases no salían en su hoja impresa.
+# ══════════════════════════════════════════════════════════════════════════
+FRASES.update({
+    "ensenar": [
+        "cuando te diga sacame la piñata es cotiza esta piñata para alicia",
+        "cuando te diga el corte es convierte esto a dxf",
+        "si te digo sacame el contorno es sacame el delineado",
+        "aprende que chekame el corte es cotiza este dxf",
+        "cuando te diga pasalo a curvas hazme exportame a pdf lo que traigo abierto en corel",
+        "si te digo cuanto sale hazme cotiza este dxf",
+        "apuntale que la caja es generame una caja de 40x30x20",
+        "cuando te diga limpiala es quitale el fondo a esta imagen",
+    ],
+    "aprende_conocimiento": [
+        "aurora aprende",
+        "aurora aprende un tabloide mide 33x48",
+        "aurora aprende que la hoja de mdf de 2.7 me cuesta 110",
+        "aprende esto el minuto de corte lo cobro a 8 pesos",
+        "aprendete que a alicia le dejo el minuto en 5 pesos",
+        "quiero que aprendas que deja siempre 5mm de margen",
+        "memoriza esto el vinil de recorte lo vendo por metro",
+        "graba esto mi cama de laser mide 130x90",
+        "apuntate esto la sublimacion en termo yeti son 180 pesos",
+    ],
+})

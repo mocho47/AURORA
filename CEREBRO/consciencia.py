@@ -2453,6 +2453,21 @@ def _candado_por_familia(mensaje: str) -> Optional[str]:
     texto = _norm_txt(mensaje)
     if not texto or _SOLO_RUTA_ANUAR.match(texto):
         return None
+
+    # Un mensaje que ENSEÑA no se ejecuta: se aprende.
+    #
+    # Encontrado en vivo el 2026-08-26. Poner `ensenar` y `aprende_conocimiento`
+    # de primeros en `_CANDADOS` no bastaba, porque esto corre ANTES que toda
+    # esa fila. «cuando te diga el corte es convierte esto a dxf» se iba a la
+    # familia `dxf` y AURORA se ponía a convertir un archivo en vez de
+    # aprenderse el atajo — y Anuar se quedaba creyendo que quedó enseñado.
+    # Pasaba igual con `corel`, `generar_caja` y `memoria`.
+    #
+    # La frase que enseña SIEMPRE lleva dentro la frase que ya funciona; por
+    # eso cualquier familia la agarra por dentro. Aquí se les da paso.
+    if _es_ensenar(mensaje) or _contiene_trigger(texto, _ABRE_LECCION):
+        return None
+
     for _candado, _patrones in _FAMILIAS_ANUAR_COMPILADAS:
         for _p in _patrones:
             if _p.search(texto):

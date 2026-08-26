@@ -7,7 +7,7 @@ este archivo no se escribe, se genera (`CEREBRO/generar_comandos_verificados.py`
 Están escritas **como escribe Anuar**, sin acentos y con sus modismos, porque
 así se van a usar de verdad.
 
-Generado: 2026-08-26 · **574 frases verificadas** en **36 capacidades** · 38 candados en total
+Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 candados en total
 
 > **No te lo tienes que aprender.** Basta con que le digas la idea. Si algo no
 > lo entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -568,6 +568,18 @@ Generado: 2026-08-26 · **574 frases verificadas** en **36 capacidades** · 38 c
 - `explicame que eres a mi esposa`
 - `que ganamos con que estes en la pc`
 
+### Le dictas un dato o le pegas un documento y se lo aprende
+
+- `aurora aprende`
+- `aurora aprende un tabloide mide 33x48`
+- `aurora aprende que la hoja de mdf de 2.7 me cuesta 110`
+- `aprende esto el minuto de corte lo cobro a 8 pesos`
+- `aprendete que a alicia le dejo el minuto en 5 pesos`
+- `quiero que aprendas que deja siempre 5mm de margen`
+- `memoriza esto el vinil de recorte lo vendo por metro`
+- `graba esto mi cama de laser mide 130x90`
+- `apuntate esto la sublimacion en termo yeti son 180 pesos`
+
 ### Te dice cómo funciona ella misma por dentro
 
 - `que hace el cotizador de vinil`
@@ -621,6 +633,17 @@ Generado: 2026-08-26 · **574 frases verificadas** en **36 capacidades** · 38 c
 - `arregla config.json que trae un error`
 - `quita de precios.json el termo viejo`
 - `edita precios.json y sube el mdf`
+
+### Le enseñas tú una forma nueva de pedirle algo
+
+- `cuando te diga sacame la piñata es cotiza esta piñata para alicia`
+- `cuando te diga el corte es convierte esto a dxf`
+- `si te digo sacame el contorno es sacame el delineado`
+- `aprende que chekame el corte es cotiza este dxf`
+- `cuando te diga pasalo a curvas hazme exportame a pdf lo que traigo abierto en corel`
+- `si te digo cuanto sale hazme cotiza este dxf`
+- `apuntale que la caja es generame una caja de 40x30x20`
+- `cuando te diga limpiala es quitale el fondo a esta imagen`
 
 ### Pone a trabajar a un equipo de agentes
 

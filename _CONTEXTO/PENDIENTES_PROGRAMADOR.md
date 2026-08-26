@@ -13,7 +13,7 @@ VERIFICADO se probó en vivo ese día; lo que dice SIN VERIFICAR, no.
 
 | Qué | Prueba real que se corrió |
 |---|---|
-| **574 frases verificadas · 36 candados** (eran 176 y 30) | `python CEREBRO/generar_comandos_verificados.py` — las 574 pasan por el enrutador real |
+| **591 frases verificadas · 38 candados** (eran 176 y 30) — ni uno suelto | `python CEREBRO/generar_comandos_verificados.py` — las 591 pasan por el enrutador real |
 | **Piñatas de Alicia, proceso completo** | `pinata_alicia.jpg` a 89.5 cm → PDF 67.12×89.5 + silueta 703 KB (33 m, 27.5 min) + despiece de 22 piezas |
 | **Corel → PDF** | Documento de prueba → PDF real de 385 KB en disco. Va a `Descargas\PDF` |
 | **`cuando te diga X es Y`** | «sacame la piñata» no llegaba a nada → ahora llega a `calcular_pieza_grande` |
