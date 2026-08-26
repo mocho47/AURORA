@@ -1,5 +1,79 @@
 # 📊 ESTADO REAL DE AURORA
-### Última actualización: 2026-08-08
+### Última actualización: 2026-08-25
+
+---
+
+## 🎯 DÓNDE QUEDAMOS — 2026-08-25
+
+**482 pruebas pasan, 0 fallan.** Commit `822169a`, en GitHub. AURORA
+reiniciada y probada en vivo después: 11 de 11 frases reales correctas.
+
+Se está ejecutando el **plan de reparación de raíz**
+(`_CONTEXTO/PLAN_REPARACION_RAIZ_20260824.md`), salido de la auditoría
+completa del 24-ago (38 hallazgos confirmados). Fases 0, 1 y 2 hechas.
+
+### FASE 0 — Cerrar la puerta ✅
+- **El respaldo diario llevaba un mes fallando en silencio**: apuntaba a
+  `C:\AURORA`, que ya no existe. Cero copias desde el 23-jul. Reescrito para
+  que **descubra** qué respaldar en vez de leer una lista escrita a mano
+  (mencionaba 3 bases, 2 inexistentes; hay 15). Verifica la integridad SQLite
+  de cada copia y falla con código ≠ 0 para que la tarea programada lo
+  reporte. Probado: 41 elementos, 15 bases íntegras, `LastTaskResult = 0`.
+- **Credenciales fuera de git**: `identidad.json`, `contactos.json` y
+  `usuarios.json` (este último se me había escapado un día — guardaba el hash
+  del PIN de Anuar y el de Rocío y el repo estuvo público). Siguen en disco.
+  ⏳ **Pendiente y declarado**: siguen en el HISTORIAL. La purga es
+  irreversible y espera autorización de Anuar.
+- `SETUP/CAMBIAR_PIN.bat` — cambia el PIN en los dos lugares donde vive,
+  respalda antes, comprueba entrando con el nuevo y restaura solo si falla.
+
+### FASE 1 — La red de seguridad ✅
+De las 425 pruebas que estaban verdes, **ninguna llamaba a `procesar()`** ni
+tocaba un endpoint. Por eso un candado podía estar muerto en producción con
+todo en verde. Tres pruebas de comportamiento:
+
+| Archivo | Qué ejerce |
+|---|---|
+| `tests/test_chat_punta_a_punta.py` | el chat completo, con mensajes reales |
+| `tests/test_servidor_taller_http.py` | los endpoints del taller, por HTTP |
+| `tests/test_foto_a_dxf_real.py` | la cadena foto→DXF, con geometría real |
+
+**Hallazgo grande: AURORA se degradaba en silencio sin `.env`.** Solo
+`run_aurora.py` lo cargaba. Cualquier otro arranque (pruebas,
+`PRUEBAS_VIVAS/arnes.py`, un script) levantaba una AURORA **sin llaves y sin
+decirlo**: se caía al modelo local de Ollama, 180 s por llamada. Un "hola"
+tardó más de diez minutos y contestó igual de campante. Arreglado en
+`CONFIG/entorno.py`: el `.env` se carga donde se usa, y si falta la llave
+AURORA **lo dice**.
+
+**Medido, no arreglado:** `POST /chat` con "hola" = **28.7 s**;
+`"cuanto llevo vendido este mes"` = **1.1 s**. Todo lo que pasa por el modelo
+cuesta ~29 s. No es un bug, es un costo — candidato a fase propia.
+
+### FASE 2 — El candado que sabe lo que hace ✅
+"abre mi agenda de hoy" abría el navegador. La familia `abrir_navegador`
+calzaba con cualquier cosa que empezara por "abre", se ponía primera **y
+borraba al resto de la fila**.
+
+- **La familia prioriza, ya no obliga**: solo reordena.
+- **`no_aplica`**: un candado declara que el mensaje no era suyo, y el
+  despacho sigue en vez de morir ahí.
+- **`tests/test_familias_no_arrastran.py`**: recorre TODAS las familias y
+  falla si alguna calza con un verbo suelto. Encontró un solo culpable.
+- **La agenda reconoce la COSA, no la frase**: `_es_agenda` era una lista de
+  ~30 frases memorizadas que no conocía "abreme LA agenda". Ahora basta con
+  nombrar la agenda o una cita. Y "precio de una agenda de vinipiel grabada"
+  sigue yendo a cotizar.
+- Verificado: **180 frases reales de `PRUEBAS_VIVAS/`, 0 cambiaron de
+  candado**, comparadas contra el commit anterior.
+
+### Lo que sigue
+- **Fase 3** — una sola fuente para los precios.
+- **Fase 4** — decidir qué es un motor (contratos; `usuarios.py` responde
+  `"ok"` e `identidad_core.py` `"OK"`, gemelos sin contrato común).
+- **Fase 5** — la voz, completa.
+- Pendiente de Anuar: cambiar el PIN con `SETUP/CAMBIAR_PIN.bat`, y autorizar
+  (o no) la purga del historial de git.
 
 ---
 
