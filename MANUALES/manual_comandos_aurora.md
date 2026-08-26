@@ -53,6 +53,14 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 ### Cerebro y Sistema
 
+**aprende_conocimiento** (aprendizaje_datos)
+- Qué hace: «aurora aprende»: él le dicta datos y reglas, o le pega un documento.
+- Frases que reconoce: «aprende esto», «aprendete», «aprendete esto», «apuntate esto», «aurora aprende», «desde», «graba esto», «memoriza esto», «quiero que aprendas», «quiero que memorices»
+
+**ensenar** (ensenar)
+- Qué hace: Anuar le enseña una forma nueva de pedirle algo, en una sola frase.
+- Frases que reconoce: «aprende que», «apuntale que», «cuando te diga», «es lo mismo que», «quiere decir», «si te digo»
+
 **cotizar_vinil** (cotizador_vinil)
 - Qué hace: el precio sale de SU lista, no de una adivinanza.
 - Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «corte laser con vinil dorado», «coste», «costo», «cotiza», «cotizacion», «cotizame»
@@ -242,7 +250,7 @@ De los 189 generadores de la librería Boxes.py, estos son los que ya tienen voc
 - **caja cerrada por todos lados** (ClosedBox) — di «cerrada», «cerrado», «closed»
 - **lámpara de media luna con canal para difusor LED (custom, no es de boxes.py)** (lampara_media_luna) — di «media luna», «medialuna», «lampara de arco», «lampara arco», «half moon»
 
-## Herramientas del enrutador universal (~696 funciones reales)
+## Herramientas del enrutador universal (~713 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -301,13 +309,20 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (87)
+### CEREBRO (95)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
 - `CEREBRO/acciones_sistema:mover` — Mueve un archivo y VERIFICA (existe en destino y ya no en origen).
 - `CEREBRO/acciones_sistema:reparar_whatsapp` — Cierra WhatsApp y limpia su cache REAL. Devuelve exactamente qué hizo.
 - `CEREBRO/acciones_sistema:reparar_corel` — Repara la conexion de AURORA con CorelDRAW borrando el cache corrupto de
+- `CEREBRO/aprende_conocimiento:extraer` — Saca DATOS y REGLAS de un texto pegado. Renglón por renglón.
+- `CEREBRO/aprende_conocimiento:donde_aplica` — Qué módulos preguntan de verdad por este número, buscándolos en el disco.
+- `CEREBRO/aprende_conocimiento:guardar_datos` — Los números, a la puerta única de las cifras de Anuar.
+- `CEREBRO/aprende_conocimiento:guardar_reglas` — Las reglas de conducta, a su propio archivo.
+- `CEREBRO/aprende_conocimiento:listar_reglas` — Lo que él le dictó, para metérselo en el contexto al contestar.
+- `CEREBRO/aprende_conocimiento:olvidar_regla` — Él manda: lo que le enseñó, se lo puede quitar.
+- `CEREBRO/aprende_conocimiento:aprender` — Lo que él pegó, entendido y guardado. La puerta de entrada.
 - `CEREBRO/aprende_del_usuario:registrar_fallo` — Este mensaje no ejecutó nada. Se guarda por si el siguiente sí lo hace.
 - `CEREBRO/aprende_del_usuario:registrar_exito` — Este mensaje SÍ ejecutó. Si el anterior falló, se aprende la equivalencia.
 - `CEREBRO/aprende_del_usuario:aprender_a_la_primera` — Aprende una frase que SÍ funcionó, sin exigir que antes haya fallado.
@@ -341,6 +356,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/fabrica_motores:crear_motor` — Genera con Groq un motor .py que cumple el contrato, lo valida con
 - `CEREBRO/fabrica_motores:listar_motores_custom` — Lista los .py de MOTORES_CUSTOM con su META (carga aislada, tolerante).
 - `CEREBRO/fabrica_motores:probar_motor` — Carga el motor <slug> con importlib y ejecuta ejecutar(accion, datos).
+- `CEREBRO/generar_comandos_verificados:generar` — generar (generar_comandos_verificados)
 - `CEREBRO/generar_manual:generar` — generar (generar_manual)
 - `CEREBRO/nucleo:registrar` — Da de alta un motor. Es el ÚNICO camino para que AURORA lo ofrezca.
 - `CEREBRO/nucleo:catalogo` — Lo que AURORA puede decir que hace. La única fuente para esa respuesta.
@@ -700,7 +716,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MEMORIA/sistema_memoria:SistemaMemoria.estadisticas` — estadisticas (SistemaMemoria)
 - `MEMORIA/sistema_memoria:SistemaMemoria.estado` — estado (SistemaMemoria)
 
-### MOTORES (55)
+### MOTORES (57)
 
 - `MOTORES/adaptadores:MotorOracle.listar_leads` — listar leads (MotorOracle)
 - `MOTORES/adaptadores:MotorOracle.crear_lead` — crear lead (MotorOracle)
@@ -757,6 +773,8 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `MOTORES/motor_reasoning:MotorReasoning.get_status` — get status (MotorReasoning)
 - `MOTORES/motor_ventas:MotorVentas.procesar` — procesar (MotorVentas)
 - `MOTORES/motor_ventas:MotorVentas.get_status` — get status (MotorVentas)
+- `MOTORES/_llamada_modelo:cliente` — El cliente con el que hablan los motores. `None` si no hay GROQ_API_KEY.
+- `MOTORES/_llamada_modelo:responder` — Le pregunta al modelo y devuelve TEXTO NO VACÍO, o levanta el error.
 
 ### MOTORES_CUSTOM (5)
 
@@ -785,13 +803,17 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `ORACLE/oracle_core:resumen` — resumen (oracle_core)
 - `ORACLE/oracle_core:obtener_conexion` — Enlace publico inyectado por el fix.
 
-### PUBLICADOR (26)
+### PUBLICADOR (30)
 
 - `PUBLICADOR/auto_publicar_atf:main` — main (auto_publicar_atf)
 - `PUBLICADOR/corregir_telefono_atf:traer_videos` — traer videos (corregir_telefono_atf)
 - `PUBLICADOR/corregir_telefono_atf:nueva_desc` — Devuelve (nuevo_texto, motivo) o (None, None) si no hay que tocar.
 - `PUBLICADOR/corregir_telefono_atf:editar` — editar (corregir_telefono_atf)
 - `PUBLICADOR/corregir_telefono_atf:main` — main (corregir_telefono_atf)
+- `PUBLICADOR/hospedaje_imagen:hospedar` — Sube una imagen del disco a la página de Facebook SIN publicarla y
+- `PUBLICADOR/hospedaje_imagen:borrar` — Borra de Facebook la foto que solo se subió para hospedarla.
+- `PUBLICADOR/marca_agua:poner_marca` — Le pone la marca del negocio a UNA imagen. Devuelve la ruta del archivo
+- `PUBLICADOR/marca_agua:poner_marca_a_todas` — La misma marca a todas las imágenes de una carpeta. Es lo que pidió
 - `PUBLICADOR/metricool_conector:estado_metricool` — estado metricool (metricool_conector)
 - `PUBLICADOR/metricool_conector:listar_marcas` — Marcas/brands conectadas a la cuenta de Metricool (cada una con su blogId).
 - `PUBLICADOR/metricool_conector:publicar_metricool` — Publica/agenda REAL via Metricool a una o varias redes (facebook, tiktok, pinterest, instagram...).
@@ -860,7 +882,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (111)
+### TALLER (114)
 
 - `TALLER/acomodar_hoja:acomodar` — Acomoda `cuantas` piezas en las hojas que hagan falta.
 - `TALLER/acomodar_hoja:main` — main (acomodar_hoja)
@@ -947,6 +969,9 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/ordenes_taller:contabilidad_mensual` — Balance por mes (por fecha de entrega; si falta, por fecha de creación).
 - `TALLER/pdf_tamano_real:generar` — Una imagen → un PDF de UNA página, del tamaño real, a 1:1.
 - `TALLER/pdf_tamano_real:main` — main (pdf_tamano_real)
+- `TALLER/pinata_completa:cama_del_laser_mm` — El área real de SU máquina, de su propia ficha. Nada de suponerla.
+- `TALLER/pinata_completa:producir` — De una imagen y UNA medida, los 4 archivos de la piñata.
+- `TALLER/pinata_completa:main` — main (pinata_completa)
 - `TALLER/print_and_cut:manual` — manual (print_and_cut)
 - `TALLER/print_and_cut:main` — main (print_and_cut)
 - `TALLER/produccion_piezas_grandes:calcular` — El cálculo completo: escala + hojas de impresión + MDF + corte + recordatorio.

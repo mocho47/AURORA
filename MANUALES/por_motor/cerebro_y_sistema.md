@@ -1,5 +1,13 @@
 # Cerebro y Sistema — comandos reales de AURORA
 
+**aprende_conocimiento** (aprendizaje_datos)
+- Qué hace: «aurora aprende»: él le dicta datos y reglas, o le pega un documento.
+- Frases que reconoce: «aprende esto», «aprendete», «aprendete esto», «apuntate esto», «aurora aprende», «desde», «graba esto», «memoriza esto», «quiero que aprendas», «quiero que memorices»
+
+**ensenar** (ensenar)
+- Qué hace: Anuar le enseña una forma nueva de pedirle algo, en una sola frase.
+- Frases que reconoce: «aprende que», «apuntale que», «cuando te diga», «es lo mismo que», «quiere decir», «si te digo»
+
 **cotizar_vinil** (cotizador_vinil)
 - Qué hace: el precio sale de SU lista, no de una adivinanza.
 - Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «corte laser con vinil dorado», «coste», «costo», «cotiza», «cotizacion», «cotizame»
