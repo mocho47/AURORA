@@ -18,6 +18,9 @@ INKSCAPE = r"C:\Program Files\Inkscape\bin\inkscape.exe"
 # Sesión de segmentación de PERSONAS (u2net_human_seg): aísla al personaje
 # sin arrastrar objetos del fondo (autos, muebles). Cacheada = se carga 1 sola vez.
 _SES_HUMANO = None
+_SES_GENERAL = None
+
+
 def _sesion_humano():
     global _SES_HUMANO
     if _SES_HUMANO is None:
@@ -121,11 +124,36 @@ def papercraft_a_dxf(pdf: str, pagina: int = 0, salida: str = "", dpi: int = 300
 
 
 # ── 5. QUITAR FONDO (IA de segmentación, rembg/u2net) ────────────────
-def quitar_fondo(entrada: str, salida: str = "", sobre_blanco: bool = False) -> dict:
-    """Recorta el sujeto y elimina el fondo. IA real (rembg). PNG con transparencia."""
+def _sesion(modelo: str):
+    """La sesion de rembg del modelo pedido, creada una sola vez cada una.
+
+    Hay dos y NO dan lo mismo (medido el 2026-08-26 con la piñata de Alicia):
+      · u2net_human_seg -> entrenado en PERSONAS. 42 s. Es el que se usa para
+        las fotos de gente que van a sublimacion, y ahi es el bueno.
+      · u2net           -> objetos en general. 14 s, tres veces mas rapido, y
+        es el correcto para una piñata, un trailer, un logo o una pieza.
+    Usar el de personas para recortar un objeto costaba 28 s de mas por foto y
+    fue lo que hacia que la cotizacion desde imagen se pasara del limite del
+    chat y le contestara a Anuar "mandame el DXF" en vez del precio.
+    """
+    if modelo == "u2net_human_seg":
+        return _sesion_humano()
+    global _SES_GENERAL
+    if _SES_GENERAL is None:
+        from rembg import new_session
+        _SES_GENERAL = new_session(modelo)
+    return _SES_GENERAL
+
+
+def quitar_fondo(entrada: str, salida: str = "", sobre_blanco: bool = False,
+                 modelo: str = "u2net_human_seg") -> dict:
+    """Recorta el sujeto y elimina el fondo. IA real (rembg). PNG con transparencia.
+
+    modelo="u2net_human_seg" (default, sin cambios) para fotos de personas.
+    modelo="u2net" para objetos — mas rapido y mas correcto (ver _sesion)."""
     from rembg import remove
     img = Image.open(entrada).convert("RGBA")
-    cut = remove(img, session=_sesion_humano())
+    cut = remove(img, session=_sesion(modelo))
     if sobre_blanco:
         bg = Image.new("RGBA", cut.size, (255, 255, 255, 255))
         cut = Image.alpha_composite(bg, cut).convert("RGB")

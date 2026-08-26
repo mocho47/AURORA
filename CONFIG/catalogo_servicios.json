@@ -675,5 +675,32 @@
     "NO_se_cobra_corte_de_vinil": true,
     "_por_que": "no hay corte de plotter: el laser corta MDF y vinil en una sola pasada",
     "formula": "(MDF + vinil) x 1.20 + corte laser + diseno + instalacion"
+  },
+  "aprendido_de_anuar": {
+    "_nota": "Dictado por Anuar directamente a AURORA con «aurora aprende». Manda sobre el resto del catálogo.",
+    "tabloide_ancho": 33.0,
+    "_tabloide_ancho": {
+      "dijo": "un tabloide mide 33x48",
+      "unidad": "cm",
+      "cuando": "2026-08-26 11:08"
+    },
+    "tabloide_alto": 48.0,
+    "_tabloide_alto": {
+      "dijo": "un tabloide mide 33x48",
+      "unidad": "cm",
+      "cuando": "2026-08-26 11:08"
+    },
+    "minuto_corte": 8.0,
+    "_minuto_corte": {
+      "dijo": "el minuto de corte lo cobro a 8 pesos",
+      "unidad": "pesos",
+      "cuando": "2026-08-26 11:08"
+    },
+    "margen": 5.0,
+    "_margen": {
+      "dijo": "deja siempre 5mm de margen",
+      "unidad": "mm",
+      "cuando": "2026-08-26 11:08"
+    }
   }
 }

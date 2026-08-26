@@ -499,6 +499,25 @@
       "aprendido": 1787509596.7030056,
       "ultima_vez": 1787509596.7030056,
       "a_la_primera": true
+    },
+    {
+      "clave": "genera 5esta pinata para alocia a 89 5cm",
+      "como_lo_dijo": "genera 5esta piñata para alocia a 89.5cm",
+      "que_si_funciono": "cotiza esapiñata para alicia a 89.5cm en material 2.5",
+      "herramienta": "cotizador",
+      "veces": 1,
+      "aprendido": 1787739657.0971045,
+      "ultima_vez": 1787739657.0971045
+    },
+    {
+      "clave": "sacame la pinata",
+      "como_lo_dijo": "sacame la piñata",
+      "que_si_funciono": "sacame la piñata",
+      "herramienta": "calcular_pieza_grande",
+      "veces": 1,
+      "aprendido": 1787763351.4035504,
+      "ultima_vez": 1787763351.4035504,
+      "a_la_primera": true
     }
   ]
 }

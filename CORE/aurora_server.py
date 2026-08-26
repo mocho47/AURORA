@@ -805,6 +805,15 @@ async def chat_archivo(file: UploadFile = File(...)):
     carpeta.mkdir(exist_ok=True)
     destino = carpeta / (file.filename or "archivo")
     destino.write_bytes(datos)
+    # Que el cerebro se acuerde de CUÁL archivo es "este". Sin esto, Anuar
+    # pegaba la foto y en el mensaje siguiente tenía que escribir la ruta
+    # completa de Windows a mano; si no, AURORA decía que no sabía hacerlo
+    # (pasó en vivo el 2026-08-26 con la piñata del escudo de Peugeot).
+    try:
+        from CEREBRO.consciencia import recordar_archivo as _recordar
+        _recordar(str(destino))
+    except Exception:
+        pass
     ext = destino.suffix.lower().lstrip(".")
     kb = round(len(datos) / 1024, 1)
     sugerencias = {

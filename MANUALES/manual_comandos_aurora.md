@@ -55,7 +55,7 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 
 **cotizar_vinil** (cotizador_vinil)
 - Qué hace: el precio sale de SU lista, no de una adivinanza.
-- Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «coste», «costo», «cotiza», «cotizacion», «cotizame», «cuesta»
+- Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «corte laser con vinil dorado», «coste», «costo», «cotiza», «cotizacion», «cotizame»
 
 **texto_a_corte** (texto_a_corte)
 - Qué hace: convierte las palabras en archivo de corte real.
@@ -85,6 +85,10 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 - Qué hace: la cadena completa: foto → sin fondo → vectorizada → DXF.
 - Frases que reconoce: «cortarlo», «elimina el fondo», «para cortar», «para corte», «para el laser», «para la laser», «quita el fondo», «quita el fondo y», «quitale el fondo», «quitale el fondo y», «recorta el sujeto», «recorta la imagen»
 
+**calcular_pieza_grande** (produccion_piezas_grandes)
+- Qué hace: CHAT → TALLER/produccion_piezas_grandes.py: escala + tabloides + MDF + corte de una pieza grande (personaje/piñata) a partir de un DXF.
+- Frases que reconoce: «calcula el contorno de», «calcula el personaje», «calcula esta pieza», «calcula esta pinata», «calcula la caja de esta pinata», «calcula la pinata», «calculame esta pinata», «cotiza esta pinata»
+
 **generar_caja** (generador_cajas)
 - Qué hace: boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
 - Frases que reconoce: «arma una caja», «caja con divisiones», «caja corazon», «crea una caja», «creame una caja», «genera una bandeja», «genera una caja», «generame el dxf de una caja», «generame una caja», «haz una caja», «hazme un cajon», «hazme una bandeja»
@@ -92,6 +96,10 @@ Generado automáticamente del código real (no escrito a mano) — si algo cambi
 **cotizar_dxf** (cotizador_laser)
 - Qué hace: mide los METROS DE CORTE reales de un DXF y lo cotiza.
 - Frases que reconoce: «cortar», «corte», «cotiza», «cotiza el archivo», «cotiza el corte», «cotiza el dibujo», «cotiza el diseno», «cotiza el dxf», «cotiza este archivo», «cotiza este corte», «cotiza este diseno», «cotiza este dxf»
+
+**cotizar_laser_medidas** (cotizador_laser_medidas)
+- Qué hace: cotiza con las medidas que dio en el texto, sin esperar a que exista un DXF (foto sin vectorizar, o cliente presente que solo quiere el número).
+- Frases que reconoce: «acrilico», «caja», «cajas», «cobrar», «cobro», «coste», «costo», «cotiza», «cotizacion», «cotizame», «cuesta», «grabado»
 
 **cotizar** (cotizador)
 - Qué hace: Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.
@@ -234,7 +242,7 @@ De los 189 generadores de la librería Boxes.py, estos son los que ya tienen voc
 - **caja cerrada por todos lados** (ClosedBox) — di «cerrada», «cerrado», «closed»
 - **lámpara de media luna con canal para difusor LED (custom, no es de boxes.py)** (lampara_media_luna) — di «media luna», «medialuna», «lampara de arco», «lampara arco», «half moon»
 
-## Herramientas del enrutador universal (~692 funciones reales)
+## Herramientas del enrutador universal (~696 funciones reales)
 
 Estas no se activan por una frase fija — el enrutador de IA elige la que mejor responda a lo que pidas, verificando que existan los datos necesarios antes de ejecutarla de verdad (nunca la adivina a ciegas).
 
@@ -293,7 +301,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `BIBLIOTECA/biblioteca:contexto_para_llm` — Devuelve un bloque de texto de los manuales, para inyectar al cerebro.
 - `BIBLIOTECA/biblioteca:estado` — estado (biblioteca)
 
-### CEREBRO (89)
+### CEREBRO (87)
 
 - `CEREBRO/acciones_sistema:buscar_archivo` — Busca un archivo por nombre (o fragmento) en las carpetas comunes. Real.
 - `CEREBRO/acciones_sistema:copiar` — Copia un archivo y VERIFICA que llegó. destino puede ser carpeta o archivo.
@@ -334,8 +342,6 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CEREBRO/fabrica_motores:listar_motores_custom` — Lista los .py de MOTORES_CUSTOM con su META (carga aislada, tolerante).
 - `CEREBRO/fabrica_motores:probar_motor` — Carga el motor <slug> con importlib y ejecuta ejecutar(accion, datos).
 - `CEREBRO/generar_manual:generar` — generar (generar_manual)
-- `CEREBRO/lengua_anuar:intencion` — Qué está pidiendo Anuar, o None si esto no lo sabe.
-- `CEREBRO/lengua_anuar:explica` — Qué familia calzó y con qué patrón. Para poder auditarlo.
 - `CEREBRO/nucleo:registrar` — Da de alta un motor. Es el ÚNICO camino para que AURORA lo ofrezca.
 - `CEREBRO/nucleo:catalogo` — Lo que AURORA puede decir que hace. La única fuente para esa respuesta.
 - `CEREBRO/nucleo:atender` — Ejecuta un motor y COMPRUEBA el resultado antes de devolverlo.
@@ -444,7 +450,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `CORE/publicador_atf_profesional:PublicadorATFProfesional.obtener_estadisticas` — Obtiene estadísticas de publicaciones
 - `CORE/publicador_atf_profesional:ejemplo_uso` — Ejemplo de cómo usar el publicador profesional
 
-### EDITOR (92)
+### EDITOR (93)
 
 - `EDITOR/arreglar_pdf:arreglar` — Agranda las imágenes que no dan el DPI y guarda un PDF nuevo.
 - `EDITOR/arreglar_pdf:main` — main (arreglar_pdf)
@@ -491,6 +497,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `EDITOR/escalas_planillas:info_dpi` — Reporta tamaño en px, DPI embebido y el tamaño físico real al que imprimiría.
 - `EDITOR/escalas_planillas:fijar_dpi` — Cambia SOLO el DPI embebido (no remuestrea): ajusta el tamaño de impresión sin tocar píxeles.
 - `EDITOR/escalas_planillas:escalar_a_medida` — Lleva una imagen a una medida FÍSICA real (cm) a un DPI dado.
+- `EDITOR/escalas_planillas:dividir_imagen_en_hojas` — Escala la imagen a su medida física real y la PARTE en hojas que sí
 - `EDITOR/escalas_planillas:generar_planilla` — Imposición: llena una hoja con copias de un ítem a medida física exacta.
 - `EDITOR/flat_prenda:dibujar` — La prenda dibujada. Devuelve (imagen RGBA, caja del área en píxeles).
 - `EDITOR/imagen_a_dxf:svg_a_dxf` — SVG → DXF sin Inkscape.
@@ -853,7 +860,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `SUBLIMACION/sublimacion_core:lienzo_blanco` — Genera el LIENZO en blanco con guías (para armar a mano), 300 DPI: PNG + PDF + preview.
 - `SUBLIMACION/sublimacion_core:montar` — Monta una imagen de diseño en el lienzo a medida y exporta LISTO PARA IMPRIMIR
 
-### TALLER (106)
+### TALLER (111)
 
 - `TALLER/acomodar_hoja:acomodar` — Acomoda `cuantas` piezas en las hojas que hagan falta.
 - `TALLER/acomodar_hoja:main` — main (acomodar_hoja)
@@ -890,7 +897,7 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/cotizador_vinil:cotizar` — Qué cuesta cortar (y planchar, y pegar) ese trabajo.
 - `TALLER/cotizador_vinil:tarifa_implicita` — De un trabajo YA COBRADO saca a cuánto le salió la hora.
 - `TALLER/cotizador_vinil:main` — main (cotizador_vinil)
-- `TALLER/dividir_en_hojas:dividir` — Parte el DXF en n_partes tiras del mismo ancho (o alto), con traslape.
+- `TALLER/dividir_en_hojas:dividir` — Parte el DXF en una cuadrícula de hojas que SÍ caben en el tamaño real
 - `TALLER/etiquetas:variantes` — Los colores de lote. El archivo manda; si no existe, la tabla de aquí.
 - `TALLER/etiquetas:guardar_config` — guardar config (etiquetas)
 - `TALLER/etiquetas:registrar_lote` — Deja constancia de lo impreso. Es la mitad del valor del servicio:
@@ -901,6 +908,8 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/etiquetas:sticker` — Sticker redondo. Mismo motor, contorno circular en el suaje.
 - `TALLER/etiquetas:cuanto_cobrar` — El precio con la fórmula de Anuar, sin adivinar.
 - `TALLER/etiquetas:main` — main (etiquetas)
+- `TALLER/formula_precios:numero` — UN número de Anuar, pedido por su nombre. La única puerta a sus cifras.
+- `TALLER/formula_precios:numeros` — Todos sus números de una vez, ya leídos del catálogo.
 - `TALLER/formula_precios:clasificar_diseno` — ¿Qué tipo de diseño trae el cliente? Se decide por la extensión.
 - `TALLER/formula_precios:cotizar` — El precio de un trabajo, con la fórmula de Anuar y su desglose completo.
 - `TALLER/formula_precios:texto` — El desglose como se lo quiere ver Anuar: en renglones, sin adornos.
@@ -936,8 +945,11 @@ Estas no se activan por una frase fija — el enrutador de IA elige la que mejor
 - `TALLER/ordenes_taller:actualizar_estado` — actualizar estado (ordenes_taller)
 - `TALLER/ordenes_taller:alertas` — Calcula alertas de entrega en vivo:
 - `TALLER/ordenes_taller:contabilidad_mensual` — Balance por mes (por fecha de entrega; si falta, por fecha de creación).
+- `TALLER/pdf_tamano_real:generar` — Una imagen → un PDF de UNA página, del tamaño real, a 1:1.
+- `TALLER/pdf_tamano_real:main` — main (pdf_tamano_real)
 - `TALLER/print_and_cut:manual` — manual (print_and_cut)
 - `TALLER/print_and_cut:main` — main (print_and_cut)
+- `TALLER/produccion_piezas_grandes:calcular` — El cálculo completo: escala + hojas de impresión + MDF + corte + recordatorio.
 - `TALLER/proveedores:buscar` — ¿Quién vende esto? Si no está, se DICE — no se inventa un proveedor.
 - `TALLER/proveedores:agregar` — Da de alta un proveedor. Los datos los pone Anuar, no se inventan.
 - `TALLER/proveedores:anotar_precio` — Registra un precio CON su fecha. Un precio sin fecha no sirve para decidir.

@@ -2,7 +2,7 @@
 
 **cotizar_vinil** (cotizador_vinil)
 - Qué hace: el precio sale de SU lista, no de una adivinanza.
-- Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «coste», «costo», «cotiza», «cotizacion», «cotizame», «cuesta»
+- Frases que reconoce: «acrilico», «caja», «cajas», «cameo», «cobrar», «cobro», «corte laser con vinil dorado», «coste», «costo», «cotiza», «cotizacion», «cotizame»
 
 **texto_a_corte** (texto_a_corte)
 - Qué hace: convierte las palabras en archivo de corte real.
@@ -32,6 +32,10 @@
 - Qué hace: la cadena completa: foto → sin fondo → vectorizada → DXF.
 - Frases que reconoce: «cortarlo», «elimina el fondo», «para cortar», «para corte», «para el laser», «para la laser», «quita el fondo», «quita el fondo y», «quitale el fondo», «quitale el fondo y», «recorta el sujeto», «recorta la imagen»
 
+**calcular_pieza_grande** (produccion_piezas_grandes)
+- Qué hace: CHAT → TALLER/produccion_piezas_grandes.py: escala + tabloides + MDF + corte de una pieza grande (personaje/piñata) a partir de un DXF.
+- Frases que reconoce: «calcula el contorno de», «calcula el personaje», «calcula esta pieza», «calcula esta pinata», «calcula la caja de esta pinata», «calcula la pinata», «calculame esta pinata», «cotiza esta pinata»
+
 **generar_caja** (generador_cajas)
 - Qué hace: boxes.py: genera la caja que se pidió EN ESPAÑOL, y la cotiza.
 - Frases que reconoce: «arma una caja», «caja con divisiones», «caja corazon», «crea una caja», «creame una caja», «genera una bandeja», «genera una caja», «generame el dxf de una caja», «generame una caja», «haz una caja», «hazme un cajon», «hazme una bandeja»
@@ -39,6 +43,10 @@
 **cotizar_dxf** (cotizador_laser)
 - Qué hace: mide los METROS DE CORTE reales de un DXF y lo cotiza.
 - Frases que reconoce: «cortar», «corte», «cotiza», «cotiza el archivo», «cotiza el corte», «cotiza el dibujo», «cotiza el diseno», «cotiza el dxf», «cotiza este archivo», «cotiza este corte», «cotiza este diseno», «cotiza este dxf»
+
+**cotizar_laser_medidas** (cotizador_laser_medidas)
+- Qué hace: cotiza con las medidas que dio en el texto, sin esperar a que exista un DXF (foto sin vectorizar, o cliente presente que solo quiere el número).
+- Frases que reconoce: «acrilico», «caja», «cajas», «cobrar», «cobro», «coste», «costo», «cotiza», «cotizacion», «cotizame», «cuesta», «grabado»
 
 **cotizar** (cotizador)
 - Qué hace: Cotiza con los precios reales de tu catálogo (98 productos de ATF, 73 servicios de Milens). Si no encuentra el producto lo dice: no inventa precios.

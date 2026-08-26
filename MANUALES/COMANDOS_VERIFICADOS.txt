@@ -1,0 +1,712 @@
+﻿==========================================================================
+        COMANDOS DE AURORA  -  probados uno por uno
+==========================================================================
+
+  574 frases verificadas   ·   36 capacidades   ·   2026-08-26
+
+  Cada frase de esta hoja se paso por AURORA de verdad y llego a
+  donde debia. No te la tienes que aprender: basta con que le digas
+  la idea. Si algo no lo entiende y se lo dices de otra forma que si
+  funciona, se queda con las dos.
+
+  Se escribe igual que hablas: sin acentos, como te salga.
+
+==========================================================================
+
+
+--------------------------------------------------------------------------
+  TALLER
+--------------------------------------------------------------------------
+
+  Adapta un diseño a OTRO grosor de material (ajusta las ranuras)
+      > ajusta la casa de bob esponja al 50% para material de 2.5
+      > tengo un archivo de 3mm y mi material es de 2.5 que hago
+      > adaptame calamardo a 2.5 son puros encastres
+      > el diseño viene para 3mm y mi material es de 2.5
+      > reescala calamardo son puros encastres
+      > adapta la plantilla a mi mdf que es mas delgado
+      > adaptame el bob esponja a mdf de 5.5
+      > reescala el dibujo a 2.5 son encastres
+      > achicame el diseño a la mitad para mdf de 3mm
+      > amplia el archivo al doble y ajusta los encastres
+      > los machos y hembras ajustalos a 2.7
+      > mi material es de 2.5 acomoda el diseño
+      > viene para 4mm ajustalo
+      > adapta la plantilla a mi acrilico de 3
+      > ajusta el diseño a mi material de 6mm
+      > adapta el archivo a material de 2.5
+
+  Tus citas y pendientes
+      > que tengo agendado
+      > que sigue
+      > que citas tengo esta semana y cuales son de atf
+      > que me toca hoy
+      > con quien quede esta semana
+      > para cuando quedo la entrega
+      > que citas tengo manana
+      > agendame con don beto el jueves
+      > mi agenda como esta
+      > cancela la cita de las 5
+      > ya vino el cliente de los faros
+      > programa una cita para el lunes
+      > que tengo agendado el sabado
+      > confirma la cita del kinder
+      > agenda del dia porfa
+      > que tengo hoy
+      > tengo pendientes hoy
+
+  Piñatas y piezas grandes: escala, tabloides, MDF y corte de un jalón
+      > cotiza esta piñata para alicia
+      > calcula esta piñata completa es con despiece
+      > calcula la caja de esta piñata es solo el contorno
+      > cotizame la pieza grande de la fiesta
+      > calculame el personaje a 89.5cm
+      > cotiza el personaje completo con despiece
+      > calcula cuantos tabloides me salen de esta pieza
+      > cotizame esta pinata a 1.20 de alto
+      > esta pinata cuanto sale calculala
+      > cotiza el personaje de bluey para una pinata
+      > calcula la pinata de alicia
+      > cotizame la pinata numero 5
+      > calcula esta pieza a escala
+      > cotiza esa pinata que te mande
+      > calcula esta pinata con despiece completo
+      > cotiza la pieza del personaje
+
+  Cotiza cualquier producto del catálogo
+      > cuanto cuesta un termo yeti sublimado
+      > cuanto sale
+      > dame precio de 3 tazas y 2 termos personalizados
+      > en cuanto dejo una gorra bordada digo sublimada
+      > precio de una agenda de vinipiel grabada
+      > cuanto por 10 vasos cafeteros personalizados
+      > cuanto cuesta una playera sublimada
+      > cotizame 20 termos con logo
+      > presupuesto de 50 tazas magicas
+      > cuanto vale una agenda personalizada
+      > cotiza 12 vasos cerveceros
+      > cuanto me sale una gorra bordada
+      > dame el precio de 100 llaveros
+      > cuanto cobras por una playera con foto
+      > cuanto cuesta un termo yeti con nombre
+      > cotizame 20 gorras personalizadas
+      > que precio tiene una taza magica
+
+  Mide un DXF y te dice el corte real
+      > cuanto cuesta cortar este archivo
+      > cuantos metros de corte trae
+      > cuantos metros de corte trae este archivo
+      > mide el dxf y dime en cuanto lo dejo
+      > que me cobrarias por cortar este diseño en mdf
+      > cuantos mts de corte tiene el archivo
+      > mide este archivo y dime el corte
+      > cuanto cobro por cortar este diseño
+      > cotiza este archivo porfa
+      > cuanto cuesta cortar lo que te mande
+      > cotiza el dibujo que traigo
+      > cuanto tarda en cortar este dxf
+      > mide el corte del archivo
+      > cotiza este corte para el cliente
+      > cuanto sale cortar esto
+
+  Cotiza láser + material dándole tú las medidas, sin DXF
+      > cotiza esta imagen en corte laser con vinil dorado 72x41
+      > cuanto sale en mdf de 60 x 40
+      > a como me sale grabar acrilico de 30x20
+      > precio de cortar mdf 100 x 50
+      > cuanto cobro por un letrero en mdf de 80x30
+      > cotizame 109 x 85 en mdf con vinil metalico
+      > cuanto me cobras por grabado en madera de 25x25
+      > que precio tiene cortar triplay de 120x60
+      > cotiza laser de 40x40 en acrilico
+      > cuanto sale un corte laser de 50 x 70 en mdf
+      > a como el mdf cortado de 90x45
+      > cuanto me cuesta grabar en acrilico
+      > cotizame corte laser en mdf
+      > cuanto por cortar acrilico
+      > cuanto sale grabar madera de 15x15
+      > cotiza mdf de 30x30 con vinil negro
+
+  Cotiza vinil de recorte por área
+      > cuanto sale un vinil de recorte de 20x30
+      > cotisa unas letras en vinil
+      > unas letras de 10x28 y unos numeros de 15x10 en vinil de corte cuanto
+      > a como me sale el metro de vinil textil ya puesto
+      > oye y si son 5 calcas de 12x12 cuanto queda cada una
+      > en cuanto sale rotular una puerta de 90 x 45 en recorte
+      > precio de vinil textil planchado en 20 playeras
+      > cuanto cobro por rotular un cristal
+      > el htv cuanto cuesta el metro
+      > cuanto sale una calca de 15x15 en recorte
+      > en cuanto dejo 50 stickers de vinil de 5x5
+      > cuanto es el planchado de un logo chico
+      > a como cobras el vinil metalico
+      > cuanto por un vinil de recorte para la camioneta
+      > precio del vinil tornasol por metro
+      > cotiza 20 calcas de 10x10 en vinil
+      > cuanto sale rotular la camioneta
+
+  Crea una caja con encastres dando solo las medidas
+      > hazme una caja de 12x9x6 en mdf de 2.7
+      > necesito una caja
+      > un cofre de 20x15x10 con dedos y que me des el dxf
+      > armame un estuche de 15x10x8
+      > necesito un organizador de 30x20x12 en mdf
+      > una cajita de 8x8x5 para una taza
+      > hazme una caja de 25x18x10
+      > un baul de 40x30x25 en mdf
+      > necesito un cofre para joyeria
+      > quiero una caja con tapa de 10x10x10
+      > armame una cajita de 6x6x4
+      > una caja de 50 x 35 x 20 para los termos
+      > hazme el estuche de 22x14x7 en mdf de 2.7
+      > organizador de 35x25x15 con dedos
+      > quiero un cofre tipo pirata de 30x20x15
+      > caja de 18x18x9 y dame el dxf
+
+  Imprimir y recortar: contorno y marcas de registro
+      > hazme un print and cut de este logo
+      > necesito imprimir y recortar unos stikers
+      > un stiker impreso con su linea de corte y marcas de registro
+      > esas calcomanias van impresas y luego recortadas verdad
+      > arma las marcas de registro para recortar lo impreso
+      > necesito calcas full color con su contorno de corte
+      > como corto lo impreso sin que se recorra
+      > ponle las marcas de registro a la hoja
+      > cuanto cabe en una hoja de stickers
+      > el area util de la hoja cual es
+      > cuanto desplazamiento le dejo al contorno
+      > unas calcas full color con su contorno
+      > necesito imprimir y cortar unas etiquetas
+      > marcas de silhouette como se ponen
+      > el excedente del corte cuanto le dejo
+      > print and cut de las calcas de luisa
+
+  Dónde comprar y a qué precio
+      > donde compro mdf en guadalajara
+      > quien vende acrilico
+      > necesito proveedor de vinil textil metalizado en gdl
+      > con quien surto acrilico
+      > quien me vende mdf barato
+      > mis proveedores de sublimacion cuales son
+      > donde consigo acrilico de 3mm
+      > quien vende mdf en tlaquepaque
+      > con quien compro vinil textil
+      > mi proveedor de termos cual era
+      > proveedores de sublimacion en gdl
+      > donde compro laminas de mdf baratas
+      > quien me surte los termos yeti
+      > con quien consigo tinta de sublimacion
+      > proveedor de acrilico en guadalajara
+      > donde compro las prendas para sublimar
+
+
+--------------------------------------------------------------------------
+  VENTAS
+--------------------------------------------------------------------------
+
+  Da de alta un cliente nuevo en el CRM
+      > apunta a juan perez 3312345678 interesado en faros
+      > guarda este cliente
+      > registra a maria del taller de enfrente quiere 50 playeras su tel es 3339998877
+      > apunta a roberto 3311223344 quiere unas playeras
+      > da de alta a la señora del kinder
+      > metelo al crm es cliente nuevo
+      > apunta a laura 3312223344 quiere termos
+      > registra a don memo cliente nuevo
+      > da de alta a la señora de las playeras
+      > anota a carlos 3311112222 interesado en faros
+      > metelo a la lista es cliente nuevo
+      > nuevo cliente del kinder apuntalo
+      > apunta a rosa quiere 30 etiquetas
+      > registra a este prospecto
+      > otro lead de facebook apuntalo
+      > metelo al crm porfa
+
+  Los precios de los paquetes escolares de Rocío
+      > cuanto sale el paquete de primaria
+      > cuanto el de la campaña
+      > oiga cuanto me deja el paquete escolar de mi niño de primaria
+      > cuanto el paquete escolar
+      > el de secundaria en cuanto queda
+      > una clienta pregunta cuanto el de preescolar
+      > cuanto sale el paquete de secundaria
+      > el de kinder en cuanto sale
+      > que traen las etiquetas escolares
+      > las etiquetas para utiles que precio tienen
+      > una mama pregunta por el paquete escolar
+      > los nombres para la ropa cuanto salen
+      > cuanto la tabla de multiplicar
+      > precio del paquete de preescolar
+      > etiquetas para la escuela cuanto
+      > las etiquetas del nino de primaria
+
+  Argumentos de venta y manejo de objeciones
+      > dame la ficha del aozoom x1
+      > que le digo al cliente del x5
+      > como le vendo un retrofit a alguien que dice que esta caro
+      > que le contesto al cliente que dice que esta caro
+      > como cierro una venta de tiras secuenciales
+      > dame los argumentos de venta del led h4
+      > dame la ficha del x7
+      > argumentos de venta de los termos
+      > que le contesto al cliente que me dice que esta caro
+      > como le vendo unas tiras secuenciales
+      > hazme un pitch de la sublimacion
+      > como vendo el corte laser a un negocio
+      > brief de venta de los letreros
+      > que le digo al cliente que compara con chinos
+      > como cierro la venta del retrofit
+      > ficha del aozoom x2
+      > dame el pitch de los faros
+
+  Cuánto vendiste, cuánto te deben
+      > cuanto vendi este mes
+      > como voy
+      > dime cuanto llevo vendido y cuanto me deben los clientes
+      > como vamos este mes
+      > cuanto llevo vendido
+      > que tal va la venta
+      > cuanto llevo vendido esta semana
+      > como va la venta
+      > cuanto me deben los clientes
+      > hazme el corte de caja de hoy
+      > cuanto entro hoy
+      > los numeros del mes como van
+      > que tal vamos
+      > cuanto facture el mes pasado
+      > cuanto llevo ganado
+      > como vamos de ventas
+
+  Atiende al cliente de faros/retrofit
+      > cuanto cuesta un retrofit de faros
+      > hacen instalacion de leds
+      > traigo una jetta quiero ponerle aozoom cuanto me sale todo
+      > cuanto por ponerle biled a una hilux
+      > traigo un civic quiero mejorar los faros
+      > hacen proyectores de faro
+      > me pueden recolocar la lupa
+      > cuanto por un retrofit completo
+      > hacen bi led en guadalajara
+      > traigo un golf quiero cambiar los faros
+      > quiero mejorar los faros de mi troca
+      > instalan aozoom
+      > cuanto sale ponerle proyectores de faro
+      > tengo una hilux le quiero poner led
+      > cuanto cuesta el retrofit de un civic
+      > quiero lupas para mi jetta
+      > cuanto sale la lupa
+
+
+--------------------------------------------------------------------------
+  DISEÑO
+--------------------------------------------------------------------------
+
+  Abre una página en el navegador
+      > abre pinterest y busca luna de mdf
+      > abreme youtube
+      > metete a mercadolibre y buscame faros aozoom
+      > metete a facebook
+      > entra a 3axis y busca cajas
+      > abre google y busca precios de acrilico
+      > abre pinterest y busca cajas de mdf
+      > metete a amazon y busca laser
+      > abre milens.com
+      > entra a aliexpress y busca lupas
+      > abre google
+      > abre youtube y busca tutorial de rdworks
+      > metete a facebook y busca el grupo de laser
+      > abre pinterest y busca letreros luminosos
+      > entra a 3axis.co
+      > abre facebook
+      > entra a pinterest
+
+  Habla con CorelDRAW: qué tienes abierto, exportar
+      > corel esta abierto
+      > que tengo abierto en corel
+      > exportame a pdf lo que traigo abierto en corel
+      > que archivo traigo en corel
+      > corel lo tengo prendido
+      > pasa a pdf el documento de corel
+      > que traigo abierto
+      > corel esta prendido
+      > exporta a pdf lo de corel
+      > abre corel
+      > que documento tengo en coreldraw
+      > el cdr que traigo abierto cual es
+      > corel dime que tengo
+      > pasa a pdf lo de corel
+      > en corel exporta la pagina
+      > que archivo cdr esta abierto
+
+  Saca la silueta para recortar, o el dibujo lineal para estarcir
+      > sacame el delineado de este dibujo
+      > delinealo para que lo corte
+      > necesito la silueta nada mas
+      > hazme el recortable de las kpop
+      > sacale las lineas de corte al pdf
+      > me pidieron un delineado y dejarle pestañas para que no se suelten las piezas
+      > esto lo quiero en estarcido
+      > hazme un stencil de esta imagen
+      > la plantilla para trazar de este dibujo
+      > delineame el personaje
+      > quiero nada mas la silueta de afuera
+      > line art de la foto porfa
+      > sacame la silueta para recortar
+      > quiero el recortable con pestañas
+      > delinear el dibujo del cliente
+
+  Convierte cualquier archivo a DXF
+      > convierte esto a dxf
+      > pasalo a dxf
+      > convierteme este svg a dxf
+      > necesito el archivo en dxf
+      > pasa el diseño a formato de corte
+      > convierte este svg a dxf
+      > conviertelo a dxf porfa
+      > exporta a dxf esto
+      > quiero esto en dxf
+      > convierte el pdf a dxf
+      > pasa a dxf lo que te mande
+      > dame el archivo en dxf
+      > convierte el eps a dxf
+      > convierte esto a formato de corte
+      > dejalo a formato de corte
+
+  Foto → sin fondo → vectorizada → DXF, de un jalón
+      > quitale el fondo a esta foto y damela en dxf
+      > de esta foto quitame el fondo vectorizala y dejamela lista para cortar
+      > quitale el fondo a este logo y vectorizalo para cortar
+      > esta imagen la quiero limpia y en vector para el laser
+      > borra el fondo de la foto y dejala lista para corte
+      > quita el fondo de esta foto y pasala a dxf
+      > esta imagen vectorizala para la laser
+      > de esta imagen dame el vector para cortar
+      > borra el fondo del logo y dejalo en dxf
+      > vectoriza esta foto y dejala lista para el laser
+      > elimina el fondo y dejala para cortar
+      > el logo lo quiero limpio y en vector
+      > quitale el fondo al png y damelo en dxf
+      > recorta el sujeto de la foto para cortarlo
+      > sin el fondo y listo para la laser
+
+  Le pegas una ruta sola y te dice qué puede hacer con eso
+      > C:\Users\Administrador\Desktop\prueba.dxf
+      > C:\Users\Administrador\Videos
+      > D:\algo_que_no_existe.cdr
+      > C:\Users\Administrador\Downloads\logo.png
+      > C:\AURORA.worktrees\TALLER_OUT
+      > E:\usb\diseno.svg
+      > C:\Users\Administrador\Desktop\calamardo.dxf
+      > C:\AURORA.worktrees\TALLER_OUT\caja.dxf
+      > D:\trabajos\pinata.cdr
+      > C:\Users\Administrador\Downloads
+      > E:\respaldos\logo.svg
+      > C:\Users\Administrador\Pictures\faro.jpg
+      > D:\milens\etiquetas.pdf
+      > C:\AURORA.worktrees\MANUALES
+      > F:\usb\despiece.dxf
+      > C:\Users\Administrador\Desktop\termo.png
+
+  Convierte texto en letras listas para el plóter
+      > hazme la palabra bienvenidos en vinil para cortar
+      > necesito unas letras para el ploter
+      > ponme MILENS en letra gruesa y pasalo a corte para el ploter
+      > sacame el nombre SOFIA en tipo script para recortar
+      > hazme los numeros del 1 al 10 para el plotter
+      > quiero la frase gracias por su compra lista para el ploter
+      > hazme el nombre valentina para el ploter
+      > las letras de MILENS en vinil de recorte
+      > quiero que diga felicidades en vinil
+      > escribe gracias en tipo script para cortar
+      > el rotulo de la puerta en vinil
+      > ponme los numeros del uno al diez para recortar
+      > necesito el texto de la promo listo para el plotter
+      > hazme la palabra abierto en vinil de recorte
+      > el nombre del bebe en vinil textil para la mantita
+      > las palabras feliz cumple para cortar en vinil
+
+
+--------------------------------------------------------------------------
+  MARKETING
+--------------------------------------------------------------------------
+
+  Revisa una campaña antes de que la mandes
+      > revisa esta campaña a ver si esta bien
+      > como ves la campaña
+      > checa la campaña de regreso a clases y dime que le falta
+      > que le falta a la campaña para que jale
+      > que opinas de la campaña asi como esta
+      > revisame la campaña antes de mandarla
+      > armame una campaña para el dia del padre
+      > como se arma una campaña que sirva
+      > cuales son las reglas de las campanas
+      > como hiciste la campaña de regreso a clases
+      > crea una campaña para navidad
+      > revisa la campaña del dia de las madres
+      > anatomia de una campaña explicamela
+      > nueva campaña para los termos
+      > esta bien esta campaña o le falta gancho
+      > que le falta a la campaña de sublimacion
+
+  Arma el post del día (no lo sube sin tu OK)
+      > que publico hoy
+      > de verdad que publico hoy
+      > arma el post de hoy para facebook de atf pero no lo subas
+      > que subo hoy a las redes
+      > arma el post pero no lo mandes
+      > que toca publicar de milens
+      > que publico hoy en atf
+      > arma el post de milens
+      > postea hoy en facebook
+      > que subo hoy a facebook
+      > publica en facebook lo de hoy
+      > sube el video de hoy
+      > arma el post pero no lo subas
+      > que toca publicar hoy
+      > publica el reel de la caja
+      > que publico hoy en milens
+      > publica en atf lo de la caja
+
+  Qué videos tienes listos para publicar
+      > que videos tengo listos para publicar
+      > cuantos videos hay
+      > sacame los videos de la carpeta de procesos que sirvan para tiktok
+      > que material de video tengo guardado
+      > hay clips que sirvan para un reel
+      > de los videos cuales estan sin publicar
+      > cuantos videos hay en la videoteca
+      > que videos hay listos
+      > revisa los videos duplicados
+      > prepara los videos para tiktok
+      > cuales clips estan en vertical
+      > voltea los videos que estan horizontales
+      > que hay en la videoteca
+      > convierte los videos a 9:16
+      > cuantos reels tengo
+      > revisa los clips repetidos
+
+
+--------------------------------------------------------------------------
+  CONOCIMIENTO
+--------------------------------------------------------------------------
+
+  Busca en internet de verdad
+      > buscame en internet precios de faros led
+      > investiga que tendencias hay en sublimacion para regreso a clases
+      > investiga que se esta usando en corte laser este año
+      > googlea cuanto cobran por retrofit en guadalajara
+      > busca en internet ideas de regalos personalizados
+      > investiga precios de maquinas laser en mexico
+      > googlea que es el kerf
+      > busca en internet ideas de letreros luminosos
+      > investiga que se vende en sublimacion
+      > busca en google como cotizan otros talleres
+      > buscame en internet tendencias de corte laser
+      > investiga cuanto cobran por letreros en gdl
+      > busca en linea proveedores de acrilico chinos
+      > googlea que resina usan para los faros
+      > investiga que piden las papelerias
+
+
+--------------------------------------------------------------------------
+  CEREBRO
+--------------------------------------------------------------------------
+
+  Mueve, copia o borra archivos y manda WhatsApps de verdad
+      > mueve estos archivos a la carpeta de entregados
+      > copia el dxf a la usb
+      > borra los temporales de la carpeta
+      > renombra el archivo con la fecha
+      > instala la libreria que falta
+      > manda un whatsapp a rocio
+      > mandale un whatsapp al cliente del kinder
+      > elimina los archivos repetidos
+      > pasalo a la carpeta de listos
+      > envia un whatsapp con el anticipo
+      > desinstala el programa viejo
+      > copia la carpeta al respaldo
+      > borra el archivo viejo
+      > instala el driver de la laser
+
+  Te explica qué es y qué puede hacer
+      > quien eres
+      > que eres tu
+      > tu que puedes hacer por mi negocio explicamelo facil
+      > explicame que eres en pocas palabras
+      > para que me sirves tu
+      > que ganamos con que estes aqui
+      > tu que eres exactamente
+      > quien eres tu
+      > para que me sirves en el taller
+      > explicame que eres sin rollos
+      > que ganamos con que estes aqui en el negocio
+      > de que me sirves
+      > que eres
+      > quien eres y de donde saliste
+      > explicame que eres a mi esposa
+      > que ganamos con que estes en la pc
+
+  Te dice cómo funciona ella misma por dentro
+      > que hace el cotizador de vinil
+      > explicame como funciona el candado de honestidad
+      > en que archivo esta la escalera de precios del vinil
+      > como funciona la escalera de precios por dentro
+      > en que archivo guardas los precios del taller
+      > que hace el validador de honestidad
+      > en que archivo guardas los precios
+      > explicame como funciona el cotizador
+      > que hace la consciencia
+      > en que archivo vive la agenda
+      > como funciona el enrutador
+      > que dice el archivo de configuracion
+      > explicame como trabaja la memoria
+      > que hace el candado de honestidad
+      > leeme el archivo de configuracion
+      > que hace el archivo de precios
+
+  Le pides una capacidad nueva (hoy eso lo fabrica AURORITA XP)
+      > creame un motor que saque los precios de acrilico
+      > crea una capacidad para medir el desperdicio
+      > fabricame un motor de etiquetas
+      > hazte capaz de leer facturas
+      > necesito un motor que cuente las piezas del despiece
+      > quiero un motor que me arme el despiece solo
+      > agregate la funcion de recordarme los saldos
+      > construye un motor para las prendas
+      > nuevo motor para el control de saldos
+      > motor nuevo que me avise de los pendientes
+      > crea un motor que me lea los tickets
+      > fabrica una capacidad para los anticipos
+      > creame una capacidad de kerf automatico
+      > agregate la capacidad de medir la cama
+      > crea una capacidad para el letrero luminoso
+
+  Le pides que corrija un archivo de su propio código
+      > edita CEREBRO/consciencia.py y quita ese mensaje
+      > modifica el archivo de precios del taller
+      > corrige TALLER/ordenes_taller.py
+      > arregla el archivo que trae el error
+      > cambia en el archivo el numero de telefono
+      > edita el codigo del cotizador
+      > agrega en el archivo la marca nueva
+      > reemplaza en el archivo el telefono viejo
+      > modifica MARKETING/generador_sitio_web.py para que no invente
+      > corrige el archivo de la campaña
+      > edita run_aurora.py y sube el puerto
+      > arregla config.json que trae un error
+      > quita de precios.json el termo viejo
+      > edita precios.json y sube el mdf
+
+  Pone a trabajar a un equipo de agentes
+      > pon a trabajar al equipo de marketing
+      > que equipos tienes
+      > activa el equipo de ventas y dime que encontro
+      > echame a andar el equipo de diseño
+      > cuales equipos tengo disponibles
+      > que puede hacer el equipo de publicacion
+      > activa el equipo de marketing
+      > pon a trabajar el equipo de ventas
+      > arma el equipo de diseño
+      > que equipos de trabajo hay
+      > echame a andar el equipo de taller
+      > cuales equipos puedo usar
+      > que puede hacer el equipo de ventas
+      > lista de equipos porfa
+      > activa el equipo de publicacion
+
+  Te dice dónde estás perdiendo dinero
+      > que me sugieres
+      > en que deberia enfocarme
+      > dime en que estoy perdiendo dinero sin darme cuenta
+      > que me conviene hacer ahorita
+      > donde estoy dejando dinero en la mesa
+      > que harias tu en mi lugar
+      > que me recomiendas hacer hoy
+      > en que me conviene meterme
+      > donde estoy perdiendo tiempo
+      > que oportunidad ves
+      > que deberia hacer con los videos parados
+      > que sigue segun tu
+      > tu intuicion que dice
+      > que me conviene mas
+      > donde estoy dejando lana
+      > que area tengo floja
+
+  Recuerda lo que le dices y te lo devuelve
+      > que recuerdas de mi
+      > acuerdate que el telefono de atf es el 3326148674
+      > que te dije de los precios del acrilico
+      > apuntate que el acrilico de 2mm quedo en 1000
+      > que te dije del kerf del mdf
+      > no se te olvide que rocio usa la pc del local
+      > acuerdate que rocio cierra los domingos
+      > guardate este dato del proveedor
+      > recuerda que la cama de la laser es de 60x40
+      > que recuerdas de los faros
+      > apuntate que el mdf lo compro en 2.7
+      > que sabes de la campaña escolar
+      > no se te olvide que anuar corta a 20 mm/s
+      > recuerdas que te dije lo del kerf
+      > que recuerdas del acrilico
+      > guardate que el mdf lo compro en 2.7
+      > que sabes del kerf
+
+  Qué ha aprendido de cómo trabajas
+      > que has aprendido de mi
+      > que sabes hacer
+      > dime que aprendiste esta semana y en que soy repetitivo
+      > que has ido aprendiendo de como trabajo
+      > en que soy repetitivo segun tu
+      > que patrones me has visto
+      > que aprendiste de mi esta semana
+      > borra lo aprendido y empezamos de cero
+      > que sabes de como hablo
+      > lo que has aprendido enseñamelo
+      > olvida todo lo aprendido
+      > que has aprendido de mis pedidos
+      > olvidalo todo
+      > que aprendiste de como cotizo
+      > que has aprendido del taller
+      > que has aprendido de como te pido las cosas
+      > dime que aprendiste de mi forma de escribir
+
+  Hablarle en vez de escribirle
+      > como suenas
+      > prueba la voz
+      > puedes hablarme en lugar de escribir
+      > puedes contestarme hablando
+      > activa que me escuches
+      > quiero platicar contigo sin teclear
+      > activa la voz porfa
+      > prende la voz
+      > apaga la voz que estoy con un cliente
+      > modo voz
+      > escuchame
+      > quiero hablarte
+      > di algo para probar
+      > hablame en vez de escribir
+      > desactiva la voz
+      > deja de escuchar
+
+
+==========================================================================
+  ESTAS CONTESTAN, PERO LAS AGARRA OTRA FUNCION (por arreglar)
+==========================================================================
+
+      > pasa esta imagen a dxf
+        deberia ir a foto_a_dxf - hoy la atiende dxf
+      > checa este dxf y dime cuanto cobro por cortarlo en mdf de 3
+        deberia ir a cotizar_dxf - hoy la atiende cotizar_laser_medidas
+      > que se esta vendiendo en corte laser
+        deberia ir a busqueda_web - hoy la atiende None
+      > vectoriza esta imagen y damela en dxf para el laser
+        deberia ir a dxf - hoy la atiende foto_a_dxf
+
+
+==========================================================================
+  Esta hoja NO se escribe a mano: la genera AURORA sola con
+  python CEREBRO/generar_comandos_verificados.py
+  Si un comando deja de servir, desaparece de aqui en la siguiente
+  corrida. Nunca te va a ensenar algo que ya no existe.
+==========================================================================

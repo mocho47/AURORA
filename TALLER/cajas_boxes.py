@@ -52,8 +52,28 @@ DESTINO = _destino_svg()
 KERF_MM = 0.2
 
 # Los mismos números reales del taller.
-COSTO_MINUTO = 8.0
-VELOCIDAD_MM_S = 25.0
+# LOS NUMEROS DE ANUAR NO SE ESCRIBEN AQUI.
+#
+# Aqui decia `VELOCIDAD_MM_S = 25.0` y `COSTO_MINUTO = 8.0`, copiados a mano.
+# El 13-ago Anuar dicto 20 mm/s -y lo dejo escrito en el catalogo, resolviendo
+# el conflicto entre el 15 que decia el catalogo y el 25 que usaba el
+# cotizador- pero esta copia se quedo en 25. Resultado real: cada caja generada se cotizaba con 20% menos de tiempo de corte
+# del real. Este archivo SI se usa: es el que llama el chat.
+#
+# Se leen de TALLER/formula_precios.py, que a su vez los lee de
+# CONFIG/catalogo_servicios.json, donde el los dicto. Si manana cambia el
+# minuto de laser, cambia en un lugar y el sistema entero queda parejo.
+def _numero(clave: str) -> float:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "formula_precios", RAIZ / "TALLER" / "formula_precios.py")
+    _fp = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_fp)
+    return _fp.numero(clave)
+
+
+VELOCIDAD_MM_S = _numero("velocidad_mm_s")
+COSTO_MINUTO = _numero("minuto_corte")
 
 
 def _consola_utf8() -> None:

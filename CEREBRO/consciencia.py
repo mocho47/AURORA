@@ -1003,6 +1003,90 @@ def _es_comando_voz(mensaje: str) -> bool:
         "di algo", "hablame"))
 
 
+# ══════════════════════════════════════════════════════════════════════════
+# «AURORA APRENDE» — él le dicta DATOS y REGLAS, o le pega un documento entero
+# ══════════════════════════════════════════════════════════════════════════
+# Idea suya, 2026-08-26: *"aurora aprende, ella contesta sí claro dime, y le
+# digo: un tabloide mide 33x48, aprende que debes dejar un margen de 5mm
+# siempre"*. Y el remate: *"si lo logras, copio su manual y le digo aurora
+# aprende y le pego su propio manual"*.
+#
+# Va ANTES que `ensenar` y que todo lo demás: lo que él pega puede ser una
+# lista de precios entera, y esa lista trae dentro palabras como «cuesta» o
+# «cotiza» que cualquier otro candado agarraría, poniéndose a cotizar en vez
+# de aprenderse los precios.
+_ABRE_LECCION = ("aurora aprende", "aprende esto", "aprendete esto",
+                 "aprendete", "quiero que aprendas", "memoriza esto",
+                 "quiero que memorices", "apuntate esto", "graba esto")
+
+# Cuando ella contesta «te escucho», el mensaje siguiente ES la lección. Sin
+# esto no existiría la conversación de dos tiempos que él pidió. Se aguanta
+# 10 minutos: es lo que tarda en ir por el papel o copiar el documento.
+_ESPERANDO_LECCION: Dict[str, float] = {"desde": 0.0}
+_VIGENCIA_LECCION_S = 600
+
+
+def _es_aprende_conocimiento(mensaje: str) -> bool:
+    """Anuar le está dictando un dato, una regla, o pegándole un documento."""
+    m = _norm_txt(mensaje)
+    if _contiene_trigger(m, _ABRE_LECCION):
+        return True
+    # ¿Venía de decirle «aurora aprende» y ella contestó «te escucho»?
+    esperando = _ESPERANDO_LECCION.get("desde", 0.0)
+    if esperando and (time.time() - esperando) < _VIGENCIA_LECCION_S:
+        return bool(mensaje and mensaje.strip())
+    return False
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ENSEÑARLE A MANO — Anuar le enseña una frase él solo, sin programador
+# ══════════════════════════════════════════════════════════════════════════
+# Idea suya, 2026-08-26, textual: *"si enseñas a AURORA a que entienda los
+# comandos de la lista no deberías tener problema"*. Tenía razón y señalaba
+# algo que faltaba de raíz.
+#
+# Hasta hoy AURORA aprendía SOLA (aprende_del_usuario.py): cuando algo no lo
+# entendía y él lo reformulaba de una forma que sí ejecutaba, se quedaba con
+# las dos. Eso es bueno pero es PASIVO: hay que fallar primero para aprender.
+#
+# Esto es lo otro: que él pueda enseñarle A PROPÓSITO, en una sola frase, sin
+# que nadie toque código. «cuando te diga sácame la piñata es cotiza esta
+# piñata para alicia» y ya quedó, para siempre.
+#
+# Por qué importa más de lo que parece: la prioridad #1 de este proyecto es
+# que AURORA le sirva SIN mí. Cada frase que él pueda enseñarle solo es una
+# vez menos que necesita a un programador.
+_ENSENAR_PATRONES = (
+    # (regex, qué grupo es la frase NUEVA, qué grupo es la que YA funciona)
+    r"cuando\s+te\s+diga\s+(.+?)\s+(?:es|seria|significa|equivale\s+a|"
+    r"me\s+refiero\s+a|hazme|haz|quiero\s+que\s+hagas|es\s+lo\s+mismo\s+que)\s+(.+)",
+    r"si\s+te\s+digo\s+(.+?)\s+(?:es|seria|significa|equivale\s+a|"
+    r"me\s+refiero\s+a|hazme|haz|quiero\s+que\s+hagas|es\s+lo\s+mismo\s+que)\s+(.+)",
+    r"aprende\s+que\s+(.+?)\s+(?:es|seria|significa|equivale\s+a|"
+    r"es\s+lo\s+mismo\s+que)\s+(.+)",
+    r"apuntale\s+que\s+(.+?)\s+(?:es|significa|es\s+lo\s+mismo\s+que)\s+(.+)",
+    r"(.+?)\s+es\s+lo\s+mismo\s+que\s+(.+)",
+    r"(.+?)\s+quiere\s+decir\s+(.+)",
+)
+
+
+def _es_ensenar(mensaje: str) -> bool:
+    """Anuar le está enseñando una forma nueva de pedirle algo.
+
+    Va PRIMERO en la lista de candados a propósito: la frase que enseña lleva
+    dentro la frase que ya funciona («cuando te diga X es *cotiza esta piñata
+    para alicia*»), así que cualquier otro candado la agarraría y ejecutaría
+    la cotización en vez de aprenderse el atajo.
+    """
+    m = _norm_txt(mensaje)
+    # El marco tiene que estar completo. Sin esto, un «esto es lo mismo que
+    # ayer» en medio de una charla se tomaría como una lección.
+    if not _contiene_trigger(m, ("cuando te diga", "si te digo", "aprende que",
+                                 "apuntale que", "es lo mismo que", "quiere decir")):
+        return False
+    return any(re.search(p, m, re.I) for p in _ENSENAR_PATRONES)
+
+
 def _es_ver_aprendizaje(mensaje: str) -> bool:
     """Anuar quiere ver o borrar lo que AURORA aprendió de cómo habla.
 
@@ -1061,6 +1145,50 @@ _GENERAR_CAJA = (
 
 def _es_generar_caja(mensaje: str) -> bool:
     return _contiene_trigger(_norm_txt(mensaje), _GENERAR_CAJA)
+
+
+# ── EL ÚLTIMO ARCHIVO QUE ANUAR LE DIO AL CHAT ──────────────────────────
+# Encontrado el 2026-08-26, en vivo, con la piñata del escudo de Peugeot:
+# Anuar pegó la imagen en el chat y escribió «cotiza esta piñata para alicia
+# de 89.5 de alto». AURORA le contestó "no encontré cómo hacer eso todavía".
+#
+# El archivo SÍ se había guardado —el panel lo sube a ENTRADAS_CHAT y AURORA
+# contesta "lo guardé de verdad"— pero la ruta se quedaba ahí: el panel nunca
+# la mete en el mensaje siguiente, así que cuando él escribía "esta piñata",
+# el chat buscaba un ".jpg" dentro del texto, no encontraba ninguno, y se
+# rendía. Le estaba pidiendo que copiara y pegara una ruta de Windows.
+#
+# "Esta" quiere decir "la que te acabo de dar". Eso es lo que se guarda aquí:
+# el último archivo recibido, y de qué tipo, para que cualquier candado que
+# necesite una ruta pueda preguntarlo en vez de exigírsela escrita.
+_ULTIMO_ARCHIVO: Dict[str, Any] = {"ruta": "", "cuando": 0.0}
+
+# Media hora. Si pegó una foto hace 40 minutos y ahora escribe "cotiza esta
+# piñata", lo más probable es que hable de otra cosa: mejor preguntar que
+# cotizar el archivo equivocado y que corte la pieza que no era.
+_VIGENCIA_ARCHIVO_S = 1800
+
+
+def recordar_archivo(ruta: str) -> None:
+    """Lo llama el servidor cuando entra un archivo por el chat."""
+    import time as _t
+    _ULTIMO_ARCHIVO["ruta"] = str(ruta or "")
+    _ULTIMO_ARCHIVO["cuando"] = _t.time()
+    logger.info(f"[CHAT] archivo recibido y recordado: {ruta}")
+
+
+def _archivo_reciente(ext_regex: str) -> str:
+    """La ruta del último archivo recibido, si es del tipo pedido y está
+    fresco. Cadena vacía si no hay ninguno que sirva — nunca adivina."""
+    import time as _t
+    ruta = _ULTIMO_ARCHIVO.get("ruta") or ""
+    if not ruta:
+        return ""
+    if _t.time() - float(_ULTIMO_ARCHIVO.get("cuando") or 0) > _VIGENCIA_ARCHIVO_S:
+        return ""
+    if not re.search(r"\.(?:" + ext_regex + r")$", ruta, re.IGNORECASE):
+        return ""
+    return ruta if Path(ruta).exists() else ""
 
 
 # Producción de piezas grandes (personajes/piñatas): escala + tabloides +
@@ -1914,6 +2042,17 @@ _CANDADOS: List[Tuple[str, Any, str, str]] = [
     # AURORA le INVENTÓ un precio («entre $500 y $1,500») con su lista de
     # precios de vinil guardada enfrente. El cotizador general no sabe de la
     # escalera de vinil; este sí, y es el que debe contestar.
+    # ensenar va PRIMERO de toda la fila, sin excepción: la frase con la que
+    # Anuar enseña CONTIENE la frase que ya funciona («cuando te diga sácame
+    # la piñata es *cotiza esta piñata para alicia*»). Cualquier otro candado
+    # la agarraría por dentro y ejecutaría la cotización en vez de aprenderse
+    # el atajo — y él se quedaría creyendo que quedó enseñado cuando no.
+    # aprende_conocimiento va incluso antes que ensenar: lo que Anuar pega
+    # puede ser una lista de precios ENTERA, y ahí dentro vienen «cuesta»,
+    # «cotiza», «el minuto a $8»... que cualquier candado agarraría para
+    # ponerse a cotizar en vez de aprenderse los precios.
+    ("aprende_conocimiento", _es_aprende_conocimiento, "_aprende_conocimiento_real", "aprendizaje_datos"),
+    ("ensenar",         _es_ensenar,           "_ensenar_real",           "ensenar"),
     ("cotizar_vinil",   _es_cotizar_vinil,     "_cotizar_vinil_real",     "cotizador_vinil"),
     # cotizar_vinil gana solo si pregunta un PRECIO. Sin palabra de dinero,
     # «hazme la palabra X en vinil» es generar el archivo, y cae aquí.
@@ -3985,7 +4124,11 @@ class Consciencia:
             if mq:
                 return mq.group(1)
             ms = re.search(r"[^\s\"']+\.(?:" + ext_regex + r")", texto, re.IGNORECASE)
-            return ms.group(0) if ms else ""
+            if ms:
+                return ms.group(0)
+            # No escribió ninguna ruta. Pero "esta piñata" quiere decir la que
+            # acaba de pegar en el chat: se usa esa (ver _archivo_reciente).
+            return _archivo_reciente(ext_regex)
 
         # Ruta del DXF: la última ".dxf" que aparezca en el mensaje.
         _rdxf = _ruta_con_extension(mensaje, "dxf")
@@ -4018,12 +4161,18 @@ class Consciencia:
             # lo que de verdad se corta/graba en la máquina. Corre en
             # SUBPROCESO aparte (ver _vectorizar_imagen_subproceso arriba),
             # no en un hilo del proceso de AURORA.
-            rv = await _vectorizar_imagen_subproceso(_rimg, "lineal", timeout=60)
+            # 150 s, no 60. Medido el 2026-08-26 con la piñata de Alicia (foto
+            # de 1086x1448): la cadena completa tarda ~75 s con la máquina
+            # ocupada. Con el límite en 60 s Anuar recibía "mándame el DXF"
+            # aunque la vectorización SÍ iba a terminar bien — le devolvía
+            # trabajo en vez del precio. 150 s es el mismo límite que ya usa el
+            # otro camino de vectorizar del chat, así que ahora los dos esperan
+            # lo mismo.
+            rv = await _vectorizar_imagen_subproceso(_rimg, "lineal", timeout=150)
             if rv.get("status") == "TIMEOUT":
-                return {"respuesta": "La imagen se está tardando más de 60s en vectorizar "
-                                     "(pasa con degradados/brillos muy detallados) — "
-                                     "mándame el DXF si ya lo tienes, o pide primero "
-                                     "«convierte a dxf» aparte y luego cotiza desde ese archivo."}
+                return {"respuesta": "La imagen se pasó de 150s vectorizando (pasa con fotos "
+                                     "muy grandes o con mucho degradado) — mándame el DXF si "
+                                     "ya lo tienes, o bájale el tamaño a la foto y la cotizo."}
             if rv.get("status") != "OK" or not rv.get("archivo"):
                 return {"respuesta": f"No pude vectorizar la imagen: {rv.get('detalle', rv.get('status'))}"}
             ruta = rv["archivo"]
@@ -4036,10 +4185,30 @@ class Consciencia:
 
         modo = "despiece" if "despiece" in m else "contorno"
 
-        alto_cm = None
-        ma = re.search(r"(\d+(?:[.,]\d+)?)\s*cm", m)
-        if ma:
-            alto_cm = float(ma.group(1).replace(",", "."))
+        # ── LA MEDIDA, COMO ANUAR LA ESCRIBE ────────────────────────────
+        # Antes esto exigía la palabra "cm". El 2026-08-26 mandó «cotiza esta
+        # piñata para alicia [foto] de 89.5 de alto» y la medida se perdió
+        # entera: cotizó la pieza a su tamaño original sin decir nada. Él dice
+        # el número y para qué es —"de alto", "de ancho"—, y la unidad la da
+        # por sabida, porque en su taller todo es en centímetros.
+        # Y el ANCHO nunca se leía: se le pasaba None al calculador aunque lo
+        # dijera. Ahora los dos.
+        def _medida(*palabras) -> float | None:
+            for w in palabras:
+                mm = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:cm|centimetros?)?\s*"
+                               r"(?:de\s+)?" + w, m)
+                if mm:
+                    return float(mm.group(1).replace(",", "."))
+            return None
+
+        alto_cm = _medida(r"alto\b", r"altura\b", r"largo\b")
+        ancho_cm = _medida(r"ancho\b", r"anchura\b")
+        if alto_cm is None and ancho_cm is None:
+            # Sin decir cuál es cuál, un número con "cm" es el alto —
+            # es como lo venía usando y así se queda.
+            ma = re.search(r"(\d+(?:[.,]\d+)?)\s*cm", m)
+            if ma:
+                alto_cm = float(ma.group(1).replace(",", "."))
 
         con_suaje = "con suaje" in m or ("suaje" in m and "sin suaje" not in m)
         hoja = "a4" if re.search(r"\ba4\b", m) else "tabloide"
@@ -4053,9 +4222,14 @@ class Consciencia:
         mn = re.search(r"\b(\d+)\s*(tabloides?|hojas?|a4s?)\b", m)
         if mn:
             n_hojas = int(mn.group(1))
-        r = await asyncio.to_thread(ppg.calcular, ruta, alto_cm, None, modo,
+        # De dónde salió el diseño decide cuánto se cobra por él (regla de
+        # Anuar, 2026-08-13): si él tuvo que vectorizar una imagen son $15;
+        # si el cliente trajo el vector listo, $10. `aviso_vectorizado` solo
+        # trae texto cuando esta misma petición acaba de vectorizar una foto.
+        _de_donde = "imagen" if aviso_vectorizado else "vector"
+        r = await asyncio.to_thread(ppg.calcular, ruta, alto_cm, ancho_cm, modo,
                                      2.7, 10.0, 25.0, 5.0, mensaje, con_suaje, hoja,
-                                     orientacion, n_hojas)
+                                     orientacion, n_hojas, _de_donde)
         if r.get("status") != "OK":
             return {"respuesta": f"No pude calcularlo: {r.get('detalle', r.get('status'))}"}
 
@@ -4070,8 +4244,29 @@ class Consciencia:
             txt += f"MDF: {r['mdf']['hojas_necesarias']} hoja(s) de {r['mdf']['material']}, ${r['mdf']['costo_con_margen']}.\n"
         if r["mdf"].get("aviso"):
             txt += f"⚠️ {r['mdf']['aviso']}\n"
-        txt += f"Corte láser: {r['corte']['metros']}m, {r['corte']['minutos']}min, ${r['corte']['costo']}.\n"
-        txt += f"Total estimado: ${r['total_estimado']}.\n\n{r['recordatorio_maquila']}"
+        # LAS DOS TARIFAS, siempre. Pedido de Anuar el 2026-08-26: *"que me de
+        # el costo de 8 pesos y el de 5 pesos, yo me encargo de mediar el costo
+        # al trato"*. El precio lo pone él; AURORA pone los minutos reales.
+        c = r["corte"]
+        txt += f"Corte láser: {c['metros']}m de recorrido = **{c['minutos']} min** de máquina.\n"
+        if "costo_exclusividad" in c:
+            txt += (f"   · a ${c['por_minuto_normal']:g}/min (tu tarifa): "
+                    f"${c['costo_normal']:,.2f}\n"
+                    f"   · a ${c['por_minuto_exclusividad']:g}/min (exclusividad): "
+                    f"${c['costo_exclusividad']:,.2f}\n")
+        else:
+            txt += f"   ${c['costo']}\n"
+        if r.get("diseno"):
+            txt += f"Diseño: ${r['diseno']['cobro']:,.2f}\n"
+        if r.get("total_exclusividad") is not None:
+            txt += (f"**TOTAL a ${c['por_minuto_normal']:g}/min: "
+                    f"${r['total_normal']:,.2f}**   ·   "
+                    f"**a ${c['por_minuto_exclusividad']:g}/min: "
+                    f"${r['total_exclusividad']:,.2f}**\n"
+                    f"_El precio final lo pones tú._\n")
+        else:
+            txt += f"Total estimado: ${r['total_estimado']}.\n"
+        txt += f"\n{r['recordatorio_maquila']}"
         if r.get("aviso_despiece"):
             txt += f"\n\n⚠️ {r['aviso_despiece']}"
         txt += aviso_vectorizado
@@ -5210,6 +5405,172 @@ class Consciencia:
             "También te aviso hablando si la PC se queda sin memoria. "
             "Para que pare: «apaga la voz».")}
 
+    async def _aprende_conocimiento_real(self, mensaje: str) -> Dict:
+        """«aurora aprende»: él le dicta datos y reglas, o le pega un documento.
+
+        El «comprendo» de aquí NO puede ser de adorno — él mismo lo señaló:
+        *"ella dice comprendo cuando realmente aprendió"*. Por eso se contesta
+        distinto según dónde cayó cada cosa:
+
+        * un número → entra a la puerta única de sus cifras, y se le NOMBRAN
+          los módulos que de verdad lo preguntan (buscados en el disco);
+        * una regla → se guarda, pero se le dice en la cara que ningún módulo
+          la aplica solo todavía.
+        """
+        from CEREBRO import aprende_conocimiento as _ac
+
+        m = _norm_txt(mensaje)
+        cuerpo = mensaje
+
+        # ¿Solo abrió la conversación, sin dictar todavía? → «te escucho»
+        for abre in _ABRE_LECCION:
+            i = m.find(abre)
+            if i >= 0:
+                cuerpo = mensaje[i + len(abre):].lstrip(" :,.-—")
+                break
+
+        if len(cuerpo.strip()) < 4:
+            _ESPERANDO_LECCION["desde"] = time.time()
+            return {"respuesta": (
+                "Te escucho. Dime el dato o la regla, o pégame el documento "
+                "completo — una lista de precios, la ficha de un material, tus "
+                "apuntes, lo que sea.\n\n"
+                "_Ejemplo:_ `un tabloide mide 33x48` · `la hoja de mdf de 2.7 me "
+                "cuesta 110` · `deja siempre 5mm de margen`")}
+
+        _ESPERANDO_LECCION["desde"] = 0.0        # la lección llegó, se cierra
+        r = await asyncio.to_thread(_ac.aprender, cuerpo)
+
+        if r.get("status") == "NADA":
+            return {"respuesta": (
+                "Le di la vuelta y no saqué ningún dato ni regla de ahí. "
+                "Dímelo más directo: «la hoja de mdf de 2.7 me cuesta 110» o "
+                "«deja siempre 5mm de margen».")}
+        if r.get("status") != "OK":
+            return {"respuesta": f"No pude guardarlo: {r.get('detalle')}"}
+
+        L = []
+        datos = r.get("datos") or []
+        if datos:
+            L.append(f"**Comprendo. {len(datos)} dato(s) guardado(s):**\n")
+            for d in datos:
+                linea = f"• `{d['clave']}` = **{d['valor']:g}** {d.get('unidad','')}".rstrip()
+                if d.get("cambio"):
+                    linea += f"  _(antes {d['antes']:g})_"
+                L.append(linea)
+                aplica = d.get("aplica_en") or []
+                if aplica:
+                    L.append(f"   → lo aplican ya: {', '.join(aplica)}")
+                else:
+                    # Esto es lo que hace que el «comprendo» no sea mentira.
+                    L.append("   → **guardado, pero todavía ningún módulo lo "
+                             "pregunta.** Lo tengo, no lo aplico solo.")
+            L.append("")
+
+        nuevas = r.get("reglas_nuevas") or []
+        if nuevas:
+            L.append(f"**{len(nuevas)} regla(s) guardada(s):**\n")
+            for t in nuevas:
+                L.append(f"• {t}")
+            L.append("\n_Te las tomo en cuenta cuando hablamos, pero te lo digo "
+                     "claro: **ningún módulo las aplica solo todavía.** Para que "
+                     "una regla se aplique sola hay que cablearla._")
+            L.append("")
+
+        L.append(f"_Para quitarme algo: `olvida <lo que sea>`._")
+        return {"respuesta": "\n".join(L)}
+
+    def _a_donde_llega(self, frase: str) -> str:
+        """A qué candado llega una frase HOY. Cadena vacía si no llega a ninguno.
+
+        Es exactamente el mismo recorrido que hace el chat de verdad, no una
+        aproximación: primero la familia, luego la fila de candados en orden.
+        Se usa para enseñar (hay que saber qué hace la frase que sí funciona)
+        y para comprobar después que la lección de verdad quedó.
+        """
+        try:
+            fam = _candado_por_familia(frase)
+            if fam:
+                return fam
+        except Exception:
+            pass
+        for nombre, disparador, _m, _i in _CANDADOS:
+            if nombre == "ensenar":          # no se enseña a enseñar
+                continue
+            try:
+                if disparador(frase):
+                    return nombre
+            except Exception:
+                continue
+        return ""
+
+    async def _ensenar_real(self, mensaje: str) -> Dict:
+        """Anuar le enseña una forma nueva de pedirle algo, en una sola frase.
+
+        «cuando te diga sácame la piñata es cotiza esta piñata para alicia»
+
+        No se cree la lección a ciegas: primero comprueba que la frase de la
+        derecha DE VERDAD llegue a algún lado. Si él le enseña un atajo hacia
+        algo que ella tampoco entiende, aprendería basura y le fallaría más
+        tarde, cuando ya confiara en el atajo. Ahí se lo dice en su cara.
+        """
+        from CEREBRO import aprende_del_usuario as _apr
+
+        nueva = vieja = ""
+        for patron in _ENSENAR_PATRONES:
+            g = re.search(patron, mensaje, re.I)
+            if g:
+                nueva = g.group(1).strip(" \"'«»,.:;¿?¡!")
+                vieja = g.group(2).strip(" \"'«»,.:;¿?¡!")
+                break
+
+        if not nueva or not vieja:
+            return {"respuesta": (
+                "Te entendí que me quieres enseñar algo, pero no separé las dos partes.\n"
+                "Dímelo así:  **cuando te diga _<tu forma>_ es _<la forma que ya funciona>_**\n"
+                "Ejemplo: `cuando te diga sacame la piñata es cotiza esta piñata para alicia`")}
+
+        if _norm_txt(nueva) == _norm_txt(vieja):
+            return {"respuesta": "Las dos frases son la misma, no hay nada que aprender."}
+
+        # ¿La forma que "ya funciona" de verdad funciona? Si no, no se aprende.
+        destino = self._a_donde_llega(vieja)
+        if not destino:
+            aprendido = await asyncio.to_thread(_apr.buscar, vieja)
+            if aprendido:
+                destino = aprendido.get("herramienta", "")
+        if not destino:
+            return {"respuesta": (
+                f"No te lo puedo aprender todavía: **«{vieja}» tampoco la entiendo**, "
+                f"así que el atajo apuntaría al vacío y te fallaría justo cuando "
+                f"confiaras en él.\n\n"
+                f"Dime primero una forma que sí me funcione y la enlazo con «{nueva}». "
+                f"Las que tengo probadas están en tu hoja `COMANDOS AURORA.txt`.")}
+
+        ya = await asyncio.to_thread(_apr.buscar, nueva)
+        if ya and ya.get("herramienta") == destino:
+            return {"respuesta": f"Eso ya me lo sabía: «{nueva}» → **{destino}**."}
+
+        r = await asyncio.to_thread(_apr.aprender_a_la_primera, nueva, destino,
+                                    time.time())
+        if not r:
+            return {"respuesta": (
+                f"No pude guardar la lección. «{vieja}» sí llega a **{destino}**, "
+                f"pero «{nueva}» no se me quedó — dímela con otras palabras.")}
+
+        # No se da por hecho: se vuelve a preguntar por dónde entra ahora.
+        confirma = await asyncio.to_thread(_apr.buscar, nueva)
+        if not confirma or confirma.get("herramienta") != destino:
+            return {"respuesta": (
+                f"La guardé pero no me la estoy encontrando de vuelta — no te voy a "
+                f"decir que quedó cuando no lo comprobé. Vuelve a intentarlo.")}
+
+        return {"respuesta": (
+            f"Aprendido. De ahora en adelante **«{nueva}»** hace lo mismo que "
+            f"«{vieja}» → **{destino}**.\n\n"
+            f"Ya lo comprobé: se lo pedí de vuelta y llega bien. "
+            f"Si te arrepientes, dime `olvida {nueva}`.")}
+
     async def _ver_aprendizaje_real(self, mensaje: str) -> Dict:
         """Muestra o borra lo que AURORA aprendió de cómo habla su dueño."""
         from CEREBRO import aprende_del_usuario as _apr
@@ -5846,7 +6207,12 @@ class Consciencia:
         # de Anuar (2026-07-27): "guárdalo/almacénalo como PDF" ya sabe dónde SIEMPRE, sin
         # rutas alternas para este tipo de archivo. Solo aplica a PDF (PNG/JPG conservan
         # la carpeta que Anuar mencione, como antes).
-        _CARPETA_PDF_COREL = _P.home() / "Desktop" / "PDFs a Impresion"
+        # Cambiado el 2026-08-26 a pedido de Anuar: *"no, deben ir en Descargas
+        # PDF"*. Antes iban a `Desktop/PDFs a Impresion` (petición suya del
+        # 2026-07-27). La carpeta `Descargas\PDF` ya existía en su disco y es
+        # donde de verdad busca los archivos cuando va a imprimir, así que se
+        # movió a donde ya trabaja en vez de pedirle que cambie su costumbre.
+        _CARPETA_PDF_COREL = _P.home() / "Downloads" / "PDF"
         es_pdf = "pdf" in m or not any(e in m for e in ("png", "jpg", "jpeg"))
         if not rutas and ("exporta" in m or "exportar" in m or "almacena" in m or "guarda" in m):
             _titulo = re.search(r"(?:titulo|título)\s+(\w+)", mensaje, re.I)

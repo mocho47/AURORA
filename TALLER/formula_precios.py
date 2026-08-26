@@ -53,6 +53,28 @@ _POR_DEFECTO = {
     "instalacion": 20.0,
     "instalacion_grande": 40.0,
     "instalacion_cm_grande": 100.0,
+    # ── Hojas de material, precio de COMPRA (sin el margen de 1.20) ──────
+    # Traidos el 2026-08-26 de TALLER/generar_caja.py, que era el unico lugar
+    # del proyecto donde existian estos numeros —escritos a mano y sin que
+    # nadie mas los pudiera ver ni corregir—. Aqui viven ya en la fuente unica.
+    # OJO: Anuar todavia no los ha dictado en vivo; son los que estaban en ese
+    # archivo. Cuando los confirme se cambian AQUI y llegan solos a todo.
+    "hoja_mdf_2_7": 110.0,
+    "hoja_mdf_4_0": 350.0,
+    "hoja_mdf_5_5": 280.0,
+    "hoja_cm2": 122.0 * 244.0,
+    # ── EL TRATO CON ALICIA PIÑATAS ─────────────────────────────────────
+    # Dictado por Anuar el 2026-08-26, textual: *"a alicia le dije le podria
+    # dejar hasta a 5 pesos el min si se casaba con milens"*. Es un precio de
+    # exclusividad, no la tarifa de nadie más.
+    #
+    # POR QUÉ ESTO IMPORTA MÁS QUE NINGÚN OTRO NÚMERO: a $5 el minuto el
+    # margen se estrecha, así que cotizar "a ojo" deja de perdonar. Medido con
+    # su propio archivo `k-pop 90x90.dxf`: son 70.1 m de recorrido = 58.4 min.
+    # A $8 eso es $467.56 y él cobró $500 — perdió dinero contando material y
+    # diseño. A $5 son $292. La diferencia entre ganar y perder en ese trabajo
+    # es saber los minutos ANTES de dar el precio, no después.
+    "minuto_corte_alicia": 5.0,
 }
 
 # Extensiones que llegan ya listas para cortar (el trabajo es mínimo) frente a
@@ -87,7 +109,51 @@ def _reglas() -> dict:
         r["minuto_corte"] = float(las["precio_minuto_corte_VENTA"])
     if las.get("velocidad_corte_3mm_mm_s") is not None:
         r["velocidad_mm_s"] = float(las["velocidad_corte_3mm_mm_s"])
+
+    # Lo que Anuar le dictó a AURORA por el chat, con «aurora aprende».
+    # Va AL FINAL a propósito: lo que él acaba de decir con su voz gana sobre
+    # cualquier valor viejo del catálogo o de _POR_DEFECTO. Es la misma idea
+    # de siempre —una sola puerta a sus números— pero abierta también para él,
+    # sin necesitar un programador para cambiar una cifra.
+    for clave, valor in (d.get("aprendido_de_anuar") or {}).items():
+        if str(clave).startswith("_"):      # notas y fechas, no son números
+            continue
+        try:
+            r[str(clave)] = float(valor)
+        except (TypeError, ValueError):
+            continue                        # un dato que no es número se ignora aquí
     return r
+
+
+def numero(clave: str) -> float:
+    """UN número de Anuar, pedido por su nombre. La única puerta a sus cifras.
+
+    Existe para que ningún otro archivo vuelva a escribir un precio o una
+    velocidad. Antes cada módulo se copiaba el suyo, y las copias se quedaban
+    viejas sin que nadie se enterara: el 25-ago había CUATRO archivos
+    calculando el tiempo de corte a 25 mm/s cuando Anuar dictó 20 el 13-ago
+    —incluido `cajas_boxes.py`, que sí se usa—. Eso cobraba de menos el 20%
+    del tiempo de máquina en cada caja.
+
+    Claves disponibles: las de `_POR_DEFECTO`.
+
+    Si la clave no existe, **truena**. No devuelve 0 ni un valor de respaldo:
+    un precio inventado en silencio es peor que un error a la cara, y ya pasó
+    (`motor_cotizador.py` inventaba $180 cuando el catálogo fallaba).
+    """
+    r = _reglas()
+    if clave not in r:
+        raise KeyError(
+            f"'{clave}' no es un número de Anuar. Los que hay: "
+            f"{', '.join(sorted(r))}. Si de verdad hace falta uno nuevo, se "
+            f"agrega a CONFIG/catalogo_servicios.json y a _POR_DEFECTO aquí, "
+            f"nunca escrito a mano en otro archivo.")
+    return float(r[clave])
+
+
+def numeros() -> dict:
+    """Todos sus números de una vez, ya leídos del catálogo."""
+    return _reglas()
 
 
 def clasificar_diseno(archivo) -> str:

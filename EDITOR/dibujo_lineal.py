@@ -393,7 +393,15 @@ def _a_dxf(p: Path, linea, px_mm: float, ancho: int, alto: int,
     contornos, _ = cv2.findContours(linea, cv2.RETR_CCOMP,
                                     cv2.CHAIN_APPROX_SIMPLE)
     mm = 1.0 / px_mm
-    tol = max(1.0, 0.15 * px_mm)
+    # Cuánto se puede desviar el contorno simplificado del original, en mm.
+    # Subido de 0.15 a 0.30 el 2026-08-26 por una queja real de Anuar: *"los
+    # dxf que los deje ligeros, lo más ligero posible, porque luego se traba
+    # RDWorks pensando"*. La silueta de la piñata de Alicia pesaba 1 MB.
+    # 0.30 mm sobre una pieza de 67 cm es un 0.045% — invisible a ojo y muy
+    # por debajo del kerf de la láser (que ya se come 0.2 mm), pero recorta
+    # a la mitad los puntos que RDWorks tiene que masticar.
+    TOLERANCIA_MM = 0.30
+    tol = max(1.0, TOLERANCIA_MM * px_mm)
     alto_mm = alto * mm
 
     dxf = ezdxf.new("R2010")

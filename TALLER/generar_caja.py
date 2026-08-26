@@ -27,11 +27,26 @@ sys.path.insert(0, str(RAIZ))
 
 DESTINO = Path.home() / "Downloads" / "dxf"
 
-# Los mismos números reales que usa el resto del taller.
-COSTO_MINUTO = 8.0
-VELOCIDAD_MM_S = 25.0
-PRECIO_HOJA = {2.7: 110.0, 5.5: 280.0, 4.0: 350.0}
-HOJA_CM2 = 122 * 244
+# Los números de Anuar se PIDEN, no se copian (arreglo 2026-08-26). Este
+# archivo tenía su propia copia y se había quedado en 25 mm/s cuando él ya
+# había dictado 20: cada caja que se cotizara desde aquí salía con el tiempo
+# de máquina —y el precio— equivocados. Ahora vienen de TALLER/formula_precios,
+# que es el único lugar donde viven.
+def _numero(clave: str) -> float:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "formula_precios", RAIZ / "TALLER" / "formula_precios.py")
+    _fp = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_fp)
+    return _fp.numero(clave)
+
+
+COSTO_MINUTO = _numero("minuto_corte")
+VELOCIDAD_MM_S = _numero("velocidad_mm_s")
+PRECIO_HOJA = {2.7: _numero("hoja_mdf_2_7"),
+               5.5: _numero("hoja_mdf_5_5"),
+               4.0: _numero("hoja_mdf_4_0")}
+HOJA_CM2 = _numero("hoja_cm2")
 
 
 def _consola_utf8() -> None:

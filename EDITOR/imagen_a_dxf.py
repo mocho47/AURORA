@@ -56,6 +56,48 @@ def _consola_utf8() -> None:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
+# Cuanto se permite que un punto se aparte de la linea antes de conservarlo.
+# En pixeles del SVG (que salen de la imagen reducida a 1000 px de lado): a
+# 0.35 px la diferencia es invisible incluso ampliando la pieza a 90 cm, y el
+# archivo baja varias veces de tamano.
+TOLERANCIA_PX = 0.35
+
+
+def _adelgazar(pts: list, tol: float) -> list:
+    """Douglas-Peucker sin librerias: conserva la forma, tira los puntos de mas.
+
+    Iterativo a proposito: una polilinea de un dibujo lineal puede traer miles
+    de puntos y la version recursiva revienta la pila de Python.
+    """
+    if len(pts) < 3 or tol <= 0:
+        return pts
+    guardar = [False] * len(pts)
+    guardar[0] = guardar[-1] = True
+    pila = [(0, len(pts) - 1)]
+    while pila:
+        ini, fin = pila.pop()
+        if fin <= ini + 1:
+            continue
+        x1, y1 = pts[ini]
+        x2, y2 = pts[fin]
+        dx, dy = x2 - x1, y2 - y1
+        norma = (dx * dx + dy * dy) ** 0.5
+        peor, idx = 0.0, -1
+        for i in range(ini + 1, fin):
+            x0, y0 = pts[i]
+            if norma < 1e-12:
+                d = ((x0 - x1) ** 2 + (y0 - y1) ** 2) ** 0.5
+            else:
+                d = abs(dy * x0 - dx * y0 + x2 * y1 - y2 * x1) / norma
+            if d > peor:
+                peor, idx = d, i
+        if peor > tol and idx > 0:
+            guardar[idx] = True
+            pila.append((ini, idx))
+            pila.append((idx, fin))
+    return [p for p, g in zip(pts, guardar) if g]
+
+
 def svg_a_dxf(svg: Path, salida: Path) -> dict:
     """SVG → DXF sin Inkscape.
 
@@ -101,6 +143,15 @@ def svg_a_dxf(svg: Path, salida: Path) -> dict:
         for q in pts[1:]:
             if abs(q[0] - limpio[-1][0]) > 1e-6 or abs(q[1] - limpio[-1][1]) > 1e-6:
                 limpio.append(q)
+        # ALIGERAR: se quitan los puntos que no cambian la forma.
+        # Anuar, 2026-08-26: *"los dxf que los deje ligeros, lo mas ligero
+        # posible, por que luego se traba RDWorks pensando"*. Y tiene razon:
+        # el DXF de su escudo pesaba 1.59 MB porque cada curva se partia en 24
+        # puntos, sin mirar si la curva era grande o un rizo de 2 mm. Un punto
+        # que cae sobre la linea que unen sus vecinos no aporta nada a la
+        # maquina y si la hace pensar. Se quitan con Douglas-Peucker, que es
+        # exactamente eso: conservar la forma, tirar lo que sobra.
+        limpio = _adelgazar(limpio, TOLERANCIA_PX)
         if len(limpio) >= 2:
             xs = [a[0] for a in limpio]
             ys = [a[1] for a in limpio]
@@ -153,6 +204,54 @@ def _ya_tiene_fondo_quitado(ruta: Path) -> bool:
         return False
 
 
+def _fondo_ya_plano(ruta: Path) -> bool:
+    """¿La imagen ya viene sobre un fondo parejo, sin nada que recortar?
+
+    Medido el 2026-08-26 con el escudo de Peugeot: la cadena completa tardaba
+    66 s y **48 de esos eran rembg** — la IA que separa el sujeto del fondo,
+    corriendo sobre una imagen que ya era un logo negro sobre blanco liso. No
+    tenia nada que separar: gastaba 48 s para devolver la misma imagen.
+
+    `_ya_es_dibujo_lineal` no lo cachaba porque ese escudo es medio negro
+    (pide menos del 25% oscuro) — mide otra cosa: si es un dibujo de lineas.
+    Aqui se mira lo unico que importa para esta decision: **la orilla**. Si
+    todo el marco de la imagen es un mismo color parejo, no hay fondo que
+    quitar; lo que haya adentro ya esta recortado.
+
+    Se mira solo el borde: son unos miles de pixeles, cuesta milisegundos.
+    """
+    try:
+        from PIL import Image
+        import numpy as np
+        img = Image.open(ruta).convert("RGB")
+        a = np.array(img)
+        if a.shape[0] < 8 or a.shape[1] < 8:
+            return False
+        g = max(2, min(a.shape[0], a.shape[1]) // 100)      # grosor del marco
+        orilla = np.concatenate([
+            a[:g, :, :].reshape(-1, 3), a[-g:, :, :].reshape(-1, 3),
+            a[:, :g, :].reshape(-1, 3), a[:, -g:, :].reshape(-1, 3)])
+        # El color mas repetido de la orilla, y que tan parejo es todo lo demas.
+        color = np.median(orilla, axis=0)
+        cerca = (np.abs(orilla.astype(int) - color).max(axis=1) <= 12).mean()
+        # 0.85 y no 0.97: el escudo de Peugeot llega hasta la orilla, así que
+        # el 10% del marco es dibujo y aun así el fondo es blanco liso.
+        if cerca < 0.85:
+            return False
+        # Segunda comprobación, para no confundir una FOTO con fondo parejo
+        # (una pieza sobre la mesa) con un dibujo ya recortado: una ilustración
+        # tiene pocos colores planos repetidos; una foto tiene miles y ninguno
+        # domina. Si los 12 colores más usados no cubren ni el 60%, es foto y
+        # sí hay que recortarla con rembg.
+        chica = img.copy()
+        chica.thumbnail((300, 300))
+        b = (np.array(chica) // 24 * 24).reshape(-1, 3)
+        _u, c = np.unique(b, axis=0, return_counts=True)
+        return bool(np.sort(c)[::-1][:12].sum() / b.shape[0] >= 0.60)
+    except Exception:
+        return False
+
+
 def _ya_es_dibujo_lineal(ruta: Path) -> bool:
     """¿La imagen YA es un dibujo de líneas, o es una foto?
 
@@ -179,6 +278,23 @@ def _ya_es_dibujo_lineal(ruta: Path) -> bool:
         return False
 
 
+# ── CRONÓMETRO POR ETAPA ────────────────────────────────────────────────
+# Se enciende con la variable de entorno AURORA_TIEMPOS=1 y escribe a stderr,
+# nunca a stdout (AURORA lee stdout con json.loads: una línea de más ahí la
+# deja sin respuesta). Existe porque el 2026-08-26 esta cadena se pasaba de
+# los 150 s del chat y no había forma de saber en qué paso se iba el tiempo:
+# medir a mano por fuera daba 32 s y adentro tardaba 8 minutos.
+def _cronometro():
+    import os, sys, time
+    if not os.getenv("AURORA_TIEMPOS"):
+        return lambda _q: None
+    t0 = time.time()
+
+    def marca(q: str) -> None:
+        print(f"[tiempos] {q:<38} {time.time() - t0:6.1f}s", file=sys.stderr, flush=True)
+    return marca
+
+
 def convertir(entrada: str, quitar_fondo: bool = True,
               umbral: int = 128, modo: str = "auto") -> dict:
     """Foto → DXF listo para la láser. Cada paso reporta si sirvió.
@@ -190,11 +306,67 @@ def convertir(entrada: str, quitar_fondo: bool = True,
     if not origen.exists():
         return {"status": "NO_EXISTE", "detalle": f"No encontré: {entrada}"}
 
+    _marca = _cronometro()
     pasos = []
     trabajo = origen
 
+    # ── SI ESTA IMAGEN YA SE VECTORIZÓ, SE REUSA. ───────────────────────
+    # Encontrado el 2026-08-26: el mismo archivo tardó 21 s a las 6:20 y más
+    # de 180 s a las 6:30. El código no cambió — cambió que la PC de Anuar
+    # tenía 1 GB libre con Corel, Aspire, RDWorks y el navegador abiertos.
+    # Mientras tanto él reintentaba, y cada reintento volvía a hacer TODO el
+    # trabajo desde cero: cargar el modelo, recortar, trazar, escribir.
+    # Si el DXF de esa misma imagen ya existe y es más nuevo que la imagen,
+    # es EL MISMO resultado: se devuelve y se acabó. Si él cambia la imagen,
+    # la fecha cambia y se rehace. Nunca entrega un DXF de otra foto.
+    _previo = DESTINO / f"{origen.stem}.dxf"
+    try:
+        if (_previo.exists()
+                and _previo.stat().st_mtime >= origen.stat().st_mtime
+                and _previo.stat().st_size > 1024):
+            import ezdxf as _ez
+            _n = sum(1 for _ in _ez.readfile(str(_previo)).modelspace())
+            if _n > 0:
+                return {"status": "OK", "archivo": str(_previo), "trazos": _n,
+                        "corte": 1, "grabado": max(0, _n - 1), "reusado": True,
+                        "pasos": [f"ya estaba vectorizada: reusé {_previo.name} "
+                                  f"({_n} trazos). Si cambiaste la imagen, "
+                                  f"guárdala de nuevo y la rehago."],
+                        "kb": round(_previo.stat().st_size / 1024, 1)}
+    except Exception:
+        pass    # si el DXF viejo está dañado, se rehace y ya
+
+    # ── SE REDUCE LA FOTO ANTES DE TRABAJARLA (2026-08-26) ────────────────
+    # Todo lo que sigue —quitar fondo, detectar bordes, contar contornos,
+    # escribir el DXF— cuesta en proporción a los píxeles, y para cortar no
+    # hacen falta. La piñata de Alicia llegó de 1086x1448: a 90 cm de alto
+    # eso es 0.6 mm por píxel, mucho más fino que lo que la láser puede
+    # cortar. Con la máquina ocupada (Corel + Aspire + el navegador abiertos)
+    # la cadena completa se pasaba de los 150 s del chat y Anuar recibía
+    # "mándame el DXF" en vez de su piñata. Reducir el lado largo a 1000 px
+    # deja ~0.9 mm por píxel a 90 cm: sigue siendo más fino que el corte, y
+    # el trabajo baja a menos de la mitad. El DXF se escala al tamaño que él
+    # pida de todos modos, así que no se pierde nada real.
+    LADO_MAX = 1000
+    try:
+        from PIL import Image as _Im
+        _o = _Im.open(origen)
+        if max(_o.size) > LADO_MAX:
+            _o = _o.convert("RGB")
+            _antes = _o.size
+            _o.thumbnail((LADO_MAX, LADO_MAX), _Im.LANCZOS)
+            _chica = DESTINO / f"_tmp_{origen.stem}_chica.png"
+            _chica.parent.mkdir(parents=True, exist_ok=True)
+            _o.save(_chica)
+            trabajo = _chica
+            pasos.append(f"foto reducida de {_antes[0]}x{_antes[1]} a "
+                         f"{_o.size[0]}x{_o.size[1]} (de sobra para cortar)")
+    except Exception as e:
+        pasos.append(f"sin reducir ({type(e).__name__})")
+
+    _marca("reducir")
     # ¿Es un dibujo técnico o una foto? Cambia TODO el tratamiento.
-    lineal_de_origen = _ya_es_dibujo_lineal(origen)
+    lineal_de_origen = _ya_es_dibujo_lineal(trabajo)
     if modo == "auto":
         modo = "trazar" if lineal_de_origen else "lineal"
     if lineal_de_origen:
@@ -202,13 +374,19 @@ def convertir(entrada: str, quitar_fondo: bool = True,
         # rembg lo puede destrozar (2026-08-05, el Volvo de Anuar).
         quitar_fondo = False
         pasos.append("es un dibujo de líneas: se traza tal cual")
-    elif quitar_fondo and _ya_tiene_fondo_quitado(origen):
+    elif quitar_fondo and _fondo_ya_plano(trabajo):
+        # Ya viene sobre un fondo parejo: rembg no tiene nada que hacer y
+        # cuesta 48 s (medido con el escudo de Peugeot el 2026-08-26).
+        quitar_fondo = False
+        pasos.append("la imagen ya venía sobre fondo parejo: no hizo falta recortarla")
+    elif quitar_fondo and _ya_tiene_fondo_quitado(trabajo):
         # Ya viene con alpha real (recorte tipo sticker): correrle rembg
         # encima es tiempo perdido de verdad, no cosmético (ver cabecera de
         # _ya_tiene_fondo_quitado).
         quitar_fondo = False
         pasos.append("el PNG ya traía fondo transparente: se usa tal cual")
 
+    _marca("decidir tratamiento")
     # 1) Quitar el fondo con rembg
     if quitar_fondo:
         try:
@@ -221,7 +399,10 @@ def convertir(entrada: str, quitar_fondo: bool = True,
             # Corel — Anuar lo reportó el 2026-08-05 con bunzo.jpg: "si lo abro
             # en corel sigue teniendo fondo, pero negro". Con fondo blanco se
             # ve como debe y además el paso siguiente (B&N) sale limpio.
-            r = conv.quitar_fondo(str(origen), sobre_blanco=True)
+            # modelo="u2net" (objetos) y no el de personas: lo que se manda a
+            # cortar es una piñata, un logo, una pieza. Medido el 2026-08-26 con
+            # la piñata de Alicia: 14 s contra 42 s, y recorta igual de bien.
+            r = conv.quitar_fondo(str(trabajo), sobre_blanco=True, modelo="u2net")
             ruta_sin_fondo = r.get("salida") or r.get("archivo") or r.get("ruta")
             if r.get("status") in ("OK", "ok") and ruta_sin_fondo and Path(ruta_sin_fondo).exists():
                 trabajo = Path(ruta_sin_fondo)
@@ -231,6 +412,7 @@ def convertir(entrada: str, quitar_fondo: bool = True,
         except Exception as e:
             pasos.append(f"sin quitar fondo ({type(e).__name__})")
 
+    _marca("quitar fondo")
     # 2) DIBUJO LINEAL, no silueta rellena.
     #    Encontrado el 2026-08-05: pasar a blanco y negro puro dejaba el trailer
     #    como una mancha sólida — 1 solo trazo, la pura silueta, sin nada de
@@ -309,6 +491,7 @@ def convertir(entrada: str, quitar_fondo: bool = True,
         # con cientos de líneas — el DXF salía basura y solo se vio al mirar la
         # vista previa (la idea de Rocío, que ya sirvió el mismo día).
         bn.convert("RGB").save(tmp_bn)
+        _marca("preparar blanco y negro")
     except Exception as e:
         return {"status": "ERROR", "pasos": pasos,
                 "detalle": f"no pude prepararlo: {type(e).__name__}: {e}"}
@@ -320,17 +503,21 @@ def convertir(entrada: str, quitar_fondo: bool = True,
         vtracer.convert_image_to_svg_py(str(tmp_bn), str(tmp_svg),
                                         colormode="binary")
         pasos.append("trazado con vtracer")
+        _marca("vtracer")
     except Exception as e:
         return {"status": "ERROR", "pasos": pasos,
                 "detalle": f"vtracer falló: {type(e).__name__}: {str(e)[:120]}"}
 
     # 4) SVG → DXF, sin Inkscape
+    # UN DXF POR IMAGEN, y se sobreescribe. Antes se iba numerando
+    # (`__2`, `__3`...) para no pisar nada, pero con el reuso de arriba eso
+    # rompe la cuenta: el reuso mira `nombre.dxf` y los reintentos escribían
+    # `nombre__7.dxf`, así que nunca coincidían y volvía a hacer todo. Si
+    # llegamos aquí es porque la imagen cambió o no había DXF: el viejo ya no
+    # sirve para esa imagen.
     salida = DESTINO / f"{origen.stem}.dxf"
-    n = 2
-    while salida.exists():
-        salida = DESTINO / f"{origen.stem}__{n}.dxf"
-        n += 1
     r = svg_a_dxf(tmp_svg, salida)
+    _marca("svg a dxf")
     if r.get("status") != "OK":
         return {"status": "ERROR", "pasos": pasos,
                 "detalle": f"al pasar a DXF: {r.get('detalle')}"}

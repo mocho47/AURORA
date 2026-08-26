@@ -1,491 +1,731 @@
-# Comandos de AURORA — probados en vivo
+# Comandos de AURORA — probados uno por uno
 
-**Aquí solo hay comandos que se ejecutaron de verdad contra el sistema real y
-respondieron bien.** No es una lista de lo que *debería* funcionar: cada línea se
-mandó al chat y se comprobó el resultado — el archivo en el disco, la cifra en la
-base, la página abierta.
+**Cada frase de esta lista se pasó por el enrutador real de AURORA y llegó**
+**a donde debía.** Si una dejara de funcionar, desaparecería de aquí sola:
+este archivo no se escribe, se genera (`CEREBRO/generar_comandos_verificados.py`).
 
-Están escritos **como los escribe Anuar**, con sus faltas de dedo y sus
-modismos, porque así es como se van a usar.
+Están escritas **como escribe Anuar**, sin acentos y con sus modismos, porque
+así se van a usar de verdad.
 
-Actualizado: 2026-08-05 · 26 candados directos · 567 herramientas · 238 pruebas
+Generado: 2026-08-26 · **574 frases verificadas** en **36 capacidades** · 38 candados en total
 
-> **No tienes que aprenderte esto.** AURORA aprende cómo hablas: si algo no lo
-> entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
-> Esta lista es para saber qué se puede hacer, no cómo hay que decirlo.
+> **No te lo tienes que aprender.** Basta con que le digas la idea. Si algo no
+> lo entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
 
 ---
 
-# 📖 CÓMO ENTIENDE AURORA — las reglas
+## Taller
 
-*Esto es lo que pasa entre que escribes y que ella responde. Son 5 pasos, en
-este orden.*
+### Adapta un diseño a OTRO grosor de material (ajusta las ranuras)
 
-## Regla 1 · Primero limpia lo que escribiste
+- `ajusta la casa de bob esponja al 50% para material de 2.5`
+- `tengo un archivo de 3mm y mi material es de 2.5 que hago`
+- `adaptame calamardo a 2.5 son puros encastres`
+- `el diseño viene para 3mm y mi material es de 2.5`
+- `reescala calamardo son puros encastres`
+- `adapta la plantilla a mi mdf que es mas delgado`
+- `adaptame el bob esponja a mdf de 5.5`
+- `reescala el dibujo a 2.5 son encastres`
+- `achicame el diseño a la mitad para mdf de 3mm`
+- `amplia el archivo al doble y ajusta los encastres`
+- `los machos y hembras ajustalos a 2.7`
+- `mi material es de 2.5 acomoda el diseño`
+- `viene para 4mm ajustalo`
+- `adapta la plantilla a mi acrilico de 3`
+- `ajusta el diseño a mi material de 6mm`
+- `adapta el archivo a material de 2.5`
 
-Antes de nada corrige tu forma de escribir. **Aquí puedes escribir como quieras.**
+### Tus citas y pendientes
 
-| Escribes | Lo vuelve |
-|---|---|
-| `imprecion` · `adesivo` · `watsapp` · `coreldrau` · `combiene` | la palabra correcta |
-| `ábreme` · `guárdalo` · `cotízame` · `búscame` | `abre` · `guarda` · `cotiza` · `busca` |
-| `a cuánto me sale` | `cuánto cuesta` |
-| `pásalo a corte` | `convierte a dxf` |
-| `sácale el dibujo lineal` | `vectoriza` |
-| `chékame` | `revisa` |
-| `corte de caja` | `contabilidad` |
+- `que tengo agendado`
+- `que sigue`
+- `que citas tengo esta semana y cuales son de atf`
+- `que me toca hoy`
+- `con quien quede esta semana`
+- `para cuando quedo la entrega`
+- `que citas tengo manana`
+- `agendame con don beto el jueves`
+- `mi agenda como esta`
+- `cancela la cita de las 5`
+- `ya vino el cliente de los faros`
+- `programa una cita para el lunes`
+- `que tengo agendado el sabado`
+- `confirma la cita del kinder`
+- `agenda del dia porfa`
+- `que tengo hoy`
+- `tengo pendientes hoy`
 
-Salió de **72 peticiones reales tuyas**. Si escribes algo que no reconoce, dilo
-y se agrega.
+### Piñatas y piezas grandes: escala, tabloides, MDF y corte de un jalón
 
-## Regla 2 · Busca en una lista, en orden
+- `cotiza esta piñata para alicia`
+- `calcula esta piñata completa es con despiece`
+- `calcula la caja de esta piñata es solo el contorno`
+- `cotizame la pieza grande de la fiesta`
+- `calculame el personaje a 89.5cm`
+- `cotiza el personaje completo con despiece`
+- `calcula cuantos tabloides me salen de esta pieza`
+- `cotizame esta pinata a 1.20 de alto`
+- `esta pinata cuanto sale calculala`
+- `cotiza el personaje de bluey para una pinata`
+- `calcula la pinata de alicia`
+- `cotizame la pinata numero 5`
+- `calcula esta pieza a escala`
+- `cotiza esa pinata que te mande`
+- `calcula esta pinata con despiece completo`
+- `cotiza la pieza del personaje`
 
-Hay **26 candados** y se revisan uno por uno. **El primero que reconoce, gana.**
+### Cotiza cualquier producto del catálogo
 
-Por eso el orden importa: si `cotizar` fuera antes que `buscar en internet`, la
-palabra "precio" secuestraría el mensaje. Eso pasó de verdad — cotizó 100
-playeras por $75,000 cuando se pedía papel de MercadoLibre.
+- `cuanto cuesta un termo yeti sublimado`
+- `cuanto sale`
+- `dame precio de 3 tazas y 2 termos personalizados`
+- `en cuanto dejo una gorra bordada digo sublimada`
+- `precio de una agenda de vinipiel grabada`
+- `cuanto por 10 vasos cafeteros personalizados`
+- `cuanto cuesta una playera sublimada`
+- `cotizame 20 termos con logo`
+- `presupuesto de 50 tazas magicas`
+- `cuanto vale una agenda personalizada`
+- `cotiza 12 vasos cerveceros`
+- `cuanto me sale una gorra bordada`
+- `dame el precio de 100 llaveros`
+- `cuanto cobras por una playera con foto`
+- `cuanto cuesta un termo yeti con nombre`
+- `cotizame 20 gorras personalizadas`
+- `que precio tiene una taza magica`
 
-## Regla 3 · Cada candado pide señales concretas
+### Mide un DXF y te dice el corte real
 
-| Candado | Qué necesita |
-|---|---|
-| **Corel** | decir `corel` **Y** una acción (abre, exporta, guarda) |
-| | *excepción:* palabras que solo existen ahí — `mapa de bits`, `el diseño abierto` — entran solas |
-| **Cajas** | un verbo de crear + la palabra `caja` |
-| **Cotizar** | `cotiza` o `cuánto cuesta` — **pero se apaga** si nombras una tienda (MercadoLibre, Amazon): eso es comprar, no vender |
-| **Proveedores** | va **antes** que internet: si el dato está en tu directorio, no sale a buscar |
-| **Memoria** | `qué recuerdas de X` apaga a todos los demás, para que el tema no secuestre el mensaje |
+- `cuanto cuesta cortar este archivo`
+- `cuantos metros de corte trae`
+- `cuantos metros de corte trae este archivo`
+- `mide el dxf y dime en cuanto lo dejo`
+- `que me cobrarias por cortar este diseño en mdf`
+- `cuantos mts de corte tiene el archivo`
+- `mide este archivo y dime el corte`
+- `cuanto cobro por cortar este diseño`
+- `cotiza este archivo porfa`
+- `cuanto cuesta cortar lo que te mande`
+- `cotiza el dibujo que traigo`
+- `cuanto tarda en cortar este dxf`
+- `mide el corte del archivo`
+- `cotiza este corte para el cliente`
+- `cuanto sale cortar esto`
 
+### Cotiza láser + material dándole tú las medidas, sin DXF
 
-## Regla 3-b · Buscar NO es lo mismo en todos los sitios
+- `cotiza esta imagen en corte laser con vinil dorado 72x41`
+- `cuanto sale en mdf de 60 x 40`
+- `a como me sale grabar acrilico de 30x20`
+- `precio de cortar mdf 100 x 50`
+- `cuanto cobro por un letrero en mdf de 80x30`
+- `cotizame 109 x 85 en mdf con vinil metalico`
+- `cuanto me cobras por grabado en madera de 25x25`
+- `que precio tiene cortar triplay de 120x60`
+- `cotiza laser de 40x40 en acrilico`
+- `cuanto sale un corte laser de 50 x 70 en mdf`
+- `a como el mdf cortado de 90x45`
+- `cuanto me cuesta grabar en acrilico`
+- `cotizame corte laser en mdf`
+- `cuanto por cortar acrilico`
+- `cuanto sale grabar madera de 15x15`
+- `cotiza mdf de 30x30 con vinil negro`
 
-| Lo que pides | Qué hace |
-|---|---|
-| `busca disenos de X en pinterest` | **abre Pinterest** con la búsqueda hecha |
-| `muestrame disenos en behance` | abre Behance |
-| `busca modelos en thingiverse` | abre Thingiverse |
-| `busca en mercado libre papel adhesivo` | te da **lista con precios y enlaces** |
-| `donde compro X mas barato` | busca proveedores |
+### Cotiza vinil de recorte por área
 
-**Por qué:** en Pinterest y Behance lo que importa son las **imágenes** — una
-lista de enlaces de texto no sirve para buscar referencias. En MercadoLibre sí,
-porque ahí lo que necesitas es el precio y el link.
+- `cuanto sale un vinil de recorte de 20x30`
+- `cotisa unas letras en vinil`
+- `unas letras de 10x28 y unos numeros de 15x10 en vinil de corte cuanto`
+- `a como me sale el metro de vinil textil ya puesto`
+- `oye y si son 5 calcas de 12x12 cuanto queda cada una`
+- `en cuanto sale rotular una puerta de 90 x 45 en recorte`
+- `precio de vinil textil planchado en 20 playeras`
+- `cuanto cobro por rotular un cristal`
+- `el htv cuanto cuesta el metro`
+- `cuanto sale una calca de 15x15 en recorte`
+- `en cuanto dejo 50 stickers de vinil de 5x5`
+- `cuanto es el planchado de un logo chico`
+- `a como cobras el vinil metalico`
+- `cuanto por un vinil de recorte para la camioneta`
+- `precio del vinil tornasol por metro`
+- `cotiza 20 calcas de 10x10 en vinil`
+- `cuanto sale rotular la camioneta`
 
-Sitios que se ABREN: pinterest · behance · freepik · thingiverse · etsy · instagram
-Sitios que dan LISTA: mercadolibre · amazon · lideart · búsqueda general
+### Crea una caja con encastres dando solo las medidas
 
+- `hazme una caja de 12x9x6 en mdf de 2.7`
+- `necesito una caja`
+- `un cofre de 20x15x10 con dedos y que me des el dxf`
+- `armame un estuche de 15x10x8`
+- `necesito un organizador de 30x20x12 en mdf`
+- `una cajita de 8x8x5 para una taza`
+- `hazme una caja de 25x18x10`
+- `un baul de 40x30x25 en mdf`
+- `necesito un cofre para joyeria`
+- `quiero una caja con tapa de 10x10x10`
+- `armame una cajita de 6x6x4`
+- `una caja de 50 x 35 x 20 para los termos`
+- `hazme el estuche de 22x14x7 en mdf de 2.7`
+- `organizador de 35x25x15 con dedos`
+- `quiero un cofre tipo pirata de 30x20x15`
+- `caja de 18x18x9 y dame el dxf`
 
-## Regla 3-c · Tus bancos de diseño, directos
+### Imprimir y recortar: contorno y marcas de registro
 
-Salieron de tu historial de navegación. Entran a su buscador, sin pasar por Google:
+- `hazme un print and cut de este logo`
+- `necesito imprimir y recortar unos stikers`
+- `un stiker impreso con su linea de corte y marcas de registro`
+- `esas calcomanias van impresas y luego recortadas verdad`
+- `arma las marcas de registro para recortar lo impreso`
+- `necesito calcas full color con su contorno de corte`
+- `como corto lo impreso sin que se recorra`
+- `ponle las marcas de registro a la hoja`
+- `cuanto cabe en una hoja de stickers`
+- `el area util de la hoja cual es`
+- `cuanto desplazamiento le dejo al contorno`
+- `unas calcas full color con su contorno`
+- `necesito imprimir y cortar unas etiquetas`
+- `marcas de silhouette como se ponen`
+- `el excedente del corte cuanto le dejo`
+- `print and cut de las calcas de luisa`
 
-| Escribe esto | Abre |
-|---|---|
-| `en 3axis busca casas de muñeca` | 3axis.co |
-| `en dxf download encuentra pistas de canicas` | dxfdownloads.com |
-| `en ameede busca la torre eifel en dxf` | ameede.com |
-| `en biblioteca de corte busca cajas` | bibliotecadecorte.com |
-| `en vectorsart busca mandalas` | vectorsart.com |
-| `en megalaser busca portaretratos` | megalaser.com.ar |
-| `en stanser busca troqueles` | stanser.com |
-| `abre boxes` | boxes.hackerspace-bamberg.de |
+### Dónde comprar y a qué precio
 
-**¿Y un sitio que no conoce?** No se rinde: busca en Google nombrándolo. Prueba
-`en ikea busca sillas de madera` y te lleva ahí.
-
-**¿Uno que uses y no esté?** Dímelo y lo agrego — con su buscador verificado, no
-supuesto.
-
-> **Nota sobre boxes:** ese sitio es la versión web de la misma librería que
-> AURORA ya trae dentro. Ahora `hazme una caja corazon de 45x7` hace lo mismo
-> sin abrir el navegador. El sitio sigue sirviendo para VER los dibujos de los
-> 189 modelos cuando no sabes cuál quieres.
-
-## Regla 4 · Si ninguno reconoce, entra la IA
-
-El **enrutador universal** conoce las 567 herramientas y decide en ~1 segundo.
-Y ahí **aprende la frase**, para que la próxima vez entre directo sin esperar.
-
-## Regla 5 · Si tampoco puede, lo dice
-
-**Nunca inventa.** Te dice qué sí puede hacer de verdad. Hay un candado de
-honestidad que revisa cada respuesta antes de entregártela.
-
----
-
-# 📦 La fórmula para pedir cajas
-
-```
-[verbo] una caja [tipo] de [medidas] [tapa]
-```
-
-| Parte | Qué poner |
-|---|---|
-| **verbo** | haz · crea · genera · quiero · necesito |
-| **tipo** | corazón · **cofre / baúl** · bisagras · divisiones · tapa deslizante · flex · cajón · redonda · dados · cartas · libro |
-| **medidas** | `15x15x3` o `10 x9x7cm` — en cm, como las escribas |
-| **tapa** | `con tapa de agujero` · `sobrepuesta` · `cerrada` |
-
-**Lo único que importa es que estén las cuatro partes.** El orden y la
-ortografía no. Estas funcionaron tal cual se escribieron:
-
-```
-genra una caja corazon de 25 cm x4 cm de fondo con tapa sobrepuesta
-crea una caja con tapa deslizante de 15cmx15cm x3cm
-haz una caja con bisagras de 10 x9x7cm
-aurora crea una caja tipo cofre de 20x15x7
-```
-
-¿No sabes el tipo? Pregunta: **`que cajas puedes hacer`**
-
-## Las 4 reglas de taller que ya no tienes que repetir
-
-Anuar las dictó el **2026-08-06**. Están dentro del código, no en una nota:
-él ya no las escribe y salen así solas.
-
-| Regla | Qué hace AURORA sin que se lo pidas |
-|---|---|
-| **1. El orden es X, Y, H** | `20x15x7` = 20 de ancho, 15 de fondo, 7 de alto. Nunca se reordena "por lógica" |
-| **2. Siempre en DXF** | Ya no hay que decir "entrégala en dxf". Sale el DXF y el SVG de respaldo |
-| **3. Grosor con compensación** | Material de 2.7 → se corta a **2.5**. El láser se come ~0.2 mm y así encaja justo |
-| **4. Dedos grandes** | Al tamaño de dedo que traiga el generador **se le quita el punto** (1.0→10, 2.0→20). Menos dedos = menos tiempo de corte |
-
-Y el nombre del archivo trae todo lo que necesitas para volver a cortarla
-igual: `PirateChest_20x15x7_2.5mm.dxf` — tipo, medidas en tu orden, y el
-grosor **con el que se cortó**.
-
-**Vista previa:** con cada caja sale también un PNG para verla sin abrir Corel
-ni RDWorks. La idea fue de **Rocío**.
-
----
-
-> **Y la regla más importante:** cuando algo no lo entienda, dilo. Cada frase
-> que señalas se arregla para siempre — no solo esa, sino el patrón completo.
-> Así salió lo de "tapa deslizante", que daba un cajón en vez de una caja.
-
----
-
-## 🎨 Corel
-
-| Escribe esto | Qué hace |
-|---|---|
-| `corel abre C:\ruta\foto.jpg` | Importa la imagen al documento abierto (crea uno si no hay) |
-| `corel abre C:\ruta\archivo.pdf` | Abre PDF, CDR o AI dentro de Corel |
-| `corel extrae el texto del documento` | Lee todo el texto real del diseño abierto |
-| `corel escala la pagina a 20x30 cm` | Cambia el tamaño de página |
-| `corel exporta a pdf` | Exporta a `Escritorio\PDFs a Impresion` |
-| `corel guarda una copia en C:\ruta\copia.cdr` | Copia sin tocar el original |
-| `corel cierra el documento` | Cierra sin guardar |
-| `corel tiene instalado el plugin laser` | **Lee el disco de verdad** y te dice si lo tienes |
-| `que macros tiene corel` | Lista las macros instaladas (funciona con Corel cerrado) |
-| `arregla la conexion con corel` | Repara el caché corrupto y lo confirma reconectando |
-
-**Escribe `coreldrau` o `corell`** y también funciona.
-
-⚠️ **Exportar a PNG/JPG desde Corel no sirve** — limitación real de la librería,
-no de tu Corel. Usa PDF, que funciona al 100 %.
-
----
-
-## 🔄 Convertir archivos
-
-| Escribe esto | Qué hace |
-|---|---|
-| `convierte a dxf C:\ruta\archivo.svg` | SVG, PDF, AI o EPS → DXF para la láser |
-| `convierte a png C:\ruta\archivo.pdf` | PDF → PNG **(probado: 2 MB reales en disco)** |
-| `convierte a pdf C:\ruta\archivo.svg` | A PDF |
-| `convierte a svg C:\ruta\imagen.png` | A SVG |
-| `combierte a dxf ...` | Con B también funciona |
-| `vectoriza C:\ruta\imagen.png` | Traza la imagen y genera SVG + DXF |
-
-**Con la calidad que necesitas:**
-
-| Escribe esto | Qué hace |
-|---|---|
-| `convierte a png a 150 dpi C:\ruta\archivo.pdf` | El número que digas manda |
-| `convierte a png para lona C:\ruta\archivo.pdf` | **150 DPI solo** — la lona se ve a metros |
-| `convierte a png para imprenta C:\ruta\archivo.pdf` | 600 DPI |
-| `convierte la pagina 2 a png C:\ruta\archivo.pdf` | Solo esa página |
-| `convierte todas las paginas a png C:\ruta\archivo.pdf` | Una imagen por página |
-
-Sin decir nada: **300 DPI**, que es tu estándar para sublimación y láser.
-
-⚠️ Archivos grandes o PDFs de muchas páginas tardan **1-2 minutos**. No está
-colgado: está rasterizando de verdad.
+- `donde compro mdf en guadalajara`
+- `quien vende acrilico`
+- `necesito proveedor de vinil textil metalizado en gdl`
+- `con quien surto acrilico`
+- `quien me vende mdf barato`
+- `mis proveedores de sublimacion cuales son`
+- `donde consigo acrilico de 3mm`
+- `quien vende mdf en tlaquepaque`
+- `con quien compro vinil textil`
+- `mi proveedor de termos cual era`
+- `proveedores de sublimacion en gdl`
+- `donde compro laminas de mdf baratas`
+- `quien me surte los termos yeti`
+- `con quien consigo tinta de sublimacion`
+- `proveedor de acrilico en guadalajara`
+- `donde compro las prendas para sublimar`
 
 ---
 
-## 📅 Agenda
+## Ventas
 
-| Escribe esto | Qué hace |
-|---|---|
-| `que tengo agendado hoy` | Las citas de hoy |
-| `que tengo agendado manana` | Las de mañana |
-| `proximas citas` | Lo que viene en 24 h |
-| `agenda una cita para Pedro Lopez el 2026-08-05 10:00 tipo instalacion, tel 3312345678` | La agenda de verdad |
-| `agendame una cita` | Te pide lo que falta, **no inventa** |
+### Da de alta un cliente nuevo en el CRM
 
-Tipos: `instalacion`, `entrega`, `cita`, `cotizacion`.
+- `apunta a juan perez 3312345678 interesado en faros`
+- `guarda este cliente`
+- `registra a maria del taller de enfrente quiere 50 playeras su tel es 3339998877`
+- `apunta a roberto 3311223344 quiere unas playeras`
+- `da de alta a la señora del kinder`
+- `metelo al crm es cliente nuevo`
+- `apunta a laura 3312223344 quiere termos`
+- `registra a don memo cliente nuevo`
+- `da de alta a la señora de las playeras`
+- `anota a carlos 3311112222 interesado en faros`
+- `metelo a la lista es cliente nuevo`
+- `nuevo cliente del kinder apuntalo`
+- `apunta a rosa quiere 30 etiquetas`
+- `registra a este prospecto`
+- `otro lead de facebook apuntalo`
+- `metelo al crm porfa`
 
----
+### Los precios de los paquetes escolares de Rocío
 
-## 💰 Dinero y órdenes
+- `cuanto sale el paquete de primaria`
+- `cuanto el de la campaña`
+- `oiga cuanto me deja el paquete escolar de mi niño de primaria`
+- `cuanto el paquete escolar`
+- `el de secundaria en cuanto queda`
+- `una clienta pregunta cuanto el de preescolar`
+- `cuanto sale el paquete de secundaria`
+- `el de kinder en cuanto sale`
+- `que traen las etiquetas escolares`
+- `las etiquetas para utiles que precio tienen`
+- `una mama pregunta por el paquete escolar`
+- `los nombres para la ropa cuanto salen`
+- `cuanto la tabla de multiplicar`
+- `precio del paquete de preescolar`
+- `etiquetas para la escuela cuanto`
+- `las etiquetas del nino de primaria`
 
-| Escribe esto | Qué hace |
-|---|---|
-| `cuanto llevo vendido este mes` | Cifras reales de tu contabilidad |
-| `hazme un corte de caja` | Lo mismo — es el cuadre, **no** cortar una caja |
-| `como va la contabilidad` | Ingresos, costos, utilidad, cobrado, por cobrar |
-| `que ordenes tengo pendientes` | Órdenes reales del taller |
-| `echale un ojo a las cuentas del changarro` | También lo entiende |
+### Argumentos de venta y manejo de objeciones
 
----
+- `dame la ficha del aozoom x1`
+- `que le digo al cliente del x5`
+- `como le vendo un retrofit a alguien que dice que esta caro`
+- `que le contesto al cliente que dice que esta caro`
+- `como cierro una venta de tiras secuenciales`
+- `dame los argumentos de venta del led h4`
+- `dame la ficha del x7`
+- `argumentos de venta de los termos`
+- `que le contesto al cliente que me dice que esta caro`
+- `como le vendo unas tiras secuenciales`
+- `hazme un pitch de la sublimacion`
+- `como vendo el corte laser a un negocio`
+- `brief de venta de los letreros`
+- `que le digo al cliente que compara con chinos`
+- `como cierro la venta del retrofit`
+- `ficha del aozoom x2`
+- `dame el pitch de los faros`
 
-## 🏷️ Cotizar
+### Cuánto vendiste, cuánto te deben
 
-| Escribe esto | Qué hace |
-|---|---|
-| `cuanto sale una taza sublimada` | Precio real del catálogo de Milens |
-| `cotizame 20 playeras cuello redondo` | Con tus precios, no inventados |
-| `cuanto cuesta el faro aozoom x5` | Catálogo de ATF |
-| `precio de instalacion de lupas` | Servicio de mano de obra de ATF |
-| `quiero lupas cuanto sale la instalacion` | Igual |
+- `cuanto vendi este mes`
+- `como voy`
+- `dime cuanto llevo vendido y cuanto me deben los clientes`
+- `como vamos este mes`
+- `cuanto llevo vendido`
+- `que tal va la venta`
+- `cuanto llevo vendido esta semana`
+- `como va la venta`
+- `cuanto me deben los clientes`
+- `hazme el corte de caja de hoy`
+- `cuanto entro hoy`
+- `los numeros del mes como van`
+- `que tal vamos`
+- `cuanto facture el mes pasado`
+- `cuanto llevo ganado`
+- `como vamos de ventas`
 
-Detecta solo si es Milens o ATF por lo que pidas.
+### Atiende al cliente de faros/retrofit
 
----
-
-## 🌐 Internet
-
-| Escribe esto | Qué hace |
-|---|---|
-| `buscame proveedores de acrilico en guadalajara` | Búsqueda real con resultados |
-| `investiga el precio de faros led h4 en mexico` | Precios de mercado reales |
-| `que dicen de los proyectores aozoom` | Opiniones reales |
-| `compara precios de termos para sublimar` | Comparativa real |
-| `checa en internet cuanto esta el dolar hoy` | Dato real del día |
-
-**Y abrir páginas de verdad:**
-
-| Escribe esto | Qué hace |
-|---|---|
-| `abre youtube` | La abre en el navegador **(probado)** |
-| `abreme mercadolibre` | Igual |
-| `abre facebook` · `instagram` · `gmail` · `drive` · `canva` | 24 sitios por su nombre |
-| `abre ameede.com` | Cualquier dominio que escribas |
-
-⚠️ **AURORA no navega dentro de las páginas.** Las abre y busca en internet;
-no hace clic ni llena formularios.
-
----
-
-## 🧠 Sobre sí misma
-
-| Escribe esto | Qué hace |
-|---|---|
-| `que puedes hacer` | Sus datos **reales**: candados, herramientas, límites |
-| `cuantas herramientas tienes` | El número de verdad, del registro |
-| `que has aprendido de mi` | Las formas de hablar que te aprendió |
-| `olvida <la frase>` | Borra lo que aprendió mal |
-
----
-
-## 📁 Archivos
-
-| Escribe esto | Qué hace |
-|---|---|
-| `C:\Users\Administrador\Downloads\archivo.jpg` | **Solo la ruta**: te dice qué puede hacer con él |
-| Una ruta sin extensión | La encuentra igual y te dice el tamaño |
-| `abre el archivo trailer hit y extrae el dibujo lineal` | Recorta el fondo y saca el trazo limpio B&N |
-| `edita CEREBRO/validador_honestidad.py` | Edita con respaldo, verifica que compile y revierte si falla |
-
-⚠️ Archivos de más de 14,000 caracteres **no los edita** — te avisa antes en vez
-de devolverte medio archivo.
-
----
-
-## 🚫 Lo que NO hace, y te lo dice
-
-| Si le pides | Contesta |
-|---|---|
-| Crear un motor nuevo | *"Eso es trabajo de AURORITA XP"* — la fábrica vive aparte |
-| Algo que no sabe hacer | Te ofrece lo que **sí** puede, sacado de sus herramientas reales |
-| Algo físico (ir por un café) | Niega limpio, sin inventarte una alternativa falsa |
-
-**Y desde el 30 de julio no puede afirmar que hizo algo que no hizo.** Hay un
-candado en código que revisa cada respuesta antes de salir: las acciones que dice
-haber hecho, los comandos que menciona (contra el registro real) y los archivos
-que nombra (contra el disco). Si algo no cuadra, lo corrige a la vista.
+- `cuanto cuesta un retrofit de faros`
+- `hacen instalacion de leds`
+- `traigo una jetta quiero ponerle aozoom cuanto me sale todo`
+- `cuanto por ponerle biled a una hilux`
+- `traigo un civic quiero mejorar los faros`
+- `hacen proyectores de faro`
+- `me pueden recolocar la lupa`
+- `cuanto por un retrofit completo`
+- `hacen bi led en guadalajara`
+- `traigo un golf quiero cambiar los faros`
+- `quiero mejorar los faros de mi troca`
+- `instalan aozoom`
+- `cuanto sale ponerle proyectores de faro`
+- `tengo una hilux le quiero poner led`
+- `cuanto cuesta el retrofit de un civic`
+- `quiero lupas para mi jetta`
+- `cuanto sale la lupa`
 
 ---
 
-## ⏱️ Cuánto tarda
+## Diseño
 
-| | |
-|---|---|
-| Contabilidad, agenda, servicios | **menos de 1 segundo** |
-| Corel, convertir, buscar en web | **2-10 segundos** |
-| Conversiones pesadas | **1-2 minutos** (está trabajando de verdad) |
-| Cuando Groq limita la cuota | puede tardar; eso es del proveedor, no de AURORA |
+### Abre una página en el navegador
 
+- `abre pinterest y busca luna de mdf`
+- `abreme youtube`
+- `metete a mercadolibre y buscame faros aozoom`
+- `metete a facebook`
+- `entra a 3axis y busca cajas`
+- `abre google y busca precios de acrilico`
+- `abre pinterest y busca cajas de mdf`
+- `metete a amazon y busca laser`
+- `abre milens.com`
+- `entra a aliexpress y busca lupas`
+- `abre google`
+- `abre youtube y busca tutorial de rdworks`
+- `metete a facebook y busca el grupo de laser`
+- `abre pinterest y busca letreros luminosos`
+- `entra a 3axis.co`
+- `abre facebook`
+- `entra a pinterest`
 
----
+### Habla con CorelDRAW: qué tienes abierto, exportar
 
-## 🧠 Lo que AURORA sabe de tu taller *(nuevo 2026-08-04)*
+- `corel esta abierto`
+- `que tengo abierto en corel`
+- `exportame a pdf lo que traigo abierto en corel`
+- `que archivo traigo en corel`
+- `corel lo tengo prendido`
+- `pasa a pdf el documento de corel`
+- `que traigo abierto`
+- `corel esta prendido`
+- `exporta a pdf lo de corel`
+- `abre corel`
+- `que documento tengo en coreldraw`
+- `el cdr que traigo abierto cual es`
+- `corel dime que tengo`
+- `pasa a pdf lo de corel`
+- `en corel exporta la pagina`
+- `que archivo cdr esta abierto`
 
-Tiene guardados **40 conocimientos reales** — tus parámetros probados, tus
-precios y tus criterios. Se los preguntas hablando normal, no con palabras raras.
+### Saca la silueta para recortar, o el dibujo lineal para estarcir
 
-| Escribe esto | Qué te contesta |
-|---|---|
-| `a cuanto corto mdf de 2.7` | tu 60% / 25 mm/s y la galga de 2 trozos (5.4 mm) |
-| `que galga uso para el mdf` | los 5.4 mm, y por qué los 8 mm eran el error |
-| `a que potencia grabo` | tus parámetros probados |
-| `como va la lente del cañon` | curva arriba, cómo checarla con el paño |
-| `que recuerdas de costeo` | material ya pagado NO es gratis, y qué cargarle a cada pieza |
-| `que recuerdas de precios escolares` | planilla $50, lápices $7/$5, uniformes $15 |
-| `que recuerdas de insumos` | vinil $180 el metro, papel $2.50 la hoja |
-| `que recuerdas de venta` | cómo escribirle a un cliente, 45 s entre mensajes |
-| `que recuerdas de arquitectura` | cómo está hecha ella misma |
-| `que recuerdas de decisiones` | por qué se cerró Ollama, por qué no se mueve de máquina |
+- `sacame el delineado de este dibujo`
+- `delinealo para que lo corte`
+- `necesito la silueta nada mas`
+- `hazme el recortable de las kpop`
+- `sacale las lineas de corte al pdf`
+- `me pidieron un delineado y dejarle pestañas para que no se suelten las piezas`
+- `esto lo quiero en estarcido`
+- `hazme un stencil de esta imagen`
+- `la plantilla para trazar de este dibujo`
+- `delineame el personaje`
+- `quiero nada mas la silueta de afuera`
+- `line art de la foto porfa`
+- `sacame la silueta para recortar`
+- `quiero el recortable con pestañas`
+- `delinear el dibujo del cliente`
 
-**Temas cargados:** láser · precios escolares · costeo · insumos · venta ·
-negocio · método de trabajo · arquitectura · decisiones · infraestructura
+### Convierte cualquier archivo a DXF
 
-Para recargarlos o agregar más: `python MEMORIA/cargar_conocimiento_real.py`
+- `convierte esto a dxf`
+- `pasalo a dxf`
+- `convierteme este svg a dxf`
+- `necesito el archivo en dxf`
+- `pasa el diseño a formato de corte`
+- `convierte este svg a dxf`
+- `conviertelo a dxf porfa`
+- `exporta a dxf esto`
+- `quiero esto en dxf`
+- `convierte el pdf a dxf`
+- `pasa a dxf lo que te mande`
+- `dame el archivo en dxf`
+- `convierte el eps a dxf`
+- `convierte esto a formato de corte`
+- `dejalo a formato de corte`
 
----
+### Foto → sin fondo → vectorizada → DXF, de un jalón
 
-## 🔍 Buscar precios AFUERA *(corregido 2026-08-04)*
+- `quitale el fondo a esta foto y damela en dxf`
+- `de esta foto quitame el fondo vectorizala y dejamela lista para cortar`
+- `quitale el fondo a este logo y vectorizalo para cortar`
+- `esta imagen la quiero limpia y en vector para el laser`
+- `borra el fondo de la foto y dejala lista para corte`
+- `quita el fondo de esta foto y pasala a dxf`
+- `esta imagen vectorizala para la laser`
+- `de esta imagen dame el vector para cortar`
+- `borra el fondo del logo y dejalo en dxf`
+- `vectoriza esta foto y dejala lista para el laser`
+- `elimina el fondo y dejala para cortar`
+- `el logo lo quiero limpio y en vector`
+- `quitale el fondo al png y damelo en dxf`
+- `recorta el sujeto de la foto para cortarlo`
+- `sin el fondo y listo para la laser`
 
-Antes, pedir el precio de algo en MercadoLibre te devolvía una cotización de tus
-propios productos. Ya no: el cotizador es para **vender**, no para **comprar**.
+### Le pegas una ruta sola y te dice qué puede hacer con eso
 
-| Escribe esto | Qué hace |
-|---|---|
-| `busca en mercado libre papel adhesivo para laser` | busca en internet de verdad |
-| `donde compro vinil textil mas barato` | busca proveedores |
-| `encuentra el mejor precio y dame el link` | busca y trae la publicación |
-| `cuanto cuestan 100 playeras` | **cotiza con TUS precios** (esto no cambió) |
+- `C:\Users\Administrador\Desktop\prueba.dxf`
+- `C:\Users\Administrador\Videos`
+- `D:\algo_que_no_existe.cdr`
+- `C:\Users\Administrador\Downloads\logo.png`
+- `C:\AURORA.worktrees\TALLER_OUT`
+- `E:\usb\diseno.svg`
+- `C:\Users\Administrador\Desktop\calamardo.dxf`
+- `C:\AURORA.worktrees\TALLER_OUT\caja.dxf`
+- `D:\trabajos\pinata.cdr`
+- `C:\Users\Administrador\Downloads`
+- `E:\respaldos\logo.svg`
+- `C:\Users\Administrador\Pictures\faro.jpg`
+- `D:\milens\etiquetas.pdf`
+- `C:\AURORA.worktrees\MANUALES`
+- `F:\usb\despiece.dxf`
+- `C:\Users\Administrador\Desktop\termo.png`
 
----
+### Convierte texto en letras listas para el plóter
 
-## 🎒 Campaña escolar *(lista, sin enviar)*
-
-No es un comando del chat: es un script aparte, para que nada se mande solo.
-
-```
-python MARKETING/campana_regreso_clases.py            # ver el mensaje y a quién
-python MARKETING/campana_regreso_clases.py --enviar   # mandarlo de verdad
-```
-
-22 clientas reales de julio. Va con 45 segundos entre mensaje y mensaje para que
-WhatsApp no tumbe el número del negocio.
-
-
----
-
-## 🏪 Proveedores — a quién le compras *(nuevo 2026-08-05)*
-
-Antes de mandarte a internet, revisa TU directorio.
-
-| Escribe esto | Qué hace |
-|---|---|
-| `quien me vende vinil textil` | Lideart, $180 el metro, con la fecha del dato |
-| `proveedor de mdf` | maderería, MDF 2.7 a $110 y 5.5 a $280 |
-| `que proveedores tengo` | los lista todos |
-
-Si no lo tiene, **lo dice** y te ofrece buscarlo en internet. Nunca inventa un
-teléfono. Los que faltan los agregas conforme cotices.
-
----
-
-## 👤 Apuntar un cliente *(nuevo 2026-08-05)*
-
-Antes esto no existía: un cliente que llamaba se anotaba en un papel o se perdía.
-
-| Escribe esto | Qué hace |
-|---|---|
-| `apunta a Juan Perez 3312345678 interesado en faros` | lo guarda con folio, saca el teléfono y detecta que es de ATF |
-| `anota este cliente Maria 3339876543` | lo mismo, sin interés |
-| `nuevo cliente Roberto quiere lupas` | lo guarda en ATF por lo de las lupas |
-
-Si no le pasas nombre, **no lo guarda** — un cliente sin nombre no sirve para
-llamarle después.
-
----
-
-## 📐 Diseños y cotización *(nuevo 2026-08-05)*
-
-```
-python TALLER/indexar_dxf.py --buscar casa
-```
-
-Te da el archivo, sus metros de corte, los minutos y el precio con tus números
-($8/min, 25 mm/s, margen ×3). Eso es lo que faltó el día de la casa de muñecas.
-
-| Escribe esto en el chat | Qué te contesta |
-|---|---|
-| `que recuerdas de cotizar` | la regla de bolsillo: metros × $50, y los mínimos |
-| `que recuerdas de inventario` | cuántos DXF y programas tienes |
-| `que recuerdas de proveedores` | cómo consultarlos |
-
-
----
-
-## 📦 Cajas para láser — se las pides hablando *(nuevo 2026-08-05)*
-
-**189 modelos** de boxes.py, y le hablas normal. Las medidas en cm.
-
-| Escribe esto | Qué te da |
-|---|---|
-| `hazme una caja corazon de 45x7 con tapa de agujero` | el SVG listo para cortar |
-| `quiero una caja con divisiones de 40x30x7` | bandeja con separadores |
-| `hazme una caja con bisagras de 20x10` | con bisagras integradas |
-| `una caja flex de 20x10` | pared curva (kerf bending) |
-| `un cajon de 20x10` | cajón deslizante |
-| **`que cajas puedes hacer`** | **la lista completa** |
-
-**Tipos que entiende:** corazón · flex · bisagras · divisiones · divisor ·
-cajón · redonda · hexagonal · dados · cartas · libro · castillo · pajarera ·
-alcancía · bandeja · compartimentos · cerrada
-
-**La tapa:** di *"con tapa de agujero"*, *"con tapa"* o *"cerrada"*.
-**El grosor:** si no lo dices, 2.7 mm. Para otro: *"de 5.5 mm"*.
-
-Sale en **SVG** — lo abre Corel y RDWorks directo. Para el precio, guárdalo como
-DXF desde Corel y dile `cotiza <ruta>`.
+- `hazme la palabra bienvenidos en vinil para cortar`
+- `necesito unas letras para el ploter`
+- `ponme MILENS en letra gruesa y pasalo a corte para el ploter`
+- `sacame el nombre SOFIA en tipo script para recortar`
+- `hazme los numeros del 1 al 10 para el plotter`
+- `quiero la frase gracias por su compra lista para el ploter`
+- `hazme el nombre valentina para el ploter`
+- `las letras de MILENS en vinil de recorte`
+- `quiero que diga felicidades en vinil`
+- `escribe gracias en tipo script para cortar`
+- `el rotulo de la puerta en vinil`
+- `ponme los numeros del uno al diez para recortar`
+- `necesito el texto de la promo listo para el plotter`
+- `hazme la palabra abierto en vinil de recorte`
+- `el nombre del bebe en vinil textil para la mantita`
+- `las palabras feliz cumple para cortar en vinil`
 
 ---
 
-## ✂️ Cotizar un corte *(nuevo 2026-08-05)*
+## Marketing
 
-| Escribe esto | Qué hace |
-|---|---|
-| `cotiza C:\Users\...\diseno.dxf` | mide los metros REALES y da el precio |
-| `cuanto cuesta cortar este dxf` | lo mismo |
-| `cuantos metros de corte tiene` | solo la medición |
+### Revisa una campaña antes de que la mandes
 
-Usa tus números: **$8 por minuto a 25 mm/s**, margen ×3. Es lo que faltó el día
-de la casa de muñecas.
+- `revisa esta campaña a ver si esta bien`
+- `como ves la campaña`
+- `checa la campaña de regreso a clases y dime que le falta`
+- `que le falta a la campaña para que jale`
+- `que opinas de la campaña asi como esta`
+- `revisame la campaña antes de mandarla`
+- `armame una campaña para el dia del padre`
+- `como se arma una campaña que sirva`
+- `cuales son las reglas de las campanas`
+- `como hiciste la campaña de regreso a clases`
+- `crea una campaña para navidad`
+- `revisa la campaña del dia de las madres`
+- `anatomia de una campaña explicamela`
+- `nueva campaña para los termos`
+- `esta bien esta campaña o le falta gancho`
+- `que le falta a la campaña de sublimacion`
+
+### Arma el post del día (no lo sube sin tu OK)
+
+- `que publico hoy`
+- `de verdad que publico hoy`
+- `arma el post de hoy para facebook de atf pero no lo subas`
+- `que subo hoy a las redes`
+- `arma el post pero no lo mandes`
+- `que toca publicar de milens`
+- `que publico hoy en atf`
+- `arma el post de milens`
+- `postea hoy en facebook`
+- `que subo hoy a facebook`
+- `publica en facebook lo de hoy`
+- `sube el video de hoy`
+- `arma el post pero no lo subas`
+- `que toca publicar hoy`
+- `publica el reel de la caja`
+- `que publico hoy en milens`
+- `publica en atf lo de la caja`
+
+### Qué videos tienes listos para publicar
+
+- `que videos tengo listos para publicar`
+- `cuantos videos hay`
+- `sacame los videos de la carpeta de procesos que sirvan para tiktok`
+- `que material de video tengo guardado`
+- `hay clips que sirvan para un reel`
+- `de los videos cuales estan sin publicar`
+- `cuantos videos hay en la videoteca`
+- `que videos hay listos`
+- `revisa los videos duplicados`
+- `prepara los videos para tiktok`
+- `cuales clips estan en vertical`
+- `voltea los videos que estan horizontales`
+- `que hay en la videoteca`
+- `convierte los videos a 9:16`
+- `cuantos reels tengo`
+- `revisa los clips repetidos`
 
 ---
 
-## 🗣️ AURORA ya entiende cómo escribes *(nuevo 2026-08-05)*
+## Conocimiento
 
-Se le cargó tu forma real de escribir, sacada de **72 peticiones tuyas**. Ya no
-tienes que cuidar la ortografía ni pensar cómo pedirlo:
+### Busca en internet de verdad
 
-| Escribes | Entiende |
-|---|---|
-| `abreme coreldrau porfa` | abre Corel |
-| `chekame el diseno abierto` | revisa el documento de Corel |
-| `sacale el dibujo lineal` | vectoriza |
-| `pasalo a corte` | convierte a DXF |
-| `mandale un wats al cliente` | envía WhatsApp |
-| `a cuanto me sale...` | cuánto cuesta |
-| `imprecion`, `adesivo`, `watsapp`, `combiene` | los corrige solos |
+- `buscame en internet precios de faros led`
+- `investiga que tendencias hay en sublimacion para regreso a clases`
+- `investiga que se esta usando en corte laser este año`
+- `googlea cuanto cobran por retrofit en guadalajara`
+- `busca en internet ideas de regalos personalizados`
+- `investiga precios de maquinas laser en mexico`
+- `googlea que es el kerf`
+- `busca en internet ideas de letreros luminosos`
+- `investiga que se vende en sublimacion`
+- `busca en google como cotizan otros talleres`
+- `buscame en internet tendencias de corte laser`
+- `investiga cuanto cobran por letreros en gdl`
+- `busca en linea proveedores de acrilico chinos`
+- `googlea que resina usan para los faros`
+- `investiga que piden las papelerias`
 
-Y los verbos con pronombre pegado —`ábreme`, `guárdalo`, `cotízame`— ya no la
-confunden.
+---
+
+## Cerebro
+
+### Mueve, copia o borra archivos y manda WhatsApps de verdad
+
+- `mueve estos archivos a la carpeta de entregados`
+- `copia el dxf a la usb`
+- `borra los temporales de la carpeta`
+- `renombra el archivo con la fecha`
+- `instala la libreria que falta`
+- `manda un whatsapp a rocio`
+- `mandale un whatsapp al cliente del kinder`
+- `elimina los archivos repetidos`
+- `pasalo a la carpeta de listos`
+- `envia un whatsapp con el anticipo`
+- `desinstala el programa viejo`
+- `copia la carpeta al respaldo`
+- `borra el archivo viejo`
+- `instala el driver de la laser`
+
+### Te explica qué es y qué puede hacer
+
+- `quien eres`
+- `que eres tu`
+- `tu que puedes hacer por mi negocio explicamelo facil`
+- `explicame que eres en pocas palabras`
+- `para que me sirves tu`
+- `que ganamos con que estes aqui`
+- `tu que eres exactamente`
+- `quien eres tu`
+- `para que me sirves en el taller`
+- `explicame que eres sin rollos`
+- `que ganamos con que estes aqui en el negocio`
+- `de que me sirves`
+- `que eres`
+- `quien eres y de donde saliste`
+- `explicame que eres a mi esposa`
+- `que ganamos con que estes en la pc`
+
+### Te dice cómo funciona ella misma por dentro
+
+- `que hace el cotizador de vinil`
+- `explicame como funciona el candado de honestidad`
+- `en que archivo esta la escalera de precios del vinil`
+- `como funciona la escalera de precios por dentro`
+- `en que archivo guardas los precios del taller`
+- `que hace el validador de honestidad`
+- `en que archivo guardas los precios`
+- `explicame como funciona el cotizador`
+- `que hace la consciencia`
+- `en que archivo vive la agenda`
+- `como funciona el enrutador`
+- `que dice el archivo de configuracion`
+- `explicame como trabaja la memoria`
+- `que hace el candado de honestidad`
+- `leeme el archivo de configuracion`
+- `que hace el archivo de precios`
+
+### Le pides una capacidad nueva (hoy eso lo fabrica AURORITA XP)
+
+- `creame un motor que saque los precios de acrilico`
+- `crea una capacidad para medir el desperdicio`
+- `fabricame un motor de etiquetas`
+- `hazte capaz de leer facturas`
+- `necesito un motor que cuente las piezas del despiece`
+- `quiero un motor que me arme el despiece solo`
+- `agregate la funcion de recordarme los saldos`
+- `construye un motor para las prendas`
+- `nuevo motor para el control de saldos`
+- `motor nuevo que me avise de los pendientes`
+- `crea un motor que me lea los tickets`
+- `fabrica una capacidad para los anticipos`
+- `creame una capacidad de kerf automatico`
+- `agregate la capacidad de medir la cama`
+- `crea una capacidad para el letrero luminoso`
+
+### Le pides que corrija un archivo de su propio código
+
+- `edita CEREBRO/consciencia.py y quita ese mensaje`
+- `modifica el archivo de precios del taller`
+- `corrige TALLER/ordenes_taller.py`
+- `arregla el archivo que trae el error`
+- `cambia en el archivo el numero de telefono`
+- `edita el codigo del cotizador`
+- `agrega en el archivo la marca nueva`
+- `reemplaza en el archivo el telefono viejo`
+- `modifica MARKETING/generador_sitio_web.py para que no invente`
+- `corrige el archivo de la campaña`
+- `edita run_aurora.py y sube el puerto`
+- `arregla config.json que trae un error`
+- `quita de precios.json el termo viejo`
+- `edita precios.json y sube el mdf`
+
+### Pone a trabajar a un equipo de agentes
+
+- `pon a trabajar al equipo de marketing`
+- `que equipos tienes`
+- `activa el equipo de ventas y dime que encontro`
+- `echame a andar el equipo de diseño`
+- `cuales equipos tengo disponibles`
+- `que puede hacer el equipo de publicacion`
+- `activa el equipo de marketing`
+- `pon a trabajar el equipo de ventas`
+- `arma el equipo de diseño`
+- `que equipos de trabajo hay`
+- `echame a andar el equipo de taller`
+- `cuales equipos puedo usar`
+- `que puede hacer el equipo de ventas`
+- `lista de equipos porfa`
+- `activa el equipo de publicacion`
+
+### Te dice dónde estás perdiendo dinero
+
+- `que me sugieres`
+- `en que deberia enfocarme`
+- `dime en que estoy perdiendo dinero sin darme cuenta`
+- `que me conviene hacer ahorita`
+- `donde estoy dejando dinero en la mesa`
+- `que harias tu en mi lugar`
+- `que me recomiendas hacer hoy`
+- `en que me conviene meterme`
+- `donde estoy perdiendo tiempo`
+- `que oportunidad ves`
+- `que deberia hacer con los videos parados`
+- `que sigue segun tu`
+- `tu intuicion que dice`
+- `que me conviene mas`
+- `donde estoy dejando lana`
+- `que area tengo floja`
+
+### Recuerda lo que le dices y te lo devuelve
+
+- `que recuerdas de mi`
+- `acuerdate que el telefono de atf es el 3326148674`
+- `que te dije de los precios del acrilico`
+- `apuntate que el acrilico de 2mm quedo en 1000`
+- `que te dije del kerf del mdf`
+- `no se te olvide que rocio usa la pc del local`
+- `acuerdate que rocio cierra los domingos`
+- `guardate este dato del proveedor`
+- `recuerda que la cama de la laser es de 60x40`
+- `que recuerdas de los faros`
+- `apuntate que el mdf lo compro en 2.7`
+- `que sabes de la campaña escolar`
+- `no se te olvide que anuar corta a 20 mm/s`
+- `recuerdas que te dije lo del kerf`
+- `que recuerdas del acrilico`
+- `guardate que el mdf lo compro en 2.7`
+- `que sabes del kerf`
+
+### Qué ha aprendido de cómo trabajas
+
+- `que has aprendido de mi`
+- `que sabes hacer`
+- `dime que aprendiste esta semana y en que soy repetitivo`
+- `que has ido aprendiendo de como trabajo`
+- `en que soy repetitivo segun tu`
+- `que patrones me has visto`
+- `que aprendiste de mi esta semana`
+- `borra lo aprendido y empezamos de cero`
+- `que sabes de como hablo`
+- `lo que has aprendido enseñamelo`
+- `olvida todo lo aprendido`
+- `que has aprendido de mis pedidos`
+- `olvidalo todo`
+- `que aprendiste de como cotizo`
+- `que has aprendido del taller`
+- `que has aprendido de como te pido las cosas`
+- `dime que aprendiste de mi forma de escribir`
+
+### Hablarle en vez de escribirle
+
+- `como suenas`
+- `prueba la voz`
+- `puedes hablarme en lugar de escribir`
+- `puedes contestarme hablando`
+- `activa que me escuches`
+- `quiero platicar contigo sin teclear`
+- `activa la voz porfa`
+- `prende la voz`
+- `apaga la voz que estoy con un cliente`
+- `modo voz`
+- `escuchame`
+- `quiero hablarte`
+- `di algo para probar`
+- `hablame en vez de escribir`
+- `desactiva la voz`
+- `deja de escuchar`
+
+---
+
+## Frases que hoy atiende otro candado
+
+No fallan: contestan igual, pero las agarra un gemelo. Se anotan para
+arreglarlas, no para que Anuar las evite.
+
+- `pasa esta imagen a dxf` — esperado **foto_a_dxf**, lo atiende **dxf**
+- `checa este dxf y dime cuanto cobro por cortarlo en mdf de 3` — esperado **cotizar_dxf**, lo atiende **cotizar_laser_medidas**
+- `que se esta vendiendo en corte laser` — esperado **busqueda_web**, lo atiende **None**
+- `vectoriza esta imagen y damela en dxf para el laser` — esperado **dxf**, lo atiende **foto_a_dxf**

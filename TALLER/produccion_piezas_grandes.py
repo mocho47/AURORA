@@ -32,8 +32,28 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-VELOCIDAD_MM_S = 25.0
-COSTO_MINUTO = 8.0
+# LOS NUMEROS DE ANUAR NO SE ESCRIBEN AQUI.
+#
+# Aqui decia `VELOCIDAD_MM_S = 25.0` y `COSTO_MINUTO = 8.0`, copiados a mano.
+# El 13-ago Anuar dicto 20 mm/s -y lo dejo escrito en el catalogo, resolviendo
+# el conflicto entre el 15 que decia el catalogo y el 25 que usaba el
+# cotizador- pero esta copia se quedo en 25. Resultado real: cada pieza grande -las pinatas de Alicia- se cotizaba con 20% menos
+# de tiempo de maquina del real.
+#
+# Se leen de TALLER/formula_precios.py, que a su vez los lee de
+# CONFIG/catalogo_servicios.json, donde el los dicto. Si manana cambia el
+# minuto de laser, cambia en un lugar y el sistema entero queda parejo.
+def _numero(clave: str) -> float:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "formula_precios", RAIZ / "TALLER" / "formula_precios.py")
+    _fp = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_fp)
+    return _fp.numero(clave)
+
+
+VELOCIDAD_MM_S = _numero("velocidad_mm_s")
+COSTO_MINUTO = _numero("minuto_corte")
 
 
 def _precio_mdf(grosor_mm: float = 2.7) -> dict:
@@ -88,7 +108,8 @@ def calcular(ruta_dxf: str, alto_cm: float = None, ancho_cm: float = None,
              costo_tabloide: float = 10.0, precio_tabloide: float = 25.0,
              traslape_mm: float = 5.0, cliente: str = "",
              con_suaje: bool = False, hoja: str = "tabloide",
-             orientacion: str = "auto", n_hojas: int = None) -> dict:
+             orientacion: str = "auto", n_hojas: int = None,
+             diseno_desde: str = "vector") -> dict:
     """El cálculo completo: escala + hojas de impresión + MDF + corte + recordatorio.
 
     cliente: si trae "alicia" (el acuerdo real de reventa de tabloides a
@@ -218,14 +239,49 @@ def calcular(ruta_dxf: str, alto_cm: float = None, ancho_cm: float = None,
         r["mdf"] = {"aviso": f"No encontré precio real de MDF de {grosor_mdf_mm}mm en "
                               "CONFIG/precios_base.json — dime el precio de tu hoja."}
 
-    # CORTE real ($8/min sobre el perímetro real, escalado)
+    # ── EL CORTE, CON LAS DOS TARIFAS. ANUAR DECIDE. ────────────────────
+    # Él lo pidió así el 2026-08-26: *"lo que si podemos hacer es que me de el
+    # costo de 8 pesos y el de 5 pesos en la automatizacion de piñatas, yo me
+    # encargo de mediar el costo al trato"*. Y tiene razón: quién merece el
+    # precio de exclusividad es una decisión de negocio, no un `if` en un
+    # archivo. AURORA pone los dos números sobre la mesa; el precio lo pone él.
+    #
+    # Los $5 son el trato que le ofreció a Alicia Piñatas por casarse con
+    # Milens. Los $8 son su tarifa de siempre.
+    #
+    # Por qué importa tenerlos juntos: con su k-pop 90x90 (52.1 min de corte
+    # real) la diferencia entre las dos tarifas son $156. Él cobró $500 sin
+    # saber los minutos y a tarifa normal iba $63 abajo del costo.
     perim_mm = _perimetro_mm(msp) * escala
     minutos = (perim_mm / VELOCIDAD_MM_S) / 60
-    r["corte"] = {"metros": round(perim_mm/1000, 2), "minutos": round(minutos, 1),
-                  "costo": round(minutos * COSTO_MINUTO, 2)}
+    r["corte"] = {
+        "metros": round(perim_mm / 1000, 2),
+        "minutos": round(minutos, 1),
+        "costo_normal": round(minutos * COSTO_MINUTO, 2),
+        "costo_exclusividad": round(minutos * _numero("minuto_corte_alicia"), 2),
+        "por_minuto_normal": COSTO_MINUTO,
+        "por_minuto_exclusividad": _numero("minuto_corte_alicia"),
+        "nota": (f"{round(minutos,1)} min reales de máquina. "
+                 f"${COSTO_MINUTO:g}/min es tu tarifa; "
+                 f"${_numero('minuto_corte_alicia'):g}/min es el trato de exclusividad. "
+                 f"Tú decides cuál aplica."),
+    }
+    # Se deja `costo` apuntando al normal para no romper a quien ya lo leía.
+    r["corte"]["costo"] = r["corte"]["costo_normal"]
 
-    r["total_estimado"] = round(
-        r["mdf"].get("costo_con_margen", 0) + r["corte"]["costo"], 2)
+    # ── EL DISEÑO SE COBRA. SIEMPRE. ────────────────────────────────────
+    # Faltaba en el total y por eso las cotizaciones salían cortas: en el
+    # k-pop 90x90 el piso real era $563 y él cobró $500. Su regla, dictada el
+    # 2026-08-13: trae vector/dxf/pdf $10 · trae imagen (hay que vectorizar)
+    # $15 · desde cero $20.
+    _clave_dis = {"imagen": "diseno_imagen", "cero": "diseno_cero"}.get(
+        (diseno_desde or "").lower(), "diseno_vector")
+    r["diseno"] = {"cobro": _numero(_clave_dis), "por": _clave_dis}
+
+    _base = r["mdf"].get("costo_con_margen", 0) + r["diseno"]["cobro"]
+    r["total_normal"] = round(_base + r["corte"]["costo_normal"], 2)
+    r["total_exclusividad"] = round(_base + r["corte"]["costo_exclusividad"], 2)
+    r["total_estimado"] = r["total_normal"]
 
     r["recordatorio_maquila"] = (
         f"Para que tu corte en MDF coincida con lo que impriman: manda las "

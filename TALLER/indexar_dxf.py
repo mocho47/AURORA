@@ -37,8 +37,28 @@ def _consola_utf8() -> None:
 CATALOGO = RAIZ / "CONFIG" / "catalogo_dxf.json"
 
 # Datos REALES de Anuar (CONFIG/precios_base.json y su recetario probado).
-COSTO_MINUTO = 8.0
-VELOCIDAD_MM_S = 25.0        # su 60%/25 mm/s probado en MDF 2.7
+# LOS NUMEROS DE ANUAR NO SE ESCRIBEN AQUI.
+#
+# Aqui decia `VELOCIDAD_MM_S = 25.0` y `COSTO_MINUTO = 8.0`, copiados a mano.
+# El 13-ago Anuar dicto 20 mm/s -y lo dejo escrito en el catalogo, resolviendo
+# el conflicto entre el 15 que decia el catalogo y el 25 que usaba el
+# cotizador- pero esta copia se quedo en 25. Resultado real: el indice de DXF reportaba minutos y costo de corte por debajo
+# de lo que la maquina tarda de verdad.
+#
+# Se leen de TALLER/formula_precios.py, que a su vez los lee de
+# CONFIG/catalogo_servicios.json, donde el los dicto. Si manana cambia el
+# minuto de laser, cambia en un lugar y el sistema entero queda parejo.
+def _numero(clave: str) -> float:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "formula_precios", RAIZ / "TALLER" / "formula_precios.py")
+    _fp = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_fp)
+    return _fp.numero(clave)
+
+
+VELOCIDAD_MM_S = _numero("velocidad_mm_s")
+COSTO_MINUTO = _numero("minuto_corte")
 MARGEN = 3.0                 # precio = costo x3, la cuenta que se hace en la cabeza
 
 # Carpetas que no son biblioteca de diseños.
