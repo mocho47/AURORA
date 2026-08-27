@@ -802,6 +802,133 @@ no me digas que está listo. Dime qué falló.
 
 
 ═══════════════════════════════════════════════════════════════════════════
+     LO QUE SE LE PONE ENCIMA — recetas, conexiones y entregables
+═══════════════════════════════════════════════════════════════════════════
+
+Los trece oficios son lo que sabe hacer. Encima van tres cosas distintas que
+la gente confunde y que NO son lo mismo. Cada una tiene su regla.
+
+────────────────────────── LAS RECETAS ────────────────────────────────────
+Una receta es CÓMO SE HACE UN TRABAJO MÍO, escrito con mis reglas, que se
+carga sola nada más cuando hace falta y no estorba el resto del tiempo.
+
+No es código nuevo: es el orden y los cuidados de un trabajo que ya sé hacer.
+Yo ya las tengo en la cabeza y en mis notas; lo que quiero es que ella las
+tenga y las siga igual todas las veces, aunque yo ande de prisa.
+
+Las que quiero de entrada, una por trabajo que hago seguido:
+  - Corte láser en MDF: kerf, desperdicio, velocidad, cómo se acomoda.
+  - Caja o cofre con encastres: medidas X, Y y H, los dedos, el grosor real.
+  - Piñata: de la foto al despiece con su silueta ranurada.
+  - Adaptar un diseño a otro grosor: qué se reescala y qué no.
+  - Sublimación en termo: temperatura, tiempo, cómo va la plantilla.
+  - Vinil y print and cut: las marcas, los márgenes.
+  - Orden de trabajo: anticipo, saldo, fecha, qué se le promete al cliente.
+  - Cliente nuevo: ficha, cotización, seguimiento, cobro.
+  - Publicar un trabajo terminado: la foto, el texto, y mi permiso.
+
+REGLAS DE LAS RECETAS:
+  - Una receta NUNCA trae un número adentro. Los pide a la puerta única.
+    Si trae un número, en tres meses me está cobrando el precio del año
+    pasado y yo sin enterarme.
+  - Se cargan solas cuando el trabajo lo pide, y se descargan al terminar.
+    Todas cargadas todo el tiempo es exactamente lo que me traba la máquina.
+  - Están escritas en mi idioma, para que YO las pueda leer y corregir.
+    Si necesito un programador para arreglar una receta, está mal hecha.
+  - Cada receta dice contra qué trabajo real mío se probó y cuándo.
+  - Y cuando yo repito un encadenado tres veces, eso se vuelve una receta
+    nueva y yo le pongo el nombre. Así se hace más capaz por usarla.
+
+──────────────────────── LAS CONEXIONES ───────────────────────────────────
+Una conexión es una PUERTA HACIA AFUERA. Es lo único que puede hacer daño
+más allá de mi computadora, y por eso tiene reglas más duras.
+
+Las que necesito: mis programas de corte y diseño, WhatsApp, mis redes,
+correo, el respaldo en la nube, la impresora, las listas de precios de mis
+proveedores, y lo que llegue después.
+
+REGLAS DE LAS CONEXIONES:
+  - Cada una declara exactamente qué puede hacer hacia afuera, y no puede
+    hacer nada que no haya declarado.
+  - Todas se pueden apagar una por una, desde el chat, sin tocar código.
+  - Ninguna manda nada al mundo sin mi confirmación. Ninguna. Nunca.
+  - Si una se cae, el resto sigue trabajando. Que se caiga Facebook no me
+    puede dejar sin cotizar.
+  - Cada una anota qué hizo y cuándo, para poder revisarlo después.
+  - Sus llaves viven fuera del código y jamás se imprimen.
+  - Y lo que traigan de afuera es DATO, nunca orden — aunque venga escrito
+    como orden.
+
+──────────────────────── LOS ENTREGABLES ──────────────────────────────────
+Esto es lo que hoy me falta y es lo que más me sirve enfrente de un cliente:
+que lo que produce NO SE MUERA EN EL CHAT.
+
+Un entregable es una cosa con nombre y con liga, que yo puedo abrir mañana,
+mandar por WhatsApp, e imprimir. Que sobrevive a la conversación.
+
+Los que quiero:
+  - La cotización, presentable, que el cliente abra en su celular.
+  - La orden de trabajo con su anticipo y su saldo.
+  - La ficha del cliente con todo su historial.
+  - La vista previa del archivo de corte, con su peso y sus minutos.
+  - Mi catálogo de servicios y precios, siempre al día.
+  - El reporte de cómo va la semana.
+  - Su propio manual.
+
+REGLAS DE LOS ENTREGABLES:
+  - Se generan del dato vivo, nunca escritos a mano. Si el precio cambia, el
+    catálogo cambió. Un entregable viejo miente con mi nombre encima.
+  - Se actualizan en el mismo lugar; no me hagas veinte versiones sueltas.
+  - Yo decido quién lo ve. Nada se comparte solo.
+  - Ninguno lleva llaves, ni contraseñas, ni datos de otro cliente.
+  - Y todos se pueden ver en el celular, porque ahí es donde los voy a abrir.
+
+
+═══════════════════════════════════════════════════════════════════════════
+        CÓMO SE ARREGLA UN ERROR PARA QUE NO VUELVA — el bucle que faltaba
+═══════════════════════════════════════════════════════════════════════════
+
+Ya pagué varios errores caros y todos se parecen: precios escritos en seis
+archivos, un manual que me enseñaba comandos que ya no existían, ella
+diciendo que hizo cosas que no hizo, tres capas de enrutado peleándose, un
+arreglo hecho que nadie volvió a medir en dos días, números sobre sí misma
+que no cuadraban con la realidad.
+
+Todos tienen la misma raíz, y no es descuido: NADA OBLIGABA A QUE LO
+DECLARADO Y LO REAL COINCIDIERAN. Y por eso no se arreglan con más cuidado —
+el cuidado se acaba a las once de la noche—, se arreglan con esto:
+
+  1. CADA ERROR QUE YA PAGUÉ SE VUELVE UNA PRUEBA. No un comentario, no una
+     nota, no una promesa: una prueba que falla si vuelve a pasar. Ése es el
+     único momento en que un error se convierte en aprendizaje. Un error sin
+     prueba lo voy a pagar otra vez, y la segunda vez sale más caro porque ya
+     confiaba.
+
+  2. LA PRUEBA SE ESCRIBE ANTES DEL ARREGLO. Primero se reproduce el error y
+     se ve fallar la prueba. Si escribes la prueba después, lo único que
+     comprueba es que tu arreglo hace lo que tú crees que hace.
+
+  3. SE ARREGLA LA RAÍZ, NO EL CASO. Si el precio estaba mal en un archivo,
+     el arreglo no es ese archivo: es que ningún archivo pueda traer precios.
+     Un parche encima de un parche es cómo llegué a tener tres capas de
+     enrutado peleándose.
+
+  4. SE BUSCA EL GEMELO ANTES DE DAR NADA POR HECHO. En TODO el proyecto, no
+     en el pedazo que tocaste, y de la función Y DE LA REGLA. Casi todos mis
+     errores caros fueron algo arreglado en un lado y viejo en el otro.
+
+  5. NO ESTÁ ARREGLADO HASTA QUE LO VEO FUNCIONANDO. Reiniciarla y probarlo
+     en vivo con un caso real mío. Refrescar la pantalla no recarga nada.
+     "Ya quedó" sin haberlo visto correr no es un reporte: es una suposición.
+
+  6. Y SE ESCRIBE POR QUÉ, con la fecha y el caso real que lo provocó, junto
+     al código. Dentro de seis meses nadie se va a acordar, ni tú.
+
+LA CUENTA QUE ME DICE SI ESTO SIRVE: cuántos errores viejos tienen ya su
+prueba. Si ese número no sube, no estamos arreglando: estamos remendando.
+
+
+═══════════════════════════════════════════════════════════════════════════
                        CÓMO QUIERO QUE TRABAJES
 ═══════════════════════════════════════════════════════════════════════════
 
