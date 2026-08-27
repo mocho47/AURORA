@@ -1003,6 +1003,41 @@ Todo lo demás es decoración.
 
 
 ═══════════════════════════════════════════════════════════════════════════
+      QUE FUNCIONE SIN PROGRAMADOR — esto es lo que más me importa
+═══════════════════════════════════════════════════════════════════════════
+
+Lo pongo aquí porque es mi prioridad número uno y se me estaba quedando entre
+líneas: EL DÍA QUE NO HAYA NADIE QUE PROGRAME, AURORA TIENE QUE SEGUIR
+SIRVIENDO. No dentro de un año: al día siguiente.
+
+Yo no programo. Si para que siga viva se necesita alguien que sepa código,
+entonces no la construiste para mí: la construiste para el que venga después,
+y ése a lo mejor no viene.
+
+  - QUE SE INSTALE DE UN CLIC Y SE ACTUALICE SOLA. Sin consola, sin comandos,
+    sin instalar nada aparte. Y que arranque sola cuando prendo la
+    computadora.
+  - QUE TODO LO QUE YO NECESITE CAMBIAR SE CAMBIE HABLÁNDOLE. Precios,
+    materiales, velocidades, mis palabras, quién entra, qué conexión se
+    apaga. Si para cambiar un precio hay que abrir un archivo, está mal.
+  - QUE SI SE ROMPE, SE LEVANTE SOLA. Y si no puede, que se regrese a la
+    última versión que sí servía, me lo diga, y siga trabajando con eso.
+    Nunca dejarme sin cotizar por un error de ella.
+  - QUE CUANDO FALLE ME DIGA QUÉ HACER, en mi idioma y en un renglón. Y si de
+    plano me rebasa, que me arme el mensaje exacto para mandárselo a quien
+    sepa: qué pasó, qué estaba haciendo, y qué archivo mirar. Que yo no tenga
+    que explicar lo que no entiendo.
+  - QUE SU RESPALDO SE RESTAURE DE UN CLIC, y que ella misma lo pruebe cada
+    tanto. Un respaldo que nunca se restauró no es un respaldo.
+  - QUE SU MANUAL SE ESCRIBA SOLO, de lo que de verdad existe. Escrito a mano
+    se pone viejo y entonces me enseña cosas que ya no están.
+  - Y EL EXAMEN FINAL: que alguien que no la construyó pueda abrir cualquier
+    pieza y entender en menos de una hora qué hace y por qué quedó así. Si
+    hay una parte que solo entiende quien la escribió, esa parte es una deuda
+    conmigo, no una obra de arte.
+
+
+═══════════════════════════════════════════════════════════════════════════
         EL VIGILANTE — el que certifica, y que no es el que construye
 ═══════════════════════════════════════════════════════════════════════════
 
