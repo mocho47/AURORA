@@ -1517,8 +1517,16 @@ def _es_cotizar_laser_medidas(mensaje: str) -> bool:
         return False
     if not _contiene_trigger(m, _MATERIAL_LASER):
         return False
-    if re.search(r"\.dxf\b", m):
-        return False   # eso lo mide cotizar_dxf del archivo real, más exacto
+    if re.search(r"\bdxf\b", m):
+        # Eso lo mide cotizar_dxf del archivo real, que es más exacto.
+        #
+        # Antes decía `\.dxf\b`, o sea que solo se hacía a un lado si venía la
+        # extensión con punto. Pero Anuar no escribe la extensión: dice *"checa
+        # este dxf y dime cuánto cobro por cortarlo en mdf de 3"*. Con esa frase
+        # este candado se quedaba el turno y cotizaba por el texto, teniendo el
+        # archivo real enfrente — que mide los metros de corte de verdad.
+        # Encontrado el 2026-08-26 revisando por qué esa frase caía en el gemelo.
+        return False
     return bool(re.search(r"\d+(?:[.,]\d+)?\s*(?:cm|mm)?\s*[x×por]\s*\d", m))
 
 
@@ -2471,6 +2479,17 @@ def _candado_por_familia(mensaje: str) -> Optional[str]:
     for _candado, _patrones in _FAMILIAS_ANUAR_COMPILADAS:
         for _p in _patrones:
             if _p.search(texto):
+                # Si hay un DXF de por medio, manda el que MIDE el archivo.
+                #
+                # La regla ya existía dentro de `_es_cotizar_laser_medidas`,
+                # pero esto corre antes y la pisaba: «checa este dxf y dime
+                # cuánto cobro por cortarlo en mdf de 3» cotizaba por el texto
+                # teniendo el archivo real enfrente, que da los metros de corte
+                # de verdad. La misma regla escrita en dos lados y arreglada en
+                # uno solo — el gemelo de siempre, esta vez de una REGLA, no de
+                # una función. Encontrado el 2026-08-26.
+                if _candado == "cotizar_laser_medidas" and re.search(r"\bdxf\b", texto):
+                    return None          # que decida la fila: gana cotizar_dxf
                 return _candado
     return None
 

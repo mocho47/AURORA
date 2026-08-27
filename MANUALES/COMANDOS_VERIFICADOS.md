@@ -7,7 +7,7 @@ este archivo no se escribe, se genera (`CEREBRO/generar_comandos_verificados.py`
 Están escritas **como escribe Anuar**, sin acentos y con sus modismos, porque
 así se van a usar de verdad.
 
-Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 candados en total
+Generado: 2026-08-27 · **595 frases verificadas** en **38 capacidades** · 38 candados en total
 
 > **No te lo tienes que aprender.** Basta con que le digas la idea. Si algo no
 > lo entiende y se lo dices de otra forma que sí funciona, se queda con las dos.
@@ -98,6 +98,7 @@ Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 c
 
 - `cuanto cuesta cortar este archivo`
 - `cuantos metros de corte trae`
+- `checa este dxf y dime cuanto cobro por cortarlo en mdf de 3`
 - `cuantos metros de corte trae este archivo`
 - `mide el dxf y dime en cuanto lo dejo`
 - `que me cobrarias por cortar este diseño en mdf`
@@ -374,6 +375,7 @@ Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 c
 
 - `convierte esto a dxf`
 - `pasalo a dxf`
+- `pasa esta imagen a dxf`
 - `convierteme este svg a dxf`
 - `necesito el archivo en dxf`
 - `pasa el diseño a formato de corte`
@@ -392,6 +394,7 @@ Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 c
 
 - `quitale el fondo a esta foto y damela en dxf`
 - `de esta foto quitame el fondo vectorizala y dejamela lista para cortar`
+- `vectoriza esta imagen y damela en dxf para el laser`
 - `quitale el fondo a este logo y vectorizalo para cortar`
 - `esta imagen la quiero limpia y en vector para el laser`
 - `borra el fondo de la foto y dejala lista para corte`
@@ -513,6 +516,7 @@ Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 c
 ### Busca en internet de verdad
 
 - `buscame en internet precios de faros led`
+- `que se esta vendiendo en corte laser`
 - `investiga que tendencias hay en sublimacion para regreso a clases`
 - `investiga que se esta usando en corte laser este año`
 - `googlea cuanto cobran por retrofit en guadalajara`
@@ -742,13 +746,3 @@ Generado: 2026-08-26 · **591 frases verificadas** en **38 capacidades** · 38 c
 - `deja de escuchar`
 
 ---
-
-## Frases que hoy atiende otro candado
-
-No fallan: contestan igual, pero las agarra un gemelo. Se anotan para
-arreglarlas, no para que Anuar las evite.
-
-- `pasa esta imagen a dxf` — esperado **foto_a_dxf**, lo atiende **dxf**
-- `checa este dxf y dime cuanto cobro por cortarlo en mdf de 3` — esperado **cotizar_dxf**, lo atiende **cotizar_laser_medidas**
-- `que se esta vendiendo en corte laser` — esperado **busqueda_web**, lo atiende **None**
-- `vectoriza esta imagen y damela en dxf para el laser` — esperado **dxf**, lo atiende **foto_a_dxf**

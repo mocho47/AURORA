@@ -2,7 +2,7 @@
         COMANDOS DE AURORA  -  probados uno por uno
 ==========================================================================
 
-  591 frases verificadas   ·   38 capacidades   ·   2026-08-26
+  595 frases verificadas   ·   38 capacidades   ·   2026-08-27
 
   Cada frase de esta hoja se paso por AURORA de verdad y llego a
   donde debia. No te la tienes que aprender: basta con que le digas
@@ -95,6 +95,7 @@
   Mide un DXF y te dice el corte real
       > cuanto cuesta cortar este archivo
       > cuantos metros de corte trae
+      > checa este dxf y dime cuanto cobro por cortarlo en mdf de 3
       > cuantos metros de corte trae este archivo
       > mide el dxf y dime en cuanto lo dejo
       > que me cobrarias por cortar este diseño en mdf
@@ -359,6 +360,7 @@
   Convierte cualquier archivo a DXF
       > convierte esto a dxf
       > pasalo a dxf
+      > pasa esta imagen a dxf
       > convierteme este svg a dxf
       > necesito el archivo en dxf
       > pasa el diseño a formato de corte
@@ -376,6 +378,7 @@
   Foto → sin fondo → vectorizada → DXF, de un jalón
       > quitale el fondo a esta foto y damela en dxf
       > de esta foto quitame el fondo vectorizala y dejamela lista para cortar
+      > vectoriza esta imagen y damela en dxf para el laser
       > quitale el fondo a este logo y vectorizalo para cortar
       > esta imagen la quiero limpia y en vector para el laser
       > borra el fondo de la foto y dejala lista para corte
@@ -493,6 +496,7 @@
 
   Busca en internet de verdad
       > buscame en internet precios de faros led
+      > que se esta vendiendo en corte laser
       > investiga que tendencias hay en sublimacion para regreso a clases
       > investiga que se esta usando en corte laser este año
       > googlea cuanto cobran por retrofit en guadalajara
@@ -709,20 +713,6 @@
       > hablame en vez de escribir
       > desactiva la voz
       > deja de escuchar
-
-
-==========================================================================
-  ESTAS CONTESTAN, PERO LAS AGARRA OTRA FUNCION (por arreglar)
-==========================================================================
-
-      > pasa esta imagen a dxf
-        deberia ir a foto_a_dxf - hoy la atiende dxf
-      > checa este dxf y dime cuanto cobro por cortarlo en mdf de 3
-        deberia ir a cotizar_dxf - hoy la atiende cotizar_laser_medidas
-      > que se esta vendiendo en corte laser
-        deberia ir a busqueda_web - hoy la atiende None
-      > vectoriza esta imagen y damela en dxf para el laser
-        deberia ir a dxf - hoy la atiende foto_a_dxf
 
 
 ==========================================================================

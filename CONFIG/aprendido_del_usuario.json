@@ -518,6 +518,46 @@
       "aprendido": 1787763351.4035504,
       "ultima_vez": 1787763351.4035504,
       "a_la_primera": true
+    },
+    {
+      "clave": "que se esta vendiendo en corte laser",
+      "como_lo_dijo": "que se esta vendiendo en corte laser",
+      "que_si_funciono": "que se esta vendiendo en corte laser",
+      "herramienta": "busqueda_web",
+      "veces": 1,
+      "aprendido": 1787811286.389127,
+      "ultima_vez": 1787811286.389127,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que se vende mas en sublimacion",
+      "como_lo_dijo": "que se vende mas en sublimacion",
+      "que_si_funciono": "que se vende mas en sublimacion",
+      "herramienta": "busqueda_web",
+      "veces": 1,
+      "aprendido": 1787811286.7197223,
+      "ultima_vez": 1787811286.7197223,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que esta pegando en corte laser",
+      "como_lo_dijo": "que esta pegando en corte laser",
+      "que_si_funciono": "que esta pegando en corte laser",
+      "herramienta": "busqueda_web",
+      "veces": 1,
+      "aprendido": 1787811287.009958,
+      "ultima_vez": 1787811287.009958,
+      "a_la_primera": true
+    },
+    {
+      "clave": "que se esta moviendo en el mercado de faros",
+      "como_lo_dijo": "que se esta moviendo en el mercado de faros",
+      "que_si_funciono": "que se esta moviendo en el mercado de faros",
+      "herramienta": "busqueda_web",
+      "veces": 1,
+      "aprendido": 1787811287.3100662,
+      "ultima_vez": 1787811287.3100662,
+      "a_la_primera": true
     }
   ]
 }

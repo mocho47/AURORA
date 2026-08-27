@@ -84,8 +84,8 @@ FRASES = {
     "foto_a_dxf": (
         [
             "quitale el fondo a esta foto y damela en dxf",
-            "pasa esta imagen a dxf",
             "de esta foto quitame el fondo vectorizala y dejamela lista para cortar",
+            "vectoriza esta imagen y damela en dxf para el laser",
         ],
         "UNA cadena completa, no dos peticiones separadas.",
     ),
@@ -189,7 +189,7 @@ FRASES = {
         [
             "convierte esto a dxf",
             "pasalo a dxf",
-            "vectoriza esta imagen y damela en dxf para el laser",
+            "pasa esta imagen a dxf",
         ],
         "Convierte de verdad o dice por qué no pudo.",
     ),

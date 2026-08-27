@@ -101,6 +101,19 @@ def _destino(C, frase: str):
                 return nombre
         except Exception:
             continue
+    # Lo que AURORA APRENDIÓ también cuenta: el chat de verdad lo consulta
+    # cuando ningún candado calza, así que un manual que no lo mire estaría
+    # reportando como perdidas frases que en vivo sí llegan.
+    # Agregado el 2026-08-26, cuando se le enseñaron las frases de estudio de
+    # mercado («qué se está vendiendo en corte láser») y el manual las seguía
+    # dando por muertas.
+    try:
+        from CEREBRO import aprende_del_usuario as _apr
+        ap = _apr.buscar(frase)
+        if ap and ap.get("herramienta"):
+            return ap["herramienta"]
+    except Exception:
+        pass
     return None
 
 
