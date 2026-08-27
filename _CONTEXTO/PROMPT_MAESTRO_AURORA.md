@@ -113,6 +113,11 @@ sobra y ninguno se queda para después.
 Léela completa antes de escribir nada, porque las decisiones de arquitectura
 solo se toman bien viendo esto entero.
 
+Ojo con una cosa, para que no choque con la regla 10: aquí te lo describo CON
+MIS MATERIALES para que entiendas qué necesito. Pero adentro el oficio va
+genérico y los materiales se los pide al cartucho. Lo de abajo es el QUÉ, no
+es cómo se escribe.
+
  1. COTIZAR — lo que va a pasar y cuánto cuesta
     Cotizar por medidas dichas de boca. Cotizar midiendo un archivo real
     (DXF, imagen, PDF). Cotizar vinil. Cotizar prendas y sublimación.
@@ -511,6 +516,15 @@ porque siempre me sale lo mismo en dos lados y nunca sé cuál está bien. No
 quiero eso. Quiero cinco capas, y cada una nada más le habla a la de abajo.
 Nunca al revés, nunca en diagonal.
 
+Y antes del dibujo, la distinción que hace que esto no se contradiga con la
+regla 10: EL OFICIO ES GENÉRICO; SU CONOCIMIENTO ES DEL CARTUCHO.
+Cotizar existe en cualquier negocio: lo que cambia es CON QUÉ cotiza. Medir
+existe en cualquier negocio: lo que cambia es QUÉ se mide. Dibujar existe en
+cualquier taller: lo que cambia son los formatos y los materiales.
+Entonces en el oficio no va ni un MDF, ni un DXF, ni un láser, ni un kerf:
+todo eso se le pide al cartucho. Si abres un oficio y encuentras mi giro
+escrito adentro, ese oficio está mal hecho — aunque funcione.
+
   EL CHAT         Lo único que yo veo. No calcula, no decide, no sabe nada
                   de mi negocio. Entiende, enruta y contesta.
        ↓
@@ -613,6 +627,10 @@ Y ESTO NO LO QUIERO, POR EXPERIENCIA:
     número que la clave vieja no traía, es otra cosa. En la duda, clave
     nueva: una clave de más se ve y se corrige; un precio pisado en silencio,
     no.
+    Y si lo que le dicto PELEA con algo que ya sabe —le doy un precio que no
+    cuadra con mi propia fórmula, o una medida que no le cabe a mi máquina—
+    que no elija ella y que no promedie: que me enseñe las dos y me deje
+    decidir. Yo me equivoco también, y prefiero que me lo cache.
 
  7. YO MANDO SOBRE LO QUE APRENDIÓ.
     Todo lo aprendido lo quiero poder ver y borrar. Algo que aprende solo y
@@ -657,6 +675,11 @@ Y ESTO NO LO QUIERO, POR EXPERIENCIA:
       puedo pensar, se cayó X" es una respuesta correcta.
     - Mis programas se manejan por su interfaz oficial, nunca simulando
       teclazos, y NUNCA disparando una ventanita que la deje colgada.
+    - Y QUE NO ME PIERDA TRABAJO: todo lo que haga se puede deshacer. Nunca
+      me pisa un archivo mío —saca versión nueva—, nunca borra nada de
+      verdad —lo aparta y me avisa—, y lo último que hizo lo puedo revertir
+      diciéndoselo. Si algo de plano no se puede deshacer, me lo dice ANTES
+      y me deja decidir.
 
 13. LO DE CADA QUIEN ES DE CADA QUIEN, Y LO SECRETO NO SE ENSEÑA.
     - Mi esposa la usa al mismo tiempo desde otro aparato. TODO el estado de
@@ -749,10 +772,14 @@ Ninguna regla queda escrita nada más en este documento.
   R7  Yo mando    Aprende algo, lo enseña, lo borro, ya no está.
   R8  No resta    Cuenta los gemelos —función Y regla en dos lados—. Si el
                   número sube respecto de ayer, falla.
-  R9  Su oficio   Cada función declara su oficio; si depende de un dato que
-                  no es de su oficio, falla.
-  R10 Agnóstica   El núcleo no puede mencionar mi giro. Si aparece "MDF" o
-                  "láser" fuera del cartucho, falla.
+  R9  Su oficio   Cada función declara su oficio. Puede NECESITAR datos de
+                  otro —cotizar siempre necesita lo que midió medir—, pero
+                  no puede IR A TRAERLOS: se los pasa el armador o el
+                  cimiento. Si un oficio llama a otro por su cuenta, falla.
+  R10 Agnóstica   Ni el chat, ni el armador, ni el cimiento, ni ningún
+                  oficio pueden mencionar mi giro. Si aparece "MDF",
+                  "láser", "kerf" o cualquier palabra mía fuera del
+                  cartucho, falla.
   R11 Contrato    Cada oficio tiene contrato, y el contrato dice la verdad:
                   lo que promete existe y corre.
   R12 No tumba    Mide memoria y tiempo. Si un archivo típico se pasa de
@@ -955,8 +982,9 @@ quedan en buenas intenciones —que es exactamente el defecto número 2—:
                     como dato. Si algo de eso se ejecuta, falla.
     6  No complace  Frente a un dato que no cuadra, lo dice. Y se lleva la
                     cuenta de las advertencias acertadas.
-    7  No malgasta  Una cotización se resuelve sin llamar a ningún modelo.
-                    Si llama a uno, falla.
+    7  No malgasta  Entenderme sí puede usar el modelo chico. La CUENTA no:
+                    del dato ya extraído al precio final no se toca ningún
+                    modelo. Si lo toca, falla.
 
 
 ────────────── Y SI NO HUBIERA TECHO, ¿QUÉ SERÍA? ─────────────────────────
