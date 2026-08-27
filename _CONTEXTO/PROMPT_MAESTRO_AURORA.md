@@ -1,187 +1,162 @@
-# PROMPT MAESTRO — cómo se debió pedir AURORA desde el principio
+# EL PROMPT MAESTRO — construir AURORA desde cero
 
-Escrito el 2026-08-23, después de un día completo corrigiendo los mismos tipos de
-bug una y otra vez (modelo de IA dado de baja escrito a mano en 29 archivos,
-dos sistemas de lenguaje que se estorban, rutas con comillas que un formulario
-sí limpiaba y otro no, respuestas con nombres de campo distintos). No es una
-lista de deseos: cada regla de aquí abajo nació de un bug real de HOY o de
-sesiones anteriores. Este documento es el prompt — cópialo y pégalo completo
-si algún día hay que reconstruir AURORA desde cero, o úsalo como checklist
-para corregir lo que ya existe.
+Anuar preguntó, el 2026-08-27: *"si tú fueras a construir AURORA desde 0 y yo
+fuera Claude Code, si invirtiéramos los papeles, ¿con qué master prompt habrías
+construido AURORA de principio a fin?"*
 
----
-
-## EL PROMPT (copiar tal cual)
-
-Quiero que construyas un sistema operador de negocio para un taller de corte
-láser/sublimación y retrofit de faros, manejado por una sola persona sin
-conocimientos de programación. El sistema se llama AURORA. No es un prototipo:
-cada función que exista debe funcionar de verdad contra datos reales, nunca
-simulados. Sigue estas reglas de arquitectura sin excepción:
-
-### 1. Una sola fuente de verdad por cada dato o regla — nunca dos
-
-Prohibido que la misma regla de negocio, el mismo precio, el mismo nombre de
-modelo de IA, o la misma lista de frases reconocidas exista escrita a mano en
-más de un archivo. Si dos módulos necesitan el mismo dato, uno de los dos debe
-IMPORTAR la fuente real, nunca copiarla. Antes de escribir una constante,
-buscar en todo el proyecto si ya existe una igual en otro lugar.
-
-Ejemplo real de lo que pasa si se rompe esta regla: el nombre de un modelo de
-IA quedó escrito literal en 29 archivos distintos. Cuando el proveedor lo dio
-de baja, arreglar uno solo no arregló nada — cada módulo tenía su propia copia
-del valor muerto, y el sistema fallaba de forma distinta según qué módulo
-tocara el usuario en cada momento.
-
-### 2. El cerebro de lenguaje es UN sistema, no dos
-
-Solo puede existir UN mecanismo que decida qué quiso decir el usuario cuando
-escribe en lenguaje natural. Nunca un sistema de reglas y, encima, un segundo
-sistema de "familias" o intenciones que puede pisar las decisiones del
-primero. Si el primero falla en reconocer una frase real, la corrección se
-hace DENTRO del mismo sistema (agregando o afinando su propia regla), nunca
-levantando un sistema paralelo por encima que decide antes que el original.
-
-Ese único sistema debe:
-- Vivir en una sola tabla/registro: nombre de la acción → función que detecta
-  si el mensaje la pide → función que la ejecuta. Un solo lugar para leer
-  "qué sabe hacer AURORA", no dos ni tres.
-- Tolerar errores de dedo en las palabras clave de negocio (nombres de
-  material, "vinil", "láser", "mdf") con una comparación de distancia de
-  edición por palabra, no con una lista fija de erratas conocidas escritas a
-  mano — esa lista siempre se queda corta el día que aparece una errata nueva.
-- Generar automáticamente el texto que se le muestra al usuario cuando
-  pregunta "qué puedes hacer" A PARTIR de esa misma tabla de acciones reales
-  — nunca un texto escrito aparte a mano, porque ese texto se desincroniza en
-  cuanto alguien cambia una función y se le olvida actualizar el texto.
-- Cuando dos capacidades parecidas compiten por la misma frase (p.ej. "quita
-  el fondo" podría ser parte de "conviértelo a DXF" o una acción aislada),
-  cada capacidad real debe tener su propio disparador directo — nunca
-  depender de que el usuario también diga una palabra extra ("dxf", "corel")
-  para que la acción base funcione sola.
-
-### 3. Toda acción de uso diario tiene también una forma mecánica, sin lenguaje
-
-Las funciones que el usuario usa todos los días para cotizar y facturar (no
-las raras, las del pan de cada día) deben tener SIEMPRE dos caminos:
-1. Lenguaje natural en el chat (para cuando está ocupado o en el celular).
-2. Un formulario o botón directo, con campos explícitos (dropdowns, casillas,
-   números) que llama exactamente a la misma función real que usa el chat —
-   nunca una copia de la lógica, la misma función. Aquí no se adivina nada de
-   texto: el usuario elige de una lista, así que nunca puede fallar por un
-   error de escritura o de reconocimiento de frase.
-
-El resto de las funciones — las que se usan rara vez — se quedan solo en el
-chat de lenguaje natural. No se construye un botón por cada función que
-existe: si el sistema tiene mil capacidades, no se hacen mil botones. El
-lenguaje natural existe precisamente para no tener que hacer eso. La regla es:
-alto uso + alto costo de un error → mecánico. Bajo uso → lenguaje.
-
-### 4. Nunca un parche encima de un valor incorrecto — se corrige en el origen
-
-Cuando algo está mal, la corrección se hace en el lugar exacto donde nace el
-dato incorrecto, no con una tabla de traducción o un "if" que intercepta el
-valor malo antes de que llegue a donde importa. Una tabla de traducción que
-arregla un valor al vuelo dura hasta el día en que alguien crea una ruta
-nueva que no pasa por esa tabla — y ese día vuelve a fallar exactamente igual,
-pero en un lugar distinto, y parece un bug nuevo cuando es el mismo de
-siempre.
-
-Toda limpieza de datos de entrada (quitar comillas de una ruta de archivo,
-normalizar mayúsculas, quitar acentos) se hace UNA sola vez, en la función
-real que consume ese dato — nunca en cada quien-la-llama por separado. Así
-sea el chat, un formulario o una llamada futura que nadie ha escrito todavía,
-todos quedan arreglados con un solo cambio.
-
-### 5. Contrato de respuesta idéntico en todos los endpoints
-
-Toda función que se expone como endpoint del servidor devuelve exactamente la
-misma forma de respuesta: `{status: "ok" | "error", mensaje: "..."}` más los
-datos específicos de esa acción. Nunca un endpoint usa `detalle`, otro
-`error`, otro `mensaje` para decir lo mismo — eso hace que el frontend tenga
-que adivinar qué campo leer, y cuando adivina mal, el usuario ve un mensaje
-genérico e inútil en vez del error real que el servidor sí calculó bien.
-
-### 6. Nunca inventar una respuesta — jamás
-
-Si ningún proveedor de IA responde, el sistema lo dice tal cual, sin fingir
-una respuesta y sin quedarse callado sin explicación. Si una respuesta viene
-de un modelo de respaldo más limitado (no el principal), el sistema lo
-declara en la misma respuesta — el usuario tiene derecho a saber de dónde
-salió lo que está leyendo.
-
-### 7. Nada se declara "listo" sin las tres pruebas, en este orden
-
-1. El código se reinicia de verdad (matar el proceso viejo, lanzar el nuevo).
-2. Se confirma, leyendo el log del proceso vivo (no el archivo en disco), que
-   el cambio realmente está corriendo — un archivo editado no sirve de nada
-   si el proceso que sigue vivo es el de antes del cambio.
-3. Se prueba con un caso real, con datos reales que el usuario de verdad va a
-   usar (no un caso de laboratorio inventado) — y se prueba desde donde el
-   usuario realmente lo va a usar (el panel, el chat, WhatsApp), no solo
-   leyendo el código y asumiendo que va a funcionar.
-
-Sin las tres, no está "arreglado" — está "editado", que no es lo mismo.
-
-### 8. Los precios y fórmulas de negocio viven en un solo módulo
-
-Toda la aritmética de cuánto cobrar (materiales × margen, minutos de corte ×
-tarifa, diseño, instalación) vive en una sola función que toda la aplicación
-llama — el panel, el chat, cualquier reporte. Nunca se reescribe la misma
-cuenta en dos lugares "porque es rápido copiarla" — el día que cambie un
-precio, cambia en un lugar y automáticamente es correcto en todos los demás.
-
-Cualquier número que se le muestre al usuario y que se pueda malinterpretar
-por su unidad (área en cm² que parece m² a simple vista, por ejemplo) se
-acompaña siempre de su equivalente en la unidad más natural de leer.
-
-### 9. Arquitectura en capas, agnóstica del giro del negocio
-
-- **Motores**: las capacidades reales, la despensa. Nunca se borra una
-  función de aquí para "limpiar" — solo se agregan. Lo que no sirve se
-  documenta como obsoleto y se archiva aparte, nunca se elimina en silencio.
-- **Equipos**: recetas declarativas que combinan motores para un resultado de
-  negocio (cotizar, generar una caja, publicar un post).
-- **Cerebro**: la única capa de decisión — el sistema de lenguaje de la regla
-  2 vive aquí, y solo aquí.
-- **Consola**: la interfaz. No sabe de qué gira el negocio (láser, faros,
-  lo que sea) — carga un "paquete de dominio" que sí lo sabe. Así el mismo
-  motor de consola sirve para vender el sistema a otro negocio sin
-  reescribir nada del núcleo.
-
-### 10. El sistema debe poder operar sin la persona que lo programó
-
-Todo reinicio, todo respaldo, toda recuperación debe poder hacerla el dueño
-del negocio solo, sin depender de quien escribió el código — con scripts
-simples, con contraseñas por default documentadas, con un manual generado
-del código real (nunca escrito a mano aparte, porque se desactualiza). Si una
-función requiere que el programador original esté presente para mantenerla
-viva, esa función está mal diseñada, sin importar qué tan bien funcione hoy.
-
-### 11. Honestidad radical en cada respuesta, sin excepción
-
-El sistema nunca dice que hizo algo que no hizo, nunca oculta que una
-herramienta no existe fingiendo que sí, nunca reporta éxito sin haber
-verificado el resultado real. Si algo no se puede hacer, se dice
-directamente y se explica qué sí se puede hacer en su lugar — sin inventar
-una salida falsa para no decepcionar.
+Esto es la respuesta. No es teoría: cada ley de aquí abajo existe porque algo se
+rompió de verdad en estos meses y costó dinero o días. Un prompt maestro que no
+cargue las cicatrices no sirve de nada — vuelve a construir los mismos bugs.
 
 ---
 
-## Por qué este prompt y no otro
+## EL PROMPT
 
-Cada regla de arriba tiene un bug real de hoy o de sesiones pasadas detrás:
+> Vas a construir **AURORA**: el operador de negocio de un dueño de taller que
+> NO es programador. Él la va a usar todos los días, con clientes enfrente, para
+> cobrar y para producir archivos de corte. Si ella se equivoca en un número, él
+> pierde dinero delante de un cliente. Si le miente, él deja de confiar y todo
+> esto no sirvió.
+>
+> No estás haciendo una demo. Estás haciendo la herramienta de la que depende el
+> ingreso de una familia.
+>
+> ### LAS DIEZ LEYES — ninguna es negociable
+>
+> **1. Derivar, nunca copiar.**
+> Ningún número, lista, manual ni frase se escribe a mano dos veces. Todo se
+> deriva de una sola fuente. Una lista escrita a mano se pone vieja el día que
+> alguien toca el código, y entonces le enseña al dueño cosas que ya no existen
+> — peor que no tener lista. Si algo hay que mantener a mano, está mal diseñado.
+>
+> **2. Una sola puerta a los números.**
+> Todos los precios, velocidades y medidas del dueño se piden por
+> `numero("clave")`. Esa función **truena** si la clave no existe: no devuelve 0
+> ni un valor de respaldo. Un precio inventado en silencio es peor que un error
+> a la cara. Y una prueba automática debe fallar si CUALQUIER archivo del
+> proyecto vuelve a escribir un precio adentro.
+>
+> **3. Nada se simula.**
+> Prohibidos los mocks, los stubs y el "debería funcionar". Si no lo corriste,
+> no está hecho, y se dice explícitamente qué no se probó. Una funcionalidad no
+> se entrega contra una prueba sintética: se entrega contra **un trabajo real
+> del dueño** — su archivo, su medida, su cliente.
+>
+> **4. No puede fingir.**
+> Hay UN punto de salida por el que pasa toda respuesta antes de llegar al
+> dueño, y ahí se revisa contra la realidad: que no diga que hizo algo que no
+> hizo, que no nombre herramientas que no tiene, que no invente comandos, que no
+> se atribuya programas ajenos, y que los números sobre sí misma cuadren con el
+> conteo real del sistema. Admitir un límite ("eso no lo sé hacer todavía") NO
+> se castiga: si lo castigas, le enseñas a mentir.
+>
+> **5. Una sola decisión de enrutado.**
+> Cuando el dueño escribe algo, **una** decisión resuelve a dónde va: cada
+> capacidad dice qué tan segura está de entenderlo y gana la más alta. Nunca
+> capas en cascada donde la primera que pase se lo lleva. Las cascadas se pelean
+> entre sí, y cada arreglo es un candado encima del anterior hasta que nadie
+> entiende por qué una frase acaba donde acaba.
+>
+> **6. Aprende de cómo habla su dueño — de las dos formas.**
+> *Sola:* cuando algo no lo entiende y él lo reformula de una manera que sí
+> ejecuta, se queda con las dos. *A propósito:* él puede enseñarle en una frase
+> (`cuando te diga X es Y`) y dictarle datos y reglas (`aurora aprende`), sin
+> programador de por medio. Nunca vas a anticipar cómo escribe una persona real
+> — y él escribe sin acentos, con dedazos y en jerga de taller.
+> Cuando diga "comprendo", que sea cierto: si guardó un dato que ningún módulo
+> pregunta todavía, **tiene que decirlo en la cara**.
+>
+> **7. Él manda sobre lo que ella aprendió.**
+> Todo lo aprendido se puede ver y borrar (`qué has aprendido de mí`, `olvida
+> X`). Un sistema que aprende solo y no se puede auditar es un sistema que
+> cambia a espaldas de su dueño.
+>
+> **8. Nada se resta.**
+> Solo se suma reconocimiento y capacidad. Antes de escribir cualquier cosa
+> nueva, se busca en TODO el proyecto si ya existe un gemelo — la misma función
+> **o la misma regla** en dos lados. Los gemelos son el bug más caro de este
+> proyecto: se arregla uno, el otro se queda viejo, y nadie se entera hasta que
+> el número sale mal enfrente de un cliente.
+>
+> **9. La consola no sabe de qué ramo es.**
+> El núcleo es agnóstico. El conocimiento del negocio —precios, materiales,
+> vocabulario, flujos— vive en un **cartucho de dominio**, en datos, no en el
+> código. Así el mismo sistema sirve para otro negocio cambiando el cartucho, y
+> el dueño puede corregir un precio sin tocar Python.
+>
+> **10. Cada motor firma un contrato.**
+> Todo motor declara qué hace, qué necesita y qué devuelve, en un formato que se
+> pueda leer. El enrutador **deriva** de esos contratos lo que el sistema sabe
+> hacer, en vez de mantener una lista a mano. (Ver ley 1.)
+>
+> ### CÓMO SE TRABAJA
+>
+> - **Plan escrito ANTES de tocar código.** Ver el proyecto completo, no el
+>   fragmento. Corrección de raíz, cero parches.
+> - **Comentarios en español que expliquen el PORQUÉ**, con la fecha y el caso
+>   real que lo provocó. Un comentario que dice *qué* hace el código sobra; uno
+>   que dice *por qué está así* salva la siguiente sesión.
+> - **Resultados, no diagnósticos.** No le expliques al dueño qué falla y por
+>   qué: termina, pruébalo en vivo, y entonces repórtale el resultado.
+> - **Ante riesgo de romper algo grande: párate y pregunta.** Nunca lo fuerces.
+> - **Lo no verificado se marca como no verificado**, y va aparte para poder
+>   revertirlo de un solo movimiento.
+>
+> ### EL ORDEN DE CONSTRUCCIÓN
+>
+> Se construye por lo que **paga**, no por lo que es fácil ni por lo que luce:
+>
+> 1. **Los números.** La fuente única y la fórmula de precios del dueño,
+>    dictada por él. Con su prueba estructural. Nada más se construye antes.
+> 2. **Cotizar de verdad.** UN motor de cotización, no seis. Mide el archivo
+>    real cuando lo hay; el texto solo cuando no.
+> 3. **Producir los archivos.** De su foto a lo que se manda a la máquina, en
+>    un comando. Ligero: un archivo pesado traba la máquina y le cuesta el día.
+> 4. **El candado de honestidad.** Antes de que nadie más la use.
+> 5. **El aprendizaje.** Las dos formas. Aquí, no al final: cada día sin esto
+>    es un día en que él pelea con ella en vez de trabajar.
+> 6. **Los flujos completos del negocio**, uno por uno, cada uno probado contra
+>    un trabajo real suyo. Ninguno se declara listo por partes.
+> 7. **Marketing y publicación**, al final. Es lo que más luce y lo que menos
+>    paga si lo anterior no está firme.
+>
+> ### CÓMO SE SABE QUE ESTÁ LISTO
+>
+> Nunca por una lista de tareas palomeada. Solo por esto:
+>
+> - El dueño le pidió algo **con sus propias palabras** y salió bien.
+> - El número que dio **cuadra con lo que él cobra de verdad**.
+> - El archivo que produjo **entró a la máquina y cortó**.
+> - Cuando no supo, **lo dijo** en vez de inventar.
+>
+> Todo lo demás es decoración.
 
-| Regla | Bug real que la originó |
-|---|---|
-| 1. Una sola fuente de verdad | Modelo de Groq dado de baja, escrito a mano en 29 archivos — arreglar uno no arregló nada |
-| 2. Un solo cerebro de lenguaje | `consciencia.py` y `lengua_anuar.py` compitiendo, el segundo pisando al primero, mismo bug arreglado dos veces por separado |
-| 3. Mecánico para lo diario | "quita el fondo" fallaba en el chat por typo o frase rara — pero ya existía como botón directo, sin lenguaje, en el panel |
-| 4. Corregir en el origen, no parchar | El primer arreglo del modelo de Groq fue una tabla-traductora — se quitó apenas se corrigió la causa real, porque dejarla ahí seguía siendo un parche |
-| 5. Contrato de respuesta único | El panel de cotizar leía `r.detalle` pero el servidor mandaba `r.mensaje` — el error real existía pero el usuario nunca lo vio |
-| 6. Nunca inventar respuesta | "Se cayeron los tres" — Groq, Gemini y el modelo local fallaron a la vez, y el sistema lo dijo en vez de inventar una respuesta |
-| 7. Las tres pruebas antes de "listo" | El formulario de cotizar por ruta se dio por "ya existe, verificado" leyendo el código, sin probarlo con una ruta real con comillas — falló en vivo |
-| 8. Fórmulas en un solo módulo | La regla de sumar áreas de vinil (no precios) vive en el motor para que el panel y el chat nunca se desalineen |
-| 9. Capas agnósticas | Así el mismo AURORA puede venderse a otro negocio sin reescribir el núcleo |
-| 10. Operable sin el programador | Es la prioridad #1 declarada: que AURORA funcione sin que el dueño dependa de quien la construyó |
-| 11. Honestidad radical | AURORA fingía acciones y negaba poder abrir archivos — 4 bugs cerrados de raíz en julio por esto mismo |
+---
+
+## LO QUE ESTE PROMPT NO PUEDE DARTE
+
+Y hay que decirlo, porque un prompt maestro que se vende como suficiente es otra
+mentira.
+
+**No existe el "un solo prompt".** No porque el prompt esté mal escrito, sino
+porque la mitad de lo que hace a AURORA valiosa **no se sabía al principio**.
+Salió de que Anuar dijera *"esto no es así, en mi taller el MDF de 2.7 se corta
+a 2.5 por el kerf"*, o *"a Alicia le dije que le dejaba el minuto en 5 pesos"*,
+o *"los DXF déjalos ligeros porque se traba RDWorks pensando"*.
+
+Nada de eso está en ningún manual. Está en su cabeza y sale trabajando.
+
+Lo que este prompt sí hace es **evitar los errores caros que ya cometimos**:
+- los precios regados por seis archivos,
+- el manual escrito a mano que enseñaba comandos muertos,
+- el sistema que fingía haber hecho cosas,
+- las tres capas de enrutado peleándose,
+- y declarar cosas listas sin haberlas corrido.
+
+Eso son meses de vuelta. No es poco. Pero el conocimiento del taller sigue
+llegando de la única fuente que lo tiene: **el dueño, trabajando.**
+
+---
+
+*Escrito el 2026-08-27, al final de la sesión en que AURORA pasó de 176 a 595
+frases verificadas y aprendió a que su dueño le enseñe.*
