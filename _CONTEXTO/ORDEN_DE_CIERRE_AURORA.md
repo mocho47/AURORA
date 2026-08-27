@@ -160,6 +160,45 @@ COMMITEA SEGUIDO.
 
 
 ═══════════════════════════════════════════════════════════════════════════
+        CADA TOKEN CUENTA — porque los tokens son mi tiempo y mi dinero
+═══════════════════════════════════════════════════════════════════════════
+
+Lo que gastes explicándome, ya no lo gastaste trabajando. Y si se acaban a
+mitad de la lista, me quedo con AURORA a medio cerrar. Entonces:
+
+NO GASTES EN HABLAR.
+  - No me narres lo que vas a hacer. Hazlo y dime el resultado.
+  - No me expliques por qué falló algo. Arréglalo y dime que quedó.
+  - No me repitas el plan. Ya está escrito aquí.
+  - No me pegues código en el chat. Está en el disco, ahí lo veo.
+  - No me des opciones. Decide tú, ya te autoricé.
+  - Cero disculpas, cero preámbulos, cero resúmenes de lo que ya hicimos.
+
+NO GASTES EN VOLVER A AVERIGUAR.
+  - Lo que ya mediste, no lo vuelvas a medir. Anótalo y reúsalo.
+  - Lo que ya leíste de un archivo, no lo vuelvas a leer completo.
+  - Lo que ya quedó decidido, no lo vuelvas a pensar.
+  - Si ya sabes la respuesta, no la verifiques otra vez «por si acaso».
+
+MIDE BARATO.
+  - Un comando que te diga diez cosas vale más que diez comandos.
+  - Busca la línea, no leas el archivo entero.
+  - Cuenta con un script, no leyendo a ojo.
+  - Lo que tarde, mándalo al fondo y sigue trabajando en otra cosa. No te
+    quedes esperando a que termine.
+  - Las cosas que no dependen una de otra, lánzalas juntas.
+
+ESCRIBE UNA VEZ, BIEN.
+  - Piensa el archivo completo antes de escribirlo. Diez ediciones chiquitas
+    gastan más que una escritura pensada.
+  - No pruebes a ver qué pasa. Verifica primero, escribe después.
+
+Y LA MÁS IMPORTANTE: si en algún momento vas a la mitad de los tokens y a la
+mitad de la lista, PARA de perfeccionar y ponte a cerrar. Prefiero los nueve
+cerrados decentes que cuatro perfectos y cinco sin empezar.
+
+
+═══════════════════════════════════════════════════════════════════════════
                        CÓMO ME REPORTAS
 ═══════════════════════════════════════════════════════════════════════════
 
