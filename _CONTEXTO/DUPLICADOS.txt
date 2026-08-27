@@ -1,0 +1,81 @@
+﻿======================================================================
+  DUPLICADOS REALES DE AURORA
+======================================================================
+  archivos .py revisados : 283
+  funciones totales      : 2584
+
+  COPIAS EXACTAS (mismo nombre Y mismo código): 0
+  MISMO NOMBRE, CÓDIGO DISTINTO (los peligrosos): 44
+  líneas de puro peso muerto por las copias: ~0
+
+----------------------------------------------------------------------
+  COPIAS EXACTAS — las 15 más grandes
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+  MISMO NOMBRE, CÓDIGO DISTINTO — las 15 más grandes
+  (éstos son los que se desincronizan sin avisar)
+----------------------------------------------------------------------
+  dibujar  (38 líneas, en 3 archivos)
+      EDITOR/flat_prenda.py
+      scratchpad/calamardo_zoom.py
+      scratchpad/zoom_junta.py
+  cotizar  (33 líneas, en 6 archivos)
+      MOTORES/motor_cotizador.py
+      TALLER/cotizador_servicios.py
+      TALLER/cotizador_vinil.py
+      TALLER/formula_precios.py
+  inicializar  (27 líneas, en 5 archivos)
+      CEREBRO/consciencia.py
+      MEMORIA/analitica_marketing.py
+      MEMORIA/contexto_usuario.py
+      MEMORIA/perfil_habilidades.py
+  convertir  (27 líneas, en 3 archivos)
+      EDITOR/conversor_formatos.py
+      EDITOR/imagen_a_dxf.py
+      EDITOR/imagen_a_pdf.py
+  buscar  (24 líneas, en 10 archivos)
+      BIBLIOTECA/biblioteca.py
+      CEREBRO/aprende_del_usuario.py
+      CEREBRO/plugins.py
+      CEREBRO/registro_herramientas.py
+  revisar  (23 líneas, en 5 archivos)
+      CEREBRO/validador_honestidad.py
+      EDITOR/revisar_pdf.py
+      LICENCIA/licencias.py
+      MARKETING/metodo_campanas.py
+  crear_orden  (22 líneas, en 2 archivos)
+      ORACLE/oracle_core.py
+      TALLER/ordenes_taller.py
+  medir  (21 líneas, en 3 archivos)
+      TALLER/indexar_dxf.py
+      _CONTEXTO/benchmark_etapa0.py
+      scratchpad/medir_casas.py
+  analizar  (19 líneas, en 5 archivos)
+      CORE/chatbot_wa_profesional.py
+      MARKETING/analizador_mercado.py
+      MARKETING/estratega_shorts.py
+      MOTORES/motor_analisis.py
+  procesar_mensaje  (18 líneas, en 3 archivos)
+      CORE/aurora.py
+      CORE/aurora_server.py
+      CORE/chatbot_wa_profesional.py
+  _texto  (18 líneas, en 21 archivos)
+      EDITOR/arreglar_pdf.py
+      EDITOR/contorno_de_corte.py
+      EDITOR/dibujo_lineal.py
+      EDITOR/diseno_bandera_mx.py
+  agrupar  (17 líneas, en 2 archivos)
+      MERCADO/buscador_clientes.py
+      SISTEMA/organizador_archivos.py
+  lienzo_blanco  (17 líneas, en 2 archivos)
+      MOTORES/adaptadores.py
+      SUBLIMACION/sublimacion_core.py
+  resumen  (15 líneas, en 12 archivos)
+      AGENDA/agenda.py
+      CEREBRO/ojo_panel.py
+      CEREBRO/paneles_cerebro.py
+      MOTORES/adaptadores.py
+  vectorizar  (14 líneas, en 2 archivos)
+      MOTORES/adaptadores.py
+      TALLER/taller_core.py
