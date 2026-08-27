@@ -796,7 +796,7 @@ async def taller_imagen_url(req: ImagenUrlReq):
 
 
 @app.post("/chat/archivo", tags=["Chat"])
-async def chat_archivo(file: UploadFile = File(...)):
+async def chat_archivo(file: UploadFile = File(...), session_id: str = Form("")):
     """Recibe un archivo arrastrado/pegado al chat, lo GUARDA de verdad y dice qué
     puede hacer AURORA con él (real, sin simular). Fase 2: el chat como operador."""
     from pathlib import Path as _P
@@ -811,7 +811,9 @@ async def chat_archivo(file: UploadFile = File(...)):
     # (pasó en vivo el 2026-08-26 con la piñata del escudo de Peugeot).
     try:
         from CEREBRO.consciencia import recordar_archivo as _recordar
-        _recordar(str(destino))
+        # session_id opcional: si el navegador lo manda, el archivo queda
+        # apartado para esa persona y no se le cruza a nadie mas (2026-08-27).
+        _recordar(str(destino), session_id)
     except Exception:
         pass
     ext = destino.suffix.lower().lstrip(".")

@@ -1022,8 +1022,30 @@ _ABRE_LECCION = ("aurora aprende", "aprende esto", "aprendete esto",
 # Cuando ella contesta «te escucho», el mensaje siguiente ES la lección. Sin
 # esto no existiría la conversación de dos tiempos que él pidió. Se aguanta
 # 10 minutos: es lo que tarda en ir por el papel o copiar el documento.
-_ESPERANDO_LECCION: Dict[str, float] = {"desde": 0.0}
+_ESPERANDO_LECCION: Dict[str, float] = {}
 _VIGENCIA_LECCION_S = 600
+
+# ── DE CADA QUIEN ES DE CADA QUIEN ────────────────────────────────────────
+# 2026-08-27. Encontrado por mí, no por un usuario: el estado de conversación
+# estaba en UNA casilla global. Rocío entra desde 192.168.1.38 al mismo
+# tiempo que Anuar, así que su "aurora aprende" podía capturar el mensaje de
+# él, y el "vectorízalo" de él podía agarrar el archivo de ella.
+#
+# Se resuelve con un ContextVar en vez de pasar session_id a las ~38 pruebas
+# de candado: un ContextVar es por tarea de asyncio, así que dos peticiones
+# simultáneas nunca ven el valor de la otra, y no hay que tocar ninguna firma.
+from contextvars import ContextVar as _ContextVar
+
+_SESION_ACTUAL: "_ContextVar[str]" = _ContextVar("aurora_sesion", default="")
+
+
+def _sesion() -> str:
+    """Quién está hablando ahorita. `_sola` cuando se usa fuera del servidor
+    (pruebas, scripts): así el comportamiento de un solo usuario no cambia."""
+    try:
+        return _SESION_ACTUAL.get() or "_sola"
+    except LookupError:
+        return "_sola"
 
 
 def _es_aprende_conocimiento(mensaje: str) -> bool:
@@ -1032,7 +1054,8 @@ def _es_aprende_conocimiento(mensaje: str) -> bool:
     if _contiene_trigger(m, _ABRE_LECCION):
         return True
     # ¿Venía de decirle «aurora aprende» y ella contestó «te escucho»?
-    esperando = _ESPERANDO_LECCION.get("desde", 0.0)
+    # Por sesión: la espera de uno no puede tragarse el mensaje del otro.
+    esperando = _ESPERANDO_LECCION.get(_sesion(), 0.0)
     if esperando and (time.time() - esperando) < _VIGENCIA_LECCION_S:
         return bool(mensaje and mensaje.strip())
     return False
@@ -1161,7 +1184,9 @@ def _es_generar_caja(mensaje: str) -> bool:
 # "Esta" quiere decir "la que te acabo de dar". Eso es lo que se guarda aquí:
 # el último archivo recibido, y de qué tipo, para que cualquier candado que
 # necesite una ruta pueda preguntarlo en vez de exigírsela escrita.
-_ULTIMO_ARCHIVO: Dict[str, Any] = {"ruta": "", "cuando": 0.0}
+# Por sesión, por lo mismo que `_ESPERANDO_LECCION` (ver arriba): el archivo
+# que subió Rocío no le puede llegar a Anuar cuando él diga "vectorízalo".
+_ULTIMO_ARCHIVO: Dict[str, Dict[str, Any]] = {}
 
 # Media hora. Si pegó una foto hace 40 minutos y ahora escribe "cotiza esta
 # piñata", lo más probable es que hable de otra cosa: mejor preguntar que
@@ -1169,22 +1194,34 @@ _ULTIMO_ARCHIVO: Dict[str, Any] = {"ruta": "", "cuando": 0.0}
 _VIGENCIA_ARCHIVO_S = 1800
 
 
-def recordar_archivo(ruta: str) -> None:
-    """Lo llama el servidor cuando entra un archivo por el chat."""
+def recordar_archivo(ruta: str, session_id: str = "") -> None:
+    """Lo llama el servidor cuando entra un archivo por el chat.
+
+    `session_id` es opcional a propósito: la subida del archivo entra por otra
+    petición que la del chat, así que el ContextVar puede no estar puesto. Si
+    el servidor lo sabe, que lo mande; si no, cae en la sesión en curso.
+    """
     import time as _t
-    _ULTIMO_ARCHIVO["ruta"] = str(ruta or "")
-    _ULTIMO_ARCHIVO["cuando"] = _t.time()
-    logger.info(f"[CHAT] archivo recibido y recordado: {ruta}")
+    quien = session_id or _sesion()
+    _ULTIMO_ARCHIVO[quien] = {"ruta": str(ruta or ""), "cuando": _t.time()}
+    logger.info(f"[CHAT] archivo recibido y recordado ({quien}): {ruta}")
 
 
 def _archivo_reciente(ext_regex: str) -> str:
-    """La ruta del último archivo recibido, si es del tipo pedido y está
-    fresco. Cadena vacía si no hay ninguno que sirva — nunca adivina."""
+    """La ruta del último archivo recibido POR ESTA SESIÓN, si es del tipo
+    pedido y está fresco. Cadena vacía si no hay ninguno que sirva — nunca
+    adivina, y nunca agarra el archivo de otra persona."""
     import time as _t
-    ruta = _ULTIMO_ARCHIVO.get("ruta") or ""
+    # Primero lo mío. Si mi sesión no tiene nada, cae al cajón `_sola`: ahí
+    # aterrizan las subidas que llegaron sin sesión (el navegador todavía no
+    # la manda en /chat/archivo). Así el flujo de un solo usuario sigue
+    # funcionando igual que hoy, y en cuanto la sesión se conoce, ya no se
+    # cruza con nadie.
+    mio = _ULTIMO_ARCHIVO.get(_sesion()) or _ULTIMO_ARCHIVO.get("_sola") or {}
+    ruta = mio.get("ruta") or ""
     if not ruta:
         return ""
-    if _t.time() - float(_ULTIMO_ARCHIVO.get("cuando") or 0) > _VIGENCIA_ARCHIVO_S:
+    if _t.time() - float(mio.get("cuando") or 0) > _VIGENCIA_ARCHIVO_S:
         return ""
     if not re.search(r"\.(?:" + ext_regex + r")$", ruta, re.IGNORECASE):
         return ""
@@ -2737,6 +2774,10 @@ class Consciencia:
             await self.inicializar()
 
         session_id = session_id or user_id
+        # Quién habla, para todo lo que sigue. Va aquí y no más abajo porque
+        # las pruebas de candado corren antes que cualquier otra cosa y ya
+        # necesitan saberlo (ver `_sesion`, 2026-08-27).
+        _SESION_ACTUAL.set(session_id or "_sola")
         inicio = datetime.utcnow()
         self._sueno.registrar_actividad()
 
@@ -5464,7 +5505,7 @@ class Consciencia:
                 break
 
         if len(cuerpo.strip()) < 4:
-            _ESPERANDO_LECCION["desde"] = time.time()
+            _ESPERANDO_LECCION[_sesion()] = time.time()   # la espera es SUYA
             return {"respuesta": (
                 "Te escucho. Dime el dato o la regla, o pégame el documento "
                 "completo — una lista de precios, la ficha de un material, tus "
@@ -5472,7 +5513,7 @@ class Consciencia:
                 "_Ejemplo:_ `un tabloide mide 33x48` · `la hoja de mdf de 2.7 me "
                 "cuesta 110` · `deja siempre 5mm de margen`")}
 
-        _ESPERANDO_LECCION["desde"] = 0.0        # la lección llegó, se cierra
+        _ESPERANDO_LECCION.pop(_sesion(), None)  # la lección llegó, se cierra
         r = await asyncio.to_thread(_ac.aprender, cuerpo)
 
         if r.get("status") == "NADA":
